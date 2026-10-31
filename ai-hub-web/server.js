@@ -47,47 +47,143 @@ if (!NINE_ROUTER_KEY) {
   console.warn("⚠️  [CANH BAO] Khong tim thay NINE_ROUTER_KEY tu bien moi truong. Vui long khoi chay bang 'start-web.bat' de nap day du API key!");
 }
 
-let activeProcess = null;
-let activeSessionId = null;
-let activeSessionInfo = null; // { model, cwd, sessionId, prompt, startTime }
-let activeSessionEvents = []; // [ { event, payload } ]
-const activeClients = new Set(); // Set<http.ServerResponse>
+// Multi-session State Manager
+const activeSessions = new Map();
+// ========================================================
+// GLOBAL HUB EVENT STREAM (MULTI-DEVICE REALTIME SYNC)
+// ========================================================
+const hubEventClients = new Set();
 
-function broadcastSSE(event, payload) {
-  const p = (typeof payload === "object" && payload !== null) ? { type: event, ...payload } : { type: event, value: payload };
-  if (event === "tool_call" && p.name && !p.tool) p.tool = p.name;
-  activeSessionEvents.push({ event, payload: p });
-  if (activeSessionEvents.length > 1000) activeSessionEvents.shift();
+function setupSseHeaders(res) {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no",
+    "Content-Encoding": "none"
+  });
+  if (res.socket) {
+    if (typeof res.socket.setNoDelay === "function") res.socket.setNoDelay(true);
+    if (typeof res.socket.setKeepAlive === "function") res.socket.setKeepAlive(true, 10000);
+  }
+  if (typeof res.flushHeaders === "function") res.flushHeaders();
+  // 4KB comment padding to defeat Mobile Safari / WebKit and proxies buffer threshold
+  res.write(": " + " ".repeat(4096) + "\n\n");
+  if (typeof res.flush === "function") res.flush();
+}
+
+function broadcastHubEvent(event, data) {
+  const p = data || {};
   const chunk = `event: ${event}\ndata: ${JSON.stringify(p)}\n\n`;
-  for (const client of activeClients) {
+  for (const client of hubEventClients) {
     try {
       client.write(chunk);
+      if (typeof client.flush === "function") client.flush();
+    } catch {
+      hubEventClients.delete(client);
+    }
+  }
+}
+
+if (typeof setInterval === "function") {
+  setInterval(() => {
+    for (const client of hubEventClients) {
+      try {
+        client.write(": heartbeat\n\n");
+        if (typeof client.flush === "function") client.flush();
+      } catch {
+        hubEventClients.delete(client);
+      }
+    }
+  }, 15000);
+}
+ // Map<sessionId, SessionContext>
+
+let activeProcess = null;
+let activeSessionId = null;
+let activeSessionInfo = null;
+let activeSessionEvents = [];
+const activeClients = new Set();
+const recentlyCompletedSessions = new Map();
+
+function getRunningSession(sessionId) {
+  if (!sessionId) return null;
+  if (activeSessions.has(sessionId)) return activeSessions.get(sessionId);
+  try {
+    const stored = findStoredSession(sessionId);
+    if (stored) {
+      if (activeSessions.has(stored.id)) return activeSessions.get(stored.id);
+      if (stored.name && activeSessions.has(stored.name)) return activeSessions.get(stored.name);
+    }
+  } catch {}
+  for (const ctx of activeSessions.values()) {
+    if (ctx.sessionId === sessionId || ctx.info?.sessionId === sessionId || ctx.tempName === sessionId) {
+      return ctx;
+    }
+  }
+  if (recentlyCompletedSessions.has(sessionId)) return recentlyCompletedSessions.get(sessionId);
+  for (const ctx of recentlyCompletedSessions.values()) {
+    if (ctx.sessionId === sessionId || ctx.info?.sessionId === sessionId || ctx.tempName === sessionId) {
+      return ctx;
+    }
+  }
+  return null;
+}
+
+function isSessionRunning(sessionId) {
+  return !!getRunningSession(sessionId);
+}
+
+function broadcastToSession(sessionCtx, event, payload) {
+  if (!sessionCtx) return;
+  const p = (typeof payload === "object" && payload !== null) ? { type: event, ...payload } : { type: event, value: payload };
+  if (event === "tool_call" && p.name && !p.tool) p.tool = p.name;
+  sessionCtx.events.push({ event, payload: p });
+  if (sessionCtx.events.length > 1000) sessionCtx.events.shift();
+  const chunk = `event: ${event}\ndata: ${JSON.stringify(p)}\n\n`;
+  for (const client of sessionCtx.clients) {
+    try {
+      client.write(chunk);
+      if (typeof client.flush === "function") client.flush();
     } catch {}
   }
 }
 
-function attachClientToActiveSession(res, sessionId) {
-  res.writeHead(200, {
-    "Content-Type": "text/event-stream; charset=utf-8",
-    "Cache-Control": "no-cache",
-    "Connection": "keep-alive"
-  });
-  if (typeof res.flushHeaders === "function") res.flushHeaders();
+function attachClientToSession(res, sessionCtx) {
+  setupSseHeaders(res);
 
-  activeClients.add(res);
-
-  if (activeSessionInfo) {
-    res.write(`event: session_info\ndata: ${JSON.stringify(activeSessionInfo)}\n\n`);
+  if (sessionCtx.info) {
+    res.write(`event: session_info\ndata: ${JSON.stringify({ type: "session_info", ...sessionCtx.info })}\n\n`);
   }
 
-  for (const item of activeSessionEvents) {
+  for (const item of sessionCtx.events) {
     res.write(`event: ${item.event}\ndata: ${JSON.stringify(item.payload)}\n\n`);
   }
+  if (typeof res.flush === "function") res.flush(); // Flush replayed events on attach
+
+  if (sessionCtx.isFinished) {
+    try { res.end(); } catch {}
+    return;
+  }
+
+  sessionCtx.clients.add(res);
 
   res.on("close", () => {
-    activeClients.delete(res);
-    console.log(`[CLIENT DETACHED] Client tab disconnected (F5/close). Active clients: ${activeClients.size}. Task continues in background.`);
+    sessionCtx.clients.delete(res);
+    console.log(`[CLIENT DETACHED] Client tab disconnected for session ${sessionCtx.sessionId}. Active clients: ${sessionCtx.clients.size}. Task continues in background.`);
   });
+}
+
+// Backward compatibility wrappers
+function broadcastSSE(event, payload) {
+  for (const sessionCtx of activeSessions.values()) {
+    broadcastToSession(sessionCtx, event, payload);
+  }
+}
+
+function attachClientToActiveSession(res, sessionId) {
+  const ctx = getRunningSession(sessionId) || (activeSessions.values().next().value || null);
+  if (ctx) attachClientToSession(res, ctx);
 }
 
 // Cac model co san tren 9Router
@@ -153,12 +249,22 @@ function deleteSession(sessionId) {
     db.close();
 
     // Neu phien nay dang chay, dung tien trinh
-    if (activeProcess && (activeSessionId === sessionId || activeSessionId === realId)) {
-      try { process.kill(activeProcess.pid); } catch {}
-      activeProcess = null;
-      activeSessionId = null;
-      activeSessionInfo = null;
-      activeSessionEvents = [];
+    const runningCtx = getRunningSession(sessionId) || getRunningSession(realId);
+    if (runningCtx) {
+      try { process.kill(runningCtx.process.pid); } catch {}
+      for (const c of runningCtx.clients) {
+        try { c.end(); } catch {}
+      }
+      runningCtx.clients.clear();
+      activeSessions.delete(runningCtx.sessionId);
+      if (runningCtx.tempName) activeSessions.delete(runningCtx.tempName);
+      if (runningCtx.info?.sessionId) activeSessions.delete(runningCtx.info.sessionId);
+      if (activeProcess === runningCtx.process) {
+        activeProcess = null;
+        activeSessionId = null;
+        activeSessionInfo = null;
+        activeSessionEvents = [];
+      }
     }
 
     return { ok: true, id: realId };
@@ -197,8 +303,10 @@ function deleteWorkspaceAndSessions(wsPath) {
       throw new Error("Đường dẫn workspace không hợp lệ");
     }
     const target = normalize(wsPath);
-    if (activeProcess && activeSessionInfo?.cwd && normalize(activeSessionInfo.cwd) === target) {
-      throw new Error("Workspace đang chạy tác vụ. Vui lòng dừng tác vụ trước khi xóa.");
+    for (const ctx of activeSessions.values()) {
+      if (ctx.info?.cwd && normalize(ctx.info.cwd) === target) {
+        throw new Error("Workspace đang chạy tác vụ. Vui lòng dừng tác vụ trước khi xóa.");
+      }
     }
     const deletedSessionIds = [];
     const dbPath = path.join(process.env.APPDATA, "Block", "goose", "data", "sessions", "sessions.db");
@@ -454,7 +562,7 @@ function getSessionsList() {
     }
   }
   try {
-    const out = execSync(`"${GOOSE_PATH}" session list`, { encoding: "utf8", timeout: 4000 });
+    const out = execSync(`"${GOOSE_PATH}" session list`, { encoding: "utf8", timeout: 4000, windowsHide: true });
     const lines = out.split("\n").filter(l => l.trim() && !l.includes("Available sessions:"));
     return lines.map(line => {
       const parts = line.split(" - ");
@@ -471,6 +579,7 @@ function getSessionsList() {
 }
 
 // Lay noi dung chi tiet cua mot phien lam viec
+
 function findStoredSession(sessionId) {
   const dbPath = path.join(process.env.APPDATA || "", "Block", "goose", "data", "sessions", "sessions.db");
   if (!fs.existsSync(dbPath)) return null;
@@ -490,6 +599,7 @@ function getSessionDetail(sessionId) {
       out = execSync(`"${GOOSE_PATH}" session export --session-id "${sessionId}" --format json`, {
         encoding: "utf8",
         timeout: 6000,
+        windowsHide: true,
         maxBuffer: 50 * 1024 * 1024
       });
     } catch {
@@ -500,7 +610,8 @@ function getSessionDetail(sessionId) {
         out = execSync(`"${GOOSE_PATH}" session export --session-id "${match.id}" --format json`, {
           encoding: "utf8",
           timeout: 6000,
-          maxBuffer: 50 * 1024 * 1024
+        windowsHide: true,
+        maxBuffer: 50 * 1024 * 1024
         });
       }
     }
@@ -513,8 +624,9 @@ function getSessionDetail(sessionId) {
 function getSystemInfo() {
   let tailscaleIp = process.env.AI_HUB_TAILSCALE_IP || "127.0.0.1";
   try {
-    tailscaleIp = execSync("tailscale ip -4", { encoding: "utf8", timeout: 2000 }).trim();
+    tailscaleIp = execSync("tailscale ip -4", { encoding: "utf8", timeout: 2000, windowsHide: true }).trim();
   } catch {}
+  const latestCtx = activeSessions.values().next().value || null;
   return {
     tailscaleIp,
     vpsHost: `${NINE_ROUTER_IP}:${NINE_ROUTER_PORT}`,
@@ -523,9 +635,10 @@ function getSystemInfo() {
     workspaces: getSavedWorkspaces(),
     drives: getAvailableDrives(),
     gooseFound: fs.existsSync(GOOSE_PATH),
-    activeSessionId,
-    activeSessionInfo,
-    isBusy: !!activeProcess
+    activeSessionId: latestCtx ? latestCtx.sessionId : null,
+    activeSessionInfo: latestCtx ? latestCtx.info : null,
+    activeSessions: Array.from(activeSessions.values()).map(c => c.info),
+    isBusy: activeSessions.size > 0
   };
 }
 
@@ -555,7 +668,7 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && pathname === "/api/sessions") {
     const list = getSessionsList().map(s => ({
       ...s,
-      isRunning: (activeSessionId && (s.id === activeSessionId || s.name === activeSessionId))
+      isRunning: isSessionRunning(s.id) || isSessionRunning(s.name)
     }));
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(list));
@@ -570,8 +683,14 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ error: "Thiếu mã phiên" }));
       return;
     }
+    const detail = getSessionDetail(id) || {};
+    const runningCtx = getRunningSession(id);
+    detail.isRunning = !!runningCtx;
+    if (runningCtx && runningCtx.info) {
+      detail.activeSessionInfo = runningCtx.info;
+    }
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-    res.end(JSON.stringify(getSessionDetail(id)));
+    res.end(JSON.stringify(detail));
     return;
   }
 
@@ -828,6 +947,9 @@ const server = http.createServer((req, res) => {
           return;
         }
         const result = deleteWorkspaceAndSessions(dir);
+        if (result && result.ok) {
+          broadcastHubEvent("sessions_updated", { type: "workspace_deleted", wsPath: dir });
+        }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify(result));
       } catch (err) {
@@ -851,6 +973,9 @@ const server = http.createServer((req, res) => {
           return;
         }
         const result = deleteSession(id);
+        if (result && result.ok) {
+          broadcastHubEvent("sessions_updated", { type: "session_deleted", sessionId: id });
+        }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify(result));
       } catch (err) {
@@ -874,6 +999,9 @@ const server = http.createServer((req, res) => {
           return;
         }
         const result = renameSession(id, name.trim());
+        if (result && result.ok) {
+          broadcastHubEvent("sessions_updated", { type: "session_renamed", sessionId: id, name: name.trim() });
+        }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify(result));
       } catch (err) {
@@ -886,33 +1014,78 @@ const server = http.createServer((req, res) => {
 
   // API: Dung tien trinh dang chay (nut Dung)
   if (req.method === "POST" && pathname === "/api/stop") {
-    if (activeProcess) {
-      console.log(`[STOP] User explicitly stopped task for session ${activeSessionId} (PID: ${activeProcess.pid})`);
-      try {
-        process.kill(activeProcess.pid);
-      } catch {}
-      broadcastSSE("stderr", { text: "Tiến trình đã được dừng bởi người dùng." });
-      broadcastSSE("finish", { exitCode: -1, sessionId: activeSessionId, session_id: activeSessionId });
-      for (const c of activeClients) {
-        try { c.end(); } catch {}
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", () => {
+      let data = {};
+      try { data = JSON.parse(body); } catch {}
+      const targetId = data.sessionId;
+      const targetCtx = targetId ? getRunningSession(targetId) : (activeSessions.values().next().value || null);
+      if (targetCtx) {
+        console.log(`[STOP] User explicitly stopped task for session ${targetCtx.sessionId} (PID: ${targetCtx.process?.pid})`);
+        try {
+          if (targetCtx.process?.pid) {
+            if (process.platform === 'win32') {
+              try { execSync(`taskkill /pid ${targetCtx.process.pid} /f /t`, { windowsHide: true }); } catch {}
+            } else {
+              process.kill(targetCtx.process.pid);
+            }
+          }
+        } catch {}
+        targetCtx.isFinished = true;
+        recentlyCompletedSessions.set(targetCtx.sessionId, targetCtx);
+        if (targetCtx.tempName) recentlyCompletedSessions.set(targetCtx.tempName, targetCtx);
+        if (targetCtx.info?.sessionId) recentlyCompletedSessions.set(targetCtx.info.sessionId, targetCtx);
+        setTimeout(() => {
+          recentlyCompletedSessions.delete(targetCtx.sessionId);
+          if (targetCtx.tempName) recentlyCompletedSessions.delete(targetCtx.tempName);
+          if (targetCtx.info?.sessionId) recentlyCompletedSessions.delete(targetCtx.info.sessionId);
+        }, 15000);
+        broadcastToSession(targetCtx, "stderr", { text: "Tiến trình đã được dừng bởi người dùng." });
+        broadcastToSession(targetCtx, "finish", { exitCode: -1, sessionId: targetCtx.sessionId, session_id: targetCtx.sessionId });
+        for (const c of targetCtx.clients) {
+          try { c.end(); } catch {}
+        }
+        targetCtx.clients.clear();
+        activeSessions.delete(targetCtx.sessionId);
+        if (targetCtx.tempName) activeSessions.delete(targetCtx.tempName);
+        if (targetCtx.info?.sessionId) activeSessions.delete(targetCtx.info.sessionId);
+        if (activeProcess === targetCtx.process) {
+          activeProcess = null;
+          activeSessionId = null;
+          activeSessionInfo = null;
+          activeSessionEvents = [];
+        }
       }
-      activeClients.clear();
-      activeProcess = null;
-      activeSessionId = null;
-      activeSessionInfo = null;
-      activeSessionEvents = [];
-    }
-    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-    res.end(JSON.stringify({ ok: true, message: "Đã dừng tác vụ" }));
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      broadcastHubEvent("session_stopped", { sessionId: targetId || targetCtx?.sessionId || null });
+      res.end(JSON.stringify({ ok: true, message: "Đã dừng tác vụ" }));
+    });
     return;
   }
 
   // API: Tai ket noi luong SSE (vi du khi nguoi dung F5 / mo lai tab)
+  
+  // API: Global SSE stream for real-time multi-device synchronization
+  if (req.method === "GET" && pathname === "/api/hub/events") {
+    setupSseHeaders(res);
+    res.write(`: connected\n\n`);
+    if (typeof res.flush === "function") res.flush();
+
+    hubEventClients.add(res);
+    console.log(`[HUB SSE] Client connected. Total clients: ${hubEventClients.size}`);
+    req.on("close", () => {
+      hubEventClients.delete(res);
+      console.log(`[HUB SSE] Client disconnected. Total clients: ${hubEventClients.size}`);
+    });
+    return;
+  }
   if (req.method === "GET" && pathname === "/api/chat/stream") {
     const sId = urlObj.searchParams.get("sessionId");
-    if (activeProcess && activeSessionId && (!sId || sId === activeSessionId)) {
-      console.log(`[RECONNECT] Client reconnected to active session ${activeSessionId}`);
-      attachClientToActiveSession(res, activeSessionId);
+    const sessionCtx = sId ? getRunningSession(sId) : (activeSessions.values().next().value || null);
+    if (sessionCtx) {
+      console.log(`[RECONNECT] Client reconnected to active session ${sessionCtx.sessionId}`);
+      attachClientToSession(res, sessionCtx);
       return;
     }
     res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
@@ -943,29 +1116,32 @@ const server = http.createServer((req, res) => {
       }
       const resume = !!storedSession;
       if (storedSession) sessionId = storedSession.id;
+
       // Never silently start a blank conversation when a previous session is missing.
-      if (data.sessionId && !resume && !(activeProcess && activeSessionId === sessionId)) {
+      if (data.sessionId && !resume && !isSessionRunning(sessionId)) {
         res.writeHead(404, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Conversation not found. Please select an existing session or start a new chat." }));
         return;
       }
 
       // Neu phien nay dang chay san -> gan client vao nghe tiep thay vi chay de
-      if (activeProcess && activeSessionId === sessionId) {
+      const existingSession = getRunningSession(sessionId);
+      if (existingSession && !existingSession.isFinished) {
         console.log(`[ATTACH] Client re-attached to existing running session ${sessionId}`);
-        attachClientToActiveSession(res, sessionId);
+        if (data.streamMode === "eventsource") {
+          res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ ok: true, sessionId: existingSession.sessionId, tempName: existingSession.tempName || null }));
+          return;
+        }
+        attachClientToSession(res, existingSession);
         return;
       }
 
-      // Neu co phien khac dang chay -> dung phien cu truoc khi chay moi
-      if (activeProcess) {
-        console.log(`[REPLACE] Terminating previous process ${activeProcess.pid} for session ${activeSessionId} to start ${sessionId}`);
-        try { process.kill(activeProcess.pid); } catch {}
-        activeProcess = null;
-        for (const c of activeClients) {
-          try { c.end(); } catch {}
-        }
-        activeClients.clear();
+      // Xoa cache finished session cu vi phien bat dau luot chat moi
+      recentlyCompletedSessions.delete(sessionId);
+      if (storedSession) {
+        recentlyCompletedSessions.delete(storedSession.id);
+        if (storedSession.name) recentlyCompletedSessions.delete(storedSession.name);
       }
 
       if (!prompt.trim()) {
@@ -974,33 +1150,42 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      console.log(`[CHAT] Prompt: "${prompt.substring(0, 50)}" | Model: ${model} | CWD: ${cwd} | Session: ${sessionId} | Resume: ${resume}`);
+      console.log(`[CHAT] Prompt: "${prompt.substring(0, 50)}" | Model: ${model} | CWD: ${cwd} | Session: ${sessionId} | Resume: ${resume} | Active sessions: ${activeSessions.size}`);
       saveWorkspace(cwd);
 
-      activeSessionId = sessionId;
       const existingTitle = storedSession && (isTechnicalSessionName(storedSession.name)
         ? getSessionsList().find(s => s.id === storedSession.id)?.name : storedSession.name);
       const title = existingTitle || sessionTitle(data.titlePrompt || prompt);
-      activeSessionInfo = { model, cwd, sessionId, prompt, title, startTime: Date.now() };
-      activeSessionEvents = [];
-      activeClients.clear();
 
-      // Thiet lap Server-Sent Events (SSE) cho client hien tai
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive"
-      });
-      if (typeof res.flushHeaders === "function") res.flushHeaders();
-      activeClients.add(res);
+      const sessionCtx = {
+        process: null,
+        sessionId,
+        tempName: (!resume && sessionId.startsWith('session_')) ? sessionId : null,
+        info: { model, cwd, sessionId, prompt, title, startTime: Date.now() },
+        events: [],
+        clients: new Set((data.streamMode === "eventsource") ? [] : [res])
+      };
 
-      res.on("close", () => {
-        activeClients.delete(res);
-        console.log(`[CLIENT DETACHED] Client disconnected from session ${sessionId}. Task PID ${child.pid} continues running in background.`);
-      });
+      activeSessions.set(sessionId, sessionCtx);
+      activeSessionId = sessionId;
+      activeSessionInfo = sessionCtx.info;
+      activeSessionEvents = sessionCtx.events;
 
-      broadcastSSE("session_title", { title });
-      broadcastSSE("status", { status: "starting", model, cwd, sessionId, session_id: sessionId, text: "Đang kết nối Agent..." });
+      if (data.streamMode === "eventsource") {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: true, sessionId, tempName: sessionCtx.tempName || null }));
+      } else {
+        // Thiet lap Server-Sent Events (SSE) cho client hien tai
+        setupSseHeaders(res);
+
+        res.on("close", () => {
+          sessionCtx.clients.delete(res);
+          console.log(`[CLIENT DETACHED] Client disconnected from session ${sessionId}. Task PID ${sessionCtx.process?.pid} continues running in background.`);
+        });
+      }
+
+      broadcastToSession(sessionCtx, "session_title", { title });
+      broadcastToSession(sessionCtx, "status", { status: "starting", model, cwd, sessionId, session_id: sessionId, text: "Đang kết nối Agent..." });
 
       const env = {
         ...process.env,
@@ -1017,7 +1202,12 @@ const server = http.createServer((req, res) => {
       const systemInstruction = 
         "QUY TẮC BẮT BUỘC:\n" +
         "- Trước khi gọi lệnh shell quan trọng (build, deploy, sửa file lớn, tác động hệ thống), BẮT BUỘC viết 1 câu siêu ngắn (dưới 15 từ) thông báo mục đích cho người dùng trước khi gọi tool.\n" +
-        "- Với các thao tác đọc nhẹ (ls, cat, grep nhỏ), hãy gọi thẳng lệnh để tối ưu tốc độ phản hồi.";
+        "- Với các thao tác đọc nhẹ (ls, cat, grep nhỏ), hãy gọi thẳng lệnh để tối ưu tốc độ phản hồi.\n" +
+        "- QUY TẮC SUBAGENT (DELEGATE):\n" +
+        "  + Ưu tiên làm trực tiếp: Tự thực hiện đọc, sửa code, chạy test, commit, deploy ngay trong phiên chính.\n" +
+        "  + CẤM tuần tự hóa subagent: Không ủy quyền cho các bước nối tiếp thông thường (đọc diff -> sửa file -> test -> commit -> ghi doc).\n" +
+        "  + CẤM tạo subagent cho tác vụ nhỏ, đọc nhanh hoặc lệnh shell đơn lẻ.\n" +
+        "  + CHỈ gọi subagent khi thật sự cần thiết: Dò quét phạm vi rộng (hàng trăm file) có nguy cơ tràn context, hoặc chạy song song các nhánh nghiên cứu độc lập.";
 
       const args = [
         "run",
@@ -1035,13 +1225,26 @@ const server = http.createServer((req, res) => {
       }
 
       console.log(`[SPAWN] goose ${args.join(" ")}`);
-      const child = spawn(GOOSE_PATH, args, { cwd, env });
+      const child = spawn(GOOSE_PATH, args, { cwd, env, windowsHide: true });
+      sessionCtx.process = child;
+      sessionCtx.info.pid = child.pid;
       activeProcess = child;
+
+      broadcastHubEvent("session_turn_started", {
+        sessionId,
+        tempName: sessionCtx.tempName || null,
+        title,
+        clientId: data.clientId || null,
+        prompt,
+        model,
+        cwd,
+        timestamp: Date.now()
+      });
 
       let buffer = "";
 
       child.stdout.on("data", (chunk) => {
-        if (activeProcess !== child) return;
+        if (sessionCtx.process !== child) return;
         const str = chunk.toString("utf8");
         buffer += str;
         const lines = buffer.split("\n");
@@ -1057,9 +1260,9 @@ const server = http.createServer((req, res) => {
                 for (const item of parsed.message.content) {
                   if (item.type === "text" && item.text) {
                     const textVal = typeof item.text === 'string' ? item.text : (item.text?.value || item.text?.text || JSON.stringify(item.text));
-                    broadcastSSE("text", { text: textVal });
+                    broadcastToSession(sessionCtx, "text", { text: textVal });
                   } else if (item.type === "toolRequest" && item.toolCall) {
-                    broadcastSSE("tool_call", {
+                    broadcastToSession(sessionCtx, "tool_call", {
                       name: item.toolCall.value?.name || "tool",
                       args: item.toolCall.value?.arguments || {}
                     });
@@ -1081,12 +1284,12 @@ const server = http.createServer((req, res) => {
                         outStr = String(trVal || "");
                       }
                     }
-                    broadcastSSE("tool_result", {
+                    broadcastToSession(sessionCtx, "tool_result", {
                       output: outStr,
                       id: item.id || ""
                     });
                   } else if (item.type === "error") {
-                    broadcastSSE("error", { error: item.message || item.text || "Lỗi phản hồi" });
+                    broadcastToSession(sessionCtx, "error", { error: item.message || item.text || "Lỗi phản hồi" });
                   }
                 }
               } else if (parsed.type === "toolResponse") {
@@ -1107,48 +1310,47 @@ const server = http.createServer((req, res) => {
                     outStr = String(trVal || "");
                   }
                 }
-                broadcastSSE("tool_result", {
+                broadcastToSession(sessionCtx, "tool_result", {
                   output: outStr,
                   id: parsed.id || ""
                 });
               } else if (parsed.type === "error") {
-                broadcastSSE("error", { error: parsed.error || "Lỗi tiến trình" });
+                broadcastToSession(sessionCtx, "error", { error: parsed.error || "Lỗi tiến trình" });
               } else if (parsed.type === "complete") {
-                broadcastSSE("complete", parsed);
+                broadcastToSession(sessionCtx, "complete", parsed);
               }
             } catch {
               if (trimmed.toLowerCase().startsWith("error:")) {
-                broadcastSSE("error", { error: trimmed });
+                broadcastToSession(sessionCtx, "error", { error: trimmed });
               } else {
-                broadcastSSE("raw_log", { line: trimmed });
+                broadcastToSession(sessionCtx, "raw_log", { line: trimmed });
               }
             }
           } else {
             if (trimmed.toLowerCase().startsWith("error:")) {
-              broadcastSSE("error", { error: trimmed });
+              broadcastToSession(sessionCtx, "error", { error: trimmed });
             } else {
-              // stream-json answers come from message events; plain stdout is CLI diagnostics.
-              broadcastSSE("raw_log", { line: trimmed });
+              broadcastToSession(sessionCtx, "raw_log", { line: trimmed });
             }
           }
         }
       });
 
       child.stderr.on("data", (chunk) => {
-        if (activeProcess !== child) return;
+        if (sessionCtx.process !== child) return;
         const text = chunk.toString("utf8").trim();
         console.error(`[GOOSE STDERR] ${text}`);
-        if (text) broadcastSSE("stderr", { text });
+        if (text) broadcastToSession(sessionCtx, "stderr", { text });
       });
 
       child.on("close", (code) => {
-        // A replaced process must not finish or clear the next running turn.
-        if (activeProcess !== child) return;
-        console.log(`[GOOSE CLOSE] Exit code: ${code}`);
+        if (sessionCtx.process !== child) return;
+        console.log(`[GOOSE CLOSE] Exit code: ${code} for session ${sessionId}`);
         try {
           const stored = findStoredSession(sessionId);
           if (stored) {
             sessionId = stored.id;
+            sessionCtx.info.sessionId = stored.id;
             if (!resume && isTechnicalSessionName(stored.name)) {
               const renamed = renameSession(sessionId, title);
               if (!renamed.ok) console.error("[SESSION TITLE] " + renamed.error);
@@ -1158,30 +1360,64 @@ const server = http.createServer((req, res) => {
           console.error("[SESSION RESOLVE] " + err.message);
         }
         if (code !== 0 && code !== null) {
-          broadcastSSE("stderr", { text: `Tiến trình kết thúc với mã lỗi: ${code}` });
+          broadcastToSession(sessionCtx, "stderr", { text: `Tiến trình kết thúc với mã lỗi: ${code}` });
         }
-        broadcastSSE("finish", { exitCode: code, sessionId, session_id: sessionId });
+        sessionCtx.isFinished = true;
+        recentlyCompletedSessions.set(sessionCtx.sessionId, sessionCtx);
+        if (sessionCtx.tempName) recentlyCompletedSessions.set(sessionCtx.tempName, sessionCtx);
+        if (sessionCtx.info?.sessionId) recentlyCompletedSessions.set(sessionCtx.info.sessionId, sessionCtx);
+        setTimeout(() => {
+          recentlyCompletedSessions.delete(sessionCtx.sessionId);
+          if (sessionCtx.tempName) recentlyCompletedSessions.delete(sessionCtx.tempName);
+          if (sessionCtx.info?.sessionId) recentlyCompletedSessions.delete(sessionCtx.info.sessionId);
+        }, 15000);
 
-        for (const c of activeClients) {
+        broadcastToSession(sessionCtx, "finish", { exitCode: code, sessionId, session_id: sessionId });
+
+        for (const c of sessionCtx.clients) {
           try { c.end(); } catch {}
         }
-        activeClients.clear();
-        activeProcess = null;
-        activeSessionId = null;
-        activeSessionInfo = null;
+        sessionCtx.clients.clear();
+        activeSessions.delete(sessionCtx.sessionId);
+        if (sessionCtx.tempName) activeSessions.delete(sessionCtx.tempName);
+        if (sessionCtx.info?.sessionId) activeSessions.delete(sessionCtx.info.sessionId);
+        if (activeProcess === child) {
+          activeProcess = null;
+          activeSessionId = null;
+          activeSessionInfo = null;
+          activeSessionEvents = [];
+        }
+        broadcastHubEvent("session_turn_completed", { sessionId, tempName: sessionCtx.tempName || null, exitCode: code });
       });
 
       child.on("error", (err) => {
-        if (activeProcess !== child) return;
-        console.error(`[GOOSE ERROR] ${err.message}`);
-        broadcastSSE("error", { error: err.message });
-        for (const c of activeClients) {
+        if (sessionCtx.process !== child) return;
+        console.error(`[GOOSE ERROR] ${err.message} for session ${sessionId}`);
+        sessionCtx.isFinished = true;
+        recentlyCompletedSessions.set(sessionCtx.sessionId, sessionCtx);
+        if (sessionCtx.tempName) recentlyCompletedSessions.set(sessionCtx.tempName, sessionCtx);
+        if (sessionCtx.info?.sessionId) recentlyCompletedSessions.set(sessionCtx.info.sessionId, sessionCtx);
+        setTimeout(() => {
+          recentlyCompletedSessions.delete(sessionCtx.sessionId);
+          if (sessionCtx.tempName) recentlyCompletedSessions.delete(sessionCtx.tempName);
+          if (sessionCtx.info?.sessionId) recentlyCompletedSessions.delete(sessionCtx.info.sessionId);
+        }, 15000);
+
+        broadcastToSession(sessionCtx, "error", { error: err.message });
+        for (const c of sessionCtx.clients) {
           try { c.end(); } catch {}
         }
-        activeClients.clear();
-        activeProcess = null;
-        activeSessionId = null;
-        activeSessionInfo = null;
+        sessionCtx.clients.clear();
+        activeSessions.delete(sessionCtx.sessionId);
+        if (sessionCtx.tempName) activeSessions.delete(sessionCtx.tempName);
+        if (sessionCtx.info?.sessionId) activeSessions.delete(sessionCtx.info.sessionId);
+        if (activeProcess === child) {
+          activeProcess = null;
+          activeSessionId = null;
+          activeSessionInfo = null;
+          activeSessionEvents = [];
+        }
+        broadcastHubEvent("session_turn_completed", { sessionId, tempName: sessionCtx.tempName || null, error: err.message });
       });
     });
     return;

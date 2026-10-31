@@ -3,13 +3,26 @@ function isTechnicalSessionName(name) {
 }
 
 function sessionTitle(prompt) {
-  const text = String(prompt || '')
+  let text = String(prompt || '')
+    .replace(/<turn-context\b[^>]*>[\s\S]*?<\/turn-context>/gi, '')
     .replace(/^\s*\[[^\]]*\]\s*/, '')
     .replace(/```[\s\S]*?(?:```|$)/g, ' ')
     .replace(/https?:\/\/\S+/g, ' ')
     .replace(/[#*_`>]/g, '')
     .replace(/\s+/g, ' ').trim();
   if (!text) return 'Cu\u1ed9c tr\u00f2 chuy\u1ec7n m\u1edbi';
+  if (/Subagent\s+[A-Za-z0-9_.-]+\s+(?:completed|failed|cancelled|stopped|done|error):/i.test(text)) {
+    const cleanText = text
+      .replace(/Subagent\s+[A-Za-z0-9_.-]+\s+(?:completed|failed|cancelled|stopped|done|error):\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/gi, ' ')
+      .replace(/Subagent\s+[A-Za-z0-9_.-]+\s+(?:completed|failed|cancelled|stopped|done|error):\s*/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (cleanText) {
+      text = cleanText;
+    } else {
+      return 'B\u00e1o c\u00e1o t\u00e1c v\u1ee5 Subagent';
+    }
+  }
   const chars = Array.from(text);
   if (chars.length <= 64) return text;
   const short = chars.slice(0, 61).join('');

@@ -10,7 +10,7 @@ function definition(name) {
   return source.slice(start, end < 0 ? source.length : end).split('\n    async function ')[0].split('\n    // ')[0];
 }
 const context = vm.createContext({ console, setTimeout, clearTimeout, Date, Number, String, Map });
-for (const name of ['messageTime', 'timingLabel', 'safeStringifyCode', 'historyItemText', 'escapeHtml', 'escapeJs', 'buildHistoryItemsFromConversation']) {
+for (const name of ['extractSubagentsAndUserText', 'parseSubagentReports', 'messageTime', 'timingLabel', 'safeStringifyCode', 'historyItemText', 'escapeHtml', 'escapeJs', 'buildHistoryItemsFromConversation']) {
   new vm.Script(definition(name)).runInContext(context);
 }
 assert.equal(context.messageTime({created: 1700000000}), 1700000000000);
@@ -51,4 +51,36 @@ assert.ok(source.includes("loadFullConvBatch('older')"));
 assert.ok(source.includes('requestAnimationFrame(() => requestAnimationFrame(async () =>'));
 assert.ok(!source.includes('items.forEach(item => {\n        renderSingleHistoryItem(item, container'));
 assert.ok(source.includes('if (mount) {\n        chatFeed.appendChild(row)'));
-console.log('Chat UI: 17 regression checks passed');
+const subagentPrompt = 'thêm nút xem web toàn màn hình, Subagent 20261031_23 completed: {"summary":"task 23 done"}Subagent 20261031_22 completed: {"summary":"task 22 done"}Subagent 20261031_21 completed: {"summary":"task 21 done"} với cả mấy cái này tự nhiên thành câu hỏi của tôi, thiết kế lại đi';
+const subagentItems = context.buildHistoryItemsFromConversation([
+  { role: 'user', created: 1700000000, content: [{ type: 'text', text: subagentPrompt }] },
+  { role: 'assistant', created: 1700000005, content: [{ type: 'text', text: 'Đã thiết kế lại giao diện Subagent.' }] }
+]);
+assert.equal(subagentItems.length, 3);
+assert.equal(subagentItems[0].role, 'user');
+assert.ok(subagentItems[0].text.includes('thêm nút xem web toàn màn hình'));
+assert.ok(subagentItems[0].text.includes('thiết kế lại đi'));
+assert.equal(subagentItems[1].role, 'subagent');
+assert.equal(subagentItems[1].subagents.length, 3);
+assert.equal(subagentItems[1].subagents[0].id, '20261031_23');
+assert.equal(subagentItems[2].role, 'assistant');
+assert.equal(subagentItems[2].questionText, subagentItems[0].text);
+assert.ok(source.includes('sub_content_${subSnippetId}" class="p-3.5 sm:p-4 text-xs sm:text-[13px] leading-relaxed subagent-body subagent-markdown-body markdown-body border-t hidden"'));
+assert.ok(source.includes('id="sub_chevron_${subSnippetId}"\n                        style="transform: rotate(-90deg);"'));
+assert.ok(!source.includes('subagent-body ai-content-body'));
+assert.ok(html.includes('#promptInput::placeholder'));
+assert.ok(html.includes('font-style: italic !important;'));
+assert.ok(html.includes('font-weight: 400 !important;'));
+assert.ok(html.includes('placeholder:italic placeholder:font-normal placeholder:text-xs'));
+assert.ok(html.includes('btnToggleComposerCollapse'));
+assert.ok(html.includes('mainDockBox'));
+assert.ok(html.includes('composerCollapsedBar'));
+assert.ok(html.includes('composerBottomArrow'));
+assert.ok(html.includes('composerBottomArrowWrapper'));
+assert.ok(html.includes('btnFloatingExpandComposer'));
+assert.ok(source.includes('function toggleComposerCollapse('));
+assert.ok(source.includes('function handleComposerHeaderClick('));
+assert.ok(source.includes('function initHubEvents('));
+assert.ok(source.includes('clientTabId'));
+assert.ok(source.includes("e.key.toLowerCase() === 'j'"));
+console.log('Chat UI: 33 regression checks passed');

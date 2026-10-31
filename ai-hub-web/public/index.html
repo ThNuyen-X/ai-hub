@@ -554,17 +554,27 @@
     .jump-bottom-arrow { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin: 6px 12px 6px auto; flex-shrink: 0; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-surface); color: var(--text-main); }
     .jump-bottom-arrow:hover { background: var(--bg-hover); color: #3b82f6; }
     .jump-bottom-arrow:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
-    .composer-bottom-arrow[hidden] { display: none; }
-    .composer-suggestions-header { position: relative; display: flex; align-items: center; min-height: 40px; background: transparent; }
+    .composer-bottom-arrow { margin: 0; border-radius: 50%; background: var(--bg-card); box-shadow: 0 3px 12px rgba(0,0,0,.15); transition: transform 120ms ease, background-color 120ms ease; }
+    .composer-bottom-arrow:hover { transform: scale(1.08); background: var(--bg-hover); color: #3b82f6; }
+    .composer-bottom-arrow:active { transform: scale(0.95); }
+    .composer-bottom-arrow[hidden] { display: none !important; }
+    .composer-suggestions-header { position: relative; display: flex; align-items: center; min-height: 38px; background: transparent; }
     .composer-suggestions-header #toggleQuickPromptsBtn { position: relative; z-index: 1; }
-    .composer-suggestions-header .composer-bottom-arrow { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; border-radius: 50%; background: var(--bg-card); box-shadow: 0 2px 8px rgba(0,0,0,.10); }
-    .composer-suggestions-header .composer-bottom-arrow:hover { background: var(--bg-hover); }
 
     .composer-outer { position: absolute; bottom: 0; left: 0; right: 0; background: transparent !important; pointer-events: none; }
     .composer-outer button, .composer-outer textarea, .composer-outer input, .composer-outer select { pointer-events: auto; }
     .composer-outer > .rounded-2xl { pointer-events: auto; }
     .composer-suggestions-header, #quickPromptChipsBar { background: transparent !important; }
     #chatFeed, #fullConvMessagesContainer, .user-bubble, .ai-content-body, .markdown-body { -webkit-user-select: text; user-select: text; }
+    #promptInput::placeholder,
+    #promptInput::-webkit-input-placeholder,
+    #promptInput::-moz-placeholder {
+      font-weight: 400 !important;
+      font-style: italic !important;
+      font-size: 12px !important;
+      color: var(--text-sub) !important;
+      opacity: 0.75;
+    }
     /* Keep intrinsic code/log widths inside their own scroll areas, never the page. */
     html { width: 100%; height: 100%; overflow: hidden; }
     body { width: 100% !important; height: 100dvh !important; margin: 0; }
@@ -811,6 +821,18 @@
           </svg>
         </button>
 
+        <!-- Nút Tạo Phiên Mới nhanh trên Mobile Header -->
+        <button onclick="newSession()" 
+                id="mobileHeaderNewChatBtn"
+                class="lg:hidden p-1.5 rounded-lg border ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shrink-0 shadow-2xs transition-colors text-blue-500"
+                style="background: var(--bg-card); border-color: var(--border);"
+                title="Tạo phiên trò chuyện mới">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </button>
+</button>
+
         <!-- Current Workspace Folder Badge -->
         <button onclick="openWorkspaceModal()" 
                 class="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg border text-xs font-medium ease-spring hover:bg-[var(--bg-hover)] shrink-0 max-w-[75px] xs:max-w-[105px] sm:max-w-[170px] md:max-w-[220px] shadow-2xs group"
@@ -847,6 +869,21 @@
       <!-- Right Header Controls: Full Conversation Popup, Terminal Drawer Toggle, Model Dropdown -->
       <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
         
+        <!-- Fullscreen Toggle Button -->
+        <button onclick="toggleFullscreen()" 
+                id="btnToggleFullscreen"
+                class="flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs"
+                style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
+                title="Bật/Tắt chế độ toàn màn hình (F11)">
+          <svg id="fullscreenIconExpand" class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+          </svg>
+          <svg id="fullscreenIconCompress" class="w-3.5 h-3.5 text-amber-400 shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 4v4H5m4 0L4 3m11 1v4h4m-4 0l5-5M9 20v-4H5m4 0l-5 5m11-1v-4h4m-4 0l5 5"/>
+          </svg>
+          <span class="hidden md:inline text-[11px] font-medium" id="fullscreenBtnText">Toàn màn hình</span>
+        </button>
+
         <!-- Full Conversation Popup Trigger Button -->
         <button onclick="openFullConversationModal()" 
                 id="btnHeaderFullConv"
@@ -1047,25 +1084,57 @@
     </div>
 
     <!-- Bottom Floating Input Dock -->
-    <div class="composer-outer px-2.5 sm:px-6 md:px-8 pb-3 sm:pb-4 pt-1 shrink-0 z-20" style="background: transparent;">
+    <div id="composerOuterContainer" class="composer-outer px-2 sm:px-6 md:px-8 pb-3 sm:pb-4 pt-1 shrink-0 z-20 pointer-events-none" style="background: transparent;">
       
-      <!-- Collapsible Quick Prompt Suggestions Header -->
-      <div class="composer-suggestions-header pb-1.5 px-0.5 text-[11px] select-none">
-        <button type="button" onclick="toggleQuickPrompts()" id="toggleQuickPromptsBtn"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium ease-spring shadow-2xs hover:bg-[var(--bg-hover)] active:scale-95"
-                style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
-                title="Bấm để mở / ẩn danh sách gợi ý câu lệnh">
-          <span class="text-amber-400">💡</span>
-          <span>Gợi ý câu lệnh</span>
-          <svg id="quickPromptsArrow" class="w-3 h-3 text-[var(--text-sub)] transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        <button id="composerBottomArrow" hidden type="button" class="jump-bottom-arrow composer-bottom-arrow" onclick="scrollToBottomSmooth(true)" title="Xuống cuối cuộc trò chuyện" aria-label="Xuống cuối cuộc trò chuyện"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v15m-6-6 6 6 6-6"/></svg></button>
+      <!-- Top Bar: Gợi ý (trái), Nút lướt xuống cuối nguyên bản (chính giữa dòng), Nút mở rộng (phải khi thu gọn) -->
+      <div id="composerTopBar" class="composer-suggestions-header relative flex items-center justify-between w-full max-w-4xl mx-auto pb-1.5 px-0.5 text-[11px] select-none pointer-events-none">
+        
+        <!-- Bên trái: Nút Gợi ý câu lệnh (chỉ hiện khi khung chat mở rộng) -->
+        <div id="quickPromptsContainer" class="pointer-events-auto">
+          <button type="button" onclick="toggleQuickPrompts()" id="toggleQuickPromptsBtn"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium ease-spring shadow-2xs hover:bg-[var(--bg-hover)] active:scale-95"
+                  style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
+                  title="Bấm để mở / ẩn danh sách gợi ý câu lệnh">
+            <span class="text-amber-400">⚡</span>
+            <span class="hidden xs:inline">Gợi ý câu lệnh</span>
+            <span class="xs:hidden">Gợi ý</span>
+            <svg id="quickPromptsArrow" class="w-3 h-3 text-[var(--text-sub)] transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Ở CHÍNH GIỮA DÒNG: Nút lướt xuống cuối cuộc trò chuyện nguyên bản (căn giữa màn hình / dòng) -->
+        <div id="composerBottomArrowWrapper" class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-auto z-10">
+          <button id="composerBottomArrow" hidden type="button" 
+                  class="jump-bottom-arrow composer-bottom-arrow" 
+                  onclick="scrollToBottomSmooth(true)" 
+                  title="Xuống cuối cuộc trò chuyện" 
+                  aria-label="Xuống cuối cuộc trò chuyện">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 4v15m-6-6 6 6 6-6"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Bên phải: Nút mở rộng khung chat (chỉ hiện khi thu gọn khung chat) -->
+        <div id="composerCollapsedBar" class="hidden pointer-events-auto ml-auto">
+          <button id="btnFloatingExpandComposer" type="button" onclick="toggleComposerCollapse(event, false)"
+                  class="h-9 px-3.5 sm:px-4 rounded-full border text-xs font-semibold flex items-center gap-1.5 shadow-md ease-spring hover:opacity-90 active:scale-95 transition-all text-white"
+                  style="background: var(--send-btn-bg); border-color: transparent;"
+                  title="Mở rộng khung nhập chat (Ctrl+J)" aria-label="Mở rộng khung chat">
+            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <span class="text-[11.5px] font-semibold">Mở khung chat</span>
+            <span class="text-[10px] font-mono opacity-70 hidden sm:inline">(Ctrl+J)</span>
+          </button>
+        </div>
+
       </div>
 
       <!-- Quick Prompt Suggestion Chips (Mặc định ẩn) -->
-      <div id="quickPromptChipsBar" class="hidden flex items-center space-x-1.5 overflow-x-auto scrollbar-none pb-2 pt-0.5 text-[11px] select-none">
+      <div id="quickPromptChipsBar" class="hidden flex items-center space-x-1.5 overflow-x-auto scrollbar-none pb-2 pt-0.5 text-[11px] select-none pointer-events-auto">
         <span class="text-[10px] font-semibold uppercase tracking-wider shrink-0 select-none mr-1" style="color: var(--text-sub);">Gợi ý:</span>
         <button type="button" onclick="useQuickPrompt('Tối ưu hóa hiệu năng, dọn dẹp các biến thừa và tái cấu trúc mã nguồn dự án')" 
                 class="shrink-0 px-2.5 py-1 rounded-full border text-[11px] font-medium ease-spring hover:border-blue-500 hover:text-blue-400 active:scale-95"
@@ -1099,36 +1168,50 @@
         </button>
       </div>
 
-
-      <!-- Main Dock Box -->
-      <div class="rounded-2xl border transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/30 overflow-hidden"
+      <!-- Main Dock Box (Khung chat chính, ẩn hoàn toàn cùng nền khi thu gọn) -->
+      <div id="mainDockBox" class="rounded-2xl border transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/30 overflow-hidden pointer-events-auto"
            style="background-color: var(--bg-card); border-color: var(--border); box-shadow: var(--shadow-dock);">
         
-        <!-- Mode Switcher Pill Header inside Composer -->
-        <div class="px-2.5 sm:px-3.5 pt-1.5 pb-1 flex items-center justify-between border-b text-[11px] select-none overflow-x-auto scrollbar-none"
+        <!-- Mode Switcher Pill Header inside Composer (Responsive trên di động) -->
+        <div id="composerDockHeader" class="px-2 sm:px-3.5 pt-1.5 pb-1 flex items-center justify-between border-b text-[11px] select-none gap-1 sm:gap-2"
              style="border-color: var(--border-subtle); background: var(--bg-surface);">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-[9.5px] font-medium hidden xs:inline" style="color: var(--text-sub);">Chế độ:</span>
-            <div id="agentModeSelector" class="flex items-center space-x-0.5 p-0.5 rounded-lg border text-[10.5px]" style="border-color: var(--border-subtle); background: var(--bg-card);">
-              <button type="button" onclick="setAgentMode('agent')" id="modeBtn-agent" class="px-2 py-0.5 rounded font-semibold text-[10.5px] transition-all" style="background: var(--bg-surface); color: var(--text-main);">🤖 Agent & Shell</button>
-              <button type="button" onclick="setAgentMode('chat')" id="modeBtn-chat" class="px-2 py-0.5 rounded font-medium text-[10.5px] transition-all" style="color: var(--text-sub);">💬 Tư vấn</button>
-              <button type="button" onclick="setAgentMode('architect')" id="modeBtn-architect" class="px-2 py-0.5 rounded font-medium text-[10.5px] transition-all" style="color: var(--text-sub);">📐 Kiến trúc</button>
+          <div class="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+            <span class="text-[9.5px] font-medium hidden md:inline shrink-0" style="color: var(--text-sub);">Chế độ:</span>
+            <div id="agentModeSelector" class="flex items-center space-x-0.5 p-0.5 rounded-lg border text-[10px] sm:text-[10.5px] overflow-x-auto scrollbar-none" style="border-color: var(--border-subtle); background: var(--bg-card);" onclick="event.stopPropagation()">
+              <button type="button" onclick="setAgentMode('agent')" id="modeBtn-agent" class="px-1.5 sm:px-2 py-0.5 rounded font-semibold text-[10px] sm:text-[10.5px] whitespace-nowrap transition-all" style="background: var(--bg-surface); color: var(--text-main);">🤖 Agent<span class="hidden sm:inline"> & Shell</span></button>
+              <button type="button" onclick="setAgentMode('chat')" id="modeBtn-chat" class="px-1.5 sm:px-2 py-0.5 rounded font-medium text-[10px] sm:text-[10.5px] whitespace-nowrap transition-all" style="color: var(--text-sub);">💬 Tư vấn</button>
+              <button type="button" onclick="setAgentMode('architect')" id="modeBtn-architect" class="px-1.5 sm:px-2 py-0.5 rounded font-medium text-[10px] sm:text-[10.5px] whitespace-nowrap transition-all" style="color: var(--text-sub);">📐 Kiến trúc</button>
             </div>
           </div>
-          <span class="text-[10px] font-mono opacity-60 hidden sm:inline" style="color: var(--text-sub);">Esc dừng • / mở lệnh</span>
+
+          <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+            <span id="composerEscHint" class="text-[10px] font-mono opacity-60 hidden md:inline" style="color: var(--text-sub);">Esc dừng • / mở lệnh</span>
+            
+            <!-- Nút thu gọn khung chat -->
+            <button type="button" onclick="toggleComposerCollapse(event, true)" id="btnToggleComposerCollapse"
+                    class="h-7 px-2 sm:px-2.5 rounded-md border text-xs ease-spring hover:bg-[var(--bg-hover)] flex items-center gap-1 shadow-2xs transition-colors shrink-0"
+                    style="background: var(--bg-card); border-color: var(--border-subtle); color: var(--text-sub);"
+                    title="Thu gọn khung nhập chat (Ctrl+J)" aria-expanded="true">
+              <svg id="composerCollapseIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+              <span id="composerCollapseBtnText" class="text-[10.5px] font-medium hidden sm:inline">Thu gọn</span>
+            </button>
+          </div>
         </div>
 
+        <!-- Body: Textarea -->
         <textarea id="promptInput" rows="2"
                   placeholder="Giao việc cho AI Agent (Enter gửi, Shift+Enter xuống dòng, gõ / để mở lệnh)..."
-                  class="w-full text-xs md:text-sm px-3 sm:px-4 pt-2.5 sm:pt-3.5 pb-2 bg-transparent border-0 focus:outline-none resize-none leading-relaxed font-medium"
+                  class="w-full text-xs md:text-sm px-2.5 sm:px-4 pt-2 sm:pt-3.5 pb-2 bg-transparent border-0 focus:outline-none resize-none leading-relaxed font-medium placeholder:italic placeholder:font-normal placeholder:text-xs placeholder:text-[var(--text-sub)]"
                   style="color: var(--text-main);"></textarea>
 
-        <!-- Integrated Bottom Toolbar -->
+        <!-- Integrated Bottom Toolbar (Tối ưu responsive) -->
         <div class="px-2 sm:px-3.5 pb-2 pt-1.5 flex items-center justify-between border-t gap-1 sm:gap-2 select-none"
              style="border-color: var(--border-subtle);">
           
-          <!-- Left: Status, Folder, Char Count & Attach File Button -->
-          <div class="flex items-center space-x-1 sm:space-x-1.5 text-[11px] shrink-0">
+          <!-- Left: Status, Folder, Char Count -->
+          <div class="flex items-center space-x-1 sm:space-x-1.5 text-[11px] shrink-0 min-w-0">
             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[10px]"
                   style="background: var(--badge-bg); color: var(--badge-text);" title="Trạng thái phiên làm việc">
               <span id="sessionStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow shrink-0"></span>
@@ -1153,7 +1236,7 @@
 
             <!-- Stop Task Button (Visible while running) -->
             <button id="stopBtn" 
-                    class="hidden h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg sm:rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white ease-spring flex items-center gap-1 shadow-lg shadow-rose-600/30 animate-pulse shrink-0">
+                    class="hidden h-7 sm:h-8 px-2 sm:px-3 rounded-lg sm:rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white ease-spring flex items-center gap-1 shadow-lg shadow-rose-600/30 animate-pulse shrink-0">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
               </svg>
@@ -1181,7 +1264,7 @@
 
       </div>
 
-    </div>
+      </div>
 
     <!-- ========================================================
          BOTTOM IDE TERMINAL & EXECUTION DRAWER (Ctrl+`)
@@ -1315,6 +1398,18 @@
               <span class="text-[var(--text-main)] font-medium">Mở Universal Command Palette</span>
               <div class="flex items-center gap-1 font-mono text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">K</kbd>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
+              <span class="text-[var(--text-main)] font-medium">Bật / Tắt toàn màn hình (Fullscreen)</span>
+              <div class="flex items-center gap-1 font-mono text-[11px]">
+                <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">F11</kbd>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
+              <span class="text-[var(--text-main)] font-medium">Đóng / Mở khung nhập chat</span>
+              <div class="flex items-center gap-1 font-mono text-[11px]">
+                <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">J</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
@@ -1870,6 +1965,15 @@
        CORE CLIENT JAVASCRIPT
        ======================================================== -->
   <script>
+    function safeRandomId() {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        try {
+          return crypto.randomUUID();
+        } catch (_) {}
+      }
+      return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12);
+    }
+
     const welcomeBannerTemplate = document.getElementById('welcomeBanner').cloneNode(true);
 
     // GLOBAL STATE
@@ -2520,6 +2624,7 @@
       }
       localStorage.setItem('ai_hub_pinned_sessions', JSON.stringify(Array.from(pinnedSessionsSet)));
       loadWorkspaceTree();
+      initHubEvents();
     }
 
     // FULLSCREEN CODE VIEWER
@@ -3222,13 +3327,13 @@
     const headerLiveTimerText = document.getElementById('headerLiveTimerText');
 
     // LIVE STOPWATCH CONTROLLER
-    function startLiveExecutionTimer() {
-      liveExecutionStartTime = Date.now();
+    function startLiveExecutionTimer(customStartTime = null) {
+      liveExecutionStartTime = customStartTime || Date.now();
       if (headerLiveTimerBadge) headerLiveTimerBadge.classList.remove('hidden');
       if (liveExecutionTimerInterval) clearInterval(liveExecutionTimerInterval);
 
       liveExecutionTimerInterval = setInterval(() => {
-        const elapsed = (Date.now() - liveExecutionStartTime) / 1000;
+        const elapsed = Math.max(0, (Date.now() - liveExecutionStartTime) / 1000);
         const formatted = elapsed.toFixed(1) + 's';
         if (headerLiveTimerText) headerLiveTimerText.innerText = formatted;
         const termStatus = document.getElementById('terminalDrawerStatus');
@@ -3471,6 +3576,56 @@
     }
 
     // QUICK PROMPT CHIPS & SLASH COMMANDS
+    // TOGGLE COMPOSER COLLAPSE / EXPAND
+        // Unique Tab Client ID for multi-device sync
+    const clientTabId = 'tab_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now();
+    let isComposerCollapsed = false;
+    let lastStreamedTurnSessionId = null;
+    let lastTurnCompletedAt = 0;
+
+    function toggleComposerCollapse(event = null, forceState = null) {
+      if (event && typeof event.stopPropagation === 'function') {
+        event.stopPropagation();
+      }
+      if (typeof soundEffects !== 'undefined' && soundEffects.playClick) {
+        soundEffects.playClick();
+      }
+      const mainBox = document.getElementById('mainDockBox');
+      const collapsedBar = document.getElementById('composerCollapsedBar');
+      const quickPromptsContainer = document.getElementById('quickPromptsContainer');
+      const chipsBar = document.getElementById('quickPromptChipsBar');
+      if (!mainBox || !collapsedBar) return;
+
+      if (forceState !== null) {
+        isComposerCollapsed = forceState;
+      } else {
+        isComposerCollapsed = !isComposerCollapsed;
+      }
+
+      if (isComposerCollapsed) {
+        mainBox.classList.add('hidden');
+        if (quickPromptsContainer) quickPromptsContainer.classList.add('hidden');
+        if (chipsBar) chipsBar.classList.add('hidden');
+        collapsedBar.classList.remove('hidden');
+      } else {
+        mainBox.classList.remove('hidden');
+        collapsedBar.classList.add('hidden');
+        if (quickPromptsContainer) quickPromptsContainer.classList.remove('hidden');
+        setTimeout(() => {
+          promptInput.focus();
+          autoResizeTextarea();
+        }, 50);
+      }
+
+      if (typeof syncComposerOverlaySpace === 'function') {
+        syncComposerOverlaySpace();
+      }
+    }
+
+    function handleComposerHeaderClick(event) {
+      // Kept for compatibility
+    }
+
     function toggleQuickPrompts() {
       soundEffects.playClick();
       const bar = document.getElementById('quickPromptChipsBar');
@@ -3632,7 +3787,7 @@
       }
       if (!sessionId || sessionId.startsWith('new-')) {
         newSession(false);
-        updateSessionUrl(sessionId || 'new-' + crypto.randomUUID(), true);
+        updateSessionUrl(sessionId || 'new-' + safeRandomId(), true);
         return;
       }
       const matched = allSessionsCache.find(s => s.id === sessionId || s.name === sessionId);
@@ -3643,6 +3798,10 @@
     window.addEventListener('popstate', () => { restoreSessionFromUrl(); });
 
     function newSession(updateUrl = true) {
+      if (window.activeChatEventSource) {
+        try { window.activeChatEventSource.close(); } catch (_) {}
+        window.activeChatEventSource = null;
+      }
       initialBottomFollow = false;
       sessionViewVersion++;
       allowAutoReconnect = false;
@@ -3657,8 +3816,21 @@
         if (sidebar) sidebar.classList.add('-translate-x-full');
         if (backdrop) backdrop.classList.add('hidden');
       }
+            // Auto fallback workspace for mobile / new sessions
+      if (!currentWorkspace) {
+        try {
+          const savedWs = localStorage.getItem('ai_hub_last_workspace');
+          if (savedWs) currentWorkspace = savedWs;
+          else if (allWorkspacesCache && allWorkspacesCache.length > 0) currentWorkspace = allWorkspacesCache[0];
+          if (currentWorkspace) {
+            const base = currentWorkspace.split(/[\\/]/).pop() || currentWorkspace;
+            if (currentSessionFolder) currentSessionFolder.innerText = base;
+            if (currentSessionFolderTag) currentSessionFolderTag.innerText = base;
+          }
+        } catch (_) {}
+      }
       currentSessionId = null;
-      if (updateUrl && currentWorkspace) updateSessionUrl('new-' + crypto.randomUUID());
+      if (updateUrl && currentWorkspace) updateSessionUrl('new-' + safeRandomId());
       currentSessionTitle.innerText = 'Cuộc trò chuyện mới';
       chatFeed.innerHTML = '';
       
@@ -3682,6 +3854,8 @@
     function newSessionInWorkspace(e, wsPath) {
       if (e) e.stopPropagation();
       currentWorkspace = wsPath;
+      try { localStorage.setItem('ai_hub_last_workspace', wsPath); } catch (_) {}
+
       const base = wsPath.split(/[\\/]/).pop() || wsPath;
       currentSessionFolder.innerText = base;
       currentSessionFolderTag.innerText = base;
@@ -3740,7 +3914,7 @@
     // EXPORT TO MARKDOWN (.md)
     function exportCurrentChatToMarkdown() {
       soundEffects.playClick();
-      const messages = chatFeed.querySelectorAll('.group');
+      const messages = chatFeed.querySelectorAll('.group, .subagent-turn-card');
       if (messages.length === 0) {
         showToast('Chưa có nội dung trò chuyện để xuất file', 'warning');
         return;
@@ -3751,8 +3925,10 @@
       md += `*Thời gian xuất:* ${new Date().toLocaleString('vi-VN')}\n\n---\n\n`;
 
       messages.forEach(msg => {
-        const isUser = msg.classList.contains('justify-end');
-        if (isUser) {
+        if (msg.classList.contains('subagent-turn-card')) {
+          const bodies = Array.from(msg.querySelectorAll('.subagent-body, .subagent-markdown-body')).map(b => b.innerText.trim()).filter(Boolean).join('\n\n---\n\n');
+          md += `### ⚡ Báo cáo Subagent\n\n${bodies}\n\n`;
+        } else if (msg.classList.contains('justify-end')) {
           const userBubble = msg.querySelector('.user-bubble');
           const text = userBubble ? userBubble.innerText : '';
           md += `### 👤 Người dùng\n\n${text}\n\n`;
@@ -3777,6 +3953,52 @@
       showToast('Đã xuất toàn bộ hội thoại ra file .md thành công!', 'success');
       soundEffects.playChime();
     }
+
+    
+    // FULLSCREEN TOGGLE & STATE MANAGEMENT
+    function toggleFullscreen() {
+      soundEffects.playClick();
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) {
+          docEl.requestFullscreen().catch(err => {
+            showToast('Không thể bật toàn màn hình: ' + err.message, 'warning');
+          });
+        } else if (docEl.webkitRequestFullscreen) {
+          docEl.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(err => console.error(err));
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    }
+
+    function updateFullscreenUI() {
+      const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const iconExpand = document.getElementById('fullscreenIconExpand');
+      const iconCompress = document.getElementById('fullscreenIconCompress');
+      const btnText = document.getElementById('fullscreenBtnText');
+      const btn = document.getElementById('btnToggleFullscreen');
+      if (iconExpand && iconCompress) {
+        if (isFull) {
+          iconExpand.classList.add('hidden');
+          iconCompress.classList.remove('hidden');
+          if (btnText) btnText.textContent = 'Thu nhỏ';
+          if (btn) btn.title = 'Thoát toàn màn hình (Esc hoặc F11)';
+        } else {
+          iconExpand.classList.remove('hidden');
+          iconCompress.classList.add('hidden');
+          if (btnText) btnText.textContent = 'Toàn màn hình';
+          if (btn) btn.title = 'Bật/Tắt toàn màn hình (F11)';
+        }
+      }
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenUI);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
 
     // TERMINAL DRAWER CONTROLS
     function toggleTerminalDrawer(forceState) {
@@ -3973,6 +4195,8 @@
       // 1. Actions
       const actions = [
         { label: 'Tạo phiên làm việc mới', shortcut: 'Ctrl+N', icon: '⚡', category: 'Lệnh', action: () => newSession() },
+        { label: 'Bật / Tắt toàn màn hình', shortcut: 'F11', icon: '⛶', category: 'Giao diện', action: () => toggleFullscreen() },
+        { label: 'Đóng / Mở khung nhập chat', shortcut: 'Ctrl+J', icon: '💬', category: 'Giao diện', action: () => toggleComposerCollapse() },
         { label: 'Bật / Tắt Terminal Drawer', shortcut: 'Ctrl+`', icon: '💻', category: 'Lệnh', action: () => toggleTerminalDrawer() },
         { label: 'Xuất hội thoại ra Markdown (.md)', shortcut: 'Ctrl+E', icon: '📥', category: 'Lệnh', action: () => exportCurrentChatToMarkdown() },
         { label: 'Đổi tên phiên làm việc hiện tại', shortcut: '', icon: '✏️', category: 'Lệnh', action: () => renameCurrentSessionPrompt() },
@@ -4083,6 +4307,9 @@
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         openCommandPalette();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        toggleComposerCollapse();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault();
         newSession();
@@ -4117,6 +4344,137 @@
         closeModelDropdown();
       }
     });
+
+    
+    // ========================================================
+    // GLOBAL HUB EVENT STREAM (MULTI-DEVICE REALTIME SYNC)
+    // ========================================================
+    function stopGeneration(notifyServer = true) {
+      if (window.activeChatEventSource) {
+        try { window.activeChatEventSource.close(); } catch (_) {}
+        window.activeChatEventSource = null;
+      }
+      isGenerating = false;
+      runningWorkspace = null;
+      sendBtn.classList.remove('hidden');
+      stopBtn.classList.add('hidden');
+      stopBtn.innerText = 'Dừng';
+      sessionStatus.innerText = 'Sẵn sàng';
+      sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
+      stopLiveExecutionTimer(true);
+      if (notifyServer && currentSessionId) {
+        fetch('/api/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: currentSessionId })
+        }).catch(() => {});
+      }
+    }
+    window.stopGeneration = stopGeneration;
+
+    function initHubEvents(force = false) {
+      if (typeof EventSource === 'undefined') return;
+      if (window._globalHubEventSource && !force && window._globalHubEventSource.readyState !== EventSource.CLOSED) {
+        return;
+      }
+      if (window._globalHubEventSource) {
+        try { window._globalHubEventSource.close(); } catch (_) {}
+      }
+      try {
+        const hubSource = new EventSource('/api/hub/events');
+        window._globalHubEventSource = hubSource;
+
+        hubSource.onopen = () => {
+          console.log('[HubEvents] Global SSE connected');
+        };
+
+        hubSource.addEventListener('session_turn_started', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data.clientId && data.clientId === clientTabId) {
+              return; // Do not duplicate if this tab sent the prompt
+            }
+
+            const isCurrentSession = currentSessionId && (currentSessionId === data.sessionId || currentSessionId === data.tempName);
+            const isIdleOrNew = !currentSessionId || currentSessionId.startsWith('new-') || currentSessionHistoryItems.length === 0;
+
+            if (isCurrentSession) {
+              if (!isGenerating) {
+                const promptText = (data.prompt || '').trim();
+                const lastItem = currentSessionHistoryItems[currentSessionHistoryItems.length - 1];
+                const hasPrompt = lastItem && lastItem.role === 'user' && (lastItem.text || '').trim() === promptText;
+                if (!hasPrompt && promptText) {
+                  appendUserMessage(promptText);
+                }
+                reconnectRunningSession(data.sessionId, { prompt: data.prompt, model: data.model, cwd: data.cwd }, currentSessionTitle?.innerText || data.sessionId);
+              }
+            } else if (isIdleOrNew) {
+              if (data.cwd) {
+                currentWorkspace = data.cwd;
+                const base = data.cwd.split(/[\/]/).pop() || data.cwd;
+                currentSessionFolder.innerText = base;
+                currentSessionFolderTag.innerText = base;
+              }
+              currentSessionId = data.sessionId;
+              chatFeed.innerHTML = '';
+              const promptText = (data.prompt || '').trim();
+              if (promptText) {
+                appendUserMessage(promptText);
+              }
+              reconnectRunningSession(data.sessionId, { prompt: data.prompt, model: data.model, cwd: data.cwd }, data.title || data.tempName || data.sessionId);
+            } else {
+              loadWorkspaceTree();
+            }
+          } catch (err) {
+            console.error('[HubEvents] Error processing session_turn_started:', err);
+          }
+        });
+
+        hubSource.addEventListener('session_turn_completed', (e) => {
+          try {
+            const data = JSON.parse(e.data || '{}');
+            if (data.tempName && currentSessionId === data.tempName && data.sessionId) {
+              currentSessionId = data.sessionId;
+              updateSessionUrl(currentSessionId, true);
+            }
+            const justCompletedStreaming = (lastStreamedTurnSessionId === data.sessionId && (Date.now() - lastTurnCompletedAt) < 10000);
+            if (data.sessionId && currentSessionId === data.sessionId && !isGenerating && !justCompletedStreaming) {
+              selectSession(currentSessionId, currentSessionTitle?.innerText, currentWorkspace, false);
+            }
+          } catch (_) {}
+          loadWorkspaceTree();
+        });
+
+        hubSource.addEventListener('session_stopped', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if ((currentSessionId === data.sessionId || !data.sessionId) && isGenerating) {
+              stopGeneration(false);
+            }
+            loadWorkspaceTree();
+          } catch {}
+        });
+
+        hubSource.addEventListener('sessions_updated', (e) => {
+          try {
+            const data = JSON.parse(e.data || '{}');
+            if (data.type === 'session_renamed' && currentSessionId === data.sessionId && data.name) {
+              if (currentSessionTitle) currentSessionTitle.innerText = data.name;
+            } else if (data.type === 'session_deleted' && currentSessionId === data.sessionId) {
+              showToast('Phiên làm việc này đã bị xóa từ thiết bị khác', 'info');
+              newSession(true);
+            }
+          } catch (_) {}
+          loadWorkspaceTree();
+        });
+
+        hubSource.onerror = () => {
+          // EventSource automatically reconnects
+        };
+      } catch (err) {
+        console.warn('[HubEvents] Failed to initialize:', err);
+      }
+    }
 
     // LOAD WORKSPACE TREE (VS Code Tree Style with Pinned & Sessions Counts)
     async function loadWorkspaceTree() {
@@ -4364,6 +4722,14 @@
 
       } catch (err) {
         console.error('Error loading workspaces tree:', err);
+        if (workspaceTree) {
+          workspaceTree.innerHTML = `
+            <div class="p-4 text-center text-xs" style="color: var(--text-sub);">
+              <div class="text-amber-400 mb-1">⚠️ Không thể nạp danh sách dự án</div>
+              <button onclick="loadWorkspaceTree()" class="mt-2 px-2.5 py-1 text-[11px] rounded bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--bg-hover)] text-[var(--text-main)]">Thử lại</button>
+            </div>
+          `;
+        }
       }
     }
 
@@ -4391,7 +4757,11 @@
                }"
                onclick="selectSession('${escapeJs(s.id)}', '${escapeJs(s.name)}', '${escapeJs(s.cwd || currentWorkspace)}')">
             <div class="flex items-center space-x-1.5 truncate mr-1 min-w-0 flex-1">
-              <span class="text-amber-400 text-xs shrink-0">★</span>
+              ${s.isRunning ? `
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping shrink-0" title="Đang chạy"></span>
+              ` : `
+                <span class="text-amber-400 text-xs shrink-0">★</span>
+              `}
               <span class="truncate">${escapeHtml(s.name || s.id)}</span>
             </div>
             <button onclick="togglePinSession(event, '${escapeJs(s.id)}')"
@@ -4433,6 +4803,236 @@
     let currentSessionHistoryItems = [];
     let currentHistoryRenderIndex = 0; // Vị trí tin nhắn bắt đầu render trong currentSessionHistoryItems
     const HISTORY_CHUNK_SIZE = 15; // Số lượng tin nhắn nạp mỗi lần
+
+    
+    // ========================================================
+    // SUBAGENT REPORT PARSER & RENDERING
+    // ========================================================
+    function extractSubagentsAndUserText(text) {
+      if (!text || typeof text !== 'string') return { subagents: null, userText: text || '' };
+      const headerRegex = /Subagent\s+([A-Za-z0-9_.-]+)\s+(completed|failed|cancelled|stopped|done|error):\s*/gi;
+      const blocks = [];
+      let match;
+      while ((match = headerRegex.exec(text)) !== null) {
+        const id = match[1];
+        const status = match[2].toLowerCase();
+        const startIndex = match.index;
+        const contentStartIndex = headerRegex.lastIndex;
+        let contentEndIndex = contentStartIndex;
+        const remaining = text.slice(contentStartIndex);
+        const trimmedRemaining = remaining.trimStart();
+        const leadingWhitespaceLen = remaining.length - trimmedRemaining.length;
+
+        if (trimmedRemaining.startsWith('{')) {
+          let depth = 0, inString = false, escape = false, jsonEnd = -1;
+          const actualJsonStart = contentStartIndex + leadingWhitespaceLen;
+          for (let i = actualJsonStart; i < text.length; i++) {
+            const char = text[i];
+            if (escape) { escape = false; continue; }
+            if (char === '\\') { escape = true; continue; }
+            if (char === '"') { inString = !inString; continue; }
+            if (!inString) {
+              if (char === '{') depth++;
+              else if (char === '}') {
+                depth--;
+                if (depth === 0) { jsonEnd = i + 1; break; }
+              }
+            }
+          }
+          if (jsonEnd !== -1) contentEndIndex = jsonEnd;
+          else {
+            const nextSubagent = text.slice(contentStartIndex).search(/Subagent\s+[A-Za-z0-9_.-]+\s+(completed|failed|cancelled|stopped|done|error):/i);
+            contentEndIndex = nextSubagent !== -1 ? contentStartIndex + nextSubagent : text.length;
+          }
+        } else {
+          const nextSubagent = text.slice(contentStartIndex).search(/Subagent\s+[A-Za-z0-9_.-]+\s+(completed|failed|cancelled|stopped|done|error):/i);
+          contentEndIndex = nextSubagent !== -1 ? contentStartIndex + nextSubagent : text.length;
+        }
+
+        const rawContent = text.slice(contentStartIndex, contentEndIndex).trim();
+        let summary = '';
+        try {
+          if (rawContent.startsWith('{') && rawContent.endsWith('}')) {
+            const parsed = JSON.parse(rawContent);
+            summary = parsed.summary || parsed.result || parsed.output || parsed.message || parsed.error || '';
+          }
+        } catch (_) {}
+        if (!summary) {
+          const m = rawContent.match(/"summary"\s*:\s*"([\s\S]*)"\s*}/);
+          if (m) {
+            try { summary = JSON.parse('"' + m[1] + '"'); } catch (_) { summary = m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'); }
+          }
+        }
+        if (!summary) summary = rawContent;
+        blocks.push({ id, status, summary, raw: rawContent, startIndex, endIndex: contentEndIndex });
+        headerRegex.lastIndex = contentEndIndex;
+      }
+      if (blocks.length === 0) return { subagents: null, userText: text };
+
+      let userTextParts = [];
+      let lastIndex = 0;
+      for (const b of blocks) {
+        if (b.startIndex > lastIndex) {
+          const seg = text.slice(lastIndex, b.startIndex).trim();
+          if (seg) userTextParts.push(seg);
+        }
+        lastIndex = b.endIndex;
+      }
+      if (lastIndex < text.length) {
+        const seg = text.slice(lastIndex).trim();
+        if (seg) userTextParts.push(seg);
+      }
+      return { subagents: blocks, userText: userTextParts.join('\n\n').trim() };
+    }
+
+    function parseSubagentReports(text) {
+      const res = extractSubagentsAndUserText(text);
+      return res.subagents;
+    }
+
+    function renderSubagentReportCard(item, container, prepend = false) {
+      const row = document.createElement('div');
+      row.className = 'w-full my-3.5 px-1 sm:px-2 subagent-turn-card';
+      row.dataset.turnQuestion = item.questionText || '';
+
+      const subagents = item.subagents || [];
+      const cardId = 'subcard_' + Math.random().toString(36).substring(2, 9);
+      
+      const fullTextToCopy = subagents.map(s => `[Subagent ${s.id} - ${s.status.toUpperCase()}]\n${s.summary}`).join('\n\n---\n\n');
+      window._codeSnippets[cardId] = fullTextToCopy;
+
+      const allCompleted = subagents.every(s => s.status === 'completed' || s.status === 'done');
+      const hasFailed = subagents.some(s => s.status === 'failed' || s.status === 'error');
+
+      const mainStatusBadge = hasFailed 
+        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-rose-500/15 text-rose-400 border border-rose-500/25">✕ Có tác vụ lỗi</span>`
+        : (allCompleted 
+          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">✓ Tất cả hoàn thành</span>`
+          : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-amber-500/15 text-amber-400 border border-amber-500/25">⚠ Hoàn tất</span>`);
+
+      let subagentItemsHtml = '';
+      subagents.forEach((sub, idx) => {
+        const subSnippetId = cardId + '_' + idx;
+        window._codeSnippets[subSnippetId] = (sub.summary || sub.raw || '').trim();
+
+        const isDone = sub.status === 'completed' || sub.status === 'done';
+        const isErr = sub.status === 'failed' || sub.status === 'error';
+        const statusPill = isErr
+          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">✕ Thất bại</span>`
+          : (isDone 
+            ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">✓ Hoàn thành</span>`
+            : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">⚠ ${escapeHtml(sub.status)}</span>`);
+
+        let parsedSummaryHtml = '';
+        try {
+          parsedSummaryHtml = marked.parse(sub.summary || sub.raw || '');
+        } catch (_) {
+          parsedSummaryHtml = `<p class="whitespace-pre-wrap">${escapeHtml(sub.summary || sub.raw || '')}</p>`;
+        }
+
+        subagentItemsHtml += `
+          <div class="rounded-xl border my-2 overflow-hidden transition-all duration-200" 
+               style="background: var(--bg-card); border-color: var(--border-subtle);">
+            <div class="px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-2 cursor-pointer select-none hover:bg-[var(--bg-hover)] transition-colors"
+                 onclick="toggleSubagentAccordion('${subSnippetId}')"
+                 style="background: var(--tool-header-bg);"
+                 title="Bấm để đóng/mở nội dung">
+              <div class="flex items-center space-x-2 sm:space-x-2.5 min-w-0">
+                <svg class="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span class="font-mono text-xs font-semibold text-[var(--text-main)] truncate">Subagent ${escapeHtml(sub.id)}</span>
+                ${statusPill}
+              </div>
+              <div class="flex items-center space-x-1.5 shrink-0" onclick="event.stopPropagation()">
+                <button onclick="copySnippet('${subSnippetId}', this)" 
+                        class="opacity-80 hover:opacity-100 ease-spring text-[10.5px] px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] flex items-center gap-1 text-[var(--text-sub)] hover:text-[var(--text-main)]"
+                        title="Sao chép báo cáo của subagent này">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  <span class="hidden sm:inline">Sao chép</span>
+                </button>
+                <button onclick="toggleSubagentAccordion('${subSnippetId}')" 
+                        id="sub_chevron_${subSnippetId}"
+                        style="transform: rotate(-90deg);"
+                        class="p-1 rounded text-zinc-400 hover:text-white transition-transform duration-200"
+                        title="Đóng / Mở">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+              </div>
+            </div>
+            <div id="sub_content_${subSnippetId}" class="p-3.5 sm:p-4 text-xs sm:text-[13px] leading-relaxed subagent-body subagent-markdown-body markdown-body border-t hidden"
+                 style="border-color: var(--border-subtle); background: var(--bg-card);">
+              ${parsedSummaryHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      row.innerHTML = `
+        <div class="max-w-4xl mx-auto rounded-2xl border shadow-sm overflow-hidden"
+             style="background: var(--bg-card); border-color: var(--border);">
+          <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 flex items-center justify-between border-b"
+               style="background: var(--tool-header-bg); border-color: var(--border-subtle);">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs"
+                   style="background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(168,85,247,0.18)); border-color: rgba(168,85,247,0.3); color: #c084fc;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+              </div>
+              <div class="flex items-center space-x-2 min-w-0">
+                <span class="text-xs sm:text-[13px] font-semibold text-[var(--text-main)] truncate">Báo cáo Subagent</span>
+                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-mono font-medium shrink-0"
+                      style="background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3);">
+                  ${subagents.length} tác vụ
+                </span>
+                ${mainStatusBadge}
+              </div>
+            </div>
+            <div class="flex items-center space-x-1.5 shrink-0">
+              <button onclick="copySnippet('${cardId}', this)" 
+                      class="px-2 py-1 rounded-md text-[11px] font-medium border ease-spring hover:bg-[var(--bg-hover)] text-[var(--text-sub)] hover:text-[var(--text-main)] flex items-center gap-1 shadow-2xs"
+                      style="border-color: var(--border-subtle); background: var(--bg-card);"
+                      title="Sao chép toàn bộ nội dung báo cáo của các Subagent">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span class="hidden sm:inline">Sao chép tất cả</span>
+              </button>
+            </div>
+          </div>
+          <div class="p-2 sm:p-3 space-y-1">
+            ${subagentItemsHtml}
+          </div>
+          <div class="px-3.5 py-1.5 border-t flex items-center justify-between text-[11px] text-[var(--text-sub)] select-none"
+               style="border-color: var(--border-subtle); background: var(--tool-header-bg);">
+            <span class="subagent-card-footer-timing font-mono">${item.startedAt ? new Date(item.startedAt).toLocaleString('vi-VN') : ''}</span>
+            <span class="text-[10.5px] opacity-75">${subagents.length} tác vụ Subagent hoàn tất</span>
+          </div>
+        </div>
+      `;
+
+      enhanceChatElement(row);
+      addMessageTiming(row, item);
+
+      if (prepend && container.firstChild) {
+        container.insertBefore(row, container.firstChild);
+      } else {
+        container.appendChild(row);
+      }
+    }
+
+    function toggleSubagentAccordion(snippetId) {
+      const content = document.getElementById('sub_content_' + snippetId);
+      const chevron = document.getElementById('sub_chevron_' + snippetId);
+      if (!content) return;
+      const isHidden = content.classList.contains('hidden');
+      if (isHidden) {
+        content.classList.remove('hidden');
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+      } else {
+        content.classList.add('hidden');
+        if (chevron) chevron.style.transform = 'rotate(-90deg)';
+      }
+    }
 
     function buildHistoryItemsFromConversation(conversation) {
       const items = [];
@@ -4483,7 +5083,15 @@
             .replace(/<turn-context\b[^>]*>[\s\S]*?<\/turn-context>/gi, '')
             .trim();
           if (fullPrompt) {
-            items.push({ role: 'user', text: fullPrompt, startedAt: messageTime(msg) });
+            const extracted = extractSubagentsAndUserText(fullPrompt);
+            if (extracted.subagents && extracted.subagents.length > 0) {
+              if (extracted.userText) {
+                items.push({ role: 'user', text: extracted.userText, startedAt: messageTime(msg) });
+              }
+              items.push({ role: 'subagent', subagents: extracted.subagents, text: fullPrompt, startedAt: messageTime(msg) });
+            } else {
+              items.push({ role: 'user', text: fullPrompt, startedAt: messageTime(msg) });
+            }
           }
         } else if (msg.role === 'assistant') {
           items.push({ role: 'assistant', rawContent: msg.content || [], toolResponsesMap, startedAt: messageTime(msg) });
@@ -4499,7 +5107,7 @@
           item.questionText = turn.text;
           item.questionItem = turn;
         }
-        if (item.role !== 'user' && turn && turn.startedAt && item.startedAt) {
+        if (item.role !== 'user' && item.role !== 'subagent' && turn && turn.startedAt && item.startedAt) {
           turn.elapsedMs = Math.max(0, item.startedAt - turn.startedAt);
           item.elapsedMs = turn.elapsedMs;
         }
@@ -4527,10 +5135,17 @@
 
     function timingLabel(item) {
       const start = item.startedAt ? new Date(item.startedAt).toLocaleString('vi-VN') : 'Không có thời gian bắt đầu';
-      return start + (item.role !== 'user' && Number.isFinite(item.elapsedMs) ? ` · Tổng thời gian: ${(item.elapsedMs / 1000).toFixed(1)} giây` : item.role !== 'user' && item.isRunning ? ' · Đang thực hiện…' : '');
+      return start + (item.role !== 'user' && item.role !== 'subagent' && Number.isFinite(item.elapsedMs) ? ` · Tổng thời gian: ${(item.elapsedMs / 1000).toFixed(1)} giây` : item.role !== 'user' && item.role !== 'subagent' && item.isRunning ? ' · Đang thực hiện…' : '');
     }
 
     function addMessageTiming(row, item) {
+      if (item.role === 'subagent') {
+        const footerTiming = row.querySelector('.subagent-card-footer-timing');
+        if (footerTiming && item.startedAt) {
+          footerTiming.textContent = new Date(item.startedAt).toLocaleString('vi-VN');
+        }
+        return null;
+      }
       const label = document.createElement('div');
       label.className = 'message-timing';
       label.textContent = timingLabel(item);
@@ -4539,14 +5154,16 @@
         label.classList.add('turn-duration-footer');
         answerBody.parentElement.appendChild(label);
       } else {
-        row.firstElementChild.appendChild(label);
+        row.firstElementChild?.appendChild(label);
       }
       item.timingElement = label;
       return label;
     }
 
     function renderSingleHistoryItem(item, container, prepend = false) {
-      if (item.role === 'user') {
+      if (item.role === 'subagent') {
+        renderSubagentReportCard(item, container, prepend);
+      } else if (item.role === 'user') {
         const row = document.createElement('div');
         row.className = 'w-full flex justify-end my-3 px-1 sm:px-2 group';
         const isCodeLike = item.text.includes('\n') || item.text.startsWith('$') || item.text.includes('kubectl') || item.text.includes('curl ') || item.text.includes('SELECT ');
@@ -4683,6 +5300,19 @@
     }
 
     async function selectSession(sessionId, sessionTitle, wsPath, updateUrl = true) {
+      if (window.activeChatEventSource) {
+        try { window.activeChatEventSource.close(); } catch (_) {}
+        window.activeChatEventSource = null;
+      }
+      if (sessionId === currentSessionId && isGenerating) {
+        if (window.innerWidth < 1024) {
+          const sidebar = document.getElementById('sidebar');
+          const backdrop = document.getElementById('sidebarBackdrop');
+          if (sidebar) sidebar.classList.add('-translate-x-full');
+          if (backdrop) backdrop.classList.add('hidden');
+        }
+        return;
+      }
       soundEffects.playClick();
       if (window.innerWidth < 1024) {
         const sidebar = document.getElementById('sidebar');
@@ -4698,6 +5328,8 @@
       currentSessionId = sessionId;
       if (wsPath) {
         currentWorkspace = wsPath;
+      try { localStorage.setItem('ai_hub_last_workspace', wsPath); } catch (_) {}
+
         const base = wsPath.split(/[\\/]/).pop() || wsPath;
         currentSessionFolder.innerText = base;
         currentSessionFolderTag.innerText = base;
@@ -4726,32 +5358,41 @@
         if (!data || !data.conversation || data.conversation.length === 0) {
           currentSessionHistoryItems = [];
           currentHistoryRenderIndex = 0;
-          chatFeed.innerHTML = `
-            <div class="text-center py-16 text-xs" style="color: var(--text-sub);">
-              Phiên này chưa có tin nhắn hoặc lịch sử đã được lưu trữ.
-            </div>
-          `;
-          return;
+          if (!data?.isRunning) {
+            chatFeed.innerHTML = `
+              <div class="text-center py-16 text-xs" style="color: var(--text-sub);">
+                Phiên này chưa có tin nhắn hoặc lịch sử đã được lưu trữ.
+              </div>
+            `;
+          }
+        } else {
+          currentSessionHistoryItems = buildHistoryItemsFromConversation(data.conversation);
+          const totalItems = currentSessionHistoryItems.length;
+
+          if (totalItems <= HISTORY_CHUNK_SIZE) {
+            currentHistoryRenderIndex = 0;
+            currentSessionHistoryItems.forEach(item => {
+              renderSingleHistoryItem(item, chatFeed, false);
+            });
+          } else {
+            currentHistoryRenderIndex = totalItems - HISTORY_CHUNK_SIZE;
+            const initialChunk = currentSessionHistoryItems.slice(currentHistoryRenderIndex);
+            initialChunk.forEach(item => {
+              renderSingleHistoryItem(item, chatFeed, false);
+            });
+            renderHistoryLazyBanner();
+            attachHistoryScrollListener();
+          }
         }
 
-        // Trích xuất danh sách các items
-        currentSessionHistoryItems = buildHistoryItemsFromConversation(data.conversation);
-        const totalItems = currentSessionHistoryItems.length;
-
-        // Tính toán chunk mới nhất để hiển thị
-        if (totalItems <= HISTORY_CHUNK_SIZE) {
-          currentHistoryRenderIndex = 0;
-          currentSessionHistoryItems.forEach(item => {
-            renderSingleHistoryItem(item, chatFeed, false);
-          });
-        } else {
-          currentHistoryRenderIndex = totalItems - HISTORY_CHUNK_SIZE;
-          const initialChunk = currentSessionHistoryItems.slice(currentHistoryRenderIndex);
-          initialChunk.forEach(item => {
-            renderSingleHistoryItem(item, chatFeed, false);
-          });
-          renderHistoryLazyBanner();
-          attachHistoryScrollListener();
+        if (data.isRunning && data.activeSessionInfo) {
+          const promptText = (data.activeSessionInfo.prompt || '').trim();
+          const lastItem = currentSessionHistoryItems[currentSessionHistoryItems.length - 1];
+          const hasPrompt = lastItem && lastItem.role === 'user' && (lastItem.text || '').trim() === promptText;
+          if (!hasPrompt && promptText) {
+            appendUserMessage(promptText);
+          }
+          reconnectRunningSession(sessionId, data.activeSessionInfo, sessionTitle);
         }
 
         syncComposerOverlaySpace();
@@ -4777,6 +5418,9 @@
 
     function historyItemText(item) {
       if (item.role === 'user') return item.text || '';
+      if (item.role === 'subagent') {
+        return (item.subagents || []).map(s => `[Subagent ${s.id} - ${s.status}] ${s.summary}`).join('\n');
+      }
       return (item.rawContent || []).map(c => {
         if (c.type === 'toolRequest') return '[Tool] ' + (c.toolCall?.value?.name || c.name || 'tool') + '\n' + safeStringifyCode(c.toolCall?.value?.arguments || c.arguments || {});
         if (c.type === 'thinking') return typeof c.thinking === 'string' ? c.thinking : c.thinking?.value || '';
@@ -4920,6 +5564,9 @@
       currentSessionHistoryItems.forEach(item => {
         if (item.role === 'user') {
           lines.push(`### [BẠN]:\n${item.text}\n`);
+        } else if (item.role === 'subagent') {
+          const subText = (item.subagents || []).map(s => `#### [Subagent ${s.id} - ${s.status.toUpperCase()}]:\n${s.summary}`).join('\n\n');
+          lines.push(`### [BÁO CÁO SUBAGENT]:\n${subText}\n`);
         } else if (item.role === 'assistant') {
           const texts = [];
           (item.rawContent || []).forEach(c => {
@@ -4945,6 +5592,18 @@
     function appendUserMessage(text) {
       const banner = document.getElementById('welcomeBanner');
       if (banner) banner.remove();
+
+      const extracted = extractSubagentsAndUserText(text);
+      if (extracted.subagents && extracted.subagents.length > 0) {
+        if (extracted.userText) {
+          appendUserMessage(extracted.userText);
+        }
+        const item = { role: 'subagent', subagents: extracted.subagents, text, startedAt: Date.now() };
+        currentSessionHistoryItems.push(item);
+        renderSingleHistoryItem(item, chatFeed);
+        scrollToBottom();
+        return;
+      }
 
       const row = document.createElement('div');
       row.className = 'w-full flex justify-end my-3 px-1 sm:px-2 group';
@@ -5396,7 +6055,123 @@
       return escapeHtml(String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r/g, '\\r').replace(/\n/g, '\\n'));
     }
 
-    // SSE STREAM CONSUMER
+    // EVENT PROCESSING LOGIC (CENTRALIZED FOR SSE & EVENTSOURCE)
+    function handleSessionStreamEvent(data, aiContainer) {
+      if (!data || !aiContainer) return;
+      if (aiContainer.viewVersion !== sessionViewVersion) return;
+
+      const termStatus = document.getElementById('terminalDrawerStatus');
+      if (termStatus && termStatus.innerText !== 'Done') termStatus.innerText = 'Executing';
+
+      const type = data.type;
+      if (type === 'session_info' || type === 'session_title') {
+        if (data.title && currentSessionTitle) {
+          currentSessionTitle.innerText = data.title;
+        }
+        const streamSessionId = data.session_id || data.sessionId;
+        if (streamSessionId && streamSessionId !== currentSessionId) {
+          currentSessionId = streamSessionId;
+          updateSessionUrl(currentSessionId, true);
+          loadWorkspaceTree();
+        }
+      } else if (type === 'stdout' || type === 'text') {
+        const textVal = (data.text !== undefined) ? data.text : data.value;
+        if (textVal) {
+          appendAiText(aiContainer, textVal);
+          appendTerminalLog('text', textVal);
+        }
+      } else if (type === 'status') {
+        if (data.text) {
+          aiContainer.updateProgress(data.text);
+          appendTerminalLog('info', data.text);
+        }
+      } else if (type === 'tool_call') {
+        lastRunningToolCard = appendToolCard(aiContainer, data.tool || data.name, data.args, true);
+        aiContainer.updateProgress('Thực thi: ' + (data.tool || data.name));
+      } else if (type === 'tool_result') {
+        updateToolCardResult(lastRunningToolCard, data.output, data.isError);
+        aiContainer.updateProgress('Đã xong tác vụ');
+      } else if (type === 'stderr' && data.text) {
+        appendTerminalLog('cmd', data.text);
+      } else if (type === 'raw_log' && data.line) {
+        appendTerminalLog('cmd', data.line);
+      } else if (type === 'error') {
+        appendAiText(aiContainer, '\n\n> **Lỗi thực thi:** ' + data.error + '\n');
+        appendTerminalLog('error', data.error);
+      } else if (type === 'done' || type === 'finish' || type === 'complete') {
+        lastStreamedTurnSessionId = currentSessionId;
+        lastTurnCompletedAt = Date.now();
+        if (lastRunningToolCard) {
+          updateToolCardResult(lastRunningToolCard, lastRunningToolCard._cardData?.output || null, false);
+        }
+        aiContainer.completedAt = Date.now();
+        aiContainer.finishProgress('Tác vụ đã hoàn thành');
+        soundEffects.playChime();
+        if (termStatus) termStatus.innerText = 'Done';
+      }
+    }
+
+    // NATIVE EVENTSOURCE STREAM CONSUMER (BYPASSES MOBILE CHROME / WEBKIT BUFFERING)
+    function consumeEventSourceStream(sessionId, aiContainer) {
+      return new Promise((resolve) => {
+        if (window.activeChatEventSource) {
+          try { window.activeChatEventSource.close(); } catch (_) {}
+          window.activeChatEventSource = null;
+        }
+
+        const url = '/api/chat/stream?sessionId=' + encodeURIComponent(sessionId) + '&_t=' + Date.now();
+        const es = new EventSource(url);
+        window.activeChatEventSource = es;
+
+        let isCompleted = false;
+
+        function closeAndDone() {
+          if (!isCompleted) {
+            isCompleted = true;
+            if (window.activeChatEventSource === es) window.activeChatEventSource = null;
+            try { es.close(); } catch (_) {}
+            resolve();
+          }
+        }
+
+        function onEventData(e) {
+          if (isCompleted || aiContainer.viewVersion !== sessionViewVersion) {
+            closeAndDone();
+            return;
+          }
+          try {
+            const data = JSON.parse(e.data);
+            handleSessionStreamEvent(data, aiContainer);
+            if (data.type === 'finish' || data.type === 'complete' || data.type === 'done') {
+              closeAndDone();
+            }
+          } catch (err) {
+            console.error('SSE parse error:', err, e.data);
+          }
+        }
+
+        const eventNames = [
+          'message', 'text', 'stdout', 'status', 'tool_call', 'tool_result',
+          'stderr', 'raw_log', 'session_info', 'session_title', 'complete', 'finish', 'done', 'error'
+        ];
+        eventNames.forEach(evt => es.addEventListener(evt, onEventData));
+
+        es.onerror = () => {
+          if (isCompleted) return;
+          if (es.readyState === EventSource.CLOSED) {
+            closeAndDone();
+          } else {
+            setTimeout(() => {
+              if (!isCompleted && es.readyState !== EventSource.OPEN) {
+                closeAndDone();
+              }
+            }, 1200);
+          }
+        };
+      });
+    }
+
+    // SSE STREAM CONSUMER (FALLBACK FOR FETCH STREAMS)
     async function readSseStream(response, aiContainer) {
       const reader = response.body.getReader();
       if (aiContainer.viewVersion !== sessionViewVersion) { await reader.cancel(); return; }
@@ -5422,45 +6197,7 @@
 
           try {
             const data = JSON.parse(raw);
-            if (data.type === 'session_title' && data.title) {
-              currentSessionTitle.innerText = data.title;
-            }
-            const streamSessionId = data.session_id || data.sessionId;
-            if (streamSessionId && streamSessionId !== currentSessionId) {
-              currentSessionId = streamSessionId;
-              updateSessionUrl(currentSessionId, true);
-              loadWorkspaceTree();
-            }
-
-            if ((data.type === 'stdout' || data.type === 'text') && (data.text !== undefined || data.value !== undefined)) {
-              const textVal = (data.text !== undefined) ? data.text : data.value;
-              if (textVal) {
-                appendAiText(aiContainer, textVal);
-                appendTerminalLog('text', textVal);
-              }
-            } else if (data.type === 'status') {
-              aiContainer.updateProgress(data.text);
-              appendTerminalLog('info', data.text);
-            } else if (data.type === 'tool_call') {
-              lastRunningToolCard = appendToolCard(aiContainer, data.tool || data.name, data.args, true);
-              aiContainer.updateProgress('Thực thi: ' + (data.tool || data.name));
-            } else if (data.type === 'tool_result') {
-              updateToolCardResult(lastRunningToolCard, data.output, data.isError);
-              aiContainer.updateProgress('Đã xong tác vụ');
-            } else if (data.type === 'stderr' && data.text) {
-              appendTerminalLog('cmd', data.text);
-            } else if (data.type === 'error') {
-              appendAiText(aiContainer, `\n\n> **Lỗi thực thi:** ${data.error}\n`);
-              appendTerminalLog('error', data.error);
-            } else if (data.type === 'done' || data.type === 'finish' || data.type === 'complete') {
-              if (lastRunningToolCard) {
-                updateToolCardResult(lastRunningToolCard, lastRunningToolCard._cardData?.output || null, false);
-              }
-              aiContainer.completedAt = Date.now();
-              aiContainer.finishProgress('Tác vụ đã hoàn thành');
-              soundEffects.playChime();
-              if (termStatus) termStatus.innerText = 'Done';
-            }
+            handleSessionStreamEvent(data, aiContainer);
           } catch (e) {
             console.error('SSE JSON parse error:', e, raw);
           }
@@ -5468,7 +6205,7 @@
       }
     }
 
-    // RECONNECT RUNNING SESSION
+    // RECONNECT RUNNING SESSION (USES NATIVE EVENTSOURCE FOR MOBILE REALTIME)
     async function reconnectRunningSession(sessionId, sessionInfo, friendlyTitle) {
       if (isGenerating) return;
       isGenerating = true;
@@ -5488,22 +6225,46 @@
       stopBtn.classList.remove('hidden');
       sessionStatus.innerText = 'Đang tiếp tục...';
       sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
-      startLiveExecutionTimer();
+      const taskStartTime = sessionInfo?.startTime || Date.now();
+      startLiveExecutionTimer(taskStartTime);
 
-      appendTerminalLog('info', `Kết nối lại tiến trình đang chạy (PID: ${sessionInfo?.pid || 'active'})...`);
+      appendTerminalLog('info', 'Kết nối lại tiến trình đang chạy (PID: ' + (sessionInfo?.pid || 'active') + ')...');
 
-      const aiContainer = createAiMessageContainer(currentSelectedModel, true);
+      const aiContainer = createAiMessageContainer(sessionInfo?.model || currentSelectedModel, true);
       aiContainer.viewVersion = sessionViewVersion;
       aiContainer.updateProgress('Đang nhận dữ liệu stream từ agent...');
 
+      const responseItem = { role: 'assistant', rawContent: [], startedAt: taskStartTime };
+      currentSessionHistoryItems.push(responseItem);
+      aiContainer.historyItem = responseItem;
+      const timing = addMessageTiming(aiContainer.row, responseItem);
+      const turnItem = currentSessionHistoryItems[currentSessionHistoryItems.length - 2];
+      responseItem.questionText = turnItem?.text || sessionInfo?.prompt || '';
+      aiContainer.row.dataset.turnQuestion = responseItem.questionText;
+      responseItem.isRunning = true;
+      if (turnItem) turnItem.isRunning = true;
+      const turnTimer = setInterval(() => {
+        const elapsedMs = Date.now() - taskStartTime;
+        timing.textContent = timingLabel({ ...responseItem, elapsedMs }) + ' • Đang thực hiện...';
+        if (turnItem?.timingElement) {
+          turnItem.timingElement.textContent = timingLabel(turnItem);
+        }
+      }, 1000);
+
       try {
-        const streamRes = await fetch(`/api/chat/stream?sessionId=${encodeURIComponent(sessionId)}`);
-        if (!streamRes.ok) throw new Error(`Stream status ${streamRes.status}`);
-        await readSseStream(streamRes, aiContainer);
+        await consumeEventSourceStream(sessionId, aiContainer);
       } catch (err) {
         console.error('Lỗi khi reconnect SSE:', err);
-        appendTerminalLog('error', `Lỗi reconnect stream: ${err.message}`);
+        appendTerminalLog('error', 'Lỗi reconnect stream: ' + err.message);
       } finally {
+        clearInterval(turnTimer);
+        responseItem.isRunning = false;
+        if (turnItem) turnItem.isRunning = false;
+        const finalElapsed = Date.now() - taskStartTime;
+        timing.textContent = timingLabel({ ...responseItem, elapsedMs: finalElapsed });
+        if (turnItem?.timingElement) {
+          turnItem.timingElement.textContent = timingLabel(turnItem);
+        }
         isGenerating = false;
         if (aiContainer && aiContainer.contentBody) {
           enhanceChatElement(aiContainer.contentBody);
@@ -5518,7 +6279,7 @@
       }
     }
 
-    // SEND MESSAGE
+    // SEND MESSAGE (USES EVENTSOURCE TO STREAM WORD-BY-WORD WITH ZERO MOBILE BUFFERING)
     async function sendMessage() {
       const prompt = promptInput.value.trim();
       if (!prompt || isGenerating) return;
@@ -5544,7 +6305,7 @@
       sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
       startLiveExecutionTimer();
 
-      appendTerminalLog('cmd', `[PROMPT] ${prompt}`);
+      appendTerminalLog('cmd', '[PROMPT] ' + prompt);
 
       const aiContainer = createAiMessageContainer(currentSelectedModel, true);
       aiContainer.viewVersion = sessionViewVersion;
@@ -5565,7 +6326,6 @@
         }
       }, 1000);
 
-
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
@@ -5576,23 +6336,32 @@
               : (currentAgentMode === 'architect' 
                 ? '[Yêu cầu: Đóng vai trò Kiến trúc sư phần mềm, đánh giá cấu trúc hệ thống, phân tích hiệu năng, bảo mật và khả năng mở rộng]\n\n' + prompt 
                 : prompt)),
+            clientId: clientTabId,
             titlePrompt: prompt,
             workspace: currentWorkspace,
             sessionId: currentSessionId,
             resume: !!currentSessionId,
-            model: currentSelectedModel
+            model: currentSelectedModel,
+            streamMode: 'eventsource'
           })
         });
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${res.status}`);
+          throw new Error(errData.error || ('HTTP ' + res.status));
         }
 
-        await readSseStream(res, aiContainer);
+        const chatMeta = await res.json();
+        const activeSId = chatMeta.sessionId || currentSessionId;
+        if (chatMeta.sessionId && chatMeta.sessionId !== currentSessionId) {
+          currentSessionId = chatMeta.sessionId;
+          updateSessionUrl(currentSessionId, true);
+        }
+
+        await consumeEventSourceStream(activeSId, aiContainer);
       } catch (err) {
-        appendAiText(aiContainer, `\n\n> ❌ **Không thể hoàn thành yêu cầu:** ${err.message}\n`);
-        appendTerminalLog('error', `Lỗi kết nối API: ${err.message}`);
+        appendAiText(aiContainer, '\n\n> ❌ **Không thể hoàn thành yêu cầu:** ' + err.message + '\n');
+        appendTerminalLog('error', 'Lỗi kết nối API: ' + err.message);
         showToast('Lỗi gửi tin nhắn: ' + err.message, 'error');
       } finally {
         clearInterval(turnTimer);
@@ -5656,13 +6425,9 @@
     stopBtn.addEventListener('click', async () => {
       stopBtn.innerText = 'Đang dừng...';
       soundEffects.playClick();
-      try {
-        await fetch('/api/stop', { method: 'POST' });
-        showToast('Đã gửi yêu cầu dừng tiến trình', 'info');
-        appendTerminalLog('info', 'Người dùng đã gửi lệnh dừng tiến trình.');
-      } catch (err) {
-        showToast('Lỗi khi gửi lệnh dừng: ' + err.message, 'error');
-      }
+      stopGeneration(true);
+      showToast('Đã gửi yêu cầu dừng tiến trình', 'info');
+      appendTerminalLog('info', 'Người dùng đã gửi lệnh dừng tiến trình.');
     });
 
     // ========================================================
@@ -5924,6 +6689,8 @@
         }
 
         currentWorkspace = wsPath;
+      try { localStorage.setItem('ai_hub_last_workspace', wsPath); } catch (_) {}
+
         const base = wsPath.split(/[\\/]/).pop() || wsPath;
         currentSessionFolder.innerText = base;
         currentSessionFolderTag.innerText = base;
@@ -6216,7 +6983,8 @@
     function updateComposerBottomArrow() {
       const arrow = document.getElementById('composerBottomArrow');
       const distance = chatFeed.scrollHeight - chatFeed.scrollTop - chatFeed.clientHeight;
-      arrow.hidden = distance <= 8;
+      const isScrolledUp = distance > 8;
+      if (arrow) arrow.hidden = !isScrolledUp;
     }
     chatFeed.addEventListener('scroll', updateComposerBottomArrow, { passive: true });
     new ResizeObserver(updateComposerBottomArrow).observe(chatFeed);
@@ -6263,7 +7031,21 @@
     updateSidebarToggleUI();
     window.addEventListener('resize', updateSidebarToggleUI);
 
-    allowAutoReconnect = false;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        initHubEvents(true);
+        loadWorkspaceTree().then(() => {
+          if (currentSessionId && !isGenerating) {
+            const activeMatch = allSessionsCache.find(s => (s.id === currentSessionId || s.name === currentSessionId) && s.isRunning);
+            if (activeMatch) {
+              reconnectRunningSession(currentSessionId, { cwd: activeMatch.cwd }, activeMatch.name);
+            }
+          }
+        });
+      }
+    });
+
+    initHubEvents();
     loadWorkspaceTree().then(() => restoreSessionFromUrl());
   </script>
 </body>

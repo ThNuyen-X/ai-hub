@@ -11,6 +11,8 @@ assert.equal(sessionTitle('S\u1eeda l\u1ed7i m\u1ea5t ng\u1eef c\u1ea3nh'), 'S\u
 assert.ok(isTechnicalSessionName('session_1793415199327'));
 assert.ok(isTechnicalSessionName('20261031_1'));
 assert.ok(!isTechnicalSessionName('My custom title'));
+assert.equal(sessionTitle('Subagent 20261031_1 completed: {"summary":"Done"}'), 'B\u00e1o c\u00e1o t\u00e1c v\u1ee5 Subagent');
+assert.equal(sessionTitle('Subagent 20261031_1 completed: {"summary":"Done"} với cả mấy cái này tự nhiên thành câu hỏi của tôi'), 'với cả mấy cái này tự nhiên thành câu hỏi của tôi');
 assert.equal(titleFromContent('[{"type":"text","text":"Fix session context"}]'), 'Fix session context');
 assert.equal(titleFromContent('{broken'), sessionTitle(''));
-console.log('Session titles: 13 checks passed');
+console.log('Session titles: 15 checks passed');

@@ -37,7 +37,7 @@ const context = vm.createContext({
     };
     return require(name);
   },
-  process: { env: { APPDATA: 'test', NINE_ROUTER_KEY: 'test' }, cwd: () => __dirname, kill() {}, platform: 'win32' },
+  process: { env: { APPDATA: 'test', NINE_ROUTER_KEY: 'test' }, cwd: () => __dirname, kill() {}, platform: 'win32', on: () => {} },
   console: { log() {}, warn() {}, error() {} },
   __dirname, URL, setTimeout, clearTimeout
 });

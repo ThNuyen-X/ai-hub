@@ -5,6 +5,10 @@
 !.env.example
 *.local.bat
 *.local.ps1
+/start-web.lnk
+/ai-hub.lnk
+/AI Hub.lnk
+/ai-hub.exe
 
 # Local workspace state, conversations, logs and backups.
 **/workspaces.json

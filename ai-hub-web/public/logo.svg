@@ -1,17 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <title>AI Hub Quantum Cube</title>
   <defs>
-    <linearGradient id="surface" x1="4" y1="2" x2="36" y2="40" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#22374A"/>
-      <stop offset="1" stop-color="#0B1520"/>
-    </linearGradient>
-    <linearGradient id="signal" x1="12" y1="10" x2="29" y2="31" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#9AF4DD"/>
-      <stop offset="1" stop-color="#36AFAF"/>
-    </linearGradient>
+    <linearGradient id="top" x1="14" y1="16" x2="106" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#395A70"/><stop offset="1" stop-color="#162D42"/></linearGradient>
+    <linearGradient id="left" x1="14" y1="16" x2="106" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#213F55"/><stop offset="1" stop-color="#0B1C2D"/></linearGradient>
+    <linearGradient id="right" x1="14" y1="16" x2="106" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#17354F"/><stop offset="1" stop-color="#071423"/></linearGradient>
+    <linearGradient id="edge" x1="20" y1="16" x2="100" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#B4FFF1"/><stop offset="1" stop-color="#159EDB"/></linearGradient>
   </defs>
-  <rect x="1" y="1" width="38" height="38" rx="12" fill="url(#surface)" stroke="#4B687C" stroke-opacity=".55"/>
-  <path d="M11 25V16L20 10L29 16V25L20 31L11 25Z" stroke="url(#signal)" stroke-width="2.3" stroke-linejoin="round"/>
-  <path d="M11 16L20 22L29 16M20 22V31" stroke="url(#signal)" stroke-width="2.3" stroke-linejoin="round"/>
-  <path d="M20 10V16" stroke="#E5FFF6" stroke-width="2.3" stroke-linecap="round"/>
-  <circle cx="29" cy="10" r="3" fill="#E5FFF6" stroke="#142737" stroke-width="2"/>
+  <path d="M14 42 60 16 106 42 60 69Z" fill="url(#top)"/>
+  <path d="m14 42 46 27v51L14 93Z" fill="url(#left)"/>
+  <path d="m60 69 46-27v51l-46 27Z" fill="url(#right)"/>
+  <g stroke="url(#edge)" stroke-width="4.5" stroke-linejoin="bevel">
+    <path d="M14 42 60 16 106 42V93L60 120 14 93V42Z"/>
+    <path d="m14 42 46 27 46-27M60 69v51"/>
+  </g>
+  <path d="M30 67V83L44 91M90 67V83L76 91" stroke="url(#edge)" stroke-width="3"/>
+  <path d="m60 32 19 11-19 11-19-11Z" fill="#A1FFF0"/>
+  <circle cx="112" cy="14" r="8" fill="#A1FFF0"/>
 </svg>

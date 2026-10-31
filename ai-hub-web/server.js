@@ -9,6 +9,30 @@ const { DatabaseSync } = require("node:sqlite");
 const { isTechnicalSessionName, sessionTitle, titleFromContent } = require("./session-title.cjs");
 const { cleanWorkspacePath, workspaceKey } = require("./workspace-path.cjs");
 
+// Tu dong ghi log vao server.log va ghi server.pid
+const LOG_DIR = path.join(process.env.LOCALAPPDATA || process.env.USERPROFILE || ".", "ai-hub", "logs");
+try {
+  fs.mkdirSync(LOG_DIR, { recursive: true });
+  fs.writeFileSync(path.join(LOG_DIR, "server.pid"), String(process.pid));
+  const logStream = fs.createWriteStream(path.join(LOG_DIR, "server.log"), { flags: "a" });
+  const origOut = process.stdout.write.bind(process.stdout);
+  const origErr = process.stderr.write.bind(process.stderr);
+  process.stdout.write = function (chunk, ...args) {
+    try { logStream.write(chunk); } catch {}
+    return origOut(chunk, ...args);
+  };
+  process.stderr.write = function (chunk, ...args) {
+    try { logStream.write(chunk); } catch {}
+    return origErr(chunk, ...args);
+  };
+} catch {}
+process.on("exit", () => {
+  try {
+    const pidPath = path.join(LOG_DIR, "server.pid");
+    if (fs.existsSync(pidPath)) fs.unlinkSync(pidPath);
+  } catch {}
+});
+
 // Thong tin cau hinh & key duoc nap tu bien moi truong (D:\start-web.bat truyen vao)
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 20130;
 const NINE_ROUTER_IP = process.env.NINE_ROUTER_IP || "127.0.0.1";

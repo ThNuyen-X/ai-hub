@@ -1,0 +1,16 @@
+const assert = require('node:assert/strict');
+const { sessionTitle, isTechnicalSessionName, titleFromContent } = require('./session-title.cjs');
+assert.equal(sessionTitle('  Fix login\n  redirect  '), 'Fix login redirect');
+assert.equal(sessionTitle('[Mode instructions]\n\nFix login redirect'), 'Fix login redirect');
+assert.equal(sessionTitle('### Fix **login** `redirect`'), 'Fix login redirect');
+assert.equal(sessionTitle('Explain https://example.com/page login'), 'Explain login');
+assert.equal(sessionTitle('```js\nconsole.log(1)\n``` Explain the issue'), 'Explain the issue');
+assert.ok(Array.from(sessionTitle('A long conversation topic '.repeat(12))).length <= 64);
+assert.ok(sessionTitle('A long conversation topic '.repeat(12)).endsWith('...'));
+assert.equal(sessionTitle('S\u1eeda l\u1ed7i m\u1ea5t ng\u1eef c\u1ea3nh'), 'S\u1eeda l\u1ed7i m\u1ea5t ng\u1eef c\u1ea3nh');
+assert.ok(isTechnicalSessionName('session_1793415199327'));
+assert.ok(isTechnicalSessionName('20261031_1'));
+assert.ok(!isTechnicalSessionName('My custom title'));
+assert.equal(titleFromContent('[{"type":"text","text":"Fix session context"}]'), 'Fix session context');
+assert.equal(titleFromContent('{broken'), sessionTitle(''));
+console.log('Session titles: 13 checks passed');

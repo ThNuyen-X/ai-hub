@@ -1,0 +1,26 @@
+# Private launcher: contains real credentials and machine-specific configuration.
+/start-web.bat
+.env
+.env.*
+!.env.example
+*.local.bat
+*.local.ps1
+
+# Local workspace state, conversations, logs and backups.
+**/workspaces.json
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.log
+*.bak
+*.tmp
+*.pem
+*.key
+*.pfx
+*.p12
+node_modules/
+coverage/
+.DS_Store
+Thumbs.db

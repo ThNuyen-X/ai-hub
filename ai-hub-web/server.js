@@ -635,6 +635,164 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Mo thu muc hoac file tren may tinh
+  if (req.method === "POST" && pathname === "/api/open-path") {
+    let body = "";
+    req.on("data", chunk => { body += chunk; });
+    req.on("end", () => {
+      try {
+        const payload = JSON.parse(body || "{}");
+        let targetPath = (payload.path || "").trim();
+        const workspace = (payload.workspace || "").trim();
+
+        if (!targetPath) {
+          res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ success: false, error: "Đường dẫn trống" }));
+          return;
+        }
+
+        targetPath = targetPath.replace(/^[`"']+|[`"']+$/g, "").trim();
+
+        let resolved = targetPath;
+        if (!path.isAbsolute(resolved)) {
+          if (workspace && fs.existsSync(workspace)) {
+            resolved = path.resolve(workspace, targetPath);
+          } else {
+            resolved = path.resolve(process.cwd(), targetPath);
+          }
+        }
+
+        if (!fs.existsSync(resolved)) {
+          res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({
+            success: false,
+            error: `Đường dẫn không tồn tại trên máy: ${resolved}`
+          }));
+          return;
+        }
+
+        const stat = fs.statSync(resolved);
+        const isDir = stat.isDirectory();
+        const baseName = path.basename(resolved);
+        const ext = path.extname(resolved).toLowerCase();
+
+        if (process.platform === "win32") {
+          if (isDir) {
+            const cp = spawn("explorer.exe", [resolved], { detached: true, stdio: "ignore" });
+            cp.unref();
+          } else if ([".exe", ".bat", ".cmd", ".msi", ".ps1"].includes(ext) || payload.reveal) {
+            const cp = spawn("explorer.exe", ["/select,", resolved], { detached: true, stdio: "ignore" });
+            cp.unref();
+          } else {
+            const cp = spawn("cmd.exe", ["/c", "start", '""', resolved], {
+              detached: true,
+              stdio: "ignore",
+              windowsVerbatimArguments: true
+            });
+            cp.unref();
+          }
+        } else if (process.platform === "darwin") {
+          spawn("open", [resolved], { detached: true, stdio: "ignore" }).unref();
+        } else {
+          spawn("xdg-open", [resolved], { detached: true, stdio: "ignore" }).unref();
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({
+          success: true,
+          isDir,
+          path: resolved,
+          name: baseName
+        }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: Xem truoc noi dung file (ho tro ca mobile qua Tailscale)
+  if (req.method === "GET" && pathname === "/api/file-preview") {
+    try {
+      let targetPath = (urlObj.searchParams.get("path") || "").trim();
+      const workspace = (urlObj.searchParams.get("workspace") || "").trim();
+
+      if (!targetPath) {
+        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: "Thiếu tham số path" }));
+        return;
+      }
+
+      targetPath = targetPath.replace(/^[`"']+|[`"']+$/g, "").trim();
+
+      let resolved = targetPath;
+      if (!path.isAbsolute(resolved)) {
+        if (workspace && fs.existsSync(workspace)) {
+          resolved = path.resolve(workspace, targetPath);
+        } else {
+          resolved = path.resolve(process.cwd(), targetPath);
+        }
+      }
+
+      if (!fs.existsSync(resolved)) {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: `File không tồn tại: ${resolved}` }));
+        return;
+      }
+
+      const stat = fs.statSync(resolved);
+      if (stat.isDirectory()) {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, isDir: true, error: "Đường dẫn là thư mục, không phải file" }));
+        return;
+      }
+
+      const ext = path.extname(resolved).toLowerCase();
+      const imageExts = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico"];
+      if (imageExts.includes(ext)) {
+        const imgBuffer = fs.readFileSync(resolved);
+        const mimeType = ext === ".svg" ? "image/svg+xml" : ext === ".ico" ? "image/x-icon" : `image/${ext.replace(".", "")}`;
+        const base64 = `data:${mimeType};base64,${imgBuffer.toString("base64")}`;
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({
+          success: true,
+          name: path.basename(resolved),
+          path: resolved,
+          size: stat.size,
+          isImage: true,
+          imageUrl: base64,
+          ext
+        }));
+        return;
+      }
+
+      const MAX_SIZE = 2 * 1024 * 1024;
+      const readSize = Math.min(stat.size, MAX_SIZE);
+      const fd = fs.openSync(resolved, "r");
+      const buffer = Buffer.alloc(readSize);
+      fs.readSync(fd, buffer, 0, readSize, 0);
+      fs.closeSync(fd);
+
+      const content = buffer.toString("utf8");
+
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({
+        success: true,
+        name: path.basename(resolved),
+        path: resolved,
+        size: stat.size,
+        truncated: stat.size > MAX_SIZE,
+        ext,
+        content
+      }));
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ success: false, error: err.message }));
+    }
+    return;
+  }
+
   // API: Them Workspace truc tiep
   if (req.method === "POST" && pathname === "/api/workspaces") {
     let body = "";

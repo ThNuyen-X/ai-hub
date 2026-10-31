@@ -338,6 +338,107 @@
       overflow-x: auto;
       background: transparent;
     }
+
+    /* Clickable Path and Web Link Badges in Chat */
+    .chat-web-link {
+      color: #38bdf8 !important;
+      text-decoration: underline !important;
+      text-underline-offset: 3px !important;
+      font-weight: 500;
+      transition: color 0.15s ease;
+      word-break: break-all;
+    }
+    .chat-web-link:hover {
+      color: #7dd3fc !important;
+    }
+    [data-theme="warm"] .chat-web-link {
+      color: #0284c7 !important;
+    }
+    [data-theme="warm"] .chat-web-link:hover {
+      color: #0369a1 !important;
+    }
+
+    .local-path-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 7px;
+      margin: 2px 2px;
+      border-radius: 7px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11.5px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      cursor: pointer;
+      user-select: none;
+      vertical-align: middle;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .local-path-badge:hover {
+      background: var(--bg-hover);
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15);
+      transform: translateY(-0.5px);
+    }
+    [data-theme="warm"] .local-path-badge:hover {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25);
+    }
+    .local-path-badge .path-text {
+      color: #38bdf8;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 2.5px;
+      user-select: text;
+      word-break: break-all;
+    }
+    [data-theme="warm"] .local-path-badge .path-text {
+      color: #d97706;
+    }
+    .local-path-badge:hover .path-text {
+      color: #7dd3fc;
+      text-decoration-style: solid;
+    }
+    [data-theme="warm"] .local-path-badge:hover .path-text {
+      color: #b45309;
+    }
+    .local-path-badge .path-icon {
+      font-size: 12px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .local-path-badge .path-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      opacity: 0.65;
+      margin-left: 2px;
+      transition: opacity 0.15s;
+    }
+    .local-path-badge:hover .path-actions {
+      opacity: 1;
+    }
+    .local-path-badge .path-btn {
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    [data-theme="warm"] .local-path-badge .path-btn {
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .local-path-badge .path-btn:hover {
+      background: rgba(56, 189, 248, 0.25);
+      color: #ffffff;
+    }
+    [data-theme="warm"] .local-path-badge .path-btn:hover {
+      background: rgba(245, 158, 11, 0.25);
+      color: #1e293b;
+    }
     .markdown-body pre code {
       font-family: 'JetBrains Mono', monospace;
       background: transparent !important;
@@ -1713,6 +1814,55 @@
     </div>
   </div>
 
+  <!-- File Preview Modal (Quick view for desktop & mobile) -->
+  <div id="filePreviewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-md">
+    <div class="w-full max-w-4xl h-[88vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden modal-enter"
+         style="background: var(--bg-surface); border-color: var(--border-subtle);">
+      
+      <!-- Modal Header -->
+      <div class="px-4 py-2.5 border-b flex items-center justify-between font-mono text-xs select-none"
+           style="background: var(--bg-hover); border-color: var(--border-subtle);">
+        <div class="flex items-center space-x-2 min-w-0">
+          <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+          <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+          <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+          <span id="filePreviewTitle" class="ml-2 font-bold text-slate-200 truncate max-w-[200px] sm:max-w-md">filename</span>
+          <span id="filePreviewSize" class="text-slate-400 text-[11px] hidden sm:inline">0 KB</span>
+        </div>
+
+        <div class="flex items-center space-x-2 shrink-0">
+          <button id="filePreviewOpenBtn" onclick="openCurrentPreviewOnPc()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium ease-spring flex items-center gap-1" title="Mở trên máy tính PC">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            <span>Mở trên PC</span>
+          </button>
+          <button id="filePreviewCopyBtn" onclick="copyFilePreviewContent()" class="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold ease-spring flex items-center gap-1" title="Sao chép nội dung">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            <span id="filePreviewCopyText">Sao chép</span>
+          </button>
+          <button onclick="closeFilePreview()" class="p-1 rounded text-slate-400 hover:text-white ease-spring text-base leading-none">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Body -->
+      <div id="filePreviewBody" class="flex-1 overflow-auto p-4 font-mono text-[12.5px] leading-relaxed select-text" style="background: var(--bg-surface);">
+        <pre id="filePreviewPre" class="p-0 m-0"><code id="filePreviewContent" class="hljs"></code></pre>
+        <div id="filePreviewImageContainer" class="hidden flex items-center justify-center p-4">
+          <img id="filePreviewImage" class="max-w-full max-h-[70vh] rounded-lg shadow-lg object-contain" src="" alt="preview" />
+        </div>
+      </div>
+
+      <!-- Footer Bar -->
+      <div class="px-4 py-2 border-t font-mono text-[11px] text-slate-400 flex items-center justify-between"
+           style="background: var(--bg-hover); border-color: var(--border-subtle);">
+        <span id="filePreviewMeta" class="truncate mr-2">Đường dẫn</span>
+        <span class="shrink-0">Nhấn <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">ESC</kbd> để đóng</span>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Toast Notification Stack Container -->
   <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-full"></div>
 
@@ -2736,7 +2886,260 @@
       `;
     };
 
+    function isLocalFilePath(str) {
+      if (!str || typeof str !== 'string') return false;
+      const s = str.trim().replace(/^["'`]|["'`]$/g, '');
+      if (/^[a-zA-Z]:[\\\/]/i.test(s)) return true;
+      if (/^\\\\[\w\-]+[\\\/]/i.test(s)) return true;
+      if (/^\/([a-zA-Z0-9_\-\.]+\/)+[a-zA-Z0-9_\-\.]+/i.test(s)) return true;
+      if (/^(?:\.{1,2}[\/\\][\w\.\-\/\\ ]+|[\w\-]+[\/\\][\w\.\-\/\\ ]+|\b[\w\-]+\.(?:js|ts|jsx|tsx|json|html|css|scss|bat|ps1|cmd|sh|cs|py|cpp|c|h|java|go|rs|md|txt|log|svg|png|jpg|jpeg|ico|toml|yaml|yml|env))$/i.test(s)) {
+        if (/^[a-zA-Z0-9\-]+\.(?:com|org|net|io|dev|ai|app|gov|edu)$/i.test(s)) return false;
+        return true;
+      }
+      return false;
+    }
+
+    function renderPathBadgeHtml(rawPath, displayText) {
+      const p = (rawPath || '').replace(/^["'`]|["'`]$/g, '').trim();
+      const isDir = !/\.[a-zA-Z0-9]{1,8}$/.test(p) || p.endsWith('/') || p.endsWith('\\');
+      const icon = isDir ? '📁' : '📄';
+      const display = escapeHtml(displayText || p);
+      const safePath = escapeHtml(p).replace(/'/g, "\\'");
+      return `<span class="local-path-badge" data-path="${safePath}" onclick="handlePathClick('${safePath}', event)" title="Click để mở hoặc xem (${safePath})"><span class="path-icon">${icon}</span><span class="path-text">${display}</span><span class="path-actions"><button type="button" class="path-btn" onclick="openLocalPath('${safePath}', event)" title="Mở trên PC">🖥️ PC</button>${!isDir ? `<button type="button" class="path-btn" onclick="previewLocalFile('${safePath}', event)" title="Xem nhanh nội dung">👁️ Xem</button>` : ''}</span></span>`;
+    }
+
+    function renderWebLinkHtml(url, displayText, title) {
+      const safeUrl = escapeHtml(url);
+      const safeText = escapeHtml(displayText || url);
+      const safeTitle = escapeHtml(title || url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="chat-web-link inline-flex items-center gap-1 font-medium" title="${safeTitle}"><span>${safeText}</span><svg class="w-3 h-3 inline-block shrink-0 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>`;
+    }
+
+    customRenderer.link = function(token, titleArg, textArg) {
+      let href = '';
+      let title = '';
+      let text = '';
+      if (typeof token === 'object' && token !== null) {
+        href = token.href || '';
+        title = token.title || '';
+        text = token.text || (token.tokens ? token.tokens.map(t => t.raw).join('') : '') || href;
+      } else {
+        href = token || '';
+        title = titleArg || '';
+        text = textArg || href;
+      }
+
+      if (/^https?:\/\//i.test(href)) {
+        return renderWebLinkHtml(href, text, title);
+      }
+      const clean = href.replace(/^file:\/\/\/?/i, '');
+      if (isLocalFilePath(clean)) {
+        return renderPathBadgeHtml(clean, text);
+      }
+      return renderWebLinkHtml(href, text, title);
+    };
+
+    customRenderer.codespan = function(token) {
+      let code = (typeof token === 'object' && token !== null ? token.text : token) || '';
+      const trimmed = code.trim();
+      if (isLocalFilePath(trimmed)) {
+        return renderPathBadgeHtml(trimmed, code);
+      }
+      return `<code class="px-1.5 py-0.5 rounded text-[12px] font-mono" style="background:var(--bg-hover);color:var(--text-main);">${escapeHtml(code)}</code>`;
+    };
+
     marked.setOptions({ renderer: customRenderer, breaks: true, gfm: true });
+
+    function enhanceChatElement(rootEl) {
+      if (!rootEl) return;
+      try {
+        const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, {
+          acceptNode: function(node) {
+            if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+            let p = node.parentElement;
+            while (p && p !== rootEl) {
+              const tag = p.tagName ? p.tagName.toLowerCase() : '';
+              if (tag === 'pre' || tag === 'code' || tag === 'a' || tag === 'button' || tag === 'textarea' || tag === 'input' || 
+                  (p.classList && (p.classList.contains('local-path-badge') || p.classList.contains('chat-web-link')))) {
+                return NodeFilter.FILTER_REJECT;
+              }
+              p = p.parentElement;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        });
+
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+
+        const regex = /(https?:\/\/[^\s<>"')]+)|([a-zA-Z]:[\\\/][\w\s\.\-\\/]+?(?=[,;:!?"'()\[\]{}]?(?:\s|$)))/g;
+
+        for (const node of nodes) {
+          const text = node.nodeValue;
+          if (!regex.test(text)) continue;
+          regex.lastIndex = 0;
+
+          const span = document.createElement('span');
+          let lastIdx = 0;
+          let match;
+          let hasMatch = false;
+
+          while ((match = regex.exec(text)) !== null) {
+            hasMatch = true;
+            const matchStart = match.index;
+            const matchEnd = regex.lastIndex;
+
+            if (matchStart > lastIdx) {
+              span.appendChild(document.createTextNode(text.substring(lastIdx, matchStart)));
+            }
+
+            const urlMatch = match[1];
+            const pathMatch = match[2];
+
+            if (urlMatch) {
+              let cleanUrl = urlMatch.replace(/[,.;:!?]+$/, '');
+              const trailing = urlMatch.substring(cleanUrl.length);
+              const temp = document.createElement('div');
+              temp.innerHTML = renderWebLinkHtml(cleanUrl, cleanUrl);
+              while (temp.firstChild) span.appendChild(temp.firstChild);
+              if (trailing) span.appendChild(document.createTextNode(trailing));
+            } else if (pathMatch) {
+              let cleanPath = pathMatch.replace(/[,.;:!?]+$/, '').trim();
+              const trailing = pathMatch.substring(cleanPath.length);
+              const temp = document.createElement('div');
+              temp.innerHTML = renderPathBadgeHtml(cleanPath, cleanPath);
+              while (temp.firstChild) span.appendChild(temp.firstChild);
+              if (trailing) span.appendChild(document.createTextNode(trailing));
+            }
+
+            lastIdx = matchEnd;
+          }
+
+          if (hasMatch) {
+            if (lastIdx < text.length) {
+              span.appendChild(document.createTextNode(text.substring(lastIdx)));
+            }
+            if (node.parentNode) {
+              node.parentNode.replaceChild(span, node);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error enhancing chat element:', e);
+      }
+    }
+
+    let currentPreviewedPath = '';
+
+    window.openLocalPath = async function(rawPath, e) {
+      if (e) e.stopPropagation();
+      try {
+        showToast('Đang mở: ' + rawPath + '...', 'info', 1800);
+        const res = await fetch('/api/open-path', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path: rawPath,
+            workspace: (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '') || ''
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (data.isDir) {
+            showToast('📁 Đã mở thư mục trên PC: ' + (data.name || rawPath), 'success', 3500);
+          } else {
+            showToast('📄 Đã mở file trên PC: ' + (data.name || rawPath), 'success', 3500);
+          }
+        } else {
+          showToast('⚠️ ' + (data.error || 'Không thể mở đường dẫn này'), 'warning', 4000);
+        }
+      } catch (err) {
+        showToast('Lỗi mở đường dẫn: ' + err.message, 'error', 3500);
+      }
+    };
+
+    window.previewLocalFile = async function(rawPath, e) {
+      if (e) e.stopPropagation();
+      try {
+        showToast('Đang tải nội dung file...', 'info', 1500);
+        const ws = (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '') || '';
+        const res = await fetch(`/api/file-preview?path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`);
+        const data = await res.json();
+        if (!data.success) {
+          showToast('⚠️ ' + (data.error || 'Không thể đọc nội dung file'), 'warning', 4000);
+          return;
+        }
+
+        currentPreviewedPath = data.path;
+        const modal = document.getElementById('filePreviewModal');
+        const titleEl = document.getElementById('filePreviewTitle');
+        const sizeEl = document.getElementById('filePreviewSize');
+        const metaEl = document.getElementById('filePreviewMeta');
+        const preEl = document.getElementById('filePreviewPre');
+        const codeEl = document.getElementById('filePreviewContent');
+        const imgContainer = document.getElementById('filePreviewImageContainer');
+        const imgEl = document.getElementById('filePreviewImage');
+
+        titleEl.textContent = data.name;
+        metaEl.textContent = data.path;
+        
+        const sizeKb = (data.size / 1024).toFixed(1);
+        sizeEl.textContent = `${sizeKb} KB${data.truncated ? ' (đã rút gọn)' : ''}`;
+
+        if (data.isImage) {
+          preEl.classList.add('hidden');
+          imgContainer.classList.remove('hidden');
+          imgEl.src = data.imageUrl;
+        } else {
+          imgContainer.classList.add('hidden');
+          preEl.classList.remove('hidden');
+          codeEl.textContent = data.content || '';
+          if (window.hljs) {
+            delete codeEl.dataset.highlighted;
+            hljs.highlightElement(codeEl);
+          }
+        }
+
+        modal.classList.remove('hidden');
+      } catch (err) {
+        showToast('Lỗi xem file: ' + err.message, 'error', 3500);
+      }
+    };
+
+    window.handlePathClick = function(rawPath, e) {
+      const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isDir = !/\.[a-zA-Z0-9]{1,8}$/.test(rawPath) || rawPath.endsWith('/') || rawPath.endsWith('\\');
+      if (isMobile && !isDir) {
+        previewLocalFile(rawPath, e);
+      } else {
+        openLocalPath(rawPath, e);
+      }
+    };
+
+    window.closeFilePreview = function() {
+      const modal = document.getElementById('filePreviewModal');
+      if (modal) modal.classList.add('hidden');
+    };
+
+    window.copyFilePreviewContent = function() {
+      const codeEl = document.getElementById('filePreviewContent');
+      if (!codeEl) return;
+      const text = codeEl.textContent || '';
+      navigator.clipboard.writeText(text).then(() => {
+        const btnText = document.getElementById('filePreviewCopyText');
+        if (btnText) {
+          btnText.textContent = 'Đã chép!';
+          setTimeout(() => { btnText.textContent = 'Sao chép'; }, 1500);
+        }
+        showToast('Đã sao chép nội dung file!', 'success', 2000);
+      });
+    };
+
+    window.openCurrentPreviewOnPc = function() {
+      if (currentPreviewedPath) {
+        openLocalPath(currentPreviewedPath);
+      }
+    };
 
     // SNIPPET UTILITIES
     window.toggleCodeWrap = function(btn) {
@@ -3702,6 +4105,7 @@
         if (!commandPaletteModal.classList.contains('hidden')) closeCommandPalette();
         else if (!keyboardShortcutsModal.classList.contains('hidden')) closeKeyboardShortcutsModal();
         else if (!fullscreenCodeModal.classList.contains('hidden')) closeFullscreenCode();
+        else if (document.getElementById('filePreviewModal') && !document.getElementById('filePreviewModal').classList.contains('hidden')) closeFilePreview();
         else if (!attachFileModal.classList.contains('hidden')) closeAttachFileModal();
         else if (document.getElementById('fullConversationModal') && !document.getElementById('fullConversationModal').classList.contains('hidden')) closeFullConversationModal();
         else if (!workspaceModal.classList.contains('hidden')) closeWorkspaceModal();
@@ -4172,6 +4576,7 @@
           </div>
         `;
         row.dataset.questionText = item.text || '';
+        enhanceChatElement(row);
         addMessageTiming(row, item);
         if (prepend && container.firstChild) {
           container.insertBefore(row, container.firstChild);
@@ -4571,6 +4976,7 @@
         </div>
       `;
       row.dataset.questionText = text;
+      enhanceChatElement(row);
       const item = { role: 'user', text, startedAt: Date.now() };
       currentSessionHistoryItems.push(item);
       addMessageTiming(row, item);
@@ -4758,6 +5164,9 @@
       }
 
       if (!container.isHistorical) notifyNewMessageArrived();
+      if (!isGenerating || container.isHistorical) {
+        enhanceChatElement(container.activeTextContainer);
+      }
     }
 
     // TOOL CALL ACTION CARD (COLLAPSIBLE & DETAILED OUTPUT)
@@ -5096,6 +5505,9 @@
         appendTerminalLog('error', `Lỗi reconnect stream: ${err.message}`);
       } finally {
         isGenerating = false;
+        if (aiContainer && aiContainer.contentBody) {
+          enhanceChatElement(aiContainer.contentBody);
+        }
         runningWorkspace = null;
         sendBtn.classList.remove('hidden');
         stopBtn.classList.add('hidden');
@@ -5202,6 +5614,9 @@
           } catch (_) {}
         }
         isGenerating = false;
+        if (aiContainer && aiContainer.contentBody) {
+          enhanceChatElement(aiContainer.contentBody);
+        }
         runningWorkspace = null;
         sendBtn.classList.remove('hidden');
         stopBtn.classList.add('hidden');

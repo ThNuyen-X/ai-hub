@@ -732,17 +732,26 @@
       #heroWorkspaceLabel { min-width: 0; max-width: 100%; }
       #welcomeBanner .bento-card { padding: 12px; }
       #welcomeBanner .grid { margin-top: 16px; gap: 8px; }
-      main > header { height: 56px; padding: 6px 8px; gap: 4px; }
+      main > header { height: 56px; padding: 6px 8px; gap: 6px; }
       main > header > div { min-width: 0; }
-      main > header > div:first-child { margin-right: 0; gap: 4px; flex: 1; }
-      main > header button { min-height: 38px; }
-      #sidebarToggleBtn, #mobileHeaderNewChatBtn, #btnHeaderFullConv, #btnToggleTerminal { min-width: 38px; width: 38px; height: 38px; padding: 0; justify-content: center; display: inline-flex; align-items: center; }
-      #btnToggleFullscreen { display: none !important; }
-      main > header button[onclick="openWorkspaceModal()"] { max-width: none; min-width: 0; flex: 1; padding: 6px 8px; }
+      #sidebarToggleBtn { min-width: 38px; width: 38px; height: 38px; padding: 0; justify-content: center; display: inline-flex; align-items: center; }
+      #mobileHeaderComboboxBtn { min-height: 38px; height: 38px; }
+      #btnHeaderFullConv, #btnToggleTerminal, #btnToggleFullscreen { display: none !important; }
       #currentSessionFolder { font-size: 12px; }
-      #modelDropdownBtn { max-width: 112px; padding: 6px 8px; }
-      #currentModelName { max-width: 62px; }
+      #modelDropdownBtn { min-width: 38px; height: 38px; max-width: 110px; padding: 6px 8px; }
+      #currentModelName { max-width: 58px; }
       #headerLiveTimerBadge { display: none !important; }
+      #mobileHeaderComboboxMenu {
+        position: fixed;
+        top: 60px;
+        left: 10px;
+        right: 10px;
+        margin: 0 auto;
+        width: calc(100vw - 20px);
+        max-width: 340px;
+        max-height: min(76dvh, 520px);
+        overflow-y: auto;
+      }
       #modelDropdownMenu { position: fixed; top: 60px; right: 8px; width: min(320px, calc(100vw - 16px)); max-height: min(68dvh, 460px); }
       #slashCommandsMenu { left: 8px !important; right: 8px !important; bottom: 168px !important; width: auto !important; max-width: none !important; max-height: 48dvh; overflow-y: auto; }
       #sidebar { width: min(320px, calc(100vw - 44px)); }
@@ -822,9 +831,9 @@
       #slashCommandsMenu { left: 16px !important; width: min(360px, calc(100vw - 32px)) !important; }
     }
     @media (max-width: 359px) {
-      #btnHeaderFullConv { display: none; }
-      #modelDropdownBtn { max-width: 88px; padding: 6px; }
-      #currentModelName { max-width: 44px; }
+      #modelDropdownBtn { max-width: 86px; padding: 6px; }
+      #currentModelName { max-width: 40px; }
+      #mobileComboboxSessionTitle { display: none !important; }
       #agentModeSelector button { padding-left: 4px; padding-right: 4px; font-size: 10px; }
     }
 
@@ -1115,10 +1124,10 @@
     <header class="h-14 px-2 sm:px-4 md:px-5 flex items-center justify-between border-b shrink-0 z-20 backdrop-blur-md transition-all"
             style="background-color: var(--glass-bg); border-color: var(--border);">
       
-      <!-- Left Side: Navigation, Workspace & Dynamic Session Info -->
-      <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 mr-1.5 sm:mr-3">
+      <!-- Left Side: Navigation & Desktop Dynamic Session Info -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink-0 sm:flex-1 sm:mr-3">
         
-        <!-- Sidebar Toggle Button -->
+        <!-- Sidebar Toggle Button (Always visible on mobile & desktop) -->
         <button onclick="toggleSidebar()" 
                 id="sidebarToggleBtn"
                 type="button"
@@ -1132,20 +1141,8 @@
           </svg>
         </button>
 
-        <!-- Fast New Chat Button (Mobile & Tablet only) -->
-        <button onclick="newSession()" 
-                id="mobileHeaderNewChatBtn"
-                type="button"
-                class="lg:hidden w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shrink-0 shadow-2xs transition-colors text-blue-500"
-                style="background: var(--bg-card); border-color: var(--border);"
-                title="Tạo phiên trò chuyện mới">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/>
-          </svg>
-        </button>
-
-        <!-- Smart Responsive Session & Workspace Indicator -->
-        <div class="flex items-center min-w-0 flex-1 gap-1.5 sm:gap-2 overflow-hidden">
+        <!-- Smart Responsive Session & Workspace Indicator (Desktop only: hidden on mobile) -->
+        <div class="hidden sm:flex items-center min-w-0 flex-1 gap-1.5 sm:gap-2 overflow-hidden">
           
           <!-- Workspace Badge -->
           <button onclick="openWorkspaceModal()" 
@@ -1163,7 +1160,7 @@
           <!-- Slash separator -->
           <span class="text-zinc-600 select-none text-xs hidden xs:inline shrink-0">/</span>
 
-          <!-- Active Session Title (Visible on mobile too, flex min-w-0) -->
+          <!-- Active Session Title -->
           <div class="flex items-center min-w-0 flex-1">
             <button onclick="renameCurrentSessionPrompt()" 
                     id="currentSessionTitleBtn"
@@ -1188,10 +1185,147 @@
         </div>
       </div>
 
-      <!-- Right Header Controls: Full Conversation Popup, Terminal Drawer Toggle, Model Dropdown -->
+      <!-- Center Combobox: Mobile Only Action & Session Hub -->
+      <div id="mobileHeaderComboboxContainer" class="flex sm:hidden items-center justify-center min-w-0 flex-1 px-1">
+        
+        <!-- Mobile Combobox Trigger Button -->
+        <button id="mobileHeaderComboboxBtn" 
+                onclick="toggleMobileActionMenu()" 
+                type="button"
+                class="w-full max-w-[240px] xs:max-w-[280px] h-9 px-2.5 flex items-center justify-between gap-1.5 rounded-xl border ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shadow-2xs transition-all cursor-pointer"
+                style="background: var(--bg-card); border-color: var(--border); color: var(--text-main);"
+                title="Bấm để mở danh sách tác vụ và phiên làm việc">
+          <div class="flex items-center gap-1.5 min-w-0 flex-1">
+            <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+            </svg>
+            <span id="mobileComboboxFolder" class="truncate font-mono text-[11px] font-semibold text-[var(--text-main)] max-w-[70px] xs:max-w-[90px]">sso</span>
+            <span class="text-zinc-500 opacity-60 text-[10px] shrink-0">/</span>
+            <span id="mobileComboboxSessionTitle" class="truncate text-[11px] text-[var(--text-sub)] flex-1 text-left">Cuộc trò chuyện mới</span>
+          </div>
+          <svg id="mobileComboboxChevron" class="w-3.5 h-3.5 text-[var(--text-sub)] opacity-70 shrink-0 ease-spring transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+
+        <!-- Mobile Action Popover Dropdown Menu -->
+        <div id="mobileHeaderComboboxMenu" 
+             class="hidden-popover fixed sm:hidden z-50 rounded-2xl border p-2 shadow-2xl ease-spring"
+             style="background-color: var(--bg-card); border-color: var(--border); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+          
+          <!-- Context Section: Workspace & Session -->
+          <div class="space-y-0.5">
+            <!-- Action Item 1: Workspace Selection -->
+            <button onclick="handleMobileComboboxAction('workspace')" 
+                    type="button"
+                    class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-[var(--bg-hover)] active:scale-[0.99] transition-all group cursor-pointer">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-500/10 text-amber-500 shrink-0">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-[var(--text-main)]">Không gian làm việc</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-sub)] font-mono">Đổi</span>
+                </div>
+                <div id="mobileMenuWorkspaceText" class="text-[11px] font-mono text-[var(--text-sub)] truncate">sso</div>
+              </div>
+            </button>
+
+            <!-- Action Item 2: Rename Session -->
+            <button onclick="handleMobileComboboxAction('rename')" 
+                    type="button"
+                    class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-[var(--bg-hover)] active:scale-[0.99] transition-all group cursor-pointer">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-500/10 text-purple-400 shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-[var(--text-main)]">Tên phiên làm việc</span>
+                  <span class="text-[10px] text-blue-400 font-medium">Sửa</span>
+                </div>
+                <div id="mobileMenuSessionTitleText" class="text-[11px] text-[var(--text-sub)] truncate">Cuộc trò chuyện mới</div>
+              </div>
+            </button>
+          </div>
+
+          <!-- Divider -->
+          <div class="my-1.5 border-t border-[var(--border)] opacity-60"></div>
+
+          <!-- Quick Actions Section -->
+          <div class="space-y-0.5">
+            <!-- Action Item 3: New Chat -->
+            <button onclick="handleMobileComboboxAction('newChat')" 
+                    id="mobileHeaderNewChatBtn"
+                    type="button"
+                    class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-[var(--bg-hover)] active:scale-[0.99] transition-all cursor-pointer">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-500 shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-semibold text-[var(--text-main)]">Cuộc trò chuyện mới</div>
+                <div class="text-[10px] text-[var(--text-sub)]">Mở phiên chat mới với AI Agent</div>
+              </div>
+            </button>
+
+            <!-- Action Item 4: Full Conversation Modal -->
+            <button onclick="handleMobileComboboxAction('fullChat')" 
+                    type="button"
+                    class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-[var(--bg-hover)] active:scale-[0.99] transition-all cursor-pointer">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-sky-500/10 text-sky-400 shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-semibold text-[var(--text-main)]">Toàn bộ nội dung chat</div>
+                <div class="text-[10px] text-[var(--text-sub)]">Xem hoặc sao chép đầy đủ lịch sử</div>
+              </div>
+            </button>
+
+            <!-- Action Item 5: Terminal Drawer -->
+            <button onclick="handleMobileComboboxAction('terminal')" 
+                    type="button"
+                    class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-[var(--bg-hover)] active:scale-[0.99] transition-all cursor-pointer">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-400 shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-semibold text-[var(--text-main)]">Terminal Drawer</div>
+                <div class="text-[10px] text-[var(--text-sub)]">Bảng lệnh dòng lệnh hệ thống</div>
+              </div>
+            </button>
+
+            <!-- Action Item 6: Fullscreen Toggle -->
+            <button onclick="handleMobileComboboxAction('fullscreen')" 
+                    type="button"
+                    class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-[var(--bg-hover)] active:scale-[0.99] transition-all cursor-pointer">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-500/10 text-amber-400 shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-semibold text-[var(--text-main)]">Toàn màn hình</div>
+                <div class="text-[10px] text-[var(--text-sub)]">Bật/tắt chế độ toàn màn hình</div>
+              </div>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right Header Controls: Model Selector (Mobile + Desktop) & Desktop Actions -->
       <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
         
-        <!-- Fullscreen Toggle Button (Hidden on mobile < 640px) -->
+        <!-- Fullscreen Toggle Button (Desktop only: hidden on mobile < 640px) -->
         <button onclick="toggleFullscreen()" 
                 id="btnToggleFullscreen"
                 type="button"
@@ -1207,11 +1341,11 @@
           <span class="hidden md:inline text-[11px] font-medium" id="fullscreenBtnText">Toàn màn hình</span>
         </button>
 
-        <!-- Full Conversation Popup Trigger Button -->
+        <!-- Full Conversation Popup Trigger Button (Desktop only: hidden on mobile < 640px) -->
         <button onclick="openFullConversationModal()" 
                 id="btnHeaderFullConv"
                 type="button"
-                class="flex items-center space-x-1 p-1.5 sm:px-2 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
+                class="hidden sm:flex items-center space-x-1 p-1.5 sm:px-2 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
                 style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
                 title="Mở popup xem toàn bộ lịch sử đoạn chat">
           <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1220,11 +1354,11 @@
           <span class="hidden md:inline text-[11px] font-medium">Toàn bộ chat</span>
         </button>
 
-        <!-- Terminal Drawer Toggle Button -->
+        <!-- Terminal Drawer Toggle Button (Desktop only: hidden on mobile < 640px) -->
         <button onclick="toggleTerminalDrawer()" 
                 id="btnToggleTerminal"
                 type="button"
-                class="flex items-center space-x-1 sm:space-x-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-mono ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
+                class="hidden sm:flex items-center space-x-1 sm:space-x-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-mono ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
                 style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
                 title="Bật/Tắt Terminal Drawer (Ctrl+`)">
           <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5272,6 +5406,7 @@
       const menu = document.getElementById('modelDropdownMenu');
       if (menu) {
         if (menu.classList.contains('hidden-popover')) {
+          closeMobileActionMenu();
           menu.classList.remove('hidden-popover');
           menu.classList.add('visible-popover');
         } else {
@@ -5289,14 +5424,96 @@
       }
     }
 
+    // MOBILE ACTION COMBOBOX CONTROLLER
+    function toggleMobileActionMenu() {
+      closeModelDropdown();
+      const menu = document.getElementById('mobileHeaderComboboxMenu');
+      const chevron = document.getElementById('mobileComboboxChevron');
+      if (menu) {
+        if (menu.classList.contains('hidden-popover')) {
+          syncMobileActionMenuLabels();
+          menu.classList.remove('hidden-popover');
+          menu.classList.add('visible-popover');
+          if (chevron) chevron.classList.add('rotate-180');
+        } else {
+          closeMobileActionMenu();
+        }
+      }
+    }
+
+    function closeMobileActionMenu() {
+      const menu = document.getElementById('mobileHeaderComboboxMenu');
+      const chevron = document.getElementById('mobileComboboxChevron');
+      if (menu) {
+        menu.classList.remove('visible-popover');
+        menu.classList.add('hidden-popover');
+      }
+      if (chevron) {
+        chevron.classList.remove('rotate-180');
+      }
+    }
+
+    function syncMobileActionMenuLabels() {
+      const folderText = (currentSessionFolder && currentSessionFolder.innerText.trim()) || 'Chọn workspace';
+      const titleText = (currentSessionTitle && currentSessionTitle.innerText.trim()) || 'Cuộc trò chuyện mới';
+
+      const mobFolder = document.getElementById('mobileComboboxFolder');
+      if (mobFolder) mobFolder.textContent = folderText;
+
+      const mobTitle = document.getElementById('mobileComboboxSessionTitle');
+      if (mobTitle) mobTitle.textContent = titleText;
+
+      const menuFolder = document.getElementById('mobileMenuWorkspaceText');
+      if (menuFolder) menuFolder.textContent = folderText;
+
+      const menuTitle = document.getElementById('mobileMenuSessionTitleText');
+      if (menuTitle) menuTitle.textContent = titleText;
+    }
+
+    function handleMobileComboboxAction(action) {
+      closeMobileActionMenu();
+      if (action === 'workspace') {
+        openWorkspaceModal();
+      } else if (action === 'rename') {
+        renameCurrentSessionPrompt();
+      } else if (action === 'newChat') {
+        newSession();
+      } else if (action === 'fullChat') {
+        openFullConversationModal();
+      } else if (action === 'terminal') {
+        toggleTerminalDrawer();
+      } else if (action === 'fullscreen') {
+        toggleFullscreen();
+      }
+    }
+
+    // Realtime synchronization of header session & workspace titles
+    if (typeof MutationObserver !== 'undefined') {
+      const headerLabelObserver = new MutationObserver(() => syncMobileActionMenuLabels());
+      if (currentSessionFolder) headerLabelObserver.observe(currentSessionFolder, { characterData: true, childList: true, subtree: true });
+      if (currentSessionTitle) headerLabelObserver.observe(currentSessionTitle, { characterData: true, childList: true, subtree: true });
+    }
+
     document.addEventListener('click', (e) => {
       const btn = document.getElementById('modelDropdownBtn');
       const menu = document.getElementById('modelDropdownMenu');
       if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
         closeModelDropdown();
       }
+      const mobBtn = document.getElementById('mobileHeaderComboboxBtn');
+      const mobMenu = document.getElementById('mobileHeaderComboboxMenu');
+      if (mobBtn && mobMenu && !mobBtn.contains(e.target) && !mobMenu.contains(e.target)) {
+        closeMobileActionMenu();
+      }
       if (slashMenu && !slashMenu.contains(e.target) && e.target !== promptInput) {
         slashMenu.classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMobileActionMenu();
+        closeModelDropdown();
       }
     });
 
@@ -5338,6 +5555,8 @@
 
     function toggleSidebar(forceState) {
       soundEffects.playClick();
+      closeMobileActionMenu();
+      closeModelDropdown();
       const sidebar = document.getElementById('sidebar');
       const backdrop = document.getElementById('sidebarBackdrop');
       const isMobile = window.innerWidth < 1024;

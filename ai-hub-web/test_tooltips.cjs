@@ -53,4 +53,26 @@ assert.equal(pending, null);
 const detached = new Element('Removed row');
 hover(detached); detached.isConnected = false; pending();
 assert.ok(tooltip.hidden);
-console.log('Custom tooltips: delay, viewport position, Escape, native suppression, accessibility and cleanup passed');
+
+// Touch suppression assertions
+assert.ok(source.includes('@media (hover: none) and (pointer: coarse)'), 'Must include touch media query to suppress tooltips on mobile');
+assert.ok(typeof listeners.touchstart === 'function', 'Must register touchstart listener to hide tooltip');
+
+// Touch pointerover must be ignored immediately without scheduling a timer
+pending = null;
+context.revealTruncatedText({ target: clipped, type: 'pointerover', pointerType: 'touch' });
+assert.equal(pending, null, 'Must ignore touch pointerover');
+
+// Focusin without focus-visible / non-mouse must be ignored
+pending = null;
+context.revealTruncatedText({ target: clipped, type: 'focusin' });
+assert.equal(pending, null, 'Must ignore tap focusin');
+
+// touchstart dismisses tooltip
+hover(clipped);
+pending();
+assert.equal(tooltip.hidden, false);
+listeners.touchstart();
+assert.ok(tooltip.hidden, 'touchstart must dismiss any active tooltip');
+
+console.log('Custom tooltips: delay, viewport position, Escape, touch suppression, native suppression, accessibility and cleanup passed');

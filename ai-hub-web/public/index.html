@@ -686,6 +686,14 @@
     .hub-tooltip[data-visible="true"] { opacity: 1; }
     .hub-tooltip[hidden] { display: none; }
     @media (prefers-reduced-motion: reduce) { .hub-tooltip { transition: none; } }
+    @media (hover: none) and (pointer: coarse) {
+      #hubTooltip, .hub-tooltip {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+    }
     .question-context-action { font-size: 11px; color: #3b82f6; flex-shrink: 0; }
     .question-context-highlight .user-bubble { outline: 2px solid #3b82f6; outline-offset: 4px; }
     @media (max-width: 640px) { .question-context { padding: 10px 12px; gap: 8px; } .question-context-label { display: none; } }
@@ -3235,8 +3243,21 @@
       hubTooltip.dataset.visible = 'false';
     }
 
+    function isTouchInteraction(event) {
+      if (!event) return false;
+      if (event.pointerType === 'touch') return true;
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+        return true;
+      }
+      return false;
+    }
+
     function revealTruncatedText(event) {
-      if (event.pointerType === 'touch') return;
+      if (isTouchInteraction(event)) { hideHubTooltip(); return; }
+      if (event.type === 'focusin') {
+        const isFocusVisible = typeof event.target?.matches === 'function' ? event.target.matches(':focus-visible') : false;
+        if (!isFocusVisible && event.pointerType !== 'mouse') { hideHubTooltip(); return; }
+      }
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
       const anchor = target?.closest('[title], [data-tooltip], .truncate, .question-context-text, [class*="line-clamp-"], [data-session-name]');
       if (!anchor) { hideHubTooltip(); return; }
@@ -3283,6 +3304,7 @@
     });
     document.addEventListener('focusout', hideHubTooltip);
     document.addEventListener('pointerdown', hideHubTooltip);
+    document.addEventListener('touchstart', hideHubTooltip, { passive: true });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') hideHubTooltip(); });
     document.addEventListener('scroll', hideHubTooltip, true);
     window.addEventListener('resize', hideHubTooltip);

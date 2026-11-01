@@ -24,6 +24,8 @@ assert(html.includes('id="sessionCtxBtnDelete"'), 'Delete button must exist in c
 assert(html.includes('-webkit-touch-callout: none !important;'), 'Must suppress iOS callout popup');
 assert(html.includes('user-select: none !important;'), 'Must suppress native text selection on long-press');
 assert(html.includes('sessionModalPopIn'), 'Must define pop-in animation for centered mobile modal');
+assert(html.includes('break-words whitespace-normal'), 'Session context menu title must support full multi-line wrapping');
+assert(html.includes('hidden sm:flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors'), 'Fullscreen toggle button should be hidden on small mobile viewports');
 
 // 3. Execution Simulation using VM
 const startIdx = html.indexOf('let currentContextMenuSession');
@@ -200,6 +202,7 @@ const menu = mockElements.get('sessionContextMenu');
 assert(!menu.classList.contains('hidden'), 'Menu should not be hidden when opened');
 assert(menu.classList.contains('active'), 'Menu should have active class');
 assert.strictEqual(mockElements.get('sessionContextMenuTitle').textContent, 'Fix User Auth Bug');
+assert.strictEqual(mockElements.get('sessionContextMenuTitle').title, 'Fix User Auth Bug', 'Title attribute must be set for full tooltip');
 assert(mockElements.get('sessionCtxBtnOpen').innerHTML.includes('Mở phiên này'), 'Open button should show open option');
 
 // 5. Test getSessionFullUrl and openSessionInNewTab

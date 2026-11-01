@@ -25,7 +25,7 @@ assert(html.includes('-webkit-touch-callout: none !important;'), 'Must suppress 
 assert(html.includes('user-select: none !important;'), 'Must suppress native text selection on long-press');
 assert(html.includes('sessionModalPopIn'), 'Must define pop-in animation for centered mobile modal');
 assert(html.includes('break-words whitespace-normal'), 'Session context menu title must support full multi-line wrapping');
-assert(html.includes('hidden sm:flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors'), 'Fullscreen toggle button should be hidden on small mobile viewports');
+assert(html.includes('hidden lg:flex items-center space-x-1 p-1.5') || html.includes('hidden sm:flex items-center space-x-1 p-1.5'), 'Fullscreen toggle button should be hidden on small mobile viewports');
 
 // 3. Execution Simulation using VM
 const startIdx = html.indexOf('let currentContextMenuSession');

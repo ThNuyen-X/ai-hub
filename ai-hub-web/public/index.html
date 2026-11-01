@@ -748,7 +748,7 @@
         right: 10px;
         margin: 0 auto;
         width: calc(100vw - 20px);
-        max-width: 340px;
+        max-width: 380px;
         max-height: min(76dvh, 520px);
         overflow-y: auto;
       }
@@ -827,8 +827,37 @@
     @media (min-width: 640px) and (max-width: 1023px) {
       body { height: var(--mobile-app-height, 100dvh) !important; }
       main { overflow: hidden; width: 100%; max-width: 100vw; }
-      main > header button[onclick="openWorkspaceModal()"] { max-width: 240px; }
+      #btnHeaderFullConv, #btnToggleTerminal, #btnToggleFullscreen { display: none !important; }
+      #headerLiveTimerBadge { display: none !important; }
+      #mobileHeaderComboboxBtn { min-height: 38px; height: 38px; max-width: 380px; }
+      #mobileHeaderComboboxMenu {
+        position: fixed;
+        top: 60px;
+        left: 10px;
+        right: 10px;
+        margin: 0 auto;
+        width: calc(100vw - 20px);
+        max-width: 420px;
+        max-height: min(76dvh, 520px);
+        overflow-y: auto;
+      }
+      #modelDropdownMenu { position: fixed; top: 60px; right: 12px; width: min(340px, calc(100vw - 24px)); max-height: min(68dvh, 460px); }
       #slashCommandsMenu { left: 16px !important; width: min(360px, calc(100vw - 32px)) !important; }
+    }
+    @media (orientation: landscape) and (max-height: 520px) {
+      main > header { height: 48px !important; padding: 4px 8px !important; }
+      #sidebarToggleBtn { min-width: 34px !important; width: 34px !important; height: 34px !important; }
+      #mobileHeaderComboboxBtn { min-height: 34px !important; height: 34px !important; max-width: 380px !important; }
+      #modelDropdownBtn { min-width: 34px !important; height: 34px !important; padding: 4px 8px !important; }
+      #mobileHeaderComboboxMenu {
+        top: 52px !important;
+        max-height: min(86dvh, 360px) !important;
+        max-width: 440px !important;
+      }
+      #modelDropdownMenu {
+        top: 52px !important;
+        max-height: min(86dvh, 360px) !important;
+      }
     }
     @media (max-width: 359px) {
       #modelDropdownBtn { max-width: 86px; padding: 6px; }
@@ -1142,7 +1171,7 @@
         </button>
 
         <!-- Smart Responsive Session & Workspace Indicator (Desktop only: hidden on mobile) -->
-        <div class="hidden sm:flex items-center min-w-0 flex-1 gap-1.5 sm:gap-2 overflow-hidden">
+        <div class="hidden lg:flex items-center min-w-0 flex-1 gap-1.5 sm:gap-2 overflow-hidden">
           
           <!-- Workspace Badge -->
           <button onclick="openWorkspaceModal()" 
@@ -1186,13 +1215,13 @@
       </div>
 
       <!-- Center Combobox: Mobile Only Action & Session Hub -->
-      <div id="mobileHeaderComboboxContainer" class="flex sm:hidden items-center justify-center min-w-0 flex-1 px-1">
+      <div id="mobileHeaderComboboxContainer" class="flex lg:hidden items-center justify-center min-w-0 flex-1 px-1">
         
         <!-- Mobile Combobox Trigger Button -->
         <button id="mobileHeaderComboboxBtn" 
                 onclick="toggleMobileActionMenu()" 
                 type="button"
-                class="w-full max-w-[240px] xs:max-w-[280px] h-9 px-2.5 flex items-center justify-between gap-1.5 rounded-xl border ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shadow-2xs transition-all cursor-pointer"
+                class="w-full max-w-[240px] xs:max-w-[280px] sm:max-w-[360px] md:max-w-[420px] h-9 px-2.5 flex items-center justify-between gap-1.5 rounded-xl border ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shadow-2xs transition-all cursor-pointer"
                 style="background: var(--bg-card); border-color: var(--border); color: var(--text-main);"
                 title="Bấm để mở danh sách tác vụ và phiên làm việc">
           <div class="flex items-center gap-1.5 min-w-0 flex-1">
@@ -1210,46 +1239,59 @@
 
         <!-- Mobile Action Popover Dropdown Menu -->
         <div id="mobileHeaderComboboxMenu" 
-             class="hidden-popover fixed sm:hidden z-50 rounded-2xl border p-2 shadow-2xl ease-spring"
+             class="hidden-popover fixed lg:hidden z-50 rounded-2xl border p-2 shadow-2xl ease-spring"
              style="background-color: var(--bg-card); border-color: var(--border); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
           
-          <!-- Context Section: Workspace & Session -->
-          <div class="space-y-0.5">
-            <!-- Action Item 1: Workspace Selection -->
-            <button onclick="handleMobileComboboxAction('workspace')" 
-                    type="button"
-                    class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-[var(--bg-hover)] active:scale-[0.99] transition-all group cursor-pointer">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-500/10 text-amber-500 shrink-0">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <!-- Unified Context Card: Workspace & Session in 1 Single Option -->
+          <div class="p-2.5 rounded-xl border transition-all mb-1.5"
+               style="background-color: var(--bg-card); border-color: var(--border);">
+            
+            <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-sub)] mb-1.5 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
                 </svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-semibold text-[var(--text-main)]">Không gian làm việc</span>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-sub)] font-mono">Đổi</span>
-                </div>
-                <div id="mobileMenuWorkspaceText" class="text-[11px] font-mono text-[var(--text-sub)] truncate">sso</div>
-              </div>
-            </button>
+                Ngữ cảnh phiên làm việc
+              </span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Đang hoạt động"></span>
+            </div>
 
-            <!-- Action Item 2: Rename Session -->
-            <button onclick="handleMobileComboboxAction('rename')" 
-                    type="button"
-                    class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-[var(--bg-hover)] active:scale-[0.99] transition-all group cursor-pointer">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-500/10 text-purple-400 shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Workspace + Session Title Breadcrumb Line -->
+            <div class="flex items-center gap-1.5 mb-2 min-w-0">
+              <span id="mobileMenuWorkspaceText" 
+                    class="shrink-0 px-2 py-0.5 rounded-md font-mono text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 max-w-[100px] truncate">
+                sso
+              </span>
+              <span class="text-zinc-600 text-xs shrink-0 select-none">/</span>
+              <span id="mobileMenuSessionTitleText" 
+                    class="text-xs font-medium text-[var(--text-main)] truncate flex-1"
+                    title="Tên phiên hiện tại">
+                Cuộc trò chuyện mới
+              </span>
+            </div>
+
+            <!-- 2 Fast Action Buttons in Same Option Card -->
+            <div class="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-[var(--border)] opacity-90">
+              <button onclick="handleMobileComboboxAction('workspace')" 
+                      type="button"
+                      class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[11px] font-medium border ease-spring hover:bg-[var(--bg-hover)] active:scale-95 transition-all text-[var(--text-main)] cursor-pointer"
+                      style="background: var(--bg-card); border-color: var(--border);">
+                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+                </svg>
+                <span>Đổi thư mục</span>
+              </button>
+
+              <button onclick="handleMobileComboboxAction('rename')" 
+                      type="button"
+                      class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[11px] font-medium border ease-spring hover:bg-[var(--bg-hover)] active:scale-95 transition-all text-blue-400 cursor-pointer"
+                      style="background: var(--bg-card); border-color: var(--border);">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                 </svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-semibold text-[var(--text-main)]">Tên phiên làm việc</span>
-                  <span class="text-[10px] text-blue-400 font-medium">Sửa</span>
-                </div>
-                <div id="mobileMenuSessionTitleText" class="text-[11px] text-[var(--text-sub)] truncate">Cuộc trò chuyện mới</div>
-              </div>
-            </button>
+                <span>Đổi tên phiên</span>
+              </button>
+            </div>
           </div>
 
           <!-- Divider -->
@@ -1329,7 +1371,7 @@
         <button onclick="toggleFullscreen()" 
                 id="btnToggleFullscreen"
                 type="button"
-                class="hidden sm:flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
+                class="hidden lg:flex items-center space-x-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
                 style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
                 title="Bật/Tắt chế độ toàn màn hình (F11)">
           <svg id="fullscreenIconExpand" class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1345,7 +1387,7 @@
         <button onclick="openFullConversationModal()" 
                 id="btnHeaderFullConv"
                 type="button"
-                class="hidden sm:flex items-center space-x-1 p-1.5 sm:px-2 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
+                class="hidden lg:flex items-center space-x-1 p-1.5 sm:px-2 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
                 style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
                 title="Mở popup xem toàn bộ lịch sử đoạn chat">
           <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1358,7 +1400,7 @@
         <button onclick="toggleTerminalDrawer()" 
                 id="btnToggleTerminal"
                 type="button"
-                class="hidden sm:flex items-center space-x-1 sm:space-x-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-mono ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
+                class="hidden lg:flex items-center space-x-1 sm:space-x-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-mono ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
                 style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
                 title="Bật/Tắt Terminal Drawer (Ctrl+`)">
           <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -578,6 +578,10 @@
       opacity: 1 !important;
       pointer-events: auto !important;
     }
+    #sessionContextMenuPanel {
+      background-color: var(--bg-card) !important;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border) !important;
+    }
     .toast-item.toast-success {
       border-color: rgba(16, 185, 129, 0.45);
       box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.2);
@@ -796,19 +800,19 @@
         right: 0 !important;
         bottom: 0 !important;
         display: flex !important;
-        align-items: flex-end !important;
+        align-items: center !important;
         justify-content: center !important;
-        padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+        padding: 16px !important;
       }
       #sessionContextMenu.active #sessionContextMenuPanel {
-        width: calc(100% - 20px) !important;
-        max-width: 420px !important;
-        border-radius: 24px !important;
-        animation: sessionSheetSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        width: calc(100% - 32px) !important;
+        max-width: 320px !important;
+        border-radius: 20px !important;
+        animation: sessionModalPopIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
-      @keyframes sessionSheetSlideUp {
-        from { transform: translateY(100%); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+      @keyframes sessionModalPopIn {
+        from { transform: scale(0.92); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
       }
     }
     @media (min-width: 640px) and (max-width: 1023px) {
@@ -2282,20 +2286,15 @@
     </div>
   </div>
 
-  <!-- Custom Session Context Menu / Mobile Action Sheet (Redesigned) -->
+  <!-- Custom Session Context Menu (Centered Mobile Modal & Solid Opaque Background) -->
   <div id="sessionContextMenu" class="hidden fixed z-[95] select-none transition-all duration-150 ease-out opacity-0 pointer-events-none" role="menu" aria-label="Menu phiên làm việc">
     <!-- Backdrop for mobile touch-outside -->
-    <div id="sessionContextMenuBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm sm:hidden hidden"></div>
+    <div id="sessionContextMenuBackdrop" class="fixed inset-0 bg-black/65 sm:hidden hidden"></div>
 
-    <!-- Menu Panel -->
-    <div id="sessionContextMenuPanel" class="relative w-[280px] max-w-[calc(100vw-24px)] rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]/96 backdrop-blur-xl shadow-2xl p-1.5 text-xs text-[var(--text-main)] overflow-hidden">
-      <!-- Mobile drag handle indicator -->
-      <div class="sm:hidden flex justify-center pt-1 pb-1.5">
-        <div class="w-10 h-1 rounded-full bg-zinc-500/40"></div>
-      </div>
-
+    <!-- Menu Panel (100% Solid background, zero see-through) -->
+    <div id="sessionContextMenuPanel" class="relative w-[280px] max-w-[calc(100vw-32px)] rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-2xl p-2 text-xs text-[var(--text-main)] overflow-hidden">
       <!-- Header -->
-      <div class="px-3 py-2 mb-1.5 rounded-xl bg-[var(--bg-surface)]/70 border border-[var(--border)]/40 flex items-center justify-between gap-2">
+      <div class="px-3 py-2.5 mb-1.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)]/60 flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0 flex-1">
           <div class="w-6 h-6 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2327,7 +2326,7 @@
         </button>
       </div>
 
-      <div class="my-1.5 border-t border-[var(--border)]/50"></div>
+      <div class="my-1.5 border-t border-[var(--border)]/60"></div>
 
       <!-- Group 2: Management -->
       <div class="space-y-0.5">

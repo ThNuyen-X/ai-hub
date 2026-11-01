@@ -23,7 +23,7 @@ assert(html.includes('id="sessionCtxBtnDelete"'), 'Delete button must exist in c
 // 2. CSS Rules Checks
 assert(html.includes('-webkit-touch-callout: none !important;'), 'Must suppress iOS callout popup');
 assert(html.includes('user-select: none !important;'), 'Must suppress native text selection on long-press');
-assert(html.includes('sessionSheetSlideUp'), 'Must define slide-up animation for mobile action sheet');
+assert(html.includes('sessionModalPopIn'), 'Must define pop-in animation for centered mobile modal');
 
 // 3. Execution Simulation using VM
 const startIdx = html.indexOf('let currentContextMenuSession');

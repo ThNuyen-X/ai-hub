@@ -563,6 +563,21 @@
       from { opacity: 0; transform: translateY(-14px) scale(0.96); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
+
+    /* Session Context Menu & Mobile Action Sheet */
+    .session-item {
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      touch-action: pan-y;
+    }
+    #sessionContextMenu {
+      transition: opacity 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #sessionContextMenu.active {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
     .toast-item.toast-success {
       border-color: rgba(16, 185, 129, 0.45);
       box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.2);
@@ -773,6 +788,27 @@
         max-width: 420px;
         margin: 0 auto;
         gap: 8px;
+      }
+      #sessionContextMenu.active {
+        inset: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        display: flex !important;
+        align-items: flex-end !important;
+        justify-content: center !important;
+        padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+      }
+      #sessionContextMenu.active #sessionContextMenuPanel {
+        width: calc(100% - 24px) !important;
+        max-width: 420px !important;
+        border-radius: 20px !important;
+        animation: sessionSheetSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes sessionSheetSlideUp {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
     }
     @media (min-width: 640px) and (max-width: 1023px) {
@@ -2246,6 +2282,88 @@
     </div>
   </div>
 
+  <!-- Custom Session Context Menu / Mobile Action Sheet -->
+  <div id="sessionContextMenu" class="hidden fixed z-[95] select-none transition-opacity duration-150 ease-out opacity-0 pointer-events-none" role="menu" aria-label="Menu phiên làm việc">
+    <!-- Backdrop for mobile touch-outside -->
+    <div id="sessionContextMenuBackdrop" class="fixed inset-0 bg-black/50 backdrop-blur-xs sm:hidden hidden"></div>
+
+    <!-- Menu Panel -->
+    <div id="sessionContextMenuPanel" class="relative w-64 max-w-[calc(100vw-24px)] rounded-xl border border-[var(--border)] bg-[var(--bg-card)]/95 backdrop-blur-md shadow-2xl p-1.5 text-xs text-[var(--text-main)] overflow-hidden">
+      <!-- Header -->
+      <div class="px-2.5 py-1.5 mb-1 border-b border-[var(--border)]/60 flex items-center justify-between gap-1.5">
+        <div class="flex items-center gap-1.5 min-w-0 flex-1">
+          <svg class="w-3.5 h-3.5 opacity-60 shrink-0 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+          </svg>
+          <span id="sessionContextMenuTitle" class="font-semibold truncate text-[11px] text-[var(--text-sub)]">Tên phiên</span>
+        </div>
+        <span id="sessionContextMenuStatus" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 shrink-0 hidden">Đang chạy</span>
+      </div>
+
+      <!-- Action items -->
+      <div class="space-y-0.5">
+        <!-- Open in current tab -->
+        <button id="sessionCtxBtnOpen" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+          <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+          </svg>
+          <span class="flex-1 font-medium">Mở phiên này</span>
+        </button>
+
+        <!-- Open in new tab -->
+        <button id="sessionCtxBtnOpenNewTab" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring text-sky-400">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          <span class="flex-1 font-medium">Mở trong tab mới</span>
+          <span class="text-[10px] opacity-50 font-mono hidden sm:inline">↗</span>
+        </button>
+
+        <div class="my-1 border-t border-[var(--border)]/50"></div>
+
+        <!-- Pin / Unpin -->
+        <button id="sessionCtxBtnPin" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+          <span id="sessionCtxPinIcon" class="text-amber-400 text-sm leading-none shrink-0 w-4 text-center">★</span>
+          <span id="sessionCtxPinLabel" class="flex-1">Ghim phiên</span>
+        </button>
+
+        <!-- Rename -->
+        <button id="sessionCtxBtnRename" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+          <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          <span class="flex-1">Đổi tên phiên</span>
+        </button>
+
+        <!-- Copy Name -->
+        <button id="sessionCtxBtnCopyName" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+          <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+          <span class="flex-1">Sao chép tên phiên</span>
+        </button>
+
+        <!-- Copy ID -->
+        <button id="sessionCtxBtnCopyId" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+          <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+          </svg>
+          <span class="flex-1 font-mono text-[11px]">Sao chép Session ID</span>
+        </button>
+
+        <div class="my-1 border-t border-[var(--border)]/50"></div>
+
+        <!-- Delete session -->
+        <button id="sessionCtxBtnDelete" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-rose-500/10 text-rose-400 text-left ease-spring">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          <span class="flex-1 font-medium">Xóa phiên làm việc</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Stack Container (Responsive, Safe-Area & Above Modals) -->
   <div id="toastContainer" class="fixed z-[100] flex flex-col pointer-events-none" aria-live="polite" aria-atomic="true"></div>
 
@@ -2614,6 +2732,289 @@
 
         document.addEventListener('keydown', handleEsc);
       });
+    }
+
+    // ========================================================
+    // SESSION CONTEXT MENU & MOBILE ACTION SHEET
+    // ========================================================
+    let currentContextMenuSession = null;
+    let suppressNextSessionClick = false;
+
+    function handleSessionItemClick(e, id, name, wsPath) {
+      if (suppressNextSessionClick) {
+        suppressNextSessionClick = false;
+        return;
+      }
+      selectSession(id, name, wsPath);
+    }
+
+    function getSessionFullUrl(sessionId, sessionName, wsPath) {
+      const ws = wsPath || currentWorkspace;
+      const session = allSessionsCache.find(s => s && (s.id === sessionId || s.name === sessionId)) || {
+        id: sessionId,
+        name: sessionName || sessionId,
+        cwd: ws
+      };
+      const wsSlug = typeof workspaceRouteSlug === 'function' ? workspaceRouteSlug(ws) : 'workspace';
+      const sSlug = typeof sessionRouteSlug === 'function' ? sessionRouteSlug(session) : encodeURIComponent(sessionId);
+      const urlPath = '/' + wsSlug + '/' + sSlug;
+
+      try {
+        localStorage.setItem('ai_hub_session_workspace:' + sessionId, ws);
+        localStorage.setItem('ai_hub_session_route:' + urlPath, JSON.stringify({ sessionId, workspace: ws }));
+      } catch (_) {}
+
+      return window.location.origin + urlPath;
+    }
+
+    function openSessionInNewTab(sessionId, sessionName, wsPath) {
+      const url = getSessionFullUrl(sessionId, sessionName, wsPath);
+      const newWin = window.open(url, '_blank', 'noopener,noreferrer');
+      if (newWin) {
+        showToast('Đang mở phiên trong tab mới...', 'info', 2000);
+      } else {
+        showToast('Trình duyệt chặn popup. Vui lòng cấp quyền mở tab mới.', 'warning');
+      }
+    }
+
+    function openSessionContextMenu(sessionData, clientX, clientY) {
+      const menu = document.getElementById('sessionContextMenu');
+      const panel = document.getElementById('sessionContextMenuPanel');
+      const backdrop = document.getElementById('sessionContextMenuBackdrop');
+      const titleEl = document.getElementById('sessionContextMenuTitle');
+      const statusEl = document.getElementById('sessionContextMenuStatus');
+      const pinIcon = document.getElementById('sessionCtxPinIcon');
+      const pinLabel = document.getElementById('sessionCtxPinLabel');
+      const openBtn = document.getElementById('sessionCtxBtnOpen');
+      if (!menu || !panel || !sessionData) return;
+
+      currentContextMenuSession = sessionData;
+
+      if (titleEl) titleEl.textContent = sessionData.name || sessionData.id;
+      if (statusEl) {
+        statusEl.classList.toggle('hidden', !sessionData.isRunning);
+      }
+
+      const isPinned = pinnedSessionsSet.has(sessionData.id);
+      if (pinIcon) pinIcon.textContent = isPinned ? '★' : '☆';
+      if (pinLabel) pinLabel.textContent = isPinned ? 'Bỏ ghim phiên' : 'Ghim phiên lên đầu';
+
+      const isCurrent = currentSessionId && (sessionData.id === currentSessionId || sessionData.name === currentSessionId);
+      if (openBtn) {
+        openBtn.innerHTML = isCurrent
+          ? '<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span class="flex-1 font-medium text-emerald-400">Phiên đang chọn</span>'
+          : '<svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg><span class="flex-1 font-medium">Mở phiên này</span>';
+      }
+
+      menu.classList.remove('hidden');
+      menu.classList.add('active');
+      menu.style.pointerEvents = 'auto';
+      menu.style.opacity = '1';
+
+      if (window.innerWidth < 640) {
+        if (backdrop) backdrop.classList.remove('hidden');
+        menu.style.left = '0';
+        menu.style.top = '0';
+        menu.style.right = '0';
+        menu.style.bottom = '0';
+      } else {
+        if (backdrop) backdrop.classList.add('hidden');
+        const menuWidth = 264;
+        const menuHeight = 280;
+        const padding = 12;
+
+        let posX = clientX;
+        let posY = clientY;
+
+        if (posX + menuWidth > window.innerWidth - padding) {
+          posX = window.innerWidth - menuWidth - padding;
+        }
+        if (posY + menuHeight > window.innerHeight - padding) {
+          posY = window.innerHeight - menuHeight - padding;
+        }
+
+        menu.style.left = Math.max(padding, posX) + 'px';
+        menu.style.top = Math.max(padding, posY) + 'px';
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
+      }
+
+      if (typeof soundEffects !== 'undefined' && soundEffects.playClick) {
+        soundEffects.playClick();
+      }
+    }
+
+    function closeSessionContextMenu() {
+      const menu = document.getElementById('sessionContextMenu');
+      const backdrop = document.getElementById('sessionContextMenuBackdrop');
+      if (!menu || menu.classList.contains('hidden')) return false;
+
+      menu.style.opacity = '0';
+      menu.style.pointerEvents = 'none';
+      menu.classList.remove('active');
+      if (backdrop) backdrop.classList.add('hidden');
+
+      setTimeout(() => {
+        menu.classList.add('hidden');
+        currentContextMenuSession = null;
+      }, 160);
+      return true;
+    }
+
+    function initSessionContextMenu() {
+      const menu = document.getElementById('sessionContextMenu');
+      const backdrop = document.getElementById('sessionContextMenuBackdrop');
+      const sidebarEl = document.getElementById('sidebar');
+      if (!menu) return;
+
+      document.addEventListener('click', (e) => {
+        if (!menu.classList.contains('hidden') && !menu.contains(e.target)) {
+          closeSessionContextMenu();
+        }
+      });
+
+      if (backdrop) {
+        backdrop.addEventListener('click', closeSessionContextMenu);
+      }
+
+      if (sidebarEl) {
+        sidebarEl.addEventListener('scroll', () => {
+          if (!menu.classList.contains('hidden')) closeSessionContextMenu();
+        }, { passive: true });
+      }
+
+      document.getElementById('sessionCtxBtnOpen')?.addEventListener('click', () => {
+        if (!currentContextMenuSession) return;
+        const { id, name, wsPath } = currentContextMenuSession;
+        closeSessionContextMenu();
+        selectSession(id, name, wsPath);
+      });
+
+      document.getElementById('sessionCtxBtnOpenNewTab')?.addEventListener('click', () => {
+        if (!currentContextMenuSession) return;
+        const { id, name, wsPath } = currentContextMenuSession;
+        closeSessionContextMenu();
+        if (typeof soundEffects !== 'undefined' && soundEffects.playClick) soundEffects.playClick();
+        openSessionInNewTab(id, name, wsPath);
+      });
+
+      document.getElementById('sessionCtxBtnPin')?.addEventListener('click', (e) => {
+        if (!currentContextMenuSession) return;
+        const { id } = currentContextMenuSession;
+        closeSessionContextMenu();
+        togglePinSession(e, id);
+      });
+
+      document.getElementById('sessionCtxBtnRename')?.addEventListener('click', (e) => {
+        if (!currentContextMenuSession) return;
+        const { id, name } = currentContextMenuSession;
+        closeSessionContextMenu();
+        startRenameSession(e, id, name);
+      });
+
+      document.getElementById('sessionCtxBtnCopyName')?.addEventListener('click', () => {
+        if (!currentContextMenuSession) return;
+        const val = currentContextMenuSession.name || currentContextMenuSession.id;
+        if (window.writeTextToClipboard) {
+          window.writeTextToClipboard(val).then(() => {
+            showToast('Đã sao chép tên phiên', 'info');
+          });
+        }
+        closeSessionContextMenu();
+      });
+
+      document.getElementById('sessionCtxBtnCopyId')?.addEventListener('click', () => {
+        if (!currentContextMenuSession) return;
+        if (window.writeTextToClipboard) {
+          window.writeTextToClipboard(currentContextMenuSession.id).then(() => {
+            showToast('Đã sao chép Session ID', 'info');
+          });
+        }
+        closeSessionContextMenu();
+      });
+
+      document.getElementById('sessionCtxBtnDelete')?.addEventListener('click', (e) => {
+        if (!currentContextMenuSession) return;
+        const { id, name, wsPath } = currentContextMenuSession;
+        closeSessionContextMenu();
+        deleteSessionPrompt(e, id, name, wsPath);
+      });
+
+      if (sidebarEl) {
+        sidebarEl.addEventListener('contextmenu', (e) => {
+          const item = e.target.closest('.session-item');
+          if (!item) return;
+          e.preventDefault();
+          e.stopPropagation();
+
+          const sId = item.getAttribute('data-session-id');
+          const sName = item.getAttribute('data-session-name');
+          const ws = item.getAttribute('data-session-workspace');
+          const isRun = item.getAttribute('data-is-running') === 'true';
+          if (!sId) return;
+
+          openSessionContextMenu({ id: sId, name: sName, wsPath: ws, isRunning: isRun }, e.clientX, e.clientY);
+        });
+
+        let touchHoldTimer = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchTargetSession = null;
+        let isLongPressTriggered = false;
+
+        sidebarEl.addEventListener('touchstart', (e) => {
+          const item = e.target.closest('.session-item');
+          if (!item) return;
+          if (e.target.closest('button')) return;
+          if (e.touches.length !== 1) return;
+
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          isLongPressTriggered = false;
+
+          const sId = item.getAttribute('data-session-id');
+          const sName = item.getAttribute('data-session-name');
+          const ws = item.getAttribute('data-session-workspace');
+          const isRun = item.getAttribute('data-is-running') === 'true';
+          touchTargetSession = { id: sId, name: sName, wsPath: ws, isRunning: isRun };
+
+          clearTimeout(touchHoldTimer);
+          touchHoldTimer = setTimeout(() => {
+            isLongPressTriggered = true;
+            suppressNextSessionClick = true;
+            try { if (navigator.vibrate) navigator.vibrate(35); } catch (_) {}
+            openSessionContextMenu(touchTargetSession, touchStartX, touchStartY);
+          }, 450);
+        }, { passive: true });
+
+        sidebarEl.addEventListener('touchmove', (e) => {
+          if (!touchHoldTimer) return;
+          const dx = Math.abs(e.touches[0].clientX - touchStartX);
+          const dy = Math.abs(e.touches[0].clientY - touchStartY);
+          if (dx > 8 || dy > 8) {
+            clearTimeout(touchHoldTimer);
+            touchHoldTimer = null;
+          }
+        }, { passive: true });
+
+        sidebarEl.addEventListener('touchend', () => {
+          if (touchHoldTimer) {
+            clearTimeout(touchHoldTimer);
+            touchHoldTimer = null;
+          }
+          if (isLongPressTriggered) {
+            setTimeout(() => { suppressNextSessionClick = false; }, 350);
+          }
+        });
+
+        sidebarEl.addEventListener('touchcancel', () => {
+          if (touchHoldTimer) {
+            clearTimeout(touchHoldTimer);
+            touchHoldTimer = null;
+          }
+          isLongPressTriggered = false;
+        });
+      }
     }
 
     // A single delegated tooltip covers dynamic rows and preserves native label semantics.
@@ -5778,7 +6179,9 @@
         e.preventDefault();
         cycleTheme();
       } else if (e.key === 'Escape') {
-        if (!commandPaletteModal.classList.contains('hidden')) closeCommandPalette();
+        if (closeSessionContextMenu()) {
+          // Handled closing session context menu
+        } else if (!commandPaletteModal.classList.contains('hidden')) closeCommandPalette();
         else if (!keyboardShortcutsModal.classList.contains('hidden')) closeKeyboardShortcutsModal();
         else if (!fullscreenCodeModal.classList.contains('hidden')) closeFullscreenCode();
         else if (document.getElementById('filePreviewModal') && !document.getElementById('filePreviewModal').classList.contains('hidden')) closeFilePreview();
@@ -6110,8 +6513,11 @@
                            isSelected ? 'font-semibold' : 'hover:bg-[var(--bg-hover)]'
                          }"
                          style="${isSelected ? 'background: var(--bg-surface); color: var(--text-main);' : 'color: var(--text-sub);'}"
+                         data-session-id="${escapeHtml(s.id)}"
                          data-session-name="${escapeHtml(s.name || s.id)}"
-                         onclick="selectSession('${escapeJs(s.id)}', '${escapeJs(s.name)}', '${escapeJs(wsPath)}')">
+                         data-session-workspace="${escapeHtml(wsPath)}"
+                         data-is-running="${s.isRunning ? 'true' : 'false'}"
+                         onclick="handleSessionItemClick(event, '${escapeJs(s.id)}', '${escapeJs(s.name)}', '${escapeJs(wsPath)}')">
                       <div class="flex items-center space-x-1.5 truncate mr-1 min-w-0 flex-1">
                         ${s.isRunning ? `
                           <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping shrink-0" title="Đang chạy"></span>
@@ -6201,7 +6607,11 @@
           <div class="session-item group/pin flex items-center justify-between px-2 py-1 rounded-md text-xs cursor-pointer ease-spring ${
                  isSelected ? 'font-semibold bg-[var(--bg-surface)] text-[var(--text-main)]' : 'hover:bg-[var(--bg-hover)] text-[var(--text-sub)]'
                }"
-               onclick="selectSession('${escapeJs(s.id)}', '${escapeJs(s.name)}', '${escapeJs(s.cwd || currentWorkspace)}')">
+               data-session-id="${escapeHtml(s.id)}"
+               data-session-name="${escapeHtml(s.name || s.id)}"
+               data-session-workspace="${escapeHtml(s.cwd || currentWorkspace)}"
+               data-is-running="${s.isRunning ? 'true' : 'false'}"
+               onclick="handleSessionItemClick(event, '${escapeJs(s.id)}', '${escapeJs(s.name)}', '${escapeJs(s.cwd || currentWorkspace)}')">
             <div class="flex items-center space-x-1.5 truncate mr-1 min-w-0 flex-1">
               ${s.isRunning ? `
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping shrink-0" title="Đang chạy"></span>
@@ -9073,6 +9483,7 @@
       }
     });
 
+    initSessionContextMenu();
     initHubEvents();
     loadWorkspaceTree().then(() => restoreSessionFromUrl());
   </script>

@@ -17,7 +17,7 @@ assert(html.includes('id="sessionCtxBtnOpenNewTab"'), 'Open in new tab button mu
 assert(html.includes('id="sessionCtxBtnPin"'), 'Pin button must exist in context menu');
 assert(html.includes('id="sessionCtxBtnRename"'), 'Rename button must exist in context menu');
 assert(html.includes('id="sessionCtxBtnCopyName"'), 'Copy name button must exist in context menu');
-assert(html.includes('id="sessionCtxBtnCopyId"'), 'Copy ID button must exist in context menu');
+assert(!html.includes('id="sessionCtxBtnCopyId"'), 'Copy ID button should be removed from context menu');
 assert(html.includes('id="sessionCtxBtnDelete"'), 'Delete button must exist in context menu');
 
 // 2. CSS Rules Checks
@@ -105,7 +105,6 @@ const requiredIds = [
   'sessionCtxBtnPin',
   'sessionCtxBtnRename',
   'sessionCtxBtnCopyName',
-  'sessionCtxBtnCopyId',
   'sessionCtxBtnDelete',
   'sidebar',
   'toastContainer',

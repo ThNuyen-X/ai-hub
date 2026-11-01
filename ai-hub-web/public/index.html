@@ -798,13 +798,13 @@
         display: flex !important;
         align-items: flex-end !important;
         justify-content: center !important;
-        padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+        padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
       }
       #sessionContextMenu.active #sessionContextMenuPanel {
-        width: calc(100% - 24px) !important;
+        width: calc(100% - 20px) !important;
         max-width: 420px !important;
-        border-radius: 20px !important;
-        animation: sessionSheetSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        border-radius: 24px !important;
+        animation: sessionSheetSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
       @keyframes sessionSheetSlideUp {
         from { transform: translateY(100%); opacity: 0; }
@@ -2282,83 +2282,88 @@
     </div>
   </div>
 
-  <!-- Custom Session Context Menu / Mobile Action Sheet -->
-  <div id="sessionContextMenu" class="hidden fixed z-[95] select-none transition-opacity duration-150 ease-out opacity-0 pointer-events-none" role="menu" aria-label="Menu phiên làm việc">
+  <!-- Custom Session Context Menu / Mobile Action Sheet (Redesigned) -->
+  <div id="sessionContextMenu" class="hidden fixed z-[95] select-none transition-all duration-150 ease-out opacity-0 pointer-events-none" role="menu" aria-label="Menu phiên làm việc">
     <!-- Backdrop for mobile touch-outside -->
-    <div id="sessionContextMenuBackdrop" class="fixed inset-0 bg-black/50 backdrop-blur-xs sm:hidden hidden"></div>
+    <div id="sessionContextMenuBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm sm:hidden hidden"></div>
 
     <!-- Menu Panel -->
-    <div id="sessionContextMenuPanel" class="relative w-64 max-w-[calc(100vw-24px)] rounded-xl border border-[var(--border)] bg-[var(--bg-card)]/95 backdrop-blur-md shadow-2xl p-1.5 text-xs text-[var(--text-main)] overflow-hidden">
-      <!-- Header -->
-      <div class="px-2.5 py-1.5 mb-1 border-b border-[var(--border)]/60 flex items-center justify-between gap-1.5">
-        <div class="flex items-center gap-1.5 min-w-0 flex-1">
-          <svg class="w-3.5 h-3.5 opacity-60 shrink-0 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-          </svg>
-          <span id="sessionContextMenuTitle" class="font-semibold truncate text-[11px] text-[var(--text-sub)]">Tên phiên</span>
-        </div>
-        <span id="sessionContextMenuStatus" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 shrink-0 hidden">Đang chạy</span>
+    <div id="sessionContextMenuPanel" class="relative w-[280px] max-w-[calc(100vw-24px)] rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]/96 backdrop-blur-xl shadow-2xl p-1.5 text-xs text-[var(--text-main)] overflow-hidden">
+      <!-- Mobile drag handle indicator -->
+      <div class="sm:hidden flex justify-center pt-1 pb-1.5">
+        <div class="w-10 h-1 rounded-full bg-zinc-500/40"></div>
       </div>
 
-      <!-- Action items -->
+      <!-- Header -->
+      <div class="px-3 py-2 mb-1.5 rounded-xl bg-[var(--bg-surface)]/70 border border-[var(--border)]/40 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <div class="w-6 h-6 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+            </svg>
+          </div>
+          <span id="sessionContextMenuTitle" class="font-semibold truncate text-[13px] text-[var(--text-main)]">Tên phiên</span>
+        </div>
+        <span id="sessionContextMenuStatus" class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 shrink-0 hidden">Đang chạy</span>
+      </div>
+
+      <!-- Group 1: Navigation -->
       <div class="space-y-0.5">
         <!-- Open in current tab -->
-        <button id="sessionCtxBtnOpen" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+        <button id="sessionCtxBtnOpen" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
           <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
           </svg>
-          <span class="flex-1 font-medium">Mở phiên này</span>
+          <span class="flex-1 font-medium text-[13px]">Mở phiên này</span>
         </button>
 
         <!-- Open in new tab -->
-        <button id="sessionCtxBtnOpenNewTab" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring text-sky-400">
+        <button id="sessionCtxBtnOpenNewTab" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-sky-500/10 text-sky-400 text-left transition-colors">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
           </svg>
-          <span class="flex-1 font-medium">Mở trong tab mới</span>
-          <span class="text-[10px] opacity-50 font-mono hidden sm:inline">↗</span>
+          <span class="flex-1 font-medium text-[13px]">Mở trong tab mới</span>
+          <span class="text-[11px] opacity-70 font-mono">↗</span>
         </button>
+      </div>
 
-        <div class="my-1 border-t border-[var(--border)]/50"></div>
+      <div class="my-1.5 border-t border-[var(--border)]/50"></div>
 
+      <!-- Group 2: Management -->
+      <div class="space-y-0.5">
         <!-- Pin / Unpin -->
-        <button id="sessionCtxBtnPin" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+        <button id="sessionCtxBtnPin" type="button" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
           <span id="sessionCtxPinIcon" class="text-amber-400 text-sm leading-none shrink-0 w-4 text-center">★</span>
-          <span id="sessionCtxPinLabel" class="flex-1">Ghim phiên</span>
+          <span id="sessionCtxPinLabel" class="flex-1 text-[13px]">Ghim phiên</span>
         </button>
 
         <!-- Rename -->
-        <button id="sessionCtxBtnRename" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+        <button id="sessionCtxBtnRename" type="button" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
           <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
           </svg>
-          <span class="flex-1">Đổi tên phiên</span>
+          <span class="flex-1 text-[13px]">Đổi tên phiên</span>
         </button>
 
         <!-- Copy Name -->
-        <button id="sessionCtxBtnCopyName" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
+        <button id="sessionCtxBtnCopyName" type="button" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
           <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
           </svg>
-          <span class="flex-1">Sao chép tên phiên</span>
+          <span class="flex-1 text-[13px]">Sao chép tên phiên</span>
         </button>
+      </div>
 
-        <!-- Copy ID -->
-        <button id="sessionCtxBtnCopyId" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--bg-hover)] text-left ease-spring">
-          <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-          </svg>
-          <span class="flex-1 font-mono text-[11px]">Sao chép Session ID</span>
-        </button>
+      <div class="my-1.5 border-t border-[var(--border)]/50"></div>
 
-        <div class="my-1 border-t border-[var(--border)]/50"></div>
-
+      <!-- Group 3: Danger Zone -->
+      <div class="space-y-0.5">
         <!-- Delete session -->
-        <button id="sessionCtxBtnDelete" type="button" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-rose-500/10 text-rose-400 text-left ease-spring">
+        <button id="sessionCtxBtnDelete" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-rose-500/15 text-rose-400 text-left transition-colors">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
           </svg>
-          <span class="flex-1 font-medium">Xóa phiên làm việc</span>
+          <span class="flex-1 font-medium text-[13px]">Xóa phiên làm việc</span>
         </button>
       </div>
     </div>
@@ -2819,8 +2824,8 @@
         menu.style.bottom = '0';
       } else {
         if (backdrop) backdrop.classList.add('hidden');
-        const menuWidth = 264;
-        const menuHeight = 280;
+        const menuWidth = 280;
+        const menuHeight = 295;
         const padding = 12;
 
         let posX = clientX;
@@ -2918,16 +2923,6 @@
         if (window.writeTextToClipboard) {
           window.writeTextToClipboard(val).then(() => {
             showToast('Đã sao chép tên phiên', 'info');
-          });
-        }
-        closeSessionContextMenu();
-      });
-
-      document.getElementById('sessionCtxBtnCopyId')?.addEventListener('click', () => {
-        if (!currentContextMenuSession) return;
-        if (window.writeTextToClipboard) {
-          window.writeTextToClipboard(currentContextMenuSession.id).then(() => {
-            showToast('Đã sao chép Session ID', 'info');
           });
         }
         closeSessionContextMenu();

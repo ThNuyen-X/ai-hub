@@ -12,8 +12,8 @@ REM Che do gon gang cho Goose (An log doc file va lenh shell dai dong)
 set GOOSE_CLI_MIN_PRIORITY=0.8
 set GOOSE_SHOW_FULL_OUTPUT=false
 
-REM Chi thi he thong (System Prompt) cho Goose Agent
-set SYSTEM_INSTRUCTION=QUY TAC BAT BUOC: Truoc khi goi lenh shell quan trong (build, deploy, sua file lon, tac dong he thong), BAT BUOC viet 1 cau sieu ngan (duoi 15 tu) thong bao muc dich cho nguoi dung truoc khi goi tool. Voi cac thao tac doc nhe (ls, cat, grep nho), hay goi thang lenh de toi uu toc do.
+REM Chi thi he thong (System Prompt) toan cuc cho Goose Agent
+set SYSTEM_INSTRUCTION=QUY TAC BAT BUOC: (1) Truoc khi goi lenh shell quan trong (build, deploy, sua file lon, tac dong he thong), BAT BUOC viet 1 cau sieu ngan (duoi 15 tu) thong bao muc dich truoc khi goi tool. (2) Voi thao tac doc nhe (ls, cat, grep nho), goi thang lenh va gop thao tac de toi uu toc do. (3) QUY CHUAN TOI UU TAI NGUYEN: Khong doc toan bo file lon khi chi sua doan nho; luu y CRLF tren Windows; tranh execSync/N+1 query; doc SQLite che do readOnly va dong trong finally; dung TTL cache; chong goi trung (coalesce) va don sach EventSource/timer tren UI; luon chay node --check hoac test sau khi sua code. (4) Tu dong doc .goosehints tai workspace va cap nhat bai hoc moi vao D:\ai-hub\lessons.md.
 
 :CHECK_DIR
 for %%I in ("%CD%") do set "WORKSPACE_NAME=%%~nxI"

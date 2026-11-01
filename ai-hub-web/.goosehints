@@ -1,0 +1,6 @@
+# AI Hub Web Workspace (.goosehints)
+
+- **Backend**: `server.js` (Port `20130`, SSE streaming, multi-session `activeSessions`, direct SQLite read from `%APPDATA%\Block\goose\data\sessions\sessions.db`).
+- **Frontend**: `public/index.html` (Multi-session chat UI, `.live-progress-container` placed below `.ai-content-body`, coalesced `loadWorkspaceTree`).
+- **Shared Lessons**: `D:\ai-hub\lessons.md`.
+- **Verification**: Always run `node --check server.js` and `node test_chat_ui.cjs` (plus other `test_*.cjs` files) after edits.

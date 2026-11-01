@@ -4,10 +4,11 @@
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
-const { spawn, execSync } = require("node:child_process");
+const { spawn, execSync, execFile } = require("node:child_process");
 const { DatabaseSync } = require("node:sqlite");
 const { isTechnicalSessionName, sessionTitle, titleFromContent } = require("./session-title.cjs");
 const { cleanWorkspacePath, workspaceKey } = require("./workspace-path.cjs");
+const { buildSystemInstruction } = require("./system-instruction.cjs");
 
 // Tu dong ghi log vao server.log va ghi server.pid
 const LOG_DIR = path.join(process.env.LOCALAPPDATA || process.env.USERPROFILE || ".", "ai-hub", "logs");
@@ -67,8 +68,8 @@ function setupSseHeaders(res) {
     if (typeof res.socket.setKeepAlive === "function") res.socket.setKeepAlive(true, 10000);
   }
   if (typeof res.flushHeaders === "function") res.flushHeaders();
-  // 4KB comment padding to defeat Mobile Safari / WebKit and proxies buffer threshold
-  res.write(": " + " ".repeat(4096) + "\n\n");
+  // 4KB comment padding + retry hint to defeat Mobile Safari / WebKit buffering and speed up auto-reconnect
+  res.write("retry: 1500\n: " + " ".repeat(4096) + "\n\n");
   if (typeof res.flush === "function") res.flush();
 }
 
@@ -95,6 +96,17 @@ if (typeof setInterval === "function") {
         hubEventClients.delete(client);
       }
     }
+    for (const sessionCtx of activeSessions.values()) {
+      if (!sessionCtx || !sessionCtx.clients) continue;
+      for (const client of sessionCtx.clients) {
+        try {
+          client.write(": heartbeat\n\n");
+          if (typeof client.flush === "function") client.flush();
+        } catch {
+          sessionCtx.clients.delete(client);
+        }
+      }
+    }
   }, 15000);
 }
  // Map<sessionId, SessionContext>
@@ -106,24 +118,33 @@ let activeSessionEvents = [];
 const activeClients = new Set();
 const recentlyCompletedSessions = new Map();
 
-function getRunningSession(sessionId) {
+function getRunningSession(sessionId, skipDbLookup = false) {
   if (!sessionId) return null;
+  if (activeSessions.size === 0 && recentlyCompletedSessions.size === 0) return null;
   if (activeSessions.has(sessionId)) return activeSessions.get(sessionId);
-  try {
-    const stored = findStoredSession(sessionId);
-    if (stored) {
-      if (activeSessions.has(stored.id)) return activeSessions.get(stored.id);
-      if (stored.name && activeSessions.has(stored.name)) return activeSessions.get(stored.name);
-    }
-  } catch {}
   for (const ctx of activeSessions.values()) {
-    if (ctx.sessionId === sessionId || ctx.info?.sessionId === sessionId || ctx.tempName === sessionId) {
+    if (ctx.sessionId === sessionId || ctx.info?.sessionId === sessionId || ctx.tempName === sessionId || ctx.resolvedDbId === sessionId) {
       return ctx;
     }
   }
+  if (!skipDbLookup && activeSessions.size > 0) {
+    try {
+      const stored = findStoredSession(sessionId);
+      if (stored) {
+        if (activeSessions.has(stored.id)) return activeSessions.get(stored.id);
+        if (stored.name && activeSessions.has(stored.name)) return activeSessions.get(stored.name);
+        for (const ctx of activeSessions.values()) {
+          if (ctx.sessionId === stored.id || ctx.sessionId === stored.name || ctx.tempName === stored.name || ctx.resolvedDbId === stored.id) {
+            ctx.resolvedDbId = stored.id;
+            return ctx;
+          }
+        }
+      }
+    } catch {}
+  }
   if (recentlyCompletedSessions.has(sessionId)) return recentlyCompletedSessions.get(sessionId);
   for (const ctx of recentlyCompletedSessions.values()) {
-    if (ctx.sessionId === sessionId || ctx.info?.sessionId === sessionId || ctx.tempName === sessionId) {
+    if (ctx.sessionId === sessionId || ctx.info?.sessionId === sessionId || ctx.tempName === sessionId || ctx.resolvedDbId === sessionId) {
       return ctx;
     }
   }
@@ -131,33 +152,80 @@ function getRunningSession(sessionId) {
 }
 
 function isSessionRunning(sessionId) {
-  return !!getRunningSession(sessionId);
+  const ctx = getRunningSession(sessionId);
+  return !!(ctx && !ctx.isFinished);
+}
+
+function coalesceSessionEventsForReplay(events) {
+  const result = [];
+  for (const item of events) {
+    const prev = result[result.length - 1];
+    if ((item.event === "text" || item.event === "thinking") && prev && prev.event === item.event && typeof prev.payload?.text === "string" && typeof item.payload?.text === "string") {
+      prev.id = item.id;
+      prev.payload = { ...prev.payload, text: prev.payload.text + item.payload.text };
+    } else {
+      result.push({ id: item.id, event: item.event, payload: (typeof item.payload === "object" && item.payload !== null) ? { ...item.payload } : item.payload });
+    }
+  }
+  return result;
 }
 
 function broadcastToSession(sessionCtx, event, payload) {
   if (!sessionCtx) return;
   const p = (typeof payload === "object" && payload !== null) ? { type: event, ...payload } : { type: event, value: payload };
   if (event === "tool_call" && p.name && !p.tool) p.tool = p.name;
-  sessionCtx.events.push({ event, payload: p });
-  if (sessionCtx.events.length > 1000) sessionCtx.events.shift();
-  const chunk = `event: ${event}\ndata: ${JSON.stringify(p)}\n\n`;
+  sessionCtx.nextEventId = (sessionCtx.nextEventId || 0) + 1;
+  const eventId = sessionCtx.nextEventId;
+  sessionCtx.events.push({ id: eventId, event, payload: p });
+  if (sessionCtx.events.length > 1200) {
+    const splitIdx = Math.floor(sessionCtx.events.length / 2);
+    sessionCtx.events = coalesceSessionEventsForReplay(sessionCtx.events.slice(0, splitIdx)).concat(sessionCtx.events.slice(splitIdx));
+    while (sessionCtx.events.length > 1200) {
+      const rawIdx = sessionCtx.events.findIndex(e => e.event === "raw_log");
+      if (rawIdx !== -1) sessionCtx.events.splice(rawIdx, 1);
+      else sessionCtx.events.shift();
+    }
+  }
+  const chunk = `id: ${eventId}\nevent: ${event}\ndata: ${JSON.stringify(p)}\n\n`;
   for (const client of sessionCtx.clients) {
     try {
       client.write(chunk);
       if (typeof client.flush === "function") client.flush();
-    } catch {}
+    } catch {
+      sessionCtx.clients.delete(client);
+    }
   }
 }
 
-function attachClientToSession(res, sessionCtx) {
+function attachClientToSession(res, sessionCtx, req) {
   setupSseHeaders(res);
 
-  if (sessionCtx.info) {
+  let lastEventId = 0;
+  if (req) {
+    const hId = req.headers && req.headers["last-event-id"];
+    if (hId) {
+      const parsed = parseInt(String(hId), 10);
+      if (!Number.isNaN(parsed) && parsed > 0) lastEventId = parsed;
+    }
+    if (!lastEventId && req.url) {
+      try {
+        const u = new URL(req.url, "http://localhost");
+        const qId = parseInt(u.searchParams.get("lastEventId") || "", 10);
+        if (!Number.isNaN(qId) && qId > 0) lastEventId = qId;
+      } catch {}
+    }
+  }
+  if (lastEventId > (sessionCtx.nextEventId || 0)) lastEventId = 0;
+
+  if (lastEventId === 0 && sessionCtx.info) {
     res.write(`event: session_info\ndata: ${JSON.stringify({ type: "session_info", ...sessionCtx.info })}\n\n`);
   }
 
-  for (const item of sessionCtx.events) {
-    res.write(`event: ${item.event}\ndata: ${JSON.stringify(item.payload)}\n\n`);
+  const pendingEvents = lastEventId > 0 ? sessionCtx.events.filter(item => (item.id || 0) > lastEventId) : sessionCtx.events;
+  const replayedEvents = coalesceSessionEventsForReplay(pendingEvents);
+  for (const item of replayedEvents) {
+    const idPrefix = item.id ? `id: ${item.id}\n` : "";
+    res.write(`${idPrefix}event: ${item.event}\ndata: ${JSON.stringify(item.payload)}\n\n`);
   }
   if (typeof res.flush === "function") res.flush(); // Flush replayed events on attach
 
@@ -230,10 +298,11 @@ function removeWorkspace(wsPath) {
 }
 
 function deleteSession(sessionId) {
+  let db;
   try {
     const dbPath = path.join(process.env.APPDATA, "Block", "goose", "data", "sessions", "sessions.db");
     if (!fs.existsSync(dbPath)) return { ok: false, error: "Không tìm thấy CSDL sessions.db" };
-    const db = new DatabaseSync(dbPath);
+    db = new DatabaseSync(dbPath);
 
     let realId = sessionId;
     const findStmt = db.prepare("SELECT id FROM sessions WHERE id = ? OR name = ?");
@@ -247,6 +316,7 @@ function deleteSession(sessionId) {
     db.prepare("DELETE FROM usage_ledger WHERE session_id = ?").run(realId);
     db.prepare("DELETE FROM sessions WHERE id = ?").run(realId);
     db.close();
+    db = null;
 
     // Neu phien nay dang chay, dung tien trinh
     const runningCtx = getRunningSession(sessionId) || getRunningSession(realId);
@@ -270,14 +340,143 @@ function deleteSession(sessionId) {
     return { ok: true, id: realId };
   } catch (err) {
     return { ok: false, error: err.message };
+  } finally {
+    if (db) { try { db.close(); } catch {} }
+  }
+}
+
+function extractUserPromptTextFromContentJson(contentJson) {
+  let content = [];
+  try {
+    content = typeof contentJson === "string"
+      ? JSON.parse(contentJson || "[]")
+      : (Array.isArray(contentJson) ? contentJson : []);
+  } catch {
+    return "";
+  }
+  const userTexts = [];
+  for (const c of content) {
+    if (!c || c.type === "toolResponse") continue;
+    if (typeof c === "string") userTexts.push(c);
+    else if (typeof c.text === "string") userTexts.push(c.text);
+    else if (c.text && typeof c.text.value === "string") userTexts.push(c.text.value);
+  }
+  return String(userTexts.join("\n") || "")
+    .replace(/<turn-context\b[^>]*>[\s\S]*?<\/turn-context>/gi, "")
+    .replace(/^\[Yêu cầu:[^\]]*\]\s*/i, "")
+    .trim();
+}
+
+function truncateLastUserTurn(sessionId, newTitlePrompt = "") {
+  if (!sessionId) return { ok: false, error: "Thiếu sessionId" };
+  let db;
+  try {
+    const runningCtx = getRunningSession(sessionId);
+    const resolvedRunningId = runningCtx?.resolvedDbId || runningCtx?.info?.sessionId || null;
+    if (runningCtx) {
+      try {
+        if (runningCtx.process?.pid) {
+          if (process.platform === "win32") {
+            try { execSync(`taskkill /pid ${runningCtx.process.pid} /f /t`, { windowsHide: true }); } catch {}
+          } else {
+            process.kill(runningCtx.process.pid);
+          }
+        }
+      } catch {}
+      runningCtx.isFinished = true;
+      for (const c of runningCtx.clients) {
+        try { c.end(); } catch {}
+      }
+      runningCtx.clients.clear();
+      activeSessions.delete(runningCtx.sessionId);
+      if (runningCtx.tempName) activeSessions.delete(runningCtx.tempName);
+      if (runningCtx.info?.sessionId) activeSessions.delete(runningCtx.info.sessionId);
+      if (runningCtx.resolvedDbId) activeSessions.delete(runningCtx.resolvedDbId);
+      recentlyCompletedSessions.delete(runningCtx.sessionId);
+      if (runningCtx.tempName) recentlyCompletedSessions.delete(runningCtx.tempName);
+      if (runningCtx.info?.sessionId) recentlyCompletedSessions.delete(runningCtx.info.sessionId);
+    }
+
+    const dbPath = path.join(process.env.APPDATA || "", "Block", "goose", "data", "sessions", "sessions.db");
+    if (!fs.existsSync(dbPath)) return { ok: true, deletedCount: 0 };
+    db = new DatabaseSync(dbPath);
+
+    const lookupId = resolvedRunningId || sessionId;
+    const found = db.prepare(`SELECT id, name, user_set_name FROM sessions
+      WHERE id = ? OR name = ? OR id = ? OR name = ?
+      ORDER BY CASE WHEN id = ? OR id = ? THEN 0 ELSE 1 END, updated_at DESC LIMIT 1`)
+      .get(sessionId, sessionId, lookupId, lookupId, sessionId, lookupId);
+
+    if (!found || !found.id) {
+      return { ok: true, deletedCount: 0 };
+    }
+
+    const realId = found.id;
+    const msgRows = db.prepare("SELECT id, role, content_json, metadata_json FROM messages WHERE session_id = ? ORDER BY id ASC").all(realId);
+
+    let lastUserIdx = -1;
+    let lastUserText = "";
+    for (let i = msgRows.length - 1; i >= 0; i--) {
+      const r = msgRows[i];
+      if (r.role !== "user") continue;
+      const txt = extractUserPromptTextFromContentJson(r.content_json);
+      if (!txt || /^#\s*Conversation Summary\b/i.test(txt)) continue;
+      lastUserIdx = i;
+      lastUserText = txt;
+      break;
+    }
+
+    let deletedCount = 0;
+    if (lastUserIdx >= 0) {
+      const targetRow = msgRows[lastUserIdx];
+      const delRes = db.prepare("DELETE FROM messages WHERE session_id = ? AND id >= ?").run(realId, targetRow.id);
+      deletedCount += Number(delRes?.changes || 0);
+
+      for (let j = lastUserIdx - 1; j >= Math.max(0, lastUserIdx - 4); j--) {
+        const prev = msgRows[j];
+        if (prev.role !== "user") continue;
+        const prevTxt = extractUserPromptTextFromContentJson(prev.content_json);
+        if (prevTxt && prevTxt === lastUserText) {
+          let meta = {};
+          try { meta = JSON.parse(prev.metadata_json || "{}"); } catch {}
+          if (meta && meta.agentVisible === false) {
+            const dupRes = db.prepare("DELETE FROM messages WHERE session_id = ? AND id = ?").run(realId, prev.id);
+            deletedCount += Number(dupRes?.changes || 0);
+          }
+          break;
+        }
+      }
+
+      let hasRemainingUserPrompt = false;
+      for (let k = 0; k < lastUserIdx; k++) {
+        if (msgRows[k].role !== "user") continue;
+        const t = extractUserPromptTextFromContentJson(msgRows[k].content_json);
+        if (t && !/^#\s*Conversation Summary\b/i.test(t) && t !== lastUserText) {
+          hasRemainingUserPrompt = true;
+          break;
+        }
+      }
+      if (!hasRemainingUserPrompt && !found.user_set_name && newTitlePrompt && String(newTitlePrompt).trim()) {
+        const nextTitle = sessionTitle(String(newTitlePrompt).trim());
+        db.prepare("UPDATE sessions SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(nextTitle, realId);
+      }
+    }
+
+    return { ok: true, sessionId: realId, deletedCount };
+  } catch (err) {
+    console.error("[REWIND LAST TURN] " + err.message);
+    return { ok: false, error: err.message };
+  } finally {
+    if (db) { try { db.close(); } catch {} }
   }
 }
 
 function renameSession(sessionId, newName) {
+  let db;
   try {
     const dbPath = path.join(process.env.APPDATA, "Block", "goose", "data", "sessions", "sessions.db");
     if (!fs.existsSync(dbPath)) return { ok: false, error: "Không tìm thấy CSDL sessions.db" };
-    const db = new DatabaseSync(dbPath);
+    db = new DatabaseSync(dbPath);
 
     let realId = sessionId;
     const findStmt = db.prepare("SELECT id FROM sessions WHERE id = ? OR name = ?");
@@ -288,10 +487,13 @@ function renameSession(sessionId, newName) {
 
     db.prepare("UPDATE sessions SET name = ?, user_set_name = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(newName, realId);
     db.close();
+    db = null;
     return { ok: true, id: realId, name: newName };
   } catch (err) {
     console.error("Lỗi đổi tên phiên:", err);
     return { ok: false, error: err.message };
+  } finally {
+    if (db) { try { db.close(); } catch {} }
   }
 }
 
@@ -537,6 +739,23 @@ function findMatchingFolder(targetName, sampleFile) {
   return null;
 }
 
+// Luu model gan nhat cua tung phien trong bo nho va trich xuat tu SQLite model_config_json
+const sessionModels = new Map();
+function extractSessionModel(modelConfigJson, sessionId, sessionName) {
+  const runningCtx = (sessionId && getRunningSession(sessionId, true)) || (sessionName && getRunningSession(sessionName, true));
+  if (runningCtx && runningCtx.info && runningCtx.info.model) return runningCtx.info.model;
+  if (sessionId && sessionModels.has(sessionId)) return sessionModels.get(sessionId);
+  if (sessionName && sessionModels.has(sessionName)) return sessionModels.get(sessionName);
+  if (modelConfigJson && typeof modelConfigJson === "string") {
+    try {
+      const parsed = JSON.parse(modelConfigJson);
+      const m = parsed?.model_name || parsed?.model || null;
+      if (m) return m;
+    } catch {}
+  }
+  return null;
+}
+
 // Lay danh sach cac phien lam viec tu Goose
 function getSessionsList() {
   const dbPath = path.join(process.env.APPDATA || "", "Block", "goose", "data", "sessions", "sessions.db");
@@ -549,12 +768,22 @@ function getSessionsList() {
         FROM sessions s WHERE s.archived_at IS NULL
           AND s.session_type = 'user' AND s.parent_session_id IS NULL
         ORDER BY s.updated_at DESC`).all();
-      return rows.map(({ first_prompt, ...session }) => ({
-        ...session,
-        cwd: cleanWorkspacePath(session.cwd),
-        name: isTechnicalSessionName(session.name) ? titleFromContent(first_prompt) : session.name,
-        date: session.updated_at
-      }));
+      const modelConfigMap = new Map();
+      try {
+        for (const mr of db.prepare("SELECT id, model_config_json FROM sessions WHERE archived_at IS NULL AND model_config_json IS NOT NULL").all()) {
+          if (mr.id && mr.model_config_json) modelConfigMap.set(mr.id, mr.model_config_json);
+        }
+      } catch {}
+      return rows.map(({ first_prompt, ...session }) => {
+        const resolvedModel = extractSessionModel(modelConfigMap.get(session.id), session.id, session.name);
+        return {
+          ...session,
+          cwd: cleanWorkspacePath(session.cwd),
+          name: isTechnicalSessionName(session.name) ? titleFromContent(first_prompt) : session.name,
+          date: session.updated_at,
+          ...(resolvedModel ? { model: resolvedModel } : {})
+        };
+      });
     } catch (err) {
       console.error("[SESSION TITLES] " + err.message);
     } finally {
@@ -592,7 +821,59 @@ function findStoredSession(sessionId) {
   }
 }
 
-function getSessionDetail(sessionId) {
+function getSessionDetail(sessionId, skipCliFallback = false) {
+  const dbPath = path.join(process.env.APPDATA || "", "Block", "goose", "data", "sessions", "sessions.db");
+  if (fs.existsSync(dbPath)) {
+    let db;
+    try {
+      db = new DatabaseSync(dbPath, { readOnly: true });
+      const row = db.prepare(`SELECT id, name, working_dir, user_set_name, session_type, created_at, updated_at
+        FROM sessions WHERE id = ? OR name = ?
+        ORDER BY CASE WHEN id = ? THEN 0 ELSE 1 END, updated_at DESC LIMIT 1`).get(sessionId, sessionId, sessionId);
+      let rowModelConfigJson = null;
+      if (row && row.id) {
+        try {
+          const mc = db.prepare("SELECT model_config_json FROM sessions WHERE id = ?").get(row.id);
+          rowModelConfigJson = mc?.model_config_json || null;
+        } catch {}
+      }
+      if (row && row.id) {
+        const msgRows = db.prepare(`SELECT message_id, role, created_timestamp, content_json, metadata_json
+          FROM messages WHERE session_id = ? ORDER BY id ASC`).all(row.id);
+        const conversation = msgRows.map(r => {
+          let content = [];
+          let metadata;
+          try { content = JSON.parse(r.content_json || "[]"); } catch {}
+          try { if (r.metadata_json) metadata = JSON.parse(r.metadata_json); } catch {}
+          return {
+            id: r.message_id,
+            role: r.role,
+            created: r.created_timestamp,
+            content,
+            ...(metadata !== undefined ? { metadata } : {})
+          };
+        });
+        return {
+          id: row.id,
+          name: row.name,
+          working_dir: row.working_dir,
+          user_set_name: !!row.user_set_name,
+          session_type: row.session_type,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          model: extractSessionModel(rowModelConfigJson, row.id, row.name),
+          conversation,
+          message_count: conversation.length
+        };
+      }
+      if (skipCliFallback) return { conversation: [] };
+    } catch (err) {
+      console.error("[SESSION DETAIL DB] " + err.message);
+    } finally {
+      if (db) db.close();
+    }
+  }
+  if (skipCliFallback) return { conversation: [] };
   try {
     let out = '';
     try {
@@ -603,15 +884,14 @@ function getSessionDetail(sessionId) {
         maxBuffer: 50 * 1024 * 1024
       });
     } catch {
-      // Neu sessionId la session name (vi du session_17933...), tim internal ID tu session list
       const list = getSessionsList();
       const match = list.find(s => s.name === sessionId || s.id === sessionId);
       if (match && match.id && match.id !== sessionId) {
         out = execSync(`"${GOOSE_PATH}" session export --session-id "${match.id}" --format json`, {
           encoding: "utf8",
           timeout: 6000,
-        windowsHide: true,
-        maxBuffer: 50 * 1024 * 1024
+          windowsHide: true,
+          maxBuffer: 50 * 1024 * 1024
         });
       }
     }
@@ -621,11 +901,19 @@ function getSessionDetail(sessionId) {
   }
 }
 
+let _cachedTailscaleIp = null;
+let _cachedTailscaleIpAt = 0;
 function getSystemInfo() {
-  let tailscaleIp = process.env.AI_HUB_TAILSCALE_IP || "127.0.0.1";
-  try {
-    tailscaleIp = execSync("tailscale ip -4", { encoding: "utf8", timeout: 2000, windowsHide: true }).trim();
-  } catch {}
+  const now = Date.now();
+  if (!_cachedTailscaleIp || (now - _cachedTailscaleIpAt) > 60000) {
+    let ip = process.env.AI_HUB_TAILSCALE_IP || "127.0.0.1";
+    try {
+      ip = execSync("tailscale ip -4", { encoding: "utf8", timeout: 2000, windowsHide: true }).trim() || ip;
+    } catch {}
+    _cachedTailscaleIp = ip;
+    _cachedTailscaleIpAt = now;
+  }
+  const tailscaleIp = _cachedTailscaleIp;
   const latestCtx = activeSessions.values().next().value || null;
   return {
     tailscaleIp,
@@ -633,6 +921,7 @@ function getSystemInfo() {
     endpoint: `http://${NINE_ROUTER_IP}:${NINE_ROUTER_PORT}/v1`,
     models: AVAILABLE_MODELS,
     workspaces: getSavedWorkspaces(),
+    platform: process.platform,
     drives: getAvailableDrives(),
     gooseFound: fs.existsSync(GOOSE_PATH),
     activeSessionId: latestCtx ? latestCtx.sessionId : null,
@@ -640,6 +929,89 @@ function getSystemInfo() {
     activeSessions: Array.from(activeSessions.values()).map(c => c.info),
     isBusy: activeSessions.size > 0
   };
+}
+
+function resolveLocalTargetPath(rawInput, workspace) {
+  if (!rawInput || typeof rawInput !== "string") return { valid: false, resolved: "" };
+  const cleaned = rawInput.trim().replace(/^[`"']+|[`"']+$/g, "").trim();
+  if (!cleaned || cleaned.length > 400 || /[\r\n\0]/.test(cleaned)) {
+    return { valid: false, resolved: "" };
+  }
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(cleaned)) {
+    return { valid: false, resolved: "" };
+  }
+  if (process.platform === "win32") {
+    if (cleaned.startsWith("/") || cleaned.startsWith("\\\\")) {
+      return { valid: false, resolved: "" };
+    }
+    if (/^[a-zA-Z]:[\\\/]/.test(cleaned)) {
+      const driveRoot = cleaned.slice(0, 2).toUpperCase() + "\\";
+      const drives = getAvailableDrives().map(d => d.toUpperCase());
+      if (!drives.includes(driveRoot)) {
+        return { valid: false, resolved: "" };
+      }
+      return { valid: true, resolved: path.normalize(cleaned) };
+    }
+  }
+  if (!path.isAbsolute(cleaned)) {
+    if (workspace && fs.existsSync(workspace)) {
+      return { valid: true, resolved: path.resolve(workspace, cleaned) };
+    }
+    return { valid: true, resolved: path.resolve(process.cwd(), cleaned) };
+  }
+  return { valid: true, resolved: path.normalize(cleaned) };
+}
+
+function runGitAsync(args, cwd, timeoutMs = 4500) {
+  return new Promise((resolve) => {
+    execFile("git", ["--no-optional-locks", ...args], {
+      cwd,
+      windowsHide: true,
+      timeout: timeoutMs,
+      maxBuffer: 4 * 1024 * 1024,
+      encoding: "utf8"
+    }, (err, stdout, stderr) => {
+      if (err) {
+        resolve({ ok: false, stdout: stdout || "", stderr: stderr || err.message || "" });
+      } else {
+        resolve({ ok: true, stdout: stdout || "", stderr: stderr || "" });
+      }
+    });
+  });
+}
+
+function countUnifiedDiffStats(diffText) {
+  if (!diffText) return { added: 0, removed: 0 };
+  let added = 0;
+  let removed = 0;
+  const lines = diffText.split(/\r?\n/);
+  for (const line of lines) {
+    if (line.startsWith("+") && !line.startsWith("+++")) added++;
+    else if (line.startsWith("-") && !line.startsWith("---")) removed++;
+  }
+  return { added, removed };
+}
+
+function buildSyntheticUnifiedDiff(content, mode, relLabel) {
+  const safeLabel = (relLabel || "file").replace(/\\/g, "/");
+  const norm = String(content || "").replace(/\r\n/g, "\n");
+  const lines = norm.length === 0 ? [] : (norm.endsWith("\n") ? norm.slice(0, -1).split("\n") : norm.split("\n"));
+  if (mode === "deleted") {
+    const header = [
+      `diff --git a/${safeLabel} b/${safeLabel}`,
+      `--- a/${safeLabel}`,
+      "+++ /dev/null",
+      `@@ -1,${lines.length} +0,0 @@`
+    ];
+    return header.concat(lines.map(l => "-" + l)).join("\n");
+  }
+  const header = [
+    `diff --git a/${safeLabel} b/${safeLabel}`,
+    "--- /dev/null",
+    `+++ b/${safeLabel}`,
+    `@@ -0,0 +1,${lines.length} @@`
+  ];
+  return header.concat(lines.map(l => "+" + l)).join("\n");
 }
 
 const server = http.createServer((req, res) => {
@@ -666,10 +1038,44 @@ const server = http.createServer((req, res) => {
 
   // API: Danh sach sessions
   if (req.method === "GET" && pathname === "/api/sessions") {
-    const list = getSessionsList().map(s => ({
-      ...s,
-      isRunning: isSessionRunning(s.id) || isSessionRunning(s.name)
-    }));
+    for (const ctx of activeSessions.values()) {
+      if (ctx && !ctx.isFinished && !ctx.resolvedDbId) {
+        try {
+          const stored = findStoredSession(ctx.sessionId);
+          if (stored && stored.id) ctx.resolvedDbId = stored.id;
+        } catch {}
+      }
+    }
+    const list = getSessionsList().map(s => {
+      const runningCtx = getRunningSession(s.id, true) || getRunningSession(s.name, true);
+      const isRunning = !!(runningCtx && !runningCtx.isFinished);
+      const model = runningCtx?.info?.model || s.model || extractSessionModel(null, s.id, s.name);
+      return {
+        ...s,
+        name: (isRunning && isTechnicalSessionName(s.name) && runningCtx.info?.title) ? runningCtx.info.title : s.name,
+        ...(model ? { model } : {}),
+        isRunning
+      };
+    });
+    for (const ctx of activeSessions.values()) {
+      if (!ctx || ctx.isFinished) continue;
+      const alreadyInList = list.some(s =>
+        s.id === ctx.sessionId || s.name === ctx.sessionId ||
+        (ctx.resolvedDbId && s.id === ctx.resolvedDbId) ||
+        (ctx.tempName && (s.id === ctx.tempName || s.name === ctx.tempName)) ||
+        (ctx.info?.sessionId && (s.id === ctx.info.sessionId || s.name === ctx.info.sessionId))
+      );
+      if (!alreadyInList) {
+        list.unshift({
+          id: ctx.resolvedDbId || ctx.info?.sessionId || ctx.sessionId,
+          name: ctx.info?.title || ctx.sessionId,
+          cwd: cleanWorkspacePath(ctx.info?.cwd || ""),
+          date: new Date(ctx.info?.startTime || Date.now()).toISOString(),
+          ...(ctx.info?.model ? { model: ctx.info.model } : {}),
+          isRunning: true
+        });
+      }
+    }
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(list));
     return;
@@ -683,11 +1089,21 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({ error: "Thiếu mã phiên" }));
       return;
     }
-    const detail = getSessionDetail(id) || {};
     const runningCtx = getRunningSession(id);
-    detail.isRunning = !!runningCtx;
-    if (runningCtx && runningCtx.info) {
-      detail.activeSessionInfo = runningCtx.info;
+    const isRunning = !!(runningCtx && !runningCtx.isFinished);
+    const detail = getSessionDetail(id, isRunning) || {};
+    detail.isRunning = isRunning;
+    if (!detail.model) {
+      const fallbackModel = runningCtx?.info?.model || extractSessionModel(null, id, detail.name);
+      if (fallbackModel) detail.model = fallbackModel;
+    }
+    if (detail.isRunning) {
+      delete detail.error;
+      if (!Array.isArray(detail.conversation)) detail.conversation = [];
+      if (runningCtx.info) {
+        detail.activeSessionInfo = runningCtx.info;
+        if (runningCtx.info.model) detail.model = runningCtx.info.model;
+      }
     }
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(detail));
@@ -770,16 +1186,13 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        targetPath = targetPath.replace(/^[`"']+|[`"']+$/g, "").trim();
-
-        let resolved = targetPath;
-        if (!path.isAbsolute(resolved)) {
-          if (workspace && fs.existsSync(workspace)) {
-            resolved = path.resolve(workspace, targetPath);
-          } else {
-            resolved = path.resolve(process.cwd(), targetPath);
-          }
+        const loc = resolveLocalTargetPath(targetPath, workspace);
+        if (!loc.valid || !loc.resolved) {
+          res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ success: false, error: `Đường dẫn không thuộc máy cục bộ: ${targetPath}` }));
+          return;
         }
+        const resolved = loc.resolved;
 
         if (!fs.existsSync(resolved)) {
           res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
@@ -843,16 +1256,13 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      targetPath = targetPath.replace(/^[`"']+|[`"']+$/g, "").trim();
-
-      let resolved = targetPath;
-      if (!path.isAbsolute(resolved)) {
-        if (workspace && fs.existsSync(workspace)) {
-          resolved = path.resolve(workspace, targetPath);
-        } else {
-          resolved = path.resolve(process.cwd(), targetPath);
-        }
+      const loc = resolveLocalTargetPath(targetPath, workspace);
+      if (!loc.valid || !loc.resolved) {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: `Đường dẫn không thuộc máy cục bộ: ${targetPath}` }));
+        return;
       }
+      const resolved = loc.resolved;
 
       if (!fs.existsSync(resolved)) {
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
@@ -912,6 +1322,190 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Kiem tra nhanh danh sach duong dan co ton tai tren may cuc bo hay khong
+  if (req.method === "POST" && pathname === "/api/check-paths") {
+    let body = "";
+    req.on("data", chunk => { body += chunk; });
+    req.on("end", () => {
+      try {
+        const payload = JSON.parse(body || "{}");
+        const rawList = Array.isArray(payload.paths) ? payload.paths.slice(0, 150) : [];
+        const workspace = (payload.workspace || "").trim();
+        const results = {};
+        for (const item of rawList) {
+          if (typeof item !== "string") continue;
+          const key = item.trim();
+          if (!key || results[key]) continue;
+          const loc = resolveLocalTargetPath(key, workspace);
+          if (!loc.valid || !loc.resolved) {
+            results[key] = { exists: false, isDir: false, path: "" };
+            continue;
+          }
+          try {
+            if (fs.existsSync(loc.resolved)) {
+              const st = fs.statSync(loc.resolved);
+              results[key] = { exists: true, isDir: st.isDirectory(), path: loc.resolved };
+            } else {
+              results[key] = { exists: false, isDir: false, path: loc.resolved };
+            }
+          } catch {
+            results[key] = { exists: false, isDir: false, path: "" };
+          }
+        }
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: true, platform: process.platform, results }));
+      } catch (err) {
+        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: Xem thay doi file (Git Diff: dong xanh them / dong do xoa)
+  if (req.method === "GET" && pathname === "/api/file-diff") {
+    (async () => {
+      try {
+        const targetPath = (urlObj.searchParams.get("path") || "").trim();
+        const workspace = (urlObj.searchParams.get("workspace") || "").trim();
+        if (!targetPath) {
+          res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ success: false, error: "Thiếu tham số path" }));
+          return;
+        }
+        const loc = resolveLocalTargetPath(targetPath, workspace);
+        if (!loc.valid || !loc.resolved) {
+          res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ success: false, error: "Đường dẫn không thuộc máy cục bộ" }));
+          return;
+        }
+        const resolved = loc.resolved;
+        const existsNow = fs.existsSync(resolved);
+        let stat = null;
+        if (existsNow) {
+          stat = fs.statSync(resolved);
+          if (stat.isDirectory()) {
+            res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ success: false, isDir: true, error: "Đường dẫn là thư mục" }));
+            return;
+          }
+        }
+
+        const ext = path.extname(resolved).toLowerCase();
+        const binaryExts = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".exe", ".dll", ".zip", ".pdf", ".woff", ".woff2"];
+        const isBinary = binaryExts.includes(ext);
+
+        let probeDir = path.dirname(resolved);
+        while (probeDir && !fs.existsSync(probeDir)) {
+          const parent = path.dirname(probeDir);
+          if (parent === probeDir) break;
+          probeDir = parent;
+        }
+        if ((!probeDir || !fs.existsSync(probeDir)) && workspace && fs.existsSync(workspace)) {
+          probeDir = workspace;
+        }
+
+        let inGit = false;
+        let status = existsNow ? "unchanged" : "deleted";
+        let diffText = "";
+
+        if (probeDir && fs.existsSync(probeDir)) {
+          const topRes = await runGitAsync(["rev-parse", "--show-toplevel"], probeDir);
+          if (topRes.ok && topRes.stdout.trim()) {
+            inGit = true;
+            const repoRoot = path.normalize(topRes.stdout.trim());
+            const relPath = path.relative(repoRoot, resolved);
+            const relPosix = relPath.split(path.sep).join("/");
+            const stRes = await runGitAsync(["status", "--porcelain", "--", relPosix], repoRoot);
+            const stLine = (stRes.stdout || "").split(/\r?\n/).find(Boolean) || "";
+            const xy = stLine.slice(0, 2);
+
+            if (!existsNow || xy.includes("D")) {
+              status = "deleted";
+              let dRes = await runGitAsync(["diff", "HEAD", "--unified=3", "--", relPosix], repoRoot);
+              if (!dRes.ok || !dRes.stdout.trim()) {
+                dRes = await runGitAsync(["diff", "--unified=3", "--", relPosix], repoRoot);
+              }
+              if (dRes.ok && dRes.stdout.trim()) {
+                diffText = dRes.stdout;
+              } else if (!isBinary) {
+                const showRes = await runGitAsync(["show", `HEAD:${relPosix}`], repoRoot);
+                if (showRes.ok && showRes.stdout) {
+                  diffText = buildSyntheticUnifiedDiff(showRes.stdout, "deleted", relPosix);
+                }
+              }
+            } else if (xy === "??") {
+              status = "added";
+              if (!isBinary && stat && stat.size <= 512 * 1024) {
+                const rawContent = fs.readFileSync(resolved, "utf8");
+                diffText = buildSyntheticUnifiedDiff(rawContent, "added", relPosix);
+              }
+            } else if (stLine) {
+              status = xy.includes("A") ? "added" : "modified";
+              const dRes = await runGitAsync(["diff", "HEAD", "--unified=3", "--", relPosix], repoRoot);
+              if (!dRes.ok || !dRes.stdout.trim()) {
+                const cRes = await runGitAsync(["diff", "--cached", "--unified=3", "--", relPosix], repoRoot);
+                const wRes = await runGitAsync(["diff", "--unified=3", "--", relPosix], repoRoot);
+                diffText = (cRes.stdout || "") + (wRes.stdout || "");
+              } else {
+                diffText = dRes.stdout;
+              }
+              if (!diffText.trim() && status === "added" && !isBinary && stat && stat.size <= 512 * 1024) {
+                const rawContent = fs.readFileSync(resolved, "utf8");
+                diffText = buildSyntheticUnifiedDiff(rawContent, "added", relPosix);
+              }
+            }
+          }
+        }
+
+        const MAX_DIFF_CHARS = 350000;
+        let diffTruncated = false;
+        if (diffText.length > MAX_DIFF_CHARS) {
+          diffText = diffText.slice(0, MAX_DIFF_CHARS);
+          diffTruncated = true;
+        }
+        const stats = countUnifiedDiffStats(diffText);
+        if (!inGit && !existsNow) {
+          res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({
+            success: true,
+            name: path.basename(resolved),
+            path: resolved,
+            exists: false,
+            inGit: false,
+            hasChanges: false,
+            status: "missing",
+            added: 0,
+            removed: 0,
+            diff: ""
+          }));
+          return;
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({
+          success: true,
+          name: path.basename(resolved),
+          path: resolved,
+          size: stat ? stat.size : 0,
+          exists: existsNow,
+          isBinary,
+          inGit,
+          hasChanges: inGit ? Boolean(diffText.trim() || status !== "unchanged") : false,
+          status: inGit ? status : "unchanged",
+          added: stats.added,
+          removed: stats.removed,
+          diffTruncated,
+          diff: diffText
+        }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    })();
+    return;
+  }
+
   // API: Them Workspace truc tiep
   if (req.method === "POST" && pathname === "/api/workspaces") {
     let body = "";
@@ -966,7 +1560,8 @@ const server = http.createServer((req, res) => {
     req.on("data", chunk => { body += chunk; });
     req.on("end", () => {
       try {
-        const { id } = JSON.parse(body);
+        const payload = JSON.parse(body);
+        const id = payload.id || payload.sessionId;
         if (!id) {
           res.writeHead(400, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ ok: false, error: "Thiếu mã phiên" }));
@@ -992,7 +1587,9 @@ const server = http.createServer((req, res) => {
     req.on("data", chunk => { body += chunk; });
     req.on("end", () => {
       try {
-        const { id, name } = JSON.parse(body);
+        const payload = JSON.parse(body);
+        const id = payload.id || payload.sessionId;
+        const name = payload.name || payload.newName;
         if (!id || !name || !name.trim()) {
           res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
           res.end(JSON.stringify({ ok: false, error: "Vui lòng nhập tên mới hợp lệ" }));
@@ -1085,11 +1682,25 @@ const server = http.createServer((req, res) => {
     const sessionCtx = sId ? getRunningSession(sId) : (activeSessions.values().next().value || null);
     if (sessionCtx) {
       console.log(`[RECONNECT] Client reconnected to active session ${sessionCtx.sessionId}`);
-      attachClientToSession(res, sessionCtx);
+      attachClientToSession(res, sessionCtx, req);
       return;
     }
     res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify({ error: "Không có tác vụ đang chạy cho phiên này" }));
+    return;
+  }
+
+  // API: Rewind luot cau hoi moi nhat de gui lai (Option 1 Edit)
+  if (req.method === "POST" && pathname === "/api/rewind-last-turn") {
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", () => {
+      let data = {};
+      try { data = JSON.parse(body); } catch {}
+      const result = truncateLastUserTurn(data.sessionId, data.titlePrompt || data.prompt || "");
+      res.writeHead(result.ok ? 200 : 500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify(result));
+    });
     return;
   }
 
@@ -1106,9 +1717,15 @@ const server = http.createServer((req, res) => {
       const rawCwd = data.cwd || data.workspace;
       const cwd = (rawCwd && fs.existsSync(rawCwd)) ? rawCwd : ((process.env.AI_HUB_DEFAULT_WORKSPACE && fs.existsSync(process.env.AI_HUB_DEFAULT_WORKSPACE)) ? process.env.AI_HUB_DEFAULT_WORKSPACE : process.cwd());
       let sessionId = data.sessionId || `session_${Date.now()}`;
+      if (data.rewindLastTurn && data.sessionId) {
+        const rewindRes = truncateLastUserTurn(data.sessionId, data.titlePrompt || prompt);
+        if (rewindRes && rewindRes.sessionId) {
+          sessionId = rewindRes.sessionId;
+        }
+      }
       let storedSession;
       try {
-        storedSession = data.sessionId ? findStoredSession(data.sessionId) : null;
+        storedSession = data.sessionId ? (findStoredSession(sessionId) || findStoredSession(data.sessionId)) : null;
       } catch (err) {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Cannot load conversation: " + err.message }));
@@ -1118,7 +1735,7 @@ const server = http.createServer((req, res) => {
       if (storedSession) sessionId = storedSession.id;
 
       // Never silently start a blank conversation when a previous session is missing.
-      if (data.sessionId && !resume && !isSessionRunning(sessionId)) {
+      if (data.sessionId && !resume && !isSessionRunning(sessionId) && !data.rewindLastTurn) {
         res.writeHead(404, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Conversation not found. Please select an existing session or start a new chat." }));
         return;
@@ -1133,7 +1750,7 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ ok: true, sessionId: existingSession.sessionId, tempName: existingSession.tempName || null }));
           return;
         }
-        attachClientToSession(res, existingSession);
+        attachClientToSession(res, existingSession, req);
         return;
       }
 
@@ -1152,16 +1769,24 @@ const server = http.createServer((req, res) => {
 
       console.log(`[CHAT] Prompt: "${prompt.substring(0, 50)}" | Model: ${model} | CWD: ${cwd} | Session: ${sessionId} | Resume: ${resume} | Active sessions: ${activeSessions.size}`);
       saveWorkspace(cwd);
+      if (model && sessionId) {
+        sessionModels.set(sessionId, model);
+        if (storedSession?.id) sessionModels.set(storedSession.id, model);
+        if (storedSession?.name) sessionModels.set(storedSession.name, model);
+      }
 
+      const rawPrompt = (typeof data.titlePrompt === "string" && data.titlePrompt.trim())
+        ? data.titlePrompt.trim()
+        : prompt;
       const existingTitle = storedSession && (isTechnicalSessionName(storedSession.name)
         ? getSessionsList().find(s => s.id === storedSession.id)?.name : storedSession.name);
-      const title = existingTitle || sessionTitle(data.titlePrompt || prompt);
+      const title = existingTitle || sessionTitle(rawPrompt);
 
       const sessionCtx = {
         process: null,
         sessionId,
         tempName: (!resume && sessionId.startsWith('session_')) ? sessionId : null,
-        info: { model, cwd, sessionId, prompt, title, startTime: Date.now() },
+        info: { model, cwd, sessionId, prompt: rawPrompt, title, startTime: Date.now() },
         events: [],
         clients: new Set((data.streamMode === "eventsource") ? [] : [res])
       };
@@ -1199,15 +1824,7 @@ const server = http.createServer((req, res) => {
         GOOSE_SHOW_FULL_OUTPUT: "false"
       };
 
-      const systemInstruction = 
-        "QUY TẮC BẮT BUỘC:\n" +
-        "- Trước khi gọi lệnh shell quan trọng (build, deploy, sửa file lớn, tác động hệ thống), BẮT BUỘC viết 1 câu siêu ngắn (dưới 15 từ) thông báo mục đích cho người dùng trước khi gọi tool.\n" +
-        "- Với các thao tác đọc nhẹ (ls, cat, grep nhỏ), hãy gọi thẳng lệnh để tối ưu tốc độ phản hồi.\n" +
-        "- QUY TẮC SUBAGENT (DELEGATE):\n" +
-        "  + Ưu tiên làm trực tiếp: Tự thực hiện đọc, sửa code, chạy test, commit, deploy ngay trong phiên chính.\n" +
-        "  + CẤM tuần tự hóa subagent: Không ủy quyền cho các bước nối tiếp thông thường (đọc diff -> sửa file -> test -> commit -> ghi doc).\n" +
-        "  + CẤM tạo subagent cho tác vụ nhỏ, đọc nhanh hoặc lệnh shell đơn lẻ.\n" +
-        "  + CHỈ gọi subagent khi thật sự cần thiết: Dò quét phạm vi rộng (hàng trăm file) có nguy cơ tràn context, hoặc chạy song song các nhánh nghiên cứu độc lập.";
+      const systemInstruction = buildSystemInstruction(cwd);
 
       const args = [
         "run",
@@ -1235,7 +1852,7 @@ const server = http.createServer((req, res) => {
         tempName: sessionCtx.tempName || null,
         title,
         clientId: data.clientId || null,
-        prompt,
+        prompt: rawPrompt,
         model,
         cwd,
         timestamp: Date.now()
@@ -1261,6 +1878,11 @@ const server = http.createServer((req, res) => {
                   if (item.type === "text" && item.text) {
                     const textVal = typeof item.text === 'string' ? item.text : (item.text?.value || item.text?.text || JSON.stringify(item.text));
                     broadcastToSession(sessionCtx, "text", { text: textVal });
+                  } else if (item.type === "thinking" && item.thinking) {
+                    const thoughtVal = typeof item.thinking === 'string' ? item.thinking : (item.thinking?.value || item.thinking?.thinking || '');
+                    if (thoughtVal) {
+                      broadcastToSession(sessionCtx, "thinking", { text: thoughtVal });
+                    }
                   } else if (item.type === "toolRequest" && item.toolCall) {
                     broadcastToSession(sessionCtx, "tool_call", {
                       name: item.toolCall.value?.name || "tool",
@@ -1425,18 +2047,36 @@ const server = http.createServer((req, res) => {
 
   // Phuc vu static files (HTML, CSS, JS)
   let filePath = path.join(__dirname, "public", pathname === "/" ? "index.html" : pathname);
+  const reqExt = path.extname(pathname).toLowerCase();
+  const baseAssetName = path.posix.basename(pathname);
+  const isKnownRootIconOrManifest = /^(favicon\.ico|apple-touch-icon.*\.png|icon-.*\.(png|ico)|ai-hub-.*\.(png|ico)|logo.*\.(png|ico|svg)|manifest\.json|site\.webmanifest)$/i.test(baseAssetName);
+  if (!fs.existsSync(filePath) && isKnownRootIconOrManifest) {
+    const rootAssetCandidate = path.join(__dirname, "public", baseAssetName);
+    if (fs.existsSync(rootAssetCandidate)) filePath = rootAssetCandidate;
+  }
+  const isStaticAssetReq = /^\.(ico|png|svg|webp|jpg|jpeg|gif|webmanifest|css|js|map)$/.test(reqExt) && (pathname.split("/").filter(Boolean).length === 1 || isKnownRootIconOrManifest);
   if (!fs.existsSync(filePath)) {
+    if (isStaticAssetReq) {
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("Not Found");
+      return;
+    }
     filePath = path.join(__dirname, "public", "index.html");
   }
 
-  const ext = path.extname(filePath);
+  const ext = path.extname(filePath).toLowerCase();
   const mimeTypes = {
     ".html": "text/html; charset=utf-8",
     ".js": "application/javascript",
     ".css": "text/css",
-    ".json": "application/json",
+    ".json": "application/json; charset=utf-8",
+    ".webmanifest": "application/manifest+json; charset=utf-8",
     ".png": "image/png",
-    ".svg": "image/svg+xml"
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
+    ".webp": "image/webp",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg"
   };
 
   fs.readFile(filePath, (err, content) => {
@@ -1444,7 +2084,11 @@ const server = http.createServer((req, res) => {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("Not Found");
     } else {
-      res.writeHead(200, { "Content-Type": mimeTypes[ext] || "text/plain" });
+      const noCache = (ext === ".html" || ext === ".json" || ext === ".webmanifest");
+      res.writeHead(200, {
+        "Content-Type": mimeTypes[ext] || "application/octet-stream",
+        "Cache-Control": noCache ? "no-cache, must-revalidate" : "public, max-age=86400"
+      });
       res.end(content);
     }
   });

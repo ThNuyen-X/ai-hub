@@ -4,7 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>AI Agent Studio Pro</title>
-  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <meta name="application-name" content="AI Hub">
+  <meta name="apple-mobile-web-app-title" content="AI Hub">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#09090b">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=3">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/icon-96.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/icon-48.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png">
+  <link rel="image_src" href="/apple-touch-icon.png">
+  <meta name="msapplication-TileImage" content="/icon-144.png">
+  <meta name="msapplication-TileColor" content="#09090b">
+  <link rel="manifest" href="/manifest.json?v=3">
+  <meta property="og:title" content="AI Hub">
+  <meta property="og:image" content="/apple-touch-icon.png">
   
   <!-- Fonts: Be Vietnam Pro & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -198,6 +223,13 @@
     }
     .thought-process-card summary::-webkit-details-marker {
       display: none;
+    }
+
+    .ai-process-group {
+      transition: all 0.2s ease;
+    }
+    .ai-process-toggle .ai-process-chevron {
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .streaming-cursor {
@@ -490,6 +522,95 @@
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
+    /* Responsive Toast Notification System */
+    #toastContainer {
+      top: 20px;
+      right: 20px;
+      width: min(380px, calc(100vw - 32px));
+      gap: 10px;
+    }
+    .toast-item {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border-width: 1px;
+      border-style: solid;
+      pointer-events: auto;
+      user-select: none;
+      touch-action: pan-y;
+      background: var(--spotlight-bg, var(--bg-card));
+      color: var(--text-main);
+      border-color: var(--border);
+      box-shadow: var(--shadow-popover);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+      overflow: hidden;
+      will-change: transform, opacity;
+    }
+    .toast-item.toast-enter {
+      animation: toastSlideIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .toast-item.toast-leave {
+      opacity: 0 !important;
+      transform: translateY(-8px) scale(0.96) !important;
+      pointer-events: none;
+    }
+    @keyframes toastSlideIn {
+      from { opacity: 0; transform: translateY(-14px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .toast-item.toast-success {
+      border-color: rgba(16, 185, 129, 0.45);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.2);
+    }
+    .toast-item.toast-error {
+      border-color: rgba(239, 68, 68, 0.45);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(239, 68, 68, 0.2);
+    }
+    .toast-item.toast-warning {
+      border-color: rgba(245, 158, 11, 0.45);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(245, 158, 11, 0.2);
+    }
+    .toast-item.toast-info {
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(56, 189, 248, 0.2);
+    }
+    [data-theme="light"] .toast-item,
+    [data-theme="warm"] .toast-item {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    }
+    .toast-close-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      min-height: 28px;
+      margin: -4px -6px -4px auto;
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      opacity: 0.6;
+      transition: opacity 0.15s ease, background-color 0.15s ease;
+      cursor: pointer;
+    }
+    .toast-close-btn:hover,
+    .toast-close-btn:active {
+      opacity: 1;
+      background-color: rgba(255, 255, 255, 0.12);
+    }
+    [data-theme="light"] .toast-close-btn:hover,
+    [data-theme="light"] .toast-close-btn:active,
+    [data-theme="warm"] .toast-close-btn:hover,
+    [data-theme="warm"] .toast-close-btn:active {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+
     /* Pulse Glow */
     .pulse-glow {
       box-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
@@ -558,7 +679,7 @@
     .composer-bottom-arrow:hover { transform: scale(1.08); background: var(--bg-hover); color: #3b82f6; }
     .composer-bottom-arrow:active { transform: scale(0.95); }
     .composer-bottom-arrow[hidden] { display: none !important; }
-    .composer-suggestions-header { position: relative; display: flex; align-items: center; min-height: 38px; background: transparent; }
+    .composer-suggestions-header { position: relative; display: flex; align-items: center; justify-content: flex-start; width: 100%; min-height: 38px; background: transparent; }
     .composer-suggestions-header #toggleQuickPromptsBtn { position: relative; z-index: 1; }
 
     .composer-outer { position: absolute; bottom: 0; left: 0; right: 0; background: transparent !important; pointer-events: none; }
@@ -586,44 +707,54 @@
     @media (max-width: 639px) {
       body { height: var(--mobile-app-height, 100dvh) !important; }
       main { overflow: hidden; width: 100%; max-width: 100vw; }
-      #welcomeBanner { padding: 20px 14px; border-radius: 20px; margin-top: 0; }
+      #welcomeBanner { padding: 18px 14px; border-radius: 20px; margin-top: 0; }
       #welcomeBanner > div > button { max-width: 100%; min-width: 0; }
       #welcomeBanner > div > button > span:first-of-type { display: none; }
       #heroWorkspaceLabel { min-width: 0; max-width: 100%; }
       #welcomeBanner .bento-card { padding: 12px; }
       #welcomeBanner .grid { margin-top: 16px; gap: 8px; }
-      main > header { height: 60px; padding: 6px 10px; gap: 6px; }
+      main > header { height: 56px; padding: 6px 8px; gap: 4px; }
       main > header > div { min-width: 0; }
-      main > header > div:first-child { margin-right: 0; gap: 4px; }
-      main > header button { min-height: 40px; }
-      #sidebarToggleBtn, #btnHeaderFullConv, #btnToggleTerminal { min-width: 40px; justify-content: center; }
-      main > header button[onclick="openWorkspaceModal()"] { max-width: none; min-width: 0; flex: 1; padding: 8px; }
+      main > header > div:first-child { margin-right: 0; gap: 4px; flex: 1; }
+      main > header button { min-height: 38px; }
+      #sidebarToggleBtn, #mobileHeaderNewChatBtn, #btnHeaderFullConv, #btnToggleTerminal { min-width: 38px; width: 38px; height: 38px; padding: 0; justify-content: center; display: inline-flex; align-items: center; }
+      #btnToggleFullscreen { display: none !important; }
+      main > header button[onclick="openWorkspaceModal()"] { max-width: none; min-width: 0; flex: 1; padding: 6px 8px; }
       #currentSessionFolder { font-size: 12px; }
-      #modelDropdownBtn { max-width: 106px; padding: 8px; }
-      #currentModelName { max-width: 56px; }
+      #modelDropdownBtn { max-width: 112px; padding: 6px 8px; }
+      #currentModelName { max-width: 62px; }
       #headerLiveTimerBadge { display: none !important; }
-      #modelDropdownMenu { position: fixed; top: 64px; right: 10px; width: min(320px, calc(100vw - 20px)); }
+      #modelDropdownMenu { position: fixed; top: 60px; right: 8px; width: min(320px, calc(100vw - 16px)); max-height: min(68dvh, 460px); }
+      #slashCommandsMenu { left: 8px !important; right: 8px !important; bottom: 168px !important; width: auto !important; max-width: none !important; max-height: 48dvh; overflow-y: auto; }
       #sidebar { width: min(320px, calc(100vw - 44px)); }
       #sidebar .session-item { min-height: 44px; }
-      #chatFeed { padding: 16px 10px; }
+      #chatFeed { padding: 14px 10px; }
       #chatFeed > .group { padding-left: 0; padding-right: 0; }
       #chatFeed > .group > div { min-width: 0; max-width: 100%; }
       #chatFeed > .justify-end > div { max-width: 92%; }
-      .markdown-body, .user-bubble { font-size: 14px; line-height: 1.75; }
+      #chatFeed .ai-msg-avatar { width: 28px !important; height: 28px !important; border-radius: 8px !important; }
+      #chatFeed .ai-msg-header { margin-bottom: 6px !important; gap: 6px !important; }
+      .markdown-body, .user-bubble { font-size: 14px; line-height: 1.72; }
       .markdown-body pre { font-size: 12px; }
       .question-context { padding: 10px 12px; }
       .question-context-text { font-size: 12px; }
       .question-context-action { font-size: 0; }
       .question-context-action::after { content: '\2191'; font-size: 18px; }
       .composer-outer { padding: 0 8px max(8px, env(safe-area-inset-bottom)); }
-      .composer-suggestions-header { min-height: 32px; padding-bottom: 2px; }
-      #quickPromptChipsBar { max-height: 44px; overflow-x: auto; flex-wrap: nowrap; }
-      #quickPromptChipsBar button { flex-shrink: 0; min-height: 36px; }
+      #composerDockHeader { gap: 6px; padding-bottom: 4px; }
+      .composer-suggestions-header { min-height: 30px; padding-bottom: 2px; }
+      #quickPromptChipsBar { max-height: 42px; overflow-x: auto; flex-wrap: nowrap; }
+      #quickPromptChipsBar button { flex-shrink: 0; min-height: 34px; }
       #agentModeSelector { width: 100%; display: flex; }
-      #agentModeSelector button { min-height: 36px; font-size: 11px; padding: 6px 9px; white-space: nowrap; }
-      #promptInput { font-size: 16px; line-height: 1.5; min-height: 66px; max-height: 140px; padding: 10px 12px; }
-      .composer-outer button[onclick="toggleSlashMenu()"] { width: 40px; height: 40px; }
-      #sendBtn, #stopBtn { height: 40px; padding: 0 16px; font-size: 13px; border-radius: 10px; }
+      #agentModeSelector button { flex: 1; justify-content: center; min-height: 36px; font-size: 11px; padding: 6px 6px; white-space: nowrap; }
+      #promptInput { font-size: 16px !important; line-height: 1.5; min-height: 58px; max-height: 140px; padding: 10px 12px; }
+      #sessionSearchInput, #modelSearchInput, #fullConvSearchInput, #wsPathInput, #workspaceListFilterInput, #gitCommitMessageInput, .inline-user-edit-textarea { font-size: 16px !important; }
+      #stopBtn { width: 40px; height: 40px; padding: 0; border-radius: 10px; }
+      #sendBtn { height: 40px; padding: 0 16px; font-size: 13px; border-radius: 10px; }
+      #workspaceModal > div > div:last-child { flex-wrap: wrap; gap: 8px; }
+      #workspaceModal > div > div:last-child > span { width: 100%; }
+      #workspaceModal > div > div:last-child > div { width: 100%; justify-content: flex-end; }
+      #confirmActionModal > div { padding: 18px; border-radius: 18px; }
       #terminalDrawer { position: absolute; inset: auto 0 0; max-height: 65%; border-radius: 16px 16px 0 0; box-shadow: 0 -12px 40px rgba(0,0,0,.2); }
       #terminalDrawer > div:first-child { height: auto; min-height: 90px; padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
       #terminalDrawer > div:first-child > div { width: 100%; min-width: 0; }
@@ -634,11 +765,148 @@
       #terminalDrawer button[onclick="toggleTerminalDrawer(false)"] { position: absolute; right: 8px; top: 4px; background: var(--bg-surface); }
       #terminalLineCountBadge { margin-right: 32px; }
       #terminalLogsFeed { font-size: 12px; overflow: auto; overscroll-behavior: contain; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
-      #toastContainer { left: 12px; right: 12px; max-width: none; }
+      #toastContainer {
+        top: max(12px, env(safe-area-inset-top));
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+        max-width: 420px;
+        margin: 0 auto;
+        gap: 8px;
+      }
+    }
+    @media (min-width: 640px) and (max-width: 1023px) {
+      body { height: var(--mobile-app-height, 100dvh) !important; }
+      main { overflow: hidden; width: 100%; max-width: 100vw; }
+      main > header button[onclick="openWorkspaceModal()"] { max-width: 240px; }
+      #slashCommandsMenu { left: 16px !important; width: min(360px, calc(100vw - 32px)) !important; }
     }
     @media (max-width: 359px) {
       #btnHeaderFullConv { display: none; }
-      #agentModeSelector button { padding-left: 6px; padding-right: 6px; font-size: 10px; }
+      #modelDropdownBtn { max-width: 88px; padding: 6px; }
+      #currentModelName { max-width: 44px; }
+      #agentModeSelector button { padding-left: 4px; padding-right: 4px; font-size: 10px; }
+    }
+
+    /* Unverified candidate local paths look like plain inline code until verified on PC */
+    .local-path-badge[data-unverified="1"] {
+      background: var(--bg-hover) !important;
+      color: var(--text-main) !important;
+      border-color: transparent !important;
+      cursor: text !important;
+      padding: 1px 6px !important;
+    }
+    .local-path-badge[data-unverified="1"] .path-icon,
+    .local-path-badge[data-unverified="1"] .path-actions {
+      display: none !important;
+    }
+    .local-path-badge[data-unverified="1"]:hover {
+      box-shadow: none !important;
+      border-color: transparent !important;
+    }
+
+    /* Unified Diff Viewer (Green = Added, Red = Deleted) */
+    .diff-viewer-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .diff-viewer-table tr.diff-row-add {
+      background: rgba(16, 185, 129, 0.15);
+    }
+    .diff-viewer-table tr.diff-row-add td.diff-code,
+    .diff-viewer-table tr.diff-row-add td.diff-sign {
+      color: #34d399;
+    }
+    html[data-theme="light"] .diff-viewer-table tr.diff-row-add {
+      background: rgba(16, 185, 129, 0.14);
+    }
+    html[data-theme="light"] .diff-viewer-table tr.diff-row-add td.diff-code,
+    html[data-theme="light"] .diff-viewer-table tr.diff-row-add td.diff-sign {
+      color: #047857;
+    }
+    .diff-viewer-table tr.diff-row-del {
+      background: rgba(244, 63, 94, 0.16);
+    }
+    .diff-viewer-table tr.diff-row-del td.diff-code,
+    .diff-viewer-table tr.diff-row-del td.diff-sign {
+      color: #fb7185;
+    }
+    html[data-theme="light"] .diff-viewer-table tr.diff-row-del {
+      background: rgba(244, 63, 94, 0.13);
+    }
+    html[data-theme="light"] .diff-viewer-table tr.diff-row-del td.diff-code,
+    html[data-theme="light"] .diff-viewer-table tr.diff-row-del td.diff-sign {
+      color: #be123c;
+    }
+    .diff-viewer-table tr.diff-row-hunk {
+      background: rgba(59, 130, 246, 0.11);
+      color: #60a5fa;
+    }
+    html[data-theme="light"] .diff-viewer-table tr.diff-row-hunk {
+      background: rgba(59, 130, 246, 0.10);
+      color: #1d4ed8;
+    }
+    .diff-viewer-table td.diff-ln {
+      width: 44px;
+      min-width: 44px;
+      padding: 1px 8px;
+      text-align: right;
+      user-select: none;
+      opacity: 0.55;
+      border-right: 1px solid var(--border-subtle);
+      color: var(--text-sub);
+      font-size: 11px;
+      vertical-align: top;
+    }
+    .diff-viewer-table tr.diff-row-add td.diff-ln:first-child {
+      border-left: 3px solid #10b981;
+    }
+    .diff-viewer-table tr.diff-row-del td.diff-ln:first-child {
+      border-left: 3px solid #f43f5e;
+    }
+    .diff-viewer-table tr.diff-row-ctx td.diff-ln:first-child,
+    .diff-viewer-table tr.diff-row-hunk td.diff-ln:first-child {
+      border-left: 3px solid transparent;
+    }
+    .diff-viewer-table td.diff-sign {
+      width: 24px;
+      min-width: 24px;
+      text-align: center;
+      user-select: none;
+      font-weight: 700;
+      vertical-align: top;
+      padding: 1px 2px;
+    }
+    .diff-viewer-table td.diff-code {
+      padding: 1px 12px 1px 4px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text-main);
+      vertical-align: top;
+    }
+    .file-change-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .file-change-pill:hover {
+      border-color: rgba(59, 130, 246, 0.5);
+      background: var(--bg-hover);
+    }
+    .user-message-row:not([data-latest-user-question="true"]) .user-edit-btn,
+    .user-message-row:not([data-latest-user-question="true"]) .user-edit-sep {
+      display: none !important;
     }
   </style>
 </head>
@@ -831,7 +1099,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/>
           </svg>
         </button>
-</button>
 
         <!-- Current Workspace Folder Badge -->
         <button onclick="openWorkspaceModal()" 
@@ -1086,11 +1353,11 @@
     <!-- Bottom Floating Input Dock -->
     <div id="composerOuterContainer" class="composer-outer px-2 sm:px-6 md:px-8 pb-3 sm:pb-4 pt-1 shrink-0 z-20 pointer-events-none" style="background: transparent;">
       
-      <!-- Top Bar: Gợi ý (trái), Nút lướt xuống cuối nguyên bản (chính giữa dòng), Nút mở rộng (phải khi thu gọn) -->
-      <div id="composerTopBar" class="composer-suggestions-header relative flex items-center justify-between w-full max-w-4xl mx-auto pb-1.5 px-0.5 text-[11px] select-none pointer-events-none">
+      <!-- Top Bar: Gợi ý (căn trái), Nút lướt xuống cuối nguyên bản (chính giữa dòng), Nút mở rộng (phải khi thu gọn) -->
+      <div id="composerTopBar" class="composer-suggestions-header relative flex items-center justify-start w-full pb-1.5 px-0 text-[11px] select-none pointer-events-none">
         
-        <!-- Bên trái: Nút Gợi ý câu lệnh (chỉ hiện khi khung chat mở rộng) -->
-        <div id="quickPromptsContainer" class="pointer-events-auto">
+        <!-- Bên trái: Nút Gợi ý câu lệnh (căn sát lề trái khung chat) -->
+        <div id="quickPromptsContainer" class="pointer-events-auto mr-auto">
           <button type="button" onclick="toggleQuickPrompts()" id="toggleQuickPromptsBtn"
                   class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium ease-spring shadow-2xs hover:bg-[var(--bg-hover)] active:scale-95"
                   style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
@@ -1201,7 +1468,7 @@
         </div>
 
         <!-- Body: Textarea -->
-        <textarea id="promptInput" rows="2"
+        <textarea id="promptInput" rows="2" enterkeyhint="send"
                   placeholder="Giao việc cho AI Agent (Enter gửi, Shift+Enter xuống dòng, gõ / để mở lệnh)..."
                   class="w-full text-xs md:text-sm px-2.5 sm:px-4 pt-2 sm:pt-3.5 pb-2 bg-transparent border-0 focus:outline-none resize-none leading-relaxed font-medium placeholder:italic placeholder:font-normal placeholder:text-xs placeholder:text-[var(--text-sub)]"
                   style="color: var(--text-main);"></textarea>
@@ -1225,28 +1492,17 @@
             </span>
           </div>
 
-          <!-- Right: Slash menu trigger & Action Buttons -->
+          <!-- Right: Action Buttons -->
           <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
-            <button onclick="toggleSlashMenu()" 
-                    class="h-7 w-7 flex items-center justify-center rounded-lg border text-xs font-mono font-semibold ease-spring hover:bg-[var(--bg-hover)] shadow-2xs shrink-0"
-                    style="border-color: var(--border-subtle); color: var(--text-sub);"
-                    title="Menu lệnh gõ tắt (/)">
-              /
-            </button>
-
-            <!-- Stop Task Button (Visible while running) -->
+            <!-- Stop Task Button (Visible while running, Icon Only) -->
             <button id="stopBtn" 
-                    class="hidden h-7 sm:h-8 px-2 sm:px-3 rounded-lg sm:rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white ease-spring flex items-center gap-1 shadow-lg shadow-rose-600/30 animate-pulse shrink-0">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    title="Dừng tiến trình (Esc)"
+                    aria-label="Dừng tiến trình"
+                    class="hidden h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg sm:rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white ease-spring flex items-center justify-center shadow-lg shadow-rose-600/30 animate-pulse shrink-0">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
               </svg>
-              <span>Dừng</span>
             </button>
-
-            <!-- Live Word & Token Stats Counter -->
-            <span id="inputStatsCounter" class="text-[10px] font-mono px-2 py-0.5 rounded select-none hidden md:inline" 
-                  style="color: var(--text-sub); background: var(--badge-bg);" 
-                  title="Ước tính số từ và tokens trong prompt">0 từ • ~0 tokens</span>
 
             <!-- Send Button -->
             <button id="sendBtn" 
@@ -1909,28 +2165,30 @@
     </div>
   </div>
 
-  <!-- File Preview Modal (Quick view for desktop & mobile) -->
+  <!-- File Preview & Diff Modal (Quick view + Red/Green Diff for desktop & mobile) -->
   <div id="filePreviewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-md">
-    <div class="w-full max-w-4xl h-[88vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden modal-enter"
+    <div class="w-full max-w-5xl h-[88vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden modal-enter"
          style="background: var(--bg-surface); border-color: var(--border-subtle);">
       
       <!-- Modal Header -->
-      <div class="px-4 py-2.5 border-b flex items-center justify-between font-mono text-xs select-none"
+      <div class="px-4 py-2.5 border-b flex items-center justify-between gap-2 font-mono text-xs select-none"
            style="background: var(--bg-hover); border-color: var(--border-subtle);">
         <div class="flex items-center space-x-2 min-w-0">
-          <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
-          <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
-          <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
-          <span id="filePreviewTitle" class="ml-2 font-bold text-slate-200 truncate max-w-[200px] sm:max-w-md">filename</span>
-          <span id="filePreviewSize" class="text-slate-400 text-[11px] hidden sm:inline">0 KB</span>
+          <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block shrink-0"></span>
+          <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block shrink-0"></span>
+          <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block shrink-0"></span>
+          <span id="filePreviewTitle" class="ml-2 font-bold truncate max-w-[160px] sm:max-w-md" style="color: var(--text-main);">filename</span>
+          <span id="filePreviewStatusBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0"></span>
+          <span id="filePreviewDiffStats" class="hidden items-center gap-1.5 text-[11px] font-bold shrink-0"></span>
+          <span id="filePreviewSize" class="text-[11px] hidden md:inline shrink-0" style="color: var(--text-sub);">0 KB</span>
         </div>
 
-        <div class="flex items-center space-x-2 shrink-0">
+        <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           <button id="filePreviewOpenBtn" onclick="openCurrentPreviewOnPc()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium ease-spring flex items-center gap-1" title="Mở trên máy tính PC">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-            <span>Mở trên PC</span>
+            <span class="hidden sm:inline">Mở trên PC</span>
           </button>
-          <button id="filePreviewCopyBtn" onclick="copyFilePreviewContent()" class="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold ease-spring flex items-center gap-1" title="Sao chép nội dung">
+          <button id="filePreviewCopyBtn" onclick="copyFilePreviewContent()" class="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold ease-spring flex items-center gap-1" title="Sao chép nội dung đang xem">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             <span id="filePreviewCopyText">Sao chép</span>
           </button>
@@ -1940,17 +2198,47 @@
         </div>
       </div>
 
+      <!-- Diff / Content Mode Switcher Bar -->
+      <div id="filePreviewTabsBar" class="px-4 py-1.5 border-b flex items-center justify-between gap-2 text-xs select-none"
+           style="background: var(--bg-card); border-color: var(--border-subtle);">
+        <div class="flex items-center gap-1.5">
+          <button id="fileTabDiffBtn" type="button" onclick="switchFilePreviewTab('diff')"
+                  class="px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border">
+            <span>± Thay đổi (Xanh/Đỏ)</span>
+          </button>
+          <button id="fileTabFullBtn" type="button" onclick="switchFilePreviewTab('full')"
+                  class="px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border">
+            <span>📄 Toàn bộ file</span>
+          </button>
+        </div>
+        <div class="hidden sm:flex items-center gap-3 text-[11px] font-mono" style="color: var(--text-sub);">
+          <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500/40 border border-emerald-500 inline-block"></span> Dòng xanh (+): Thêm mới</span>
+          <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-rose-500/40 border border-rose-500 inline-block"></span> Dòng đỏ (-): Đã xóa</span>
+        </div>
+      </div>
+
       <!-- Preview Body -->
-      <div id="filePreviewBody" class="flex-1 overflow-auto p-4 font-mono text-[12.5px] leading-relaxed select-text" style="background: var(--bg-surface);">
-        <pre id="filePreviewPre" class="p-0 m-0"><code id="filePreviewContent" class="hljs"></code></pre>
+      <div id="filePreviewBody" class="flex-1 overflow-auto font-mono text-[12.5px] leading-relaxed select-text" style="background: var(--bg-surface);">
+        <!-- Diff View -->
+        <div id="filePreviewDiffContainer" class="hidden w-full">
+          <div id="filePreviewDiffEmpty" class="hidden p-8 text-center text-xs" style="color: var(--text-sub);">
+            File này hiện không có dòng thêm/xóa nào so với bản gốc.
+          </div>
+          <table id="filePreviewDiffTable" class="diff-viewer-table">
+            <tbody id="filePreviewDiffTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Full Content View -->
+        <pre id="filePreviewPre" class="p-4 m-0"><code id="filePreviewContent" class="hljs"></code></pre>
         <div id="filePreviewImageContainer" class="hidden flex items-center justify-center p-4">
           <img id="filePreviewImage" class="max-w-full max-h-[70vh] rounded-lg shadow-lg object-contain" src="" alt="preview" />
         </div>
       </div>
 
       <!-- Footer Bar -->
-      <div class="px-4 py-2 border-t font-mono text-[11px] text-slate-400 flex items-center justify-between"
-           style="background: var(--bg-hover); border-color: var(--border-subtle);">
+      <div class="px-4 py-2 border-t font-mono text-[11px] flex items-center justify-between"
+           style="background: var(--bg-hover); border-color: var(--border-subtle); color: var(--text-sub);">
         <span id="filePreviewMeta" class="truncate mr-2">Đường dẫn</span>
         <span class="shrink-0">Nhấn <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">ESC</kbd> để đóng</span>
       </div>
@@ -1958,8 +2246,8 @@
     </div>
   </div>
 
-  <!-- Toast Notification Stack Container -->
-  <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-full"></div>
+  <!-- Toast Notification Stack Container (Responsive, Safe-Area & Above Modals) -->
+  <div id="toastContainer" class="fixed z-[100] flex flex-col pointer-events-none" aria-live="polite" aria-atomic="true"></div>
 
   <!-- ========================================================
        CORE CLIENT JAVASCRIPT
@@ -2100,46 +2388,130 @@
       if (label) label.innerText = soundEffects.enabled ? 'Bật' : 'Tắt';
     }
 
-    // TOAST NOTIFICATION STACK
+    // TOAST NOTIFICATION STACK (Responsive, Touch & Gestures, Auto Limit)
     function showToast(message, type = "info", duration = 3500) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
 
-      const toast = document.createElement('div');
-      toast.className = 'pointer-events-auto flex items-center space-x-2.5 px-4 py-3 rounded-xl border shadow-xl text-xs ease-spring modal-enter';
-      
-      let borderCol = 'var(--border)';
-      let bgCol = 'var(--bg-card)';
-      let icon = 'ℹ️';
-
-      if (type === 'success') {
-        borderCol = '#10b981';
-        icon = '✅';
-      } else if (type === 'error') {
-        borderCol = '#ef4444';
-        icon = '❌';
-      } else if (type === 'warning') {
-        borderCol = '#f59e0b';
-        icon = '⚠️';
+      const MAX_TOASTS = 4;
+      const existingToasts = container.querySelectorAll('.toast-item:not(.toast-leave)');
+      if (existingToasts.length >= MAX_TOASTS) {
+        dismissToast(existingToasts[0]);
       }
 
-      toast.style.borderColor = borderCol;
-      toast.style.background = bgCol;
-      toast.style.color = 'var(--text-main)';
+      const icons = {
+        success: `<svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+        </svg>`,
+        error: `<svg class="w-4 h-4 text-rose-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+        </svg>`,
+        warning: `<svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+        </svg>`,
+        info: `<svg class="w-4 h-4 text-sky-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+        </svg>`
+      };
+
+      const selectedIcon = icons[type] || icons.info;
+      const safeMessage = typeof escapeHtml === 'function' ? escapeHtml(String(message)) : String(message);
+
+      const toast = document.createElement('div');
+      toast.className = `toast-item toast-${type} toast-enter`;
+      toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
       toast.innerHTML = `
-        <span class="text-sm shrink-0">${icon}</span>
-        <span class="flex-1 min-w-0 font-medium leading-snug">${escapeHtml(message)}</span>
-        <button class="text-zinc-500 hover:text-white ease-spring shrink-0 text-xs ml-2" onclick="this.parentElement.remove()">✕</button>
+        ${selectedIcon}
+        <div class="flex-1 min-w-0 pr-1 text-xs font-medium leading-relaxed break-words select-text">
+          ${safeMessage}
+        </div>
+        <button type="button" class="toast-close-btn" aria-label="Đóng thông báo">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
       `;
 
-      container.appendChild(toast);
+      function dismissToast(target) {
+        if (!target || target.classList.contains('toast-leave')) return;
+        target.classList.add('toast-leave');
+        setTimeout(() => {
+          if (target.parentElement) target.remove();
+        }, 220);
+      }
 
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-6px)';
-        setTimeout(() => toast.remove(), 200);
-      }, duration);
+      const closeBtn = toast.querySelector('.toast-close-btn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dismissToast(toast);
+        });
+      }
+
+      let remainingTime = duration;
+      let startTime = Date.now();
+      let timerId = null;
+
+      function startTimer() {
+        if (duration <= 0) return;
+        startTime = Date.now();
+        timerId = setTimeout(() => {
+          dismissToast(toast);
+        }, remainingTime);
+      }
+
+      function pauseTimer() {
+        if (!timerId) return;
+        clearTimeout(timerId);
+        timerId = null;
+        remainingTime -= (Date.now() - startTime);
+        if (remainingTime < 800) remainingTime = 800;
+      }
+
+      toast.addEventListener('mouseenter', pauseTimer);
+      toast.addEventListener('mouseleave', startTimer);
+
+      let startX = 0;
+      let currentX = 0;
+      let isSwiping = false;
+
+      toast.addEventListener('touchstart', (e) => {
+        pauseTimer();
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+      }, { passive: true });
+
+      toast.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        currentX = e.touches[0].clientX;
+        const deltaX = currentX - startX;
+        if (Math.abs(deltaX) > 10) {
+          toast.style.transform = `translateX(${deltaX}px)`;
+          toast.style.opacity = `${Math.max(0.2, 1 - Math.abs(deltaX) / 220)}`;
+        }
+      }, { passive: true });
+
+      toast.addEventListener('touchend', (e) => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        const deltaX = currentX - startX;
+        if (Math.abs(deltaX) > 80) {
+          const flyDirection = deltaX > 0 ? '120%' : '-120%';
+          toast.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+          toast.style.transform = `translateX(${flyDirection})`;
+          toast.style.opacity = '0';
+          setTimeout(() => dismissToast(toast), 180);
+        } else {
+          toast.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+          toast.style.transform = '';
+          toast.style.opacity = '';
+          startTimer();
+        }
+      });
+
+      container.appendChild(toast);
+      startTimer();
     }
 
     // CUSTOM PROMPT DIALOG (Promise-based)
@@ -2496,14 +2868,31 @@
       setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
     };
 
-    // SCROLL TO BOTTOM DETECTION & UNREAD BADGE
+    // SCROLL TO BOTTOM DETECTION, USER SCROLL LOCK & UNREAD BADGE
     let unreadScrollCount = 0;
+    let isChatUserScrolledUp = false;
+    let _programmaticScrollGuard = false;
+
+    function getChatDistanceToBottom() {
+      if (!chatFeed) return 0;
+      return Math.max(0, chatFeed.scrollHeight - chatFeed.scrollTop - chatFeed.clientHeight);
+    }
+
     function checkScrollDistance() {
       const pill = document.getElementById('scrollToBottomPill');
       const badge = document.getElementById('unreadScrollBadge');
-      if (!chatFeed || !pill) return;
-      const distanceToBottom = chatFeed.scrollHeight - chatFeed.scrollTop - chatFeed.clientHeight;
-      if (distanceToBottom > 150) {
+      if (!chatFeed) return;
+      const distanceToBottom = getChatDistanceToBottom();
+      if (!_programmaticScrollGuard) {
+        if (distanceToBottom <= 18) {
+          isChatUserScrolledUp = false;
+        } else if (distanceToBottom > 42) {
+          isChatUserScrolledUp = true;
+          initialBottomFollow = false;
+        }
+      }
+      if (!pill) return;
+      if (distanceToBottom > 120 || isChatUserScrolledUp) {
         pill.classList.remove('hidden');
       } else {
         pill.classList.add('hidden');
@@ -2512,21 +2901,26 @@
       }
     }
 
+    let _notifyMsgRafId = 0;
     function notifyNewMessageArrived() {
-      if (!chatFeed) return;
-      const distanceToBottom = chatFeed.scrollHeight - chatFeed.scrollTop - chatFeed.clientHeight;
-      const pill = document.getElementById('scrollToBottomPill');
-      const badge = document.getElementById('unreadScrollBadge');
-      if (distanceToBottom > 150) {
-        unreadScrollCount++;
-        if (pill) pill.classList.remove('hidden');
-        if (badge) {
-          badge.innerText = unreadScrollCount + ' mới';
-          badge.classList.remove('hidden');
+      if (!chatFeed || _notifyMsgRafId) return;
+      _notifyMsgRafId = requestAnimationFrame(() => {
+        _notifyMsgRafId = 0;
+        if (!chatFeed) return;
+        const distanceToBottom = getChatDistanceToBottom();
+        const pill = document.getElementById('scrollToBottomPill');
+        const badge = document.getElementById('unreadScrollBadge');
+        if (isChatUserScrolledUp || distanceToBottom > 80) {
+          unreadScrollCount++;
+          if (pill) pill.classList.remove('hidden');
+          if (badge) {
+            badge.innerText = unreadScrollCount + ' mới';
+            badge.classList.remove('hidden');
+          }
+        } else {
+          scrollToBottom(false);
         }
-      } else {
-        scrollToBottom();
-      }
+      });
     }
 
     // DRAG AND DROP HANDLERS
@@ -2682,16 +3076,52 @@
       if (wrapBtn) wrapBtn.innerText = fullscreenIsWrapped ? 'Xuống dòng: ON' : 'Xuống dòng: OFF';
     };
 
+    window.writeTextToClipboard = function(text) {
+      const str = String(text ?? '');
+      const fallbackCopy = () => {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = str;
+          ta.setAttribute('readonly', '');
+          ta.style.cssText = 'position:fixed;top:0;left:-9999px;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;font-size:16px;opacity:0;pointer-events:none;z-index:-1;';
+          document.body.appendChild(ta);
+          ta.focus({ preventScroll: true });
+          ta.select();
+          ta.setSelectionRange(0, str.length);
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return !!ok;
+        } catch (_) {
+          return false;
+        }
+      };
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function' && window.isSecureContext) {
+        return navigator.clipboard.writeText(str).then(() => true).catch(() => {
+          if (fallbackCopy()) return true;
+          throw new Error('Không thể truy cập bộ nhớ tạm');
+        });
+      }
+      if (fallbackCopy()) return Promise.resolve(true);
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        return navigator.clipboard.writeText(str).then(() => true);
+      }
+      return Promise.reject(new Error('Trình duyệt không hỗ trợ sao chép qua HTTP'));
+    };
+
     window.copyFullscreenCode = function() {
       if (!activeFullscreenCodeId) return;
       const code = window._codeSnippets[activeFullscreenCodeId] || '';
-      navigator.clipboard.writeText(code).then(() => {
+      window.writeTextToClipboard(code).then(() => {
         soundEffects.playBop();
         const copyBtn = document.getElementById('fullscreenCopyBtn');
-        const orig = copyBtn.innerHTML;
-        copyBtn.innerHTML = '<span>✓ Đã chép</span>';
+        if (copyBtn) {
+          const orig = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<span>✓ Đã chép</span>';
+          setTimeout(() => { copyBtn.innerHTML = orig; }, 1800);
+        }
         showToast('Đã sao chép mã nguồn vào clipboard', 'success', 2000);
-        setTimeout(() => { copyBtn.innerHTML = orig; }, 1800);
+      }).catch(err => {
+        showToast('Không thể sao chép: ' + err.message, 'error');
       });
     };
 
@@ -2934,6 +3364,7 @@
 
         // CUSTOM MARKED RENDERER WITH TRAFFIC LIGHT WINDOW, LINE NUMBERS & FULLSCREEN
     const customRenderer = new marked.Renderer();
+    const _hljsRenderCache = new Map();
     customRenderer.code = function(codeArg, infostring) {
       let rawCode = safeStringifyCode(codeArg);
       let lang = '';
@@ -2946,23 +3377,34 @@
 
       lang = (lang || 'code').trim().split(/\s+/)[0];
 
+      const cacheKey = rawCode.length <= 60000 ? (lang + '\0' + rawCode) : null;
+      const cached = cacheKey ? _hljsRenderCache.get(cacheKey) : null;
       let highlighted = '';
-      if (lang && hljs.getLanguage(lang)) {
-        try {
-          highlighted = hljs.highlight(rawCode, { language: lang, ignoreIllegals: true }).value;
-        } catch (_) {
+      let codeId = '';
+      if (cached) {
+        highlighted = cached.highlighted;
+        codeId = cached.codeId;
+        window._codeSnippets[codeId] = rawCode;
+      } else {
+        if (lang && rawCode.length <= 60000 && hljs.getLanguage(lang)) {
+          try {
+            highlighted = hljs.highlight(rawCode, { language: lang, ignoreIllegals: true }).value;
+          } catch (_) {
+            highlighted = escapeHtml(rawCode);
+          }
+        } else {
           highlighted = escapeHtml(rawCode);
         }
-      } else {
-        try {
-          highlighted = escapeHtml(rawCode);
-        } catch (_) {
-          highlighted = escapeHtml(rawCode);
+        codeId = 'code_' + Math.random().toString(36).substring(2, 9);
+        window._codeSnippets[codeId] = rawCode;
+        if (cacheKey) {
+          if (_hljsRenderCache.size >= 250) {
+            const oldestKey = _hljsRenderCache.keys().next().value;
+            if (oldestKey !== undefined) _hljsRenderCache.delete(oldestKey);
+          }
+          _hljsRenderCache.set(cacheKey, { highlighted, codeId });
         }
       }
-
-      const codeId = 'code_' + Math.random().toString(36).substring(2, 9);
-      window._codeSnippets[codeId] = rawCode;
 
       return `
         <div class="code-block-container my-3 rounded-xl border overflow-hidden select-text shadow-sm" style="border-color: #2e3440; background: #0f141c;">
@@ -2991,26 +3433,443 @@
       `;
     };
 
+    // LOCAL PATH VALIDATION, BATCH EXISTENCE CHECK & SESSION FILE DIFF TRACKING
+    let hubServerPlatform = 'win32';
+    let hubLocalDrives = ['C:', 'D:'];
+    const localPathExistenceCache = new Map();
+    const sessionFileChanges = new Map();
+
+    function normalizeTrackPathKey(rawPath) {
+      if (!rawPath || typeof rawPath !== 'string') return '';
+      let p = rawPath.trim().replace(/^["'`]+|["'`]+$/g, '').trim().replace(/\\/g, '/');
+      if (hubServerPlatform === 'win32') p = p.toLowerCase();
+      return p;
+    }
+
+    function getRecordedFileChange(rawPath) {
+      if (!rawPath || typeof rawPath !== 'string') return null;
+      const directKey = normalizeTrackPathKey(rawPath);
+      if (sessionFileChanges.has(directKey)) return sessionFileChanges.get(directKey);
+      const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
+      if (ws && !/^[a-zA-Z]:[\\\/]/.test(rawPath) && !rawPath.startsWith('/')) {
+        const joinedKey = normalizeTrackPathKey(ws.replace(/[\\\/]+$/, '') + '/' + rawPath.replace(/^\.\/+|^\.\\+/, ''));
+        if (sessionFileChanges.has(joinedKey)) return sessionFileChanges.get(joinedKey);
+      }
+      const base = directKey.split('/').pop();
+      if (base && (rawPath.includes('/') || rawPath.includes('\\'))) {
+        for (const [k, val] of sessionFileChanges.entries()) {
+          if (k.endsWith('/' + directKey) || directKey.endsWith('/' + k)) return val;
+        }
+      }
+      return null;
+    }
+
+    function computeUnifiedLineDiff(beforeText, afterText, fileLabel = 'file') {
+      const safeName = String(fileLabel || 'file').replace(/\\/g, '/');
+      const aNorm = String(beforeText ?? '').replace(/\r\n/g, '\n');
+      const bNorm = String(afterText ?? '').replace(/\r\n/g, '\n');
+      const aLines = aNorm === '' ? [] : (aNorm.endsWith('\n') ? aNorm.slice(0, -1).split('\n') : aNorm.split('\n'));
+      const bLines = bNorm === '' ? [] : (bNorm.endsWith('\n') ? bNorm.slice(0, -1).split('\n') : bNorm.split('\n'));
+
+      if (aLines.length === 0 && bLines.length === 0) {
+        return { diff: '', added: 0, removed: 0 };
+      }
+      if (aLines.length === 0) {
+        const hdr = [`--- /dev/null`, `+++ b/${safeName}`, `@@ -0,0 +1,${bLines.length} @@`];
+        return { diff: hdr.concat(bLines.map(l => '+' + l)).join('\n'), added: bLines.length, removed: 0 };
+      }
+      if (bLines.length === 0) {
+        const hdr = [`--- a/${safeName}`, `+++ /dev/null`, `@@ -1,${aLines.length} +0,0 @@`];
+        return { diff: hdr.concat(aLines.map(l => '-' + l)).join('\n'), added: 0, removed: aLines.length };
+      }
+
+      let start = 0;
+      while (start < aLines.length && start < bLines.length && aLines[start] === bLines[start]) start++;
+      let endA = aLines.length - 1;
+      let endB = bLines.length - 1;
+      while (endA >= start && endB >= start && aLines[endA] === bLines[endB]) { endA--; endB--; }
+
+      const midA = aLines.slice(start, endA + 1);
+      const midB = bLines.slice(start, endB + 1);
+      if (midA.length === 0 && midB.length === 0) {
+        return { diff: '', added: 0, removed: 0 };
+      }
+
+      const ctxBefore = aLines.slice(Math.max(0, start - 3), start);
+      const ctxAfter = aLines.slice(endA + 1, Math.min(aLines.length, endA + 4));
+      const ops = [];
+      ctxBefore.forEach(l => ops.push({ type: ' ', text: l }));
+
+      if (midA.length * midB.length <= 90000) {
+        const m = midA.length, n = midB.length;
+        const dp = Array.from({ length: m + 1 }, () => new Int32Array(n + 1));
+        for (let i = m - 1; i >= 0; i--) {
+          for (let j = n - 1; j >= 0; j--) {
+            dp[i][j] = midA[i] === midB[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+          }
+        }
+        let i = 0, j = 0;
+        while (i < m && j < n) {
+          if (midA[i] === midB[j]) { ops.push({ type: ' ', text: midA[i] }); i++; j++; }
+          else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ type: '-', text: midA[i++] }); }
+          else { ops.push({ type: '+', text: midB[j++] }); }
+        }
+        while (i < m) ops.push({ type: '-', text: midA[i++] });
+        while (j < n) ops.push({ type: '+', text: midB[j++] });
+      } else {
+        midA.forEach(l => ops.push({ type: '-', text: l }));
+        midB.forEach(l => ops.push({ type: '+', text: l }));
+      }
+
+      ctxAfter.forEach(l => ops.push({ type: ' ', text: l }));
+      let added = 0, removed = 0;
+      ops.forEach(o => { if (o.type === '+') added++; else if (o.type === '-') removed++; });
+
+      const oldStart = Math.max(1, start - ctxBefore.length + 1);
+      const newStart = Math.max(1, start - ctxBefore.length + 1);
+      const oldLen = ctxBefore.length + midA.length + ctxAfter.length;
+      const newLen = ctxBefore.length + midB.length + ctxAfter.length;
+      const header = [
+        `--- a/${safeName}`,
+        `+++ b/${safeName}`,
+        `@@ -${oldStart},${oldLen} +${newStart},${newLen} @@`
+      ];
+      return {
+        diff: header.concat(ops.map(o => o.type + o.text)).join('\n'),
+        added,
+        removed
+      };
+    }
+
+    function parseUnifiedDiffToRows(diffText) {
+      if (!diffText || typeof diffText !== 'string') return { rows: [], added: 0, removed: 0 };
+      const lines = String(diffText).replace(/\r\n/g, '\n').split('\n');
+      const rows = [];
+      let oldLine = 0;
+      let newLine = 0;
+      let inHunk = false;
+      let added = 0;
+      let removed = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const hunkMatch = line.match(/^@@\s+-(\d+)(?:,\d+)?\s+\+(\d+)(?:,\d+)?\s+@@(.*)$/);
+        if (hunkMatch) {
+          oldLine = parseInt(hunkMatch[1], 10);
+          newLine = parseInt(hunkMatch[2], 10);
+          inHunk = true;
+          rows.push({ type: 'hunk', oldNo: '', newNo: '', sign: '@@', text: line });
+          continue;
+        }
+        if (!inHunk) {
+          if (line.startsWith('diff --git ') || line.startsWith('index ') || line.startsWith('--- ') || line.startsWith('+++ ') || line.startsWith('new file ') || line.startsWith('deleted file ')) {
+            continue;
+          }
+          continue;
+        }
+        if (line === '\\ No newline at end of file') continue;
+        if (line.startsWith('+')) {
+          added++;
+          rows.push({ type: 'add', oldNo: '', newNo: newLine++, sign: '+', text: line.slice(1) });
+        } else if (line.startsWith('-')) {
+          removed++;
+          rows.push({ type: 'del', oldNo: oldLine++, newNo: '', sign: '-', text: line.slice(1) });
+        } else if (line.startsWith(' ') || line === '') {
+          if (i === lines.length - 1 && line === '') continue;
+          rows.push({ type: 'ctx', oldNo: oldLine++, newNo: newLine++, sign: ' ', text: line.startsWith(' ') ? line.slice(1) : '' });
+        }
+      }
+      return { rows, added, removed };
+    }
+
+    function extractToolFileMutations(toolName, args, outputText, isError) {
+      if (isError || !args) return [];
+      let parsedArgs = args;
+      if (typeof args === 'string') {
+        try { parsedArgs = JSON.parse(args); } catch (_) { parsedArgs = null; }
+      }
+      if (!parsedArgs || typeof parsedArgs !== 'object') return [];
+
+      const lower = String(toolName || '').toLowerCase();
+      const mutations = [];
+      const targetPath = (parsedArgs.path || parsedArgs.file_path || parsedArgs.filePath || parsedArgs.target_file || parsedArgs.filename || '').trim();
+
+      // 1. edit / str_replace / multi_edit
+      if (targetPath && (lower.includes('edit') || lower.includes('replace') || ('before' in parsedArgs && 'after' in parsedArgs) || ('old_string' in parsedArgs && 'new_string' in parsedArgs))) {
+        if (Array.isArray(parsedArgs.edits)) {
+          const chunks = [];
+          let totalAdd = 0, totalRem = 0;
+          parsedArgs.edits.forEach(ed => {
+            const bef = ed.before ?? ed.old_string ?? ed.oldText ?? '';
+            const aft = ed.after ?? ed.new_string ?? ed.newText ?? '';
+            const d = computeUnifiedLineDiff(bef, aft, targetPath);
+            if (d.diff) { chunks.push(d.diff); totalAdd += d.added; totalRem += d.removed; }
+          });
+          if (chunks.length > 0) {
+            mutations.push({ path: targetPath, status: 'modified', added: totalAdd, removed: totalRem, diff: chunks.join('\n') });
+          }
+        } else {
+          const bef = parsedArgs.before ?? parsedArgs.old_string ?? parsedArgs.old_str ?? parsedArgs.search ?? '';
+          const aft = parsedArgs.after ?? parsedArgs.new_string ?? parsedArgs.new_str ?? parsedArgs.replace ?? '';
+          const d = computeUnifiedLineDiff(bef, aft, targetPath);
+          const status = (!bef && aft) ? 'added' : ((bef && !aft) ? 'modified' : 'modified');
+          mutations.push({ path: targetPath, status, added: d.added, removed: d.removed, diff: d.diff });
+        }
+        return mutations;
+      }
+
+      // 2. write / create_file
+      if (targetPath && (lower === 'write' || lower.endsWith('__write') || lower.endsWith(':write') || lower.includes('write_file') || lower.includes('create_file') || ('content' in parsedArgs && !lower.includes('read')))) {
+        const content = String(parsedArgs.content ?? '');
+        const existing = getRecordedFileChange(targetPath);
+        const isOverwrite = /overwrit|updated/i.test(String(outputText || '')) || Boolean(existing);
+        const d = computeUnifiedLineDiff('', content, targetPath);
+        mutations.push({
+          path: targetPath,
+          status: isOverwrite ? 'modified' : 'added',
+          added: d.added,
+          removed: 0,
+          diff: d.diff,
+          fullContent: content
+        });
+        return mutations;
+      }
+
+      // 3. patch / apply_patch
+      if (lower.includes('patch') && (typeof parsedArgs.patch === 'string' || typeof parsedArgs.diff === 'string')) {
+        const patchStr = parsedArgs.patch || parsedArgs.diff;
+        const fileBlocks = patchStr.split(/(?=\*\*\* (?:Update|Add|Delete) File: |diff --git )/);
+        fileBlocks.forEach(blk => {
+          const m1 = blk.match(/^\*\*\* (Update|Add|Delete) File:\s*(.+)$/m);
+          const m2 = blk.match(/^\+\+\+ b\/(.+)$/m);
+          const p = (m1 ? m1[2] : (m2 ? m2[1] : targetPath || '')).trim();
+          if (!p) return;
+          const parsed = parseUnifiedDiffToRows(blk);
+          const st = m1 ? (m1[1] === 'Add' ? 'added' : m1[1] === 'Delete' ? 'deleted' : 'modified') : 'modified';
+          mutations.push({ path: p, status: st, added: parsed.added, removed: parsed.removed, diff: blk });
+        });
+        return mutations;
+      }
+
+      // 4. delete / remove file tool or shell delete command
+      if (targetPath && (lower.includes('delete') || lower.includes('remove') || lower.includes('unlink'))) {
+        mutations.push({ path: targetPath, status: 'deleted', added: 0, removed: 0, diff: '' });
+        return mutations;
+      }
+      if ((lower.includes('shell') || lower.includes('cmd') || lower.includes('bash')) && typeof parsedArgs.command === 'string') {
+        const cmd = parsedArgs.command.trim();
+        const delMatch = cmd.match(/(?:^|[;&|]\s*)(?:Remove-Item|del|erase|rm|git\s+rm)\s+(?:(?:-[a-zA-Z\-]+|\/[a-zA-Z]{1,3})\s+)*["']?([^"';&|\r\n]+?)["']?(?:\s|$)/i);
+        if (delMatch && delMatch[1] && !delMatch[1].includes('*')) {
+          const cand = delMatch[1].trim();
+          if (cand && !cand.startsWith('-')) {
+            mutations.push({ path: cand, status: 'deleted', added: 0, removed: 0, diff: '' });
+          }
+        }
+      }
+
+      return mutations;
+    }
+
+    function recordToolMutationsInSession(mutations) {
+      if (!Array.isArray(mutations) || mutations.length === 0) return;
+      for (const mut of mutations) {
+        if (!mut || !mut.path) continue;
+        const key = normalizeTrackPathKey(mut.path);
+        if (!key) continue;
+        const existing = sessionFileChanges.get(key);
+        if (existing && existing.diff && mut.diff && mut.status === 'modified') {
+          const stripHeader = mut.diff.split('\n').filter(l => !l.startsWith('--- ') && !l.startsWith('+++ ')).join('\n');
+          sessionFileChanges.set(key, {
+            path: mut.path,
+            status: existing.status === 'added' ? 'added' : 'modified',
+            added: (existing.added || 0) + (mut.added || 0),
+            removed: (existing.removed || 0) + (mut.removed || 0),
+            diff: existing.diff + '\n' + stripHeader,
+            fullContent: mut.fullContent ?? existing.fullContent
+          });
+        } else {
+          sessionFileChanges.set(key, { ...mut });
+        }
+        const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
+        if (ws && !/^[a-zA-Z]:[\\\/]/.test(mut.path) && !mut.path.startsWith('/')) {
+          const absKey = normalizeTrackPathKey(ws.replace(/[\\\/]+$/, '') + '/' + mut.path.replace(/^\.\/+|^\.\\+/, ''));
+          sessionFileChanges.set(absKey, sessionFileChanges.get(key));
+        }
+      }
+    }
+
     function isLocalFilePath(str) {
       if (!str || typeof str !== 'string') return false;
-      const s = str.trim().replace(/^["'`]|["'`]$/g, '');
-      if (/^[a-zA-Z]:[\\\/]/i.test(s)) return true;
-      if (/^\\\\[\w\-]+[\\\/]/i.test(s)) return true;
-      if (/^\/([a-zA-Z0-9_\-\.]+\/)+[a-zA-Z0-9_\-\.]+/i.test(s)) return true;
-      if (/^(?:\.{1,2}[\/\\][\w\.\-\/\\ ]+|[\w\-]+[\/\\][\w\.\-\/\\ ]+|\b[\w\-]+\.(?:js|ts|jsx|tsx|json|html|css|scss|bat|ps1|cmd|sh|cs|py|cpp|c|h|java|go|rs|md|txt|log|svg|png|jpg|jpeg|ico|toml|yaml|yml|env))$/i.test(s)) {
-        if (/^[a-zA-Z0-9\-]+\.(?:com|org|net|io|dev|ai|app|gov|edu)$/i.test(s)) return false;
+      const s = str.trim().replace(/^["'`]|["'`]$/g, '').trim();
+      if (!s || s.length > 260 || /[\r\n\0<>|?*]/.test(s)) return false;
+      if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//i.test(s) || s.startsWith('mailto:') || s.startsWith('node:')) return false;
+      if (/^(?:application|text|image|audio|video|multipart|font)\/[\w.+\-]+$/i.test(s)) return false;
+      if (/^(?:origin|upstream|HEAD|refs)\//i.test(s)) return false;
+      if (s.includes('...') || /path[\/\\]to[\/\\]/i.test(s) || /your[_\-]/i.test(s)) return false;
+
+      if (hubServerPlatform === 'win32') {
+        // Reject Linux/VPS/Docker/API root paths (/api/..., /etc/..., /var/..., /usr/..., /home/..., /root/...) and UNC shares
+        if (s.startsWith('/') || s.startsWith('\\\\')) return false;
+        if (/^[a-zA-Z]:[\\\/]/.test(s)) {
+          const drivePrefix = s.slice(0, 2).toUpperCase();
+          if (Array.isArray(hubLocalDrives) && hubLocalDrives.length > 0) {
+            const allowed = hubLocalDrives.some(d => String(d).slice(0, 2).toUpperCase() === drivePrefix);
+            if (!allowed) return false;
+          }
+          return true;
+        }
+      } else if (/^\/([a-zA-Z0-9_\-\.]+\/)+[a-zA-Z0-9_\-\.]+/.test(s)) {
+        if (/^\/(?:api|v1|v2)\//i.test(s)) return false;
+        return true;
+      }
+
+      if (getRecordedFileChange(s)) return true;
+
+      const isRelativeExplicit = /^\.{1,2}[\/\\][\w.\-\/\\ ]+$/i.test(s);
+      const isKnownExtPath = /^[\w.\-]+(?:[\/\\][\w.\-\/\\ ]+)?\.(?:js|cjs|mjs|ts|jsx|tsx|json|html|css|scss|bat|ps1|cmd|sh|cs|py|cpp|c|h|java|go|rs|md|txt|log|svg|png|jpg|jpeg|ico|toml|yaml|yml|env|sql|xml|lock|vue|svelte|goosehints|gitignore)$/i.test(s);
+      if (isRelativeExplicit || isKnownExtPath) {
+        if (/^[a-zA-Z0-9\-]+\.(?:com|org|net|io|dev|ai|app|gov|edu|vn)$/i.test(s)) return false;
         return true;
       }
       return false;
     }
 
-    function renderPathBadgeHtml(rawPath, displayText) {
+    function buildPathCacheKey(rawPath) {
+      const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
+      return ws + '::' + rawPath.trim();
+    }
+
+    function renderPlainCodeHtml(text) {
+      return `<code class="px-1.5 py-0.5 rounded text-[12px] font-mono" style="background:var(--bg-hover);color:var(--text-main);">${escapeHtml(text)}</code>`;
+    }
+
+    function renderPathBadgeHtml(rawPath, displayText, fromPlainText = false) {
       const p = (rawPath || '').replace(/^["'`]|["'`]$/g, '').trim();
-      const isDir = !/\.[a-zA-Z0-9]{1,8}$/.test(p) || p.endsWith('/') || p.endsWith('\\');
-      const icon = isDir ? '📁' : '📄';
+      const recorded = getRecordedFileChange(p);
+      const cacheKey = buildPathCacheKey(p);
+      const cached = localPathExistenceCache.get(cacheKey);
+      if (cached && !cached.exists && !recorded) {
+        return fromPlainText ? escapeHtml(displayText || p) : renderPlainCodeHtml(displayText || p);
+      }
+
+      const isVerified = Boolean(recorded || (cached && cached.exists));
+      const isDir = !recorded && (cached && cached.exists ? Boolean(cached.isDir) : (!/\.[a-zA-Z0-9]{1,8}$/.test(p) || p.endsWith('/') || p.endsWith('\\')));
+      const icon = recorded
+        ? (recorded.status === 'deleted' ? '🗑️' : recorded.status === 'added' ? '🟢' : '📝')
+        : (isDir ? '📁' : '📄');
       const display = escapeHtml(displayText || p);
       const safePath = escapeHtml(p).replace(/'/g, "\\'");
-      return `<span class="local-path-badge" data-path="${safePath}" onclick="handlePathClick('${safePath}', event)" title="Click để mở hoặc xem (${safePath})"><span class="path-icon">${icon}</span><span class="path-text">${display}</span><span class="path-actions"><button type="button" class="path-btn" onclick="openLocalPath('${safePath}', event)" title="Mở trên PC">🖥️ PC</button>${!isDir ? `<button type="button" class="path-btn" onclick="previewLocalFile('${safePath}', event)" title="Xem nhanh nội dung">👁️ Xem</button>` : ''}</span></span>`;
+      const unverifiedAttr = isVerified ? '' : ' data-unverified="1"';
+      const plainAttr = fromPlainText ? ' data-from-plain="1"' : '';
+      const diffPill = recorded
+        ? (recorded.status === 'deleted'
+            ? '<span class="text-[10px] font-bold text-rose-400">ĐÃ XÓA</span>'
+            : `<span class="text-[10px] font-bold"><span class="text-emerald-400">+${recorded.added || 0}</span> <span class="text-rose-400">-${recorded.removed || 0}</span></span>`)
+        : '';
+      const openBtnHtml = (!recorded || recorded.status !== 'deleted')
+        ? `<button type="button" class="path-btn" onclick="openLocalPath('${safePath}', event)" title="Mở trên PC">🖥️ PC</button>`
+        : '';
+      const viewBtnLabel = recorded ? '± Diff' : '👁️ Xem';
+      return `<span class="local-path-badge"${unverifiedAttr}${plainAttr} data-path="${escapeHtml(p)}" onclick="handlePathClick('${safePath}', event)" title="Nhấn để xem thay đổi (+/-) hoặc nội dung (${escapeHtml(p)})"><span class="path-icon">${icon}</span><span class="path-text">${display}</span>${diffPill}<span class="path-actions">${openBtnHtml}${!isDir ? `<button type="button" class="path-btn" onclick="previewLocalFile('${safePath}', event)" title="Xem thay đổi (+/-) & nội dung">${viewBtnLabel}</button>` : ''}</span></span>`;
+    }
+
+    function downgradeInvalidBadgeElement(badge) {
+      if (!badge || !badge.parentNode) return;
+      const textEl = badge.querySelector('.path-text');
+      const label = textEl ? textEl.textContent : (badge.getAttribute('data-path') || badge.textContent || '');
+      if (badge.getAttribute('data-from-plain') === '1') {
+        badge.parentNode.replaceChild(document.createTextNode(label), badge);
+      } else {
+        const code = document.createElement('code');
+        code.className = 'px-1.5 py-0.5 rounded text-[12px] font-mono';
+        code.style.background = 'var(--bg-hover)';
+        code.style.color = 'var(--text-main)';
+        code.textContent = label;
+        badge.parentNode.replaceChild(code, badge);
+      }
+    }
+
+    let _pendingBadgeVerifySet = new Set();
+    let _badgeVerifyTimer = null;
+
+    function verifyLocalBadgesInElement(rootEl) {
+      if (!rootEl || typeof rootEl.querySelectorAll !== 'function') return;
+      const badges = rootEl.querySelectorAll('.local-path-badge[data-unverified="1"]');
+      if (!badges || badges.length === 0) return;
+
+      badges.forEach(badge => {
+        const rawPath = badge.getAttribute('data-path') || '';
+        if (!rawPath) {
+          downgradeInvalidBadgeElement(badge);
+          return;
+        }
+        const recorded = getRecordedFileChange(rawPath);
+        if (recorded) {
+          badge.removeAttribute('data-unverified');
+          return;
+        }
+        const key = buildPathCacheKey(rawPath);
+        if (localPathExistenceCache.has(key)) {
+          const info = localPathExistenceCache.get(key);
+          if (info && info.exists) {
+            badge.removeAttribute('data-unverified');
+          } else {
+            downgradeInvalidBadgeElement(badge);
+          }
+          return;
+        }
+        _pendingBadgeVerifySet.add(badge);
+      });
+
+      if (_pendingBadgeVerifySet.size > 0 && !_badgeVerifyTimer) {
+        _badgeVerifyTimer = setTimeout(flushPendingBadgeVerification, 60);
+      }
+    }
+
+    async function flushPendingBadgeVerification() {
+      _badgeVerifyTimer = null;
+      const badges = Array.from(_pendingBadgeVerifySet).filter(b => b && b.isConnected);
+      _pendingBadgeVerifySet.clear();
+      if (badges.length === 0) return;
+
+      const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
+      const uniquePaths = [...new Set(badges.map(b => b.getAttribute('data-path') || '').filter(Boolean))];
+      if (uniquePaths.length === 0) return;
+
+      try {
+        const res = await fetch('/api/check-paths', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paths: uniquePaths, workspace: ws })
+        });
+        const data = await res.json();
+        if (data && data.platform) hubServerPlatform = data.platform;
+        const results = (data && data.results) || {};
+
+        badges.forEach(badge => {
+          if (!badge.isConnected) return;
+          const rawPath = badge.getAttribute('data-path') || '';
+          const recorded = getRecordedFileChange(rawPath);
+          const r = results[rawPath];
+          localPathExistenceCache.set(ws + '::' + rawPath.trim(), r || { exists: false, isDir: false });
+          if (recorded || (r && r.exists)) {
+            badge.removeAttribute('data-unverified');
+            if (r && r.isDir) {
+              const iconEl = badge.querySelector('.path-icon');
+              if (iconEl) iconEl.textContent = '📁';
+            }
+          } else {
+            downgradeInvalidBadgeElement(badge);
+          }
+        });
+      } catch (_) {
+        badges.forEach(badge => {
+          if (!badge.isConnected) return;
+          const rawPath = badge.getAttribute('data-path') || '';
+          if (getRecordedFileChange(rawPath)) badge.removeAttribute('data-unverified');
+          else downgradeInvalidBadgeElement(badge);
+        });
+      }
     }
 
     function renderWebLinkHtml(url, displayText, title) {
@@ -3039,7 +3898,7 @@
       }
       const clean = href.replace(/^file:\/\/\/?/i, '');
       if (isLocalFilePath(clean)) {
-        return renderPathBadgeHtml(clean, text);
+        return renderPathBadgeHtml(clean, text, false);
       }
       return renderWebLinkHtml(href, text, title);
     };
@@ -3048,9 +3907,9 @@
       let code = (typeof token === 'object' && token !== null ? token.text : token) || '';
       const trimmed = code.trim();
       if (isLocalFilePath(trimmed)) {
-        return renderPathBadgeHtml(trimmed, code);
+        return renderPathBadgeHtml(trimmed, code, false);
       }
-      return `<code class="px-1.5 py-0.5 rounded text-[12px] font-mono" style="background:var(--bg-hover);color:var(--text-main);">${escapeHtml(code)}</code>`;
+      return renderPlainCodeHtml(code);
     };
 
     marked.setOptions({ renderer: customRenderer, breaks: true, gfm: true });
@@ -3064,7 +3923,7 @@
             let p = node.parentElement;
             while (p && p !== rootEl) {
               const tag = p.tagName ? p.tagName.toLowerCase() : '';
-              if (tag === 'pre' || tag === 'code' || tag === 'a' || tag === 'button' || tag === 'textarea' || tag === 'input' || 
+              if (tag === 'pre' || tag === 'code' || tag === 'a' || tag === 'button' || tag === 'textarea' || tag === 'input' || tag === 'summary' ||
                   (p.classList && (p.classList.contains('local-path-badge') || p.classList.contains('chat-web-link')))) {
                 return NodeFilter.FILTER_REJECT;
               }
@@ -3090,34 +3949,35 @@
           let hasMatch = false;
 
           while ((match = regex.exec(text)) !== null) {
-            hasMatch = true;
-            const matchStart = match.index;
-            const matchEnd = regex.lastIndex;
-
-            if (matchStart > lastIdx) {
-              span.appendChild(document.createTextNode(text.substring(lastIdx, matchStart)));
-            }
-
             const urlMatch = match[1];
             const pathMatch = match[2];
 
             if (urlMatch) {
+              hasMatch = true;
+              const matchStart = match.index;
+              const matchEnd = regex.lastIndex;
+              if (matchStart > lastIdx) span.appendChild(document.createTextNode(text.substring(lastIdx, matchStart)));
               let cleanUrl = urlMatch.replace(/[,.;:!?]+$/, '');
               const trailing = urlMatch.substring(cleanUrl.length);
               const temp = document.createElement('div');
               temp.innerHTML = renderWebLinkHtml(cleanUrl, cleanUrl);
               while (temp.firstChild) span.appendChild(temp.firstChild);
               if (trailing) span.appendChild(document.createTextNode(trailing));
+              lastIdx = matchEnd;
             } else if (pathMatch) {
               let cleanPath = pathMatch.replace(/[,.;:!?]+$/, '').trim();
+              if (!isLocalFilePath(cleanPath)) continue;
+              hasMatch = true;
+              const matchStart = match.index;
+              const matchEnd = regex.lastIndex;
+              if (matchStart > lastIdx) span.appendChild(document.createTextNode(text.substring(lastIdx, matchStart)));
               const trailing = pathMatch.substring(cleanPath.length);
               const temp = document.createElement('div');
-              temp.innerHTML = renderPathBadgeHtml(cleanPath, cleanPath);
+              temp.innerHTML = renderPathBadgeHtml(cleanPath, cleanPath, true);
               while (temp.firstChild) span.appendChild(temp.firstChild);
               if (trailing) span.appendChild(document.createTextNode(trailing));
+              lastIdx = matchEnd;
             }
-
-            lastIdx = matchEnd;
           }
 
           if (hasMatch) {
@@ -3129,12 +3989,84 @@
             }
           }
         }
+        verifyLocalBadgesInElement(rootEl);
       } catch (e) {
         console.warn('Error enhancing chat element:', e);
       }
     }
 
     let currentPreviewedPath = '';
+    let currentPreviewActiveTab = 'diff';
+    let currentPreviewDiffRaw = '';
+    let currentPreviewFullRaw = '';
+    let currentPreviewHasFull = false;
+    let currentPreviewIsImage = false;
+
+    window.switchFilePreviewTab = function(mode) {
+      currentPreviewActiveTab = mode === 'diff' ? 'diff' : 'full';
+      const diffBtn = document.getElementById('fileTabDiffBtn');
+      const fullBtn = document.getElementById('fileTabFullBtn');
+      const diffContainer = document.getElementById('filePreviewDiffContainer');
+      const preEl = document.getElementById('filePreviewPre');
+      const imgContainer = document.getElementById('filePreviewImageContainer');
+
+      const activeClasses = 'bg-blue-600 text-white border-blue-500 shadow-2xs';
+      const inactiveClasses = 'bg-transparent text-slate-400 border-transparent hover:text-slate-200';
+
+      if (diffBtn) {
+        diffBtn.className = 'px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border ' +
+          (currentPreviewActiveTab === 'diff' ? activeClasses : inactiveClasses);
+      }
+      if (fullBtn) {
+        fullBtn.className = 'px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border ' +
+          (currentPreviewActiveTab === 'full' ? activeClasses : inactiveClasses);
+      }
+
+      if (currentPreviewActiveTab === 'diff') {
+        if (diffContainer) diffContainer.classList.remove('hidden');
+        if (preEl) preEl.classList.add('hidden');
+        if (imgContainer) imgContainer.classList.add('hidden');
+      } else {
+        if (diffContainer) diffContainer.classList.add('hidden');
+        if (currentPreviewIsImage) {
+          if (preEl) preEl.classList.add('hidden');
+          if (imgContainer) imgContainer.classList.remove('hidden');
+        } else {
+          if (imgContainer) imgContainer.classList.add('hidden');
+          if (preEl) preEl.classList.remove('hidden');
+        }
+      }
+    };
+
+    function renderDiffTableIntoModal(diffText) {
+      const tbody = document.getElementById('filePreviewDiffTableBody');
+      const emptyEl = document.getElementById('filePreviewDiffEmpty');
+      const tableEl = document.getElementById('filePreviewDiffTable');
+      if (!tbody) return { added: 0, removed: 0, hasRows: false };
+
+      const parsed = parseUnifiedDiffToRows(diffText);
+      if (!parsed.rows || parsed.rows.length === 0) {
+        tbody.innerHTML = '';
+        if (tableEl) tableEl.classList.add('hidden');
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        return { added: 0, removed: 0, hasRows: false };
+      }
+
+      if (emptyEl) emptyEl.classList.add('hidden');
+      if (tableEl) tableEl.classList.remove('hidden');
+
+      let html = '';
+      for (const r of parsed.rows) {
+        const rowClass = r.type === 'add' ? 'diff-row-add' : r.type === 'del' ? 'diff-row-del' : r.type === 'hunk' ? 'diff-row-hunk' : 'diff-row-ctx';
+        if (r.type === 'hunk') {
+          html += `<tr class="${rowClass}"><td class="diff-ln">...</td><td class="diff-ln">...</td><td class="diff-sign">@@</td><td class="diff-code">${escapeHtml(r.text)}</td></tr>`;
+        } else {
+          html += `<tr class="${rowClass}"><td class="diff-ln">${r.oldNo}</td><td class="diff-ln">${r.newNo}</td><td class="diff-sign">${r.sign}</td><td class="diff-code">${escapeHtml(r.text)}</td></tr>`;
+        }
+      }
+      tbody.innerHTML = html;
+      return { added: parsed.added, removed: parsed.removed, hasRows: true };
+    }
 
     window.openLocalPath = async function(rawPath, e) {
       if (e) e.stopPropagation();
@@ -3163,48 +4095,132 @@
       }
     };
 
-    window.previewLocalFile = async function(rawPath, e) {
+    window.previewLocalFile = async function(rawPath, e, preferredMode = 'auto') {
       if (e) e.stopPropagation();
       try {
-        showToast('Đang tải nội dung file...', 'info', 1500);
         const ws = (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '') || '';
-        const res = await fetch(`/api/file-preview?path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`);
-        const data = await res.json();
-        if (!data.success) {
-          showToast('⚠️ ' + (data.error || 'Không thể đọc nội dung file'), 'warning', 4000);
+        const recorded = getRecordedFileChange(rawPath);
+
+        const [diffRes, previewRes] = await Promise.all([
+          fetch(`/api/file-diff?path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`).then(r => r.json()).catch(() => null),
+          fetch(`/api/file-preview?path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`).then(r => r.json()).catch(() => null)
+        ]);
+
+        if (previewRes && previewRes.isDir) {
+          openLocalPath(rawPath, e);
           return;
         }
 
-        currentPreviewedPath = data.path;
+        const hasServerPreview = Boolean(previewRes && previewRes.success);
+        const hasServerDiff = Boolean(diffRes && diffRes.success && diffRes.diff && diffRes.diff.trim());
+        const hasRecordedDiff = Boolean(recorded && (recorded.diff || recorded.status === 'deleted'));
+
+        if (!hasServerPreview && !hasServerDiff && !hasRecordedDiff) {
+          showToast('⚠️ ' + ((previewRes && previewRes.error) || (diffRes && diffRes.error) || 'Không thể đọc nội dung file'), 'warning', 3800);
+          return;
+        }
+
+        const resolvedPath = (previewRes && previewRes.path) || (diffRes && diffRes.path) || rawPath;
+        const fileName = (previewRes && previewRes.name) || (diffRes && diffRes.name) || rawPath.split(/[\\\/]/).pop() || rawPath;
+        currentPreviewedPath = resolvedPath;
+
         const modal = document.getElementById('filePreviewModal');
         const titleEl = document.getElementById('filePreviewTitle');
+        const statusBadgeEl = document.getElementById('filePreviewStatusBadge');
+        const diffStatsEl = document.getElementById('filePreviewDiffStats');
         const sizeEl = document.getElementById('filePreviewSize');
         const metaEl = document.getElementById('filePreviewMeta');
         const preEl = document.getElementById('filePreviewPre');
         const codeEl = document.getElementById('filePreviewContent');
         const imgContainer = document.getElementById('filePreviewImageContainer');
         const imgEl = document.getElementById('filePreviewImage');
+        const openBtn = document.getElementById('filePreviewOpenBtn');
+        const fullBtn = document.getElementById('fileTabFullBtn');
 
-        titleEl.textContent = data.name;
-        metaEl.textContent = data.path;
-        
-        const sizeKb = (data.size / 1024).toFixed(1);
-        sizeEl.textContent = `${sizeKb} KB${data.truncated ? ' (đã rút gọn)' : ''}`;
+        titleEl.textContent = fileName;
+        metaEl.textContent = resolvedPath;
 
-        if (data.isImage) {
-          preEl.classList.add('hidden');
-          imgContainer.classList.remove('hidden');
-          imgEl.src = data.imageUrl;
+        let effectiveDiff = '';
+        let effectiveStatus = 'unchanged';
+        if (hasServerDiff && diffRes.status && diffRes.status !== 'unchanged') {
+          effectiveDiff = diffRes.diff;
+          effectiveStatus = diffRes.status;
+        } else if (recorded && recorded.diff) {
+          effectiveDiff = recorded.diff;
+          effectiveStatus = recorded.status || 'modified';
+        } else if ((diffRes && diffRes.status === 'deleted') || (recorded && recorded.status === 'deleted')) {
+          effectiveStatus = 'deleted';
+          effectiveDiff = (diffRes && diffRes.diff) || (recorded && recorded.diff) || '';
+        }
+
+        currentPreviewDiffRaw = effectiveDiff;
+        const renderedDiff = renderDiffTableIntoModal(effectiveDiff);
+        const effectiveAdded = renderedDiff.hasRows ? renderedDiff.added : ((diffRes && diffRes.added) || (recorded && recorded.added) || 0);
+        const effectiveRemoved = renderedDiff.hasRows ? renderedDiff.removed : ((diffRes && diffRes.removed) || (recorded && recorded.removed) || 0);
+
+        currentPreviewIsImage = Boolean(hasServerPreview && previewRes.isImage);
+        currentPreviewHasFull = Boolean(hasServerPreview || (recorded && recorded.fullContent));
+        currentPreviewFullRaw = hasServerPreview ? (previewRes.content || '') : ((recorded && recorded.fullContent) || '');
+
+        if (hasServerPreview) {
+          const sizeKb = ((previewRes.size || 0) / 1024).toFixed(1);
+          sizeEl.textContent = `${sizeKb} KB${previewRes.truncated ? ' (đã rút gọn)' : ''}`;
+          sizeEl.classList.remove('hidden');
+          if (openBtn) openBtn.classList.remove('hidden');
+          if (previewRes.isImage) {
+            imgEl.src = previewRes.imageUrl;
+          } else {
+            codeEl.textContent = previewRes.content || '';
+            if (window.hljs) {
+              delete codeEl.dataset.highlighted;
+              hljs.highlightElement(codeEl);
+            }
+          }
         } else {
-          imgContainer.classList.add('hidden');
-          preEl.classList.remove('hidden');
-          codeEl.textContent = data.content || '';
-          if (window.hljs) {
-            delete codeEl.dataset.highlighted;
-            hljs.highlightElement(codeEl);
+          sizeEl.textContent = effectiveStatus === 'deleted' ? 'Đã xóa khỏi đĩa' : '';
+          if (openBtn) openBtn.classList.add('hidden');
+          codeEl.textContent = currentPreviewFullRaw || '(File đã bị xóa — xem tab Thay đổi Xanh/Đỏ để kiểm tra các dòng đã xóa)';
+        }
+
+        if (statusBadgeEl) {
+          if (effectiveStatus === 'added') {
+            statusBadgeEl.textContent = 'Mới thêm';
+            statusBadgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          } else if (effectiveStatus === 'modified') {
+            statusBadgeEl.textContent = 'Đã sửa';
+            statusBadgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 bg-amber-500/20 text-amber-400 border border-amber-500/30';
+          } else if (effectiveStatus === 'deleted') {
+            statusBadgeEl.textContent = 'Đã xóa';
+            statusBadgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 bg-rose-500/20 text-rose-400 border border-rose-500/30';
+          } else {
+            statusBadgeEl.className = 'hidden';
           }
         }
 
+        if (diffStatsEl) {
+          if (effectiveAdded > 0 || effectiveRemoved > 0) {
+            diffStatsEl.innerHTML = `<span class="text-emerald-400">+${effectiveAdded}</span><span class="text-rose-400">-${effectiveRemoved}</span>`;
+            diffStatsEl.className = 'inline-flex items-center gap-1.5 text-[11px] font-bold shrink-0';
+          } else {
+            diffStatsEl.className = 'hidden';
+          }
+        }
+
+        const emptyEl = document.getElementById('filePreviewDiffEmpty');
+        if (emptyEl && !renderedDiff.hasRows) {
+          emptyEl.textContent = effectiveStatus === 'deleted'
+            ? 'File này đã bị xóa (không có bản lưu trước đó trong Git để đối chiếu từng dòng).'
+            : 'File này hiện không có dòng thêm (+) hay xóa (-) nào chưa commit.';
+        }
+
+        if (fullBtn) {
+          fullBtn.disabled = false;
+        }
+
+        const shouldShowDiff = preferredMode === 'diff' ||
+          (preferredMode === 'auto' && (renderedDiff.hasRows || effectiveStatus === 'deleted'));
+
+        switchFilePreviewTab(shouldShowDiff ? 'diff' : 'full');
         modal.classList.remove('hidden');
       } catch (err) {
         showToast('Lỗi xem file: ' + err.message, 'error', 3500);
@@ -3212,12 +4228,16 @@
     };
 
     window.handlePathClick = function(rawPath, e) {
-      const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const isDir = !/\.[a-zA-Z0-9]{1,8}$/.test(rawPath) || rawPath.endsWith('/') || rawPath.endsWith('\\');
-      if (isMobile && !isDir) {
-        previewLocalFile(rawPath, e);
-      } else {
+      if (e && e.currentTarget && e.currentTarget.getAttribute && e.currentTarget.getAttribute('data-unverified') === '1') {
+        return;
+      }
+      const recorded = getRecordedFileChange(rawPath);
+      const cached = localPathExistenceCache.get(buildPathCacheKey(rawPath));
+      const isDir = !recorded && (cached && cached.exists ? Boolean(cached.isDir) : (!/\.[a-zA-Z0-9]{1,8}$/.test(rawPath) || rawPath.endsWith('/') || rawPath.endsWith('\\')));
+      if (isDir) {
         openLocalPath(rawPath, e);
+      } else {
+        previewLocalFile(rawPath, e, 'auto');
       }
     };
 
@@ -3227,16 +4247,19 @@
     };
 
     window.copyFilePreviewContent = function() {
-      const codeEl = document.getElementById('filePreviewContent');
-      if (!codeEl) return;
-      const text = codeEl.textContent || '';
-      navigator.clipboard.writeText(text).then(() => {
+      const text = currentPreviewActiveTab === 'diff' && currentPreviewDiffRaw
+        ? currentPreviewDiffRaw
+        : (currentPreviewFullRaw || (document.getElementById('filePreviewContent')?.textContent || ''));
+      if (!text) return;
+      window.writeTextToClipboard(text).then(() => {
         const btnText = document.getElementById('filePreviewCopyText');
         if (btnText) {
           btnText.textContent = 'Đã chép!';
           setTimeout(() => { btnText.textContent = 'Sao chép'; }, 1500);
         }
-        showToast('Đã sao chép nội dung file!', 'success', 2000);
+        showToast(currentPreviewActiveTab === 'diff' ? 'Đã sao chép nội dung Diff!' : 'Đã sao chép nội dung file!', 'success', 2000);
+      }).catch(err => {
+        showToast('Không thể sao chép: ' + err.message, 'error');
       });
     };
 
@@ -3266,12 +4289,16 @@
     window.copySnippet = function(id, btn) {
       const text = window._codeSnippets[id] || '';
       if (!text) return;
-      navigator.clipboard.writeText(text).then(() => {
+      window.writeTextToClipboard(text).then(() => {
         soundEffects.playBop();
-        const orig = btn.innerHTML;
-        btn.innerHTML = `<span class="text-emerald-400 font-semibold flex items-center gap-1">✓ Đã chép</span>`;
-        showToast('Đã sao chép đoạn mã vào clipboard', 'success');
-        setTimeout(() => { btn.innerHTML = orig; }, 1800);
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = `<span class="text-emerald-400 font-semibold flex items-center gap-1">✓ Đã chép</span>`;
+          setTimeout(() => { btn.innerHTML = orig; }, 1800);
+        }
+        showToast('Đã sao chép vào clipboard', 'success');
+      }).catch(err => {
+        showToast('Không thể sao chép: ' + err.message, 'error');
       });
     };
 
@@ -3281,23 +4308,185 @@
         showToast('Không có nội dung phản hồi để sao chép', 'warning');
         return;
       }
-      navigator.clipboard.writeText(text).then(() => {
+      window.writeTextToClipboard(text).then(() => {
         soundEffects.playBop();
-        const orig = btn.innerHTML;
-        btn.innerHTML = `<span class="text-emerald-400 font-semibold flex items-center gap-1">✓ Đã chép toàn bộ</span>`;
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = `<span class="text-emerald-400 font-semibold flex items-center gap-1">✓ Đã chép toàn bộ</span>`;
+          setTimeout(() => { btn.innerHTML = orig; }, 1800);
+        }
         showToast('Đã sao chép toàn bộ câu trả lời', 'success');
-        setTimeout(() => { btn.innerHTML = orig; }, 1800);
+      }).catch(err => {
+        showToast('Không thể sao chép: ' + err.message, 'error');
       });
     };
 
-    // EDIT USER PROMPT & RESEND
-    window.editUserPrompt = function(id) {
-      const text = window._codeSnippets[id] || '';
-      if (text) {
-        promptInput.value = text;
-        promptInput.focus();
-        autoResizeTextarea();
-        showToast('Đã nạp lại prompt vào khung soạn thảo', 'info');
+    // EDIT USER PROMPT & RESEND (OPTION 1: INLINE EDIT ON LATEST QUESTION ONLY)
+    function syncLatestUserQuestionEditButton() {
+      const feed = document.getElementById('chatFeed');
+      if (!feed) return;
+      const rows = feed.querySelectorAll('.user-message-row');
+      rows.forEach((r, idx) => {
+        const isLatest = (idx === rows.length - 1);
+        const editBtn = r.querySelector('.user-edit-btn');
+        const editSep = r.querySelector('.user-edit-sep');
+        if (isLatest) {
+          r.dataset.latestUserQuestion = 'true';
+          if (editBtn) editBtn.classList.remove('hidden');
+          if (editSep) editSep.classList.remove('hidden');
+        } else {
+          delete r.dataset.latestUserQuestion;
+          if (editBtn) editBtn.classList.add('hidden');
+          if (editSep) editSep.classList.add('hidden');
+          const inlineBox = r.querySelector('.inline-user-edit-box');
+          if (inlineBox) {
+            inlineBox.remove();
+            const bubble = r.querySelector('.user-bubble');
+            if (bubble) bubble.classList.remove('hidden');
+          }
+        }
+      });
+    }
+
+    window.cancelInlineUserEdit = function(id) {
+      const feed = document.getElementById('chatFeed');
+      if (!feed) return;
+      const row = feed.querySelector(`.user-message-row[data-snippet-id="${id}"]`)
+        || feed.querySelector('.user-message-row[data-latest-user-question="true"]');
+      if (!row) return;
+      const inlineBox = row.querySelector('.inline-user-edit-box');
+      if (inlineBox) inlineBox.remove();
+      const bubble = row.querySelector('.user-bubble');
+      if (bubble) bubble.classList.remove('hidden');
+    };
+
+    window.submitInlineUserEdit = async function(id) {
+      const feed = document.getElementById('chatFeed');
+      if (!feed) return;
+      const row = feed.querySelector(`.user-message-row[data-snippet-id="${id}"]`)
+        || feed.querySelector('.user-message-row[data-latest-user-question="true"]');
+      if (!row) return;
+      const textarea = row.querySelector('.inline-user-edit-textarea');
+      const newPrompt = (textarea ? textarea.value : (window._codeSnippets[id] || row.dataset.questionText || '')).trim();
+      if (!newPrompt) {
+        showToast('Vui lòng nhập nội dung câu hỏi', 'info');
+        if (textarea) textarea.focus();
+        return;
+      }
+
+      // Stop active stream if currently running in this session
+      if (isGenerating) {
+        if (activeChatEventSource) {
+          try { activeChatEventSource.close(); } catch (_) {}
+          activeChatEventSource = null;
+        }
+        sessionViewVersion++;
+        isGenerating = false;
+        runningWorkspace = null;
+        stopLiveExecutionTimer(false);
+      }
+
+      // Remove DOM nodes from the latest user question row through the end of chatFeed
+      while (row.nextSibling) {
+        row.nextSibling.remove();
+      }
+      row.remove();
+
+      // Truncate currentSessionHistoryItems from the last user item onwards
+      for (let i = currentSessionHistoryItems.length - 1; i >= 0; i--) {
+        if (currentSessionHistoryItems[i].role === 'user') {
+          currentSessionHistoryItems.splice(i);
+          break;
+        }
+      }
+
+      // Remove the last saved turn timing entry for this session if present
+      if (currentSessionId) {
+        try {
+          const key = 'ai_hub_turn_timings:' + currentSessionId;
+          const records = JSON.parse(localStorage.getItem(key) || '[]');
+          if (Array.isArray(records) && records.length > 0) {
+            records.pop();
+            localStorage.setItem(key, JSON.stringify(records));
+          }
+        } catch (_) {}
+      }
+
+      await sendMessage({ promptOverride: newPrompt, rewindLastTurn: true });
+    };
+
+    window.editUserPrompt = function(id, btnEl) {
+      const feed = document.getElementById('chatFeed');
+      if (!feed) return;
+      syncLatestUserQuestionEditButton();
+      const row = (btnEl && typeof btnEl.closest === 'function' && btnEl.closest('.user-message-row'))
+        || feed.querySelector(`.user-message-row[data-snippet-id="${id}"]`)
+        || feed.querySelector('.user-message-row[data-latest-user-question="true"]');
+      if (!row || row.dataset.latestUserQuestion !== 'true') return;
+
+      const existingBox = row.querySelector('.inline-user-edit-box');
+      if (existingBox) {
+        const existingTa = existingBox.querySelector('.inline-user-edit-textarea');
+        if (existingTa) existingTa.focus();
+        return;
+      }
+
+      const bubble = row.querySelector('.user-bubble');
+      if (!bubble) return;
+      const currentText = window._codeSnippets[id] || row.dataset.questionText || bubble.textContent || '';
+      bubble.classList.add('hidden');
+
+      const editBox = document.createElement('div');
+      editBox.className = 'inline-user-edit-box w-full mt-1 rounded-2xl border p-2.5 sm:p-3 shadow-md space-y-2.5';
+      editBox.style.cssText = 'background: var(--bg-card); border-color: var(--accent); min-width: min(84vw, 440px);';
+      editBox.innerHTML = `
+        <textarea class="inline-user-edit-textarea w-full bg-transparent text-xs sm:text-[13px] leading-relaxed focus:outline-none resize-none"
+                  rows="3"
+                  style="color: var(--text-main); font-size: 16px;"
+                  placeholder="Nhập nội dung câu hỏi chỉnh sửa..."></textarea>
+        <div class="flex items-center justify-between gap-2 pt-1.5 border-t" style="border-color: var(--border-subtle);">
+          <span class="text-[10.5px] hidden sm:inline select-none" style="color: var(--text-sub);">Enter để gửi lại · Shift+Enter xuống dòng · Esc để hủy</span>
+          <div class="flex items-center gap-1.5 ml-auto">
+            <button type="button"
+                    onclick="cancelInlineUserEdit('${id}')"
+                    class="px-2.5 py-1 rounded-lg text-[11.5px] font-medium border hover:opacity-80 transition"
+                    style="border-color: var(--border); color: var(--text-sub); background: var(--bg-surface);">
+              Hủy
+            </button>
+            <button type="button"
+                    onclick="submitInlineUserEdit('${id}')"
+                    class="px-3 py-1 rounded-lg text-[11.5px] font-semibold text-white shadow-xs hover:opacity-90 transition flex items-center gap-1"
+                    style="background: var(--accent);">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Lưu & Gửi lại</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      bubble.insertAdjacentElement('afterend', editBox);
+      const ta = editBox.querySelector('.inline-user-edit-textarea');
+      if (ta) {
+        ta.value = currentText;
+        const resizeTa = () => {
+          ta.style.height = 'auto';
+          ta.style.height = Math.min(240, Math.max(68, ta.scrollHeight)) + 'px';
+        };
+        resizeTa();
+        ta.addEventListener('input', resizeTa);
+        ta.setAttribute('enterkeyhint', isMobileChatInput() ? 'enter' : 'send');
+        ta.addEventListener('keydown', (e) => {
+          if (e.isComposing || e.keyCode === 229) return;
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            window.cancelInlineUserEdit(id);
+          } else if (e.key === 'Enter' && !e.shiftKey && !isMobileChatInput()) {
+            e.preventDefault();
+            window.submitInlineUserEdit(id);
+          }
+        });
+        ta.focus();
+        try { ta.setSelectionRange(currentText.length, currentText.length); } catch (_) {}
       }
     };
 
@@ -3332,13 +4521,13 @@
       if (headerLiveTimerBadge) headerLiveTimerBadge.classList.remove('hidden');
       if (liveExecutionTimerInterval) clearInterval(liveExecutionTimerInterval);
 
+      const termStatus = document.getElementById('terminalDrawerStatus');
       liveExecutionTimerInterval = setInterval(() => {
         const elapsed = Math.max(0, (Date.now() - liveExecutionStartTime) / 1000);
         const formatted = elapsed.toFixed(1) + 's';
         if (headerLiveTimerText) headerLiveTimerText.innerText = formatted;
-        const termStatus = document.getElementById('terminalDrawerStatus');
         if (termStatus && isGenerating) termStatus.innerText = `Running (${formatted})`;
-      }, 100);
+      }, 250);
     }
 
     function stopLiveExecutionTimer(success = true) {
@@ -3354,7 +4543,7 @@
     }
 
     // TEXTAREA AUTO-RESIZE & CHAR COUNTER
-    function autoResizeTextarea() {
+    function autoResizeTextarea(persistDraft = true) {
       promptInput.style.height = 'auto';
       const newHeight = Math.min(promptInput.scrollHeight, 220);
       promptInput.style.height = newHeight + 'px';
@@ -3363,29 +4552,49 @@
       if (charCount) {
         charCount.innerText = `${len} ký tự`;
       }
+      if (persistDraft !== false && typeof saveCurrentSessionDraft === 'function') {
+        saveCurrentSessionDraft();
+      }
     }
 
+    // Bind input auto-resize listener
     promptInput.addEventListener('input', autoResizeTextarea);
 
     let initialBottomFollow = false;
     let bottomFollowFrame = 0;
     function settleSessionAtBottom() {
+      isChatUserScrolledUp = false;
       initialBottomFollow = true;
       scheduleBottomFollow();
       document.fonts?.ready.then(scheduleBottomFollow);
     }
     function scheduleBottomFollow() {
-      if (!initialBottomFollow || bottomFollowFrame) return;
+      if (!initialBottomFollow || isChatUserScrolledUp || bottomFollowFrame) return;
       bottomFollowFrame = requestAnimationFrame(() => {
         bottomFollowFrame = 0;
-        if (!initialBottomFollow) return;
+        if (!initialBottomFollow || isChatUserScrolledUp) return;
+        _programmaticScrollGuard = true;
         chatFeed.style.paddingBottom = (document.querySelector('.composer-outer').getBoundingClientRect().height + 20) + 'px';
         chatFeed.scrollTop = chatFeed.scrollHeight;
+        _programmaticScrollGuard = false;
         updateComposerBottomArrow();
       });
     }
-    ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(type => {
-      chatFeed.addEventListener(type, () => { initialBottomFollow = false; }, { passive: true });
+    chatFeed.addEventListener('wheel', (e) => {
+      initialBottomFollow = false;
+      if (e.deltaY < 0) {
+        isChatUserScrolledUp = true;
+      } else if (getChatDistanceToBottom() <= 18) {
+        isChatUserScrolledUp = false;
+      }
+    }, { passive: true });
+    ['touchstart', 'touchmove', 'pointerdown', 'keydown'].forEach(type => {
+      chatFeed.addEventListener(type, () => {
+        initialBottomFollow = false;
+        if (getChatDistanceToBottom() > 24) {
+          isChatUserScrolledUp = true;
+        }
+      }, { passive: true });
     });
     const historyLayoutObserver = new ResizeObserver(scheduleBottomFollow);
     new MutationObserver(() => {
@@ -3396,17 +4605,202 @@
     }).observe(chatFeed, { childList: true });
     chatFeed.addEventListener('load', scheduleBottomFollow, true);
 
-    function scrollToBottom() {
+    function scrollToBottom(force = false) {
+      if (!chatFeed) return;
+      if (!force && isChatUserScrolledUp) return;
+      if (force) {
+        isChatUserScrolledUp = false;
+        unreadScrollCount = 0;
+      }
+      _programmaticScrollGuard = true;
       chatFeed.scrollTop = chatFeed.scrollHeight;
+      _programmaticScrollGuard = false;
+      checkScrollDistance();
     }
 
-    function scrollToBottomSmooth() {
+    function scrollToBottomSmooth(force = false) {
+      if (!chatFeed) return;
+      if (!force && isChatUserScrolledUp) return;
+      if (force) {
+        isChatUserScrolledUp = false;
+        unreadScrollCount = 0;
+        const pill = document.getElementById('scrollToBottomPill');
+        const badge = document.getElementById('unreadScrollBadge');
+        if (pill) pill.classList.add('hidden');
+        if (badge) badge.classList.add('hidden');
+      }
       chatFeed.scrollTo({ top: chatFeed.scrollHeight, behavior: 'smooth' });
+    }
+
+    // PER-SESSION MODEL MEMORY & SPA FAVICON SYNC
+    const sessionModelsMap = new Map();
+
+    function resolveModelMeta(modelId) {
+      if (!modelId) return MODELS[0];
+      const exact = MODELS.find(m => m.id === modelId || m.full === modelId);
+      if (exact) return exact;
+      const lower = String(modelId).toLowerCase();
+      if (lower.includes('claude')) return MODELS.find(m => m.iconType === 'claude') || MODELS[0];
+      if (lower.includes('flash')) return MODELS.find(m => m.id.includes('flash')) || MODELS[1] || MODELS[0];
+      if (lower.includes('argon') || lower.includes('gemini')) return MODELS.find(m => m.id.includes('argon')) || MODELS[3] || MODELS[0];
+      if (lower.includes('gpt') || lower.includes('codex')) return MODELS[0];
+      return { id: modelId, name: modelId, full: modelId, provider: 'AI', tag: 'Mô hình phiên hiện tại', iconType: 'openai', iconBg: 'rgba(16, 185, 129, 0.1)' };
+    }
+
+    function setSessionModel(sessionId, modelId) {
+      if (!sessionId || !modelId) return;
+      const key = String(sessionId).trim();
+      if (!key) return;
+      sessionModelsMap.set(key, modelId);
+      try {
+        localStorage.setItem('ai_hub_session_model:' + key, modelId);
+      } catch (_) {}
+      if (Array.isArray(allSessionsCache)) {
+        const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
+        if (matched) {
+          matched.model = modelId;
+          if (matched.id && matched.id !== key) {
+            sessionModelsMap.set(matched.id, modelId);
+            try { localStorage.setItem('ai_hub_session_model:' + matched.id, modelId); } catch (_) {}
+          }
+          if (matched.name && matched.name !== key) {
+            sessionModelsMap.set(matched.name, modelId);
+            try { localStorage.setItem('ai_hub_session_model:' + matched.name, modelId); } catch (_) {}
+          }
+        }
+      }
+    }
+
+    function getSessionModel(sessionId, explicitOnly = false) {
+      if (!sessionId) return null;
+      const key = String(sessionId).trim();
+      if (!key) return null;
+      if (sessionModelsMap.has(key)) return sessionModelsMap.get(key);
+      try {
+        const saved = localStorage.getItem('ai_hub_session_model:' + key);
+        if (saved) {
+          sessionModelsMap.set(key, saved);
+          return saved;
+        }
+      } catch (_) {}
+      if (explicitOnly) return null;
+      if (Array.isArray(allSessionsCache)) {
+        const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
+        if (matched) {
+          if (matched.id && sessionModelsMap.has(matched.id)) return sessionModelsMap.get(matched.id);
+          if (matched.name && sessionModelsMap.has(matched.name)) return sessionModelsMap.get(matched.name);
+          try {
+            const byId = matched.id ? localStorage.getItem('ai_hub_session_model:' + matched.id) : null;
+            if (byId) return byId;
+            const byName = matched.name ? localStorage.getItem('ai_hub_session_model:' + matched.name) : null;
+            if (byName) return byName;
+          } catch (_) {}
+          if (matched.model) return matched.model;
+        }
+      }
+      return null;
+    }
+
+    function applySessionModelSelection(modelId) {
+      if (!modelId) return;
+      if (currentSelectedModel !== modelId) {
+        currentSelectedModel = modelId;
+      }
+      renderModelSelector();
+    }
+
+    // PER-SESSION DRAFT INPUT MEMORY
+    const sessionDraftsMap = new Map();
+    let currentDraftSessionKey = '__new__';
+
+    function setSessionDraft(sessionId, draftText) {
+      const key = String(sessionId || currentDraftSessionKey || '__new__').trim();
+      if (!key) return;
+      const val = String(draftText ?? '');
+      const storeKey = (k) => {
+        if (!k) return;
+        if (val) {
+          sessionDraftsMap.set(k, val);
+          try { localStorage.setItem('ai_hub_session_draft:' + k, val); } catch (_) {}
+        } else {
+          sessionDraftsMap.delete(k);
+          try { localStorage.removeItem('ai_hub_session_draft:' + k); } catch (_) {}
+        }
+      };
+      storeKey(key);
+      if (Array.isArray(allSessionsCache)) {
+        const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
+        if (matched) {
+          if (matched.id && matched.id !== key) storeKey(matched.id);
+          if (matched.name && matched.name !== key) storeKey(matched.name);
+        }
+      }
+    }
+
+    function getSessionDraft(sessionId) {
+      const key = String(sessionId || currentDraftSessionKey || '__new__').trim();
+      if (!key) return '';
+      if (sessionDraftsMap.has(key)) return sessionDraftsMap.get(key) || '';
+      try {
+        const saved = localStorage.getItem('ai_hub_session_draft:' + key);
+        if (saved !== null) {
+          sessionDraftsMap.set(key, saved);
+          return saved;
+        }
+      } catch (_) {}
+      if (Array.isArray(allSessionsCache)) {
+        const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
+        if (matched) {
+          if (matched.id && sessionDraftsMap.has(matched.id)) return sessionDraftsMap.get(matched.id) || '';
+          if (matched.name && sessionDraftsMap.has(matched.name)) return sessionDraftsMap.get(matched.name) || '';
+          try {
+            const byId = matched.id ? localStorage.getItem('ai_hub_session_draft:' + matched.id) : null;
+            if (byId !== null) {
+              sessionDraftsMap.set(key, byId);
+              return byId;
+            }
+            const byName = matched.name ? localStorage.getItem('ai_hub_session_draft:' + matched.name) : null;
+            if (byName !== null) {
+              sessionDraftsMap.set(key, byName);
+              return byName;
+            }
+          } catch (_) {}
+        }
+      }
+      return '';
+    }
+
+    function saveCurrentSessionDraft() {
+      if (!promptInput) return;
+      const activeKey = currentSessionId || currentDraftSessionKey || '__new__';
+      setSessionDraft(activeKey, promptInput.value);
+    }
+
+    function restoreSessionDraft(sessionId) {
+      if (!promptInput) return;
+      const targetKey = sessionId || currentDraftSessionKey || '__new__';
+      const draft = getSessionDraft(targetKey);
+      promptInput.value = draft;
+      autoResizeTextarea(false);
+    }
+
+    let _faviconRefreshTimer = null;
+    function refreshFaviconForCurrentRoute() {
+      clearTimeout(_faviconRefreshTimer);
+      _faviconRefreshTimer = setTimeout(() => {
+        try {
+          const links = document.head.querySelectorAll('link[rel*="icon"]');
+          links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href) link.setAttribute('href', href);
+          });
+        } catch (_) {}
+      }, 60);
     }
 
     // MODEL SELECTOR
     function renderModelSelector() {
-      const cur = MODELS.find(m => m.id === currentSelectedModel) || MODELS[0];
+      const cur = resolveModelMeta(currentSelectedModel);
       const iconEl = document.getElementById('currentModelIcon');
       const nameEl = document.getElementById('currentModelName');
       
@@ -3445,9 +4839,12 @@
     function selectModel(modelId) {
       currentSelectedModel = modelId;
       localStorage.setItem('ai_hub_model', modelId);
+      if (currentSessionId) {
+        setSessionModel(currentSessionId, modelId);
+      }
       renderModelSelector();
       closeModelDropdown();
-      showToast(`Đã kích hoạt model: ${MODELS.find(m => m.id === modelId)?.name || modelId}`, 'info', 2000);
+      showToast(`Đã kích hoạt model: ${resolveModelMeta(modelId)?.name || modelId}`, 'info', 2000);
       soundEffects.playBop();
     }
 
@@ -3725,6 +5122,7 @@
       } catch (_) {}
       if (url.href !== window.location.href) {
         window.history[replace ? 'replaceState' : 'pushState']({}, '', url);
+        refreshFaviconForCurrentRoute();
       }
     }
 
@@ -3769,6 +5167,7 @@
             if (saved) { sessionId = saved.sessionId; workspace = saved.workspace; }
           } catch (_) {}
           if (!sessionId) {
+            allowAutoReconnect = false;
             showToast('Không tìm thấy phiên chat từ URL này.', 'warning');
             return;
           }
@@ -3787,7 +5186,10 @@
       }
       if (!sessionId || sessionId.startsWith('new-')) {
         newSession(false);
-        updateSessionUrl(sessionId || 'new-' + safeRandomId(), true);
+        const restoredNewKey = sessionId || ('new-' + safeRandomId());
+        currentDraftSessionKey = restoredNewKey;
+        restoreSessionDraft(restoredNewKey);
+        updateSessionUrl(restoredNewKey, true);
         return;
       }
       const matched = allSessionsCache.find(s => s.id === sessionId || s.name === sessionId);
@@ -3797,11 +5199,27 @@
 
     window.addEventListener('popstate', () => { restoreSessionFromUrl(); });
 
-    function newSession(updateUrl = true) {
+    function detachActiveStream() {
       if (window.activeChatEventSource) {
-        try { window.activeChatEventSource.close(); } catch (_) {}
+        const es = window.activeChatEventSource;
         window.activeChatEventSource = null;
+        if (typeof es._closeAndDone === 'function') {
+          try { es._closeAndDone(); } catch (_) {}
+        } else {
+          try { es.close(); } catch (_) {}
+        }
       }
+      isGenerating = false;
+      runningWorkspace = null;
+      sendBtn.classList.remove('hidden');
+      stopBtn.classList.add('hidden');
+      sessionStatus.innerText = 'Sẵn sàng';
+      sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
+      stopLiveExecutionTimer(true);
+    }
+
+    function newSession(updateUrl = true) {
+      detachActiveStream();
       initialBottomFollow = false;
       sessionViewVersion++;
       allowAutoReconnect = false;
@@ -3829,8 +5247,13 @@
           }
         } catch (_) {}
       }
+      saveCurrentSessionDraft();
       currentSessionId = null;
-      if (updateUrl && currentWorkspace) updateSessionUrl('new-' + safeRandomId());
+      const nextNewSessionKey = 'new-' + safeRandomId();
+      currentDraftSessionKey = nextNewSessionKey;
+      isChatUserScrolledUp = false;
+      sessionFileChanges.clear();
+      if (updateUrl && currentWorkspace) updateSessionUrl(nextNewSessionKey);
       currentSessionTitle.innerText = 'Cuộc trò chuyện mới';
       chatFeed.innerHTML = '';
       
@@ -3843,8 +5266,10 @@
       chatFeed.appendChild(banner);
 
       promptInput.value = '';
-      autoResizeTextarea();
-      promptInput.focus();
+      autoResizeTextarea(false);
+      if (!isMobileChatInput()) {
+        promptInput.focus();
+      }
 
       loadWorkspaceTree();
       soundEffects.playBop();
@@ -3890,7 +5315,7 @@
         const res = await fetch('/api/rename-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, newName: newName.trim() })
+          body: JSON.stringify({ id: sessionId, sessionId, name: newName.trim(), newName: newName.trim() })
         });
         const data = await res.json();
         if (data.ok) {
@@ -4010,6 +5435,9 @@
         terminalDrawer.style.height = '240px';
         const badge = document.getElementById('terminalDrawerBadge');
         if (badge) badge.classList.add('hidden');
+        if (terminalAutoScroll && terminalLogsFeed) {
+          requestAnimationFrame(() => { terminalLogsFeed.scrollTop = terminalLogsFeed.scrollHeight; });
+        }
       } else {
         terminalDrawer.style.height = '0px';
       }
@@ -4034,18 +5462,22 @@
       }
     }
 
+    let _lastTerminalTextSpan = null;
     function clearTerminalLogs() {
       terminalLogsFeed.innerHTML = '<div class="text-zinc-500 italic">Logs cleared. Ready for next agent commands.</div>';
       terminalLogEntries = [];
+      _lastTerminalTextSpan = null;
       updateTerminalLineCount();
       showToast('Đã dọn sạch màn hình terminal log', 'info', 1200);
     }
 
     function copyTerminalLogs() {
       const text = terminalLogsFeed.innerText;
-      navigator.clipboard.writeText(text).then(() => {
+      window.writeTextToClipboard(text).then(() => {
         soundEffects.playBop();
         showToast('Đã sao chép toàn bộ logs vào clipboard', 'success');
+      }).catch(err => {
+        showToast('Không thể sao chép: ' + err.message, 'error');
       });
     }
 
@@ -4099,14 +5531,27 @@
     }
 
     function appendTerminalLog(type, content) {
+      const isClosed = !terminalDrawer.style.height || terminalDrawer.style.height === '0px';
+      if (type === 'text' && _lastTerminalTextSpan && _lastTerminalTextSpan.isConnected && _lastTerminalTextSpan.textContent.length < 2000) {
+        _lastTerminalTextSpan.textContent += content;
+        if (terminalLogEntries.length > 0) {
+          terminalLogEntries[terminalLogEntries.length - 1] += content;
+        }
+        if (!isClosed && terminalAutoScroll) {
+          terminalLogsFeed.scrollTop = terminalLogsFeed.scrollHeight;
+        }
+        return;
+      }
+
       const line = document.createElement('div');
       line.className = 'term-line flex items-start space-x-2 font-mono';
       line.setAttribute('data-log-type', type);
 
-      terminalLogEntries.push(`[${new Date().toLocaleTimeString()}] [${type}] ${content}`);
+      const time = new Date().toLocaleTimeString();
+      terminalLogEntries.push(`[${time}] [${type}] ${content}`);
+      if (terminalLogEntries.length > 1000) terminalLogEntries.shift();
       updateTerminalLineCount();
 
-      const time = new Date().toLocaleTimeString();
       let colorClass = 'text-zinc-300';
       let prefix = '•';
 
@@ -4127,7 +5572,7 @@
       line.innerHTML = `
         <span class="text-zinc-600 text-[10px] shrink-0 select-none">${time}</span>
         <span class="${colorClass} shrink-0 select-none font-bold">${prefix}</span>
-        <span class="flex-1 break-all whitespace-pre-wrap select-text ${colorClass}">${escapeHtml(content)}</span>
+        <span class="term-content-span flex-1 break-all whitespace-pre-wrap select-text ${colorClass}">${escapeHtml(content)}</span>
       `;
 
       if (terminalLogFilter !== 'all' && terminalLogFilter !== type) {
@@ -4135,12 +5580,16 @@
       }
 
       terminalLogsFeed.appendChild(line);
+      _lastTerminalTextSpan = (type === 'text') ? line.querySelector('.term-content-span') : null;
 
-      if (terminalAutoScroll) {
+      while (terminalLogsFeed.children.length > 300) {
+        terminalLogsFeed.removeChild(terminalLogsFeed.firstElementChild);
+      }
+
+      if (!isClosed && terminalAutoScroll) {
         terminalLogsFeed.scrollTop = terminalLogsFeed.scrollHeight;
       }
 
-      const isClosed = !terminalDrawer.style.height || terminalDrawer.style.height === '0px';
       if (isClosed) {
         const badge = document.getElementById('terminalDrawerBadge');
         if (badge) badge.classList.remove('hidden');
@@ -4350,18 +5799,7 @@
     // GLOBAL HUB EVENT STREAM (MULTI-DEVICE REALTIME SYNC)
     // ========================================================
     function stopGeneration(notifyServer = true) {
-      if (window.activeChatEventSource) {
-        try { window.activeChatEventSource.close(); } catch (_) {}
-        window.activeChatEventSource = null;
-      }
-      isGenerating = false;
-      runningWorkspace = null;
-      sendBtn.classList.remove('hidden');
-      stopBtn.classList.add('hidden');
-      stopBtn.innerText = 'Dừng';
-      sessionStatus.innerText = 'Sẵn sàng';
-      sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
-      stopLiveExecutionTimer(true);
+      detachActiveStream();
       if (notifyServer && currentSessionId) {
         fetch('/api/stop', {
           method: 'POST',
@@ -4396,32 +5834,15 @@
             }
 
             const isCurrentSession = currentSessionId && (currentSessionId === data.sessionId || currentSessionId === data.tempName);
-            const isIdleOrNew = !currentSessionId || currentSessionId.startsWith('new-') || currentSessionHistoryItems.length === 0;
 
             if (isCurrentSession) {
               if (!isGenerating) {
-                const promptText = (data.prompt || '').trim();
-                const lastItem = currentSessionHistoryItems[currentSessionHistoryItems.length - 1];
-                const hasPrompt = lastItem && lastItem.role === 'user' && (lastItem.text || '').trim() === promptText;
+                const { hasPrompt, promptText } = prepareRunningSessionHistoryItems(currentSessionHistoryItems, data);
                 if (!hasPrompt && promptText) {
                   appendUserMessage(promptText);
                 }
-                reconnectRunningSession(data.sessionId, { prompt: data.prompt, model: data.model, cwd: data.cwd }, currentSessionTitle?.innerText || data.sessionId);
+                reconnectRunningSession(data.sessionId, { prompt: promptText, model: data.model, cwd: data.cwd, startTime: data.timestamp }, currentSessionTitle?.innerText || data.sessionId);
               }
-            } else if (isIdleOrNew) {
-              if (data.cwd) {
-                currentWorkspace = data.cwd;
-                const base = data.cwd.split(/[\/]/).pop() || data.cwd;
-                currentSessionFolder.innerText = base;
-                currentSessionFolderTag.innerText = base;
-              }
-              currentSessionId = data.sessionId;
-              chatFeed.innerHTML = '';
-              const promptText = (data.prompt || '').trim();
-              if (promptText) {
-                appendUserMessage(promptText);
-              }
-              reconnectRunningSession(data.sessionId, { prompt: data.prompt, model: data.model, cwd: data.cwd }, data.title || data.tempName || data.sessionId);
             } else {
               loadWorkspaceTree();
             }
@@ -4477,12 +5898,32 @@
     }
 
     // LOAD WORKSPACE TREE (VS Code Tree Style with Pinned & Sessions Counts)
+    let _workspaceTreePromise = null;
+    let _workspaceTreePending = false;
     async function loadWorkspaceTree() {
+      if (_workspaceTreePromise) {
+        _workspaceTreePending = true;
+        return _workspaceTreePromise;
+      }
+      _workspaceTreePromise = (async () => {
+        do {
+          _workspaceTreePending = false;
+          await _loadWorkspaceTreeImpl();
+        } while (_workspaceTreePending);
+      })().finally(() => {
+        _workspaceTreePromise = null;
+      });
+      return _workspaceTreePromise;
+    }
+    async function _loadWorkspaceTreeImpl() {
       try {
         const [infoRes, sessionsRes] = await Promise.all([
           fetch('/api/info').then(r => r.json()),
           fetch('/api/sessions').then(r => r.json())
         ]);
+
+        if (infoRes && infoRes.platform) hubServerPlatform = infoRes.platform;
+        if (infoRes && Array.isArray(infoRes.drives) && infoRes.drives.length > 0) hubLocalDrives = infoRes.drives;
 
         allSessionsCache = sessionsRes || [];
         const selectedSession = allSessionsCache.find(s => s.id === currentSessionId);
@@ -4541,41 +5982,46 @@
           grouped[k].sessions.push({ ...s });
         });
 
-        const activeSessionId = (infoRes?.isBusy && infoRes?.activeSessionId)
-          || (isGenerating ? currentSessionId : null);
-        const activeWs = (infoRes?.isBusy && infoRes?.activeSessionInfo?.cwd)
-          || runningWorkspace
-          || currentWorkspace;
+        const activeList = Array.isArray(infoRes?.activeSessions) && infoRes.activeSessions.length > 0
+          ? infoRes.activeSessions
+          : (infoRes?.isBusy && infoRes?.activeSessionId
+            ? [{ sessionId: infoRes.activeSessionId, cwd: infoRes.activeSessionInfo?.cwd || currentWorkspace, title: infoRes.activeSessionInfo?.title || infoRes.activeSessionId }]
+            : (isGenerating && currentSessionId
+              ? [{ sessionId: currentSessionId, cwd: runningWorkspace || currentWorkspace, title: currentSessionTitle?.innerText || currentSessionId }]
+              : []));
 
-        let foundRunningInAnyGroup = false;
         for (const group of Object.values(grouped)) {
           group.sessions.forEach(s => {
-            const matchRunning = activeSessionId && (s.id === activeSessionId || s.name === activeSessionId);
-            if (matchRunning || s.isRunning) {
-              s.isRunning = true;
-              foundRunningInAnyGroup = true;
-            } else {
-              s.isRunning = false;
-            }
+            const matchRunning = activeList.some(a => a && a.sessionId && (s.id === a.sessionId || s.name === a.sessionId));
+            s.isRunning = !!(matchRunning || s.isRunning);
           });
         }
 
-        if ((isGenerating || infoRes?.isBusy) && activeSessionId && !foundRunningInAnyGroup) {
-          const targetWs = activeWs || currentWorkspace;
-          const targetK = normPath(targetWs);
-          if (!grouped[targetK]) {
-            grouped[targetK] = { wsPath: targetWs, sessions: [] };
+        for (const act of activeList) {
+          if (!act || !act.sessionId) continue;
+          let foundInAnyGroup = false;
+          for (const group of Object.values(grouped)) {
+            if (group.sessions.some(s => s.id === act.sessionId || s.name === act.sessionId)) {
+              foundInAnyGroup = true;
+              break;
+            }
           }
-          const dispName = (currentSessionTitle.innerText && currentSessionTitle.innerText !== 'Cuộc trò chuyện mới')
-            ? currentSessionTitle.innerText
-            : activeSessionId;
-          grouped[targetK].sessions.unshift({
-            id: activeSessionId,
-            name: dispName,
-            cwd: targetWs,
-            isRunning: true
-          });
-          foundRunningInAnyGroup = true;
+          if (!foundInAnyGroup) {
+            const targetWs = act.cwd || runningWorkspace || currentWorkspace;
+            const targetK = normPath(targetWs);
+            if (!grouped[targetK]) {
+              grouped[targetK] = { wsPath: targetWs, sessions: [] };
+            }
+            const dispName = act.title || ((act.sessionId === currentSessionId && currentSessionTitle.innerText && currentSessionTitle.innerText !== 'Cuộc trò chuyện mới')
+              ? currentSessionTitle.innerText
+              : act.sessionId);
+            grouped[targetK].sessions.unshift({
+              id: act.sessionId,
+              name: dispName,
+              cwd: targetWs,
+              isRunning: true
+            });
+          }
         }
 
         renderQuickWorkspaces(allWorkspacesCache);
@@ -5079,9 +6525,7 @@
             else if (c.text?.value) userTexts.push(c.text.value);
           });
           // Runtime context belongs to the agent, not the visible user transcript.
-          const fullPrompt = userTexts.join('\n')
-            .replace(/<turn-context\b[^>]*>[\s\S]*?<\/turn-context>/gi, '')
-            .trim();
+          const fullPrompt = normalizePromptForCompare(userTexts.join('\n'));
           if (fullPrompt) {
             const extracted = extractSubagentsAndUserText(fullPrompt);
             if (extracted.subagents && extracted.subagents.length > 0) {
@@ -5094,7 +6538,14 @@
             }
           }
         } else if (msg.role === 'assistant') {
-          items.push({ role: 'assistant', rawContent: msg.content || [], toolResponsesMap, startedAt: messageTime(msg) });
+          const msgTime = messageTime(msg);
+          const prevItem = items[items.length - 1];
+          if (prevItem && prevItem.role === 'assistant') {
+            prevItem.rawContent = prevItem.rawContent.concat(msg.content || []);
+            if (msgTime) prevItem.endedAt = msgTime;
+          } else {
+            items.push({ role: 'assistant', rawContent: [...(msg.content || [])], toolResponsesMap, startedAt: msgTime, endedAt: msgTime });
+          }
         }
       });
 
@@ -5107,8 +6558,8 @@
           item.questionText = turn.text;
           item.questionItem = turn;
         }
-        if (item.role !== 'user' && item.role !== 'subagent' && turn && turn.startedAt && item.startedAt) {
-          turn.elapsedMs = Math.max(0, item.startedAt - turn.startedAt);
+        if (item.role !== 'user' && item.role !== 'subagent' && turn && turn.startedAt && (item.endedAt || item.startedAt)) {
+          turn.elapsedMs = Math.max(0, (item.endedAt || item.startedAt) - turn.startedAt);
           item.elapsedMs = turn.elapsedMs;
         }
       }
@@ -5124,6 +6575,51 @@
         }
       }
       return items;
+    }
+
+    function normalizePromptForCompare(text) {
+      return String(text || '')
+        .replace(/<turn-context\b[^>]*>[\s\S]*?<\/turn-context>/gi, '')
+        .replace(/^\[Yêu cầu:[^\]]*\]\s*/i, '')
+        .trim();
+    }
+
+    function prepareRunningSessionHistoryItems(historyItems, activeSessionInfo) {
+      const items = Array.isArray(historyItems) ? historyItems : [];
+      const promptText = normalizePromptForCompare(activeSessionInfo?.prompt || '');
+      const taskStartTime = Number(activeSessionInfo?.startTime) || 0;
+
+      if (items.length >= 1) {
+        const lastItem = items[items.length - 1];
+        const secondLast = items.length >= 2 ? items[items.length - 2] : null;
+        if (lastItem && lastItem.role === 'assistant') {
+          const prevUserMatchesPrompt = !!(
+            secondLast &&
+            secondLast.role === 'user' &&
+            promptText &&
+            normalizePromptForCompare(secondLast.text) === promptText &&
+            (!taskStartTime || !secondLast.startedAt || secondLast.startedAt >= taskStartTime - 10000)
+          );
+          const startedDuringActiveTurn = !!(
+            taskStartTime &&
+            lastItem.startedAt &&
+            lastItem.startedAt >= taskStartTime - 10000
+          );
+          if (prevUserMatchesPrompt || startedDuringActiveTurn) {
+            items.pop();
+          }
+        }
+      }
+
+      const trailingItem = items[items.length - 1];
+      const hasPrompt = !!(
+        trailingItem &&
+        trailingItem.role === 'user' &&
+        (!promptText || normalizePromptForCompare(trailingItem.text) === promptText) &&
+        (!taskStartTime || !trailingItem.startedAt || trailingItem.startedAt >= taskStartTime - 10000)
+      );
+
+      return { items, hasPrompt, promptText };
     }
 
     function messageTime(msg) {
@@ -5165,21 +6661,22 @@
         renderSubagentReportCard(item, container, prepend);
       } else if (item.role === 'user') {
         const row = document.createElement('div');
-        row.className = 'w-full flex justify-end my-3 px-1 sm:px-2 group';
+        row.className = 'user-message-row w-full flex justify-end my-3 px-1 sm:px-2 group';
         const isCodeLike = item.text.includes('\n') || item.text.startsWith('$') || item.text.includes('kubectl') || item.text.includes('curl ') || item.text.includes('SELECT ');
         const userSnippetId = 'user_' + Math.random().toString(36).substring(2, 9);
         window._codeSnippets[userSnippetId] = (item.text || '').trim();
+        row.dataset.snippetId = userSnippetId;
 
         row.innerHTML = `
           <div class="flex flex-col items-end max-w-[92%] sm:max-w-[80%] md:max-w-[72%] lg:max-w-[65%] space-y-1">
             <div class="flex items-center space-x-2 text-[11px] font-semibold select-none pr-1" style="color: var(--text-sub);">
-              <button onclick="editUserPrompt('${userSnippetId}')" 
-                      class="opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring text-[10.5px] font-normal hover:text-[var(--text-main)] flex items-center gap-1 p-0.5"
-                      title="Chỉnh sửa câu hỏi này để gửi lại">
+              <button onclick="editUserPrompt('${userSnippetId}', this)" 
+                      class="user-edit-btn hidden opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring text-[10.5px] font-normal hover:text-[var(--text-main)] flex items-center gap-1 p-0.5"
+                      title="Chỉnh sửa câu hỏi mới nhất và gửi lại">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 <span>Sửa</span>
               </button>
-              <span>•</span>
+              <span class="user-edit-sep hidden">•</span>
               <button onclick="copySnippet('${userSnippetId}', this)" 
                       class="opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring text-[10.5px] font-normal hover:text-[var(--text-main)] flex items-center gap-1 p-0.5"
                       title="Sao chép nội dung câu hỏi">
@@ -5193,6 +6690,7 @@
           </div>
         `;
         row.dataset.questionText = item.text || '';
+        item.domRow = row;
         enhanceChatElement(row);
         addMessageTiming(row, item);
         if (prepend && container.firstChild) {
@@ -5200,6 +6698,7 @@
         } else {
           container.appendChild(row);
         }
+        if (container === chatFeed) syncLatestUserQuestionEditButton();
       } else if (item.role === 'assistant') {
         const aiContainer = createAiMessageContainer(currentSelectedModel, false, false);
         aiContainer.isHistorical = true;
@@ -5214,7 +6713,11 @@
         (item.rawContent || []).forEach(c => {
           if (c.type === 'thinking' || c.thinking) {
             const thoughtText = typeof c.thinking === 'string' ? c.thinking : (c.thinking?.value || '');
-            if (thoughtText.trim()) appendAiText(aiContainer, `<think>\n${thoughtText}\n</think>\n`);
+            if (thoughtText.trim()) {
+              appendAiThinking(aiContainer, thoughtText);
+              closeActiveThoughtIfNeeded(aiContainer);
+              flushAiTextRender(aiContainer);
+            }
           } else if (c.type === 'toolRequest') {
             hasTools = true;
             const toolName = c.toolCall?.value?.name || c.name || 'tool';
@@ -5237,10 +6740,16 @@
           }
         });
 
-        if (!hasText) {
+        if (aiContainer.activeTextContainer && !aiContainer.activeTextContainer.innerHTML.trim()) {
+          aiContainer.activeTextContainer.remove();
+          aiContainer.activeTextContainer = null;
+        }
+
+        const hasVisibleResult = !!(aiContainer.activeTextContainer && aiContainer.activeTextContainer.innerHTML.trim());
+        if (!hasVisibleResult) {
           if (hasTools) {
             appendToolDoneNotice(aiContainer);
-          } else {
+          } else if (!hasText && !aiContainer._processGroup) {
             appendAiText(aiContainer, '_Không có phản hồi văn bản._');
           }
         }
@@ -5280,6 +6789,7 @@
       }
 
       renderHistoryLazyBanner();
+      syncLatestUserQuestionEditButton();
 
       requestAnimationFrame(() => {
         const heightDiff = chatFeed.scrollHeight - prevScrollHeight;
@@ -5300,11 +6810,7 @@
     }
 
     async function selectSession(sessionId, sessionTitle, wsPath, updateUrl = true) {
-      if (window.activeChatEventSource) {
-        try { window.activeChatEventSource.close(); } catch (_) {}
-        window.activeChatEventSource = null;
-      }
-      if (sessionId === currentSessionId && isGenerating) {
+      if (sessionId === currentSessionId && isGenerating && window.activeChatEventSource) {
         if (window.innerWidth < 1024) {
           const sidebar = document.getElementById('sidebar');
           const backdrop = document.getElementById('sidebarBackdrop');
@@ -5313,6 +6819,7 @@
         }
         return;
       }
+      detachActiveStream();
       soundEffects.playClick();
       if (window.innerWidth < 1024) {
         const sidebar = document.getElementById('sidebar');
@@ -5322,10 +6829,19 @@
       }
       const viewVersion = ++sessionViewVersion;
       allowAutoReconnect = false;
+      isChatUserScrolledUp = false;
+      sessionFileChanges.clear();
       currentSessionHistoryItems = [];
       currentHistoryRenderIndex = 0;
       closeFullConversationModal();
+      saveCurrentSessionDraft();
       currentSessionId = sessionId;
+      currentDraftSessionKey = String(sessionId || '__new__').trim();
+      restoreSessionDraft(sessionId);
+      const earlySessionModel = getSessionModel(sessionId);
+      if (earlySessionModel) {
+        applySessionModelSelection(earlySessionModel);
+      }
       if (wsPath) {
         currentWorkspace = wsPath;
       try { localStorage.setItem('ai_hub_last_workspace', wsPath); } catch (_) {}
@@ -5353,12 +6869,38 @@
         if (viewVersion !== sessionViewVersion) return;
         if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
 
+        const resolvedSessionModel = (data?.isRunning && data?.activeSessionInfo?.model)
+          || getSessionModel(sessionId, true)
+          || data?.model
+          || getSessionModel(sessionId, false);
+        if (resolvedSessionModel) {
+          setSessionModel(sessionId, resolvedSessionModel);
+          if (data?.id && data.id !== sessionId) setSessionModel(data.id, resolvedSessionModel);
+          if (data?.name && data.name !== sessionId) setSessionModel(data.name, resolvedSessionModel);
+          applySessionModelSelection(resolvedSessionModel);
+        }
+        const resolvedSessionDraft = getSessionDraft(sessionId)
+          || (data?.id ? getSessionDraft(data.id) : '')
+          || (data?.name ? getSessionDraft(data.name) : '');
+        if (resolvedSessionDraft) {
+          setSessionDraft(sessionId, resolvedSessionDraft);
+          if (data?.id && data.id !== sessionId) setSessionDraft(data.id, resolvedSessionDraft);
+          if (data?.name && data.name !== sessionId) setSessionDraft(data.name, resolvedSessionDraft);
+          if (promptInput && !promptInput.value) {
+            promptInput.value = resolvedSessionDraft;
+            autoResizeTextarea(false);
+          }
+        }
+
         chatFeed.innerHTML = '';
 
+        let runningTurnState = null;
         if (!data || !data.conversation || data.conversation.length === 0) {
           currentSessionHistoryItems = [];
           currentHistoryRenderIndex = 0;
-          if (!data?.isRunning) {
+          if (data?.isRunning && data?.activeSessionInfo) {
+            runningTurnState = prepareRunningSessionHistoryItems(currentSessionHistoryItems, data.activeSessionInfo);
+          } else if (!data?.isRunning) {
             chatFeed.innerHTML = `
               <div class="text-center py-16 text-xs" style="color: var(--text-sub);">
                 Phiên này chưa có tin nhắn hoặc lịch sử đã được lưu trữ.
@@ -5367,6 +6909,9 @@
           }
         } else {
           currentSessionHistoryItems = buildHistoryItemsFromConversation(data.conversation);
+          if (data.isRunning && data.activeSessionInfo) {
+            runningTurnState = prepareRunningSessionHistoryItems(currentSessionHistoryItems, data.activeSessionInfo);
+          }
           const totalItems = currentSessionHistoryItems.length;
 
           if (totalItems <= HISTORY_CHUNK_SIZE) {
@@ -5386,9 +6931,7 @@
         }
 
         if (data.isRunning && data.activeSessionInfo) {
-          const promptText = (data.activeSessionInfo.prompt || '').trim();
-          const lastItem = currentSessionHistoryItems[currentSessionHistoryItems.length - 1];
-          const hasPrompt = lastItem && lastItem.role === 'user' && (lastItem.text || '').trim() === promptText;
+          const { hasPrompt, promptText } = runningTurnState || prepareRunningSessionHistoryItems(currentSessionHistoryItems, data.activeSessionInfo);
           if (!hasPrompt && promptText) {
             appendUserMessage(promptText);
           }
@@ -5396,7 +6939,7 @@
         }
 
         syncComposerOverlaySpace();
-        scrollToBottom();
+        scrollToBottom(true);
         settleSessionAtBottom();
       } catch (err) {
         showToast('Lỗi khi nạp chi tiết phiên: ' + err.message, 'error');
@@ -5581,7 +7124,7 @@
 
       const fullText = lines.join('\n---\n\n');
       try {
-        await navigator.clipboard.writeText(fullText);
+        await window.writeTextToClipboard(fullText);
         showToast('Đã sao chép toàn bộ nội dung trò chuyện!', 'success');
       } catch (err) {
         showToast('Không thể sao chép: ' + err.message, 'error');
@@ -5606,22 +7149,23 @@
       }
 
       const row = document.createElement('div');
-      row.className = 'w-full flex justify-end my-3 px-1 sm:px-2 group';
+      row.className = 'user-message-row w-full flex justify-end my-3 px-1 sm:px-2 group';
 
       const isCodeLike = text.includes('\n') || text.startsWith('$') || text.includes('kubectl') || text.includes('curl ') || text.includes('SELECT ');
       const userSnippetId = 'user_' + Math.random().toString(36).substring(2, 9);
       window._codeSnippets[userSnippetId] = (text || '').trim();
+      row.dataset.snippetId = userSnippetId;
 
       row.innerHTML = `
         <div class="flex flex-col items-end max-w-[92%] sm:max-w-[80%] md:max-w-[72%] lg:max-w-[65%] space-y-1">
           <div class="flex items-center space-x-2 text-[11px] font-semibold select-none pr-1" style="color: var(--text-sub);">
-            <button onclick="editUserPrompt('${userSnippetId}')" 
-                    class="opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring text-[10.5px] font-normal hover:text-[var(--text-main)] flex items-center gap-1 p-0.5"
-                    title="Chỉnh sửa câu hỏi này để gửi lại">
+            <button onclick="editUserPrompt('${userSnippetId}', this)" 
+                    class="user-edit-btn hidden opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring text-[10.5px] font-normal hover:text-[var(--text-main)] flex items-center gap-1 p-0.5"
+                    title="Chỉnh sửa câu hỏi mới nhất và gửi lại">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
               <span>Sửa</span>
             </button>
-            <span>·</span>
+            <span class="user-edit-sep hidden">·</span>
             <button onclick="copySnippet('${userSnippetId}', this)" 
                     class="opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring text-[10.5px] font-normal hover:text-[var(--text-main)] flex items-center gap-1 p-0.5"
                     title="Sao chép nội dung câu hỏi">
@@ -5636,10 +7180,11 @@
       `;
       row.dataset.questionText = text;
       enhanceChatElement(row);
-      const item = { role: 'user', text, startedAt: Date.now() };
+      const item = { role: 'user', text, startedAt: Date.now(), domRow: row };
       currentSessionHistoryItems.push(item);
       addMessageTiming(row, item);
       chatFeed.appendChild(row);
+      syncLatestUserQuestionEditButton();
       scrollToBottom();
     }
 
@@ -5648,7 +7193,7 @@
       const banner = document.getElementById('welcomeBanner');
       if (mount && banner) banner.remove();
 
-      const model = MODELS.find(m => m.id === (modelId || currentSelectedModel)) || MODELS[0];
+      const model = resolveModelMeta(modelId || currentSelectedModel);
       const progId = 'prog_' + Math.random().toString(36).substring(2, 9);
       const respId = 'resp_' + Math.random().toString(36).substring(2, 9);
       window._aiResponses[respId] = '';
@@ -5713,15 +7258,15 @@
               </div>
             </div>
 
+            <div class="ai-content-body space-y-2.5"></div>
+
             ${showProgress ? `
-              <div id="${progId}" class="live-progress-container flex items-center space-x-2 text-xs py-1 px-2.5 rounded-lg border my-1 text-[var(--text-sub)] animate-pulse"
+              <div id="${progId}" class="live-progress-container flex items-center space-x-2 text-xs py-1 px-2.5 rounded-lg border mt-2 mb-1 text-[var(--text-sub)] animate-pulse"
                    style="border-color: var(--border-subtle); background: var(--bg-surface);">
                 <div class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div>
                 <span class="progress-label font-mono text-[11px]">Đang kết nối agent...</span>
               </div>
             ` : ''}
-
-            <div class="ai-content-body space-y-2.5"></div>
           </div>
         </div>
       `;
@@ -5732,7 +7277,7 @@
       }
 
       const contentBody = row.querySelector('.ai-content-body');
-      const progressEl = showProgress ? document.getElementById(progId) : null;
+      const progressEl = showProgress ? row.querySelector('.live-progress-container') : null;
 
       function updateProgress(statusText) {
         if (!progressEl) return;
@@ -5742,8 +7287,9 @@
 
       function finishProgress(customMsg) {
         // Remove all streaming blinking cursors
-        document.querySelectorAll('.streaming-cursor').forEach(el => el.remove());
-        if (!progressEl) return;
+        row.querySelectorAll('.streaming-cursor').forEach(el => el.remove());
+        if (!progressEl || progressEl._finished) return;
+        progressEl._finished = true;
         progressEl.classList.remove('animate-pulse');
         progressEl.innerHTML = `
           <span class="text-emerald-400 font-bold text-xs">✓</span>
@@ -5762,26 +7308,104 @@
       return { row, contentBody, updateProgress, finishProgress, addResponseText };
     }
 
-    // PARSED REASONING & MARKDOWN RENDERER (Supports <think>...</think> DeepSeek / Claude / o1)
-    function appendAiText(container, text) {
-      if (!container.activeTextContainer) {
-        const newBlock = document.createElement('div');
-        newBlock.className = 'markdown-body font-medium';
-        newBlock.style.color = 'var(--text-main)';
-        container.contentBody.appendChild(newBlock);
-        container.activeTextContainer = newBlock;
-        container._activeRawText = '';
-      }
-      if (!container._activeRawText) container._activeRawText = '';
-      container._activeRawText += text;
-      container.addResponseText(text);
-      if (container.historyItem) {
-        const content = container.historyItem.rawContent;
-        if (!content.length) content.push({ type: 'text', text: '' });
-        content[0].text += text;
+    // Set window.USE_PLAIN_PROCESS_HEADER = false to revert header lines back to boxed headers
+    window.USE_PLAIN_PROCESS_HEADER = true;
+
+    function ensureAiProcessGroup(container) {
+      if (!container || !container.contentBody) return null;
+      if (container._processGroupBody) return container._processGroupBody;
+
+      container._thoughtCount = container._thoughtCount || 0;
+      container._toolCount = container._toolCount || 0;
+
+      const groupEl = document.createElement('div');
+      groupEl.className = 'ai-process-group my-1';
+      groupEl.innerHTML = `
+        <div onclick="toggleAiProcessGroup(this)"
+             role="button"
+             tabindex="0"
+             aria-expanded="false"
+             class="ai-process-toggle inline-flex items-center gap-1.5 py-0.5 text-xs font-medium cursor-pointer select-none opacity-85 hover:opacity-100 transition-opacity"
+             style="color: var(--text-sub);"
+             title="Nhấp để đóng/mở quá trình suy nghĩ và thực thi">
+          <svg class="ai-process-chevron w-3.5 h-3.5 shrink-0 transition-transform duration-200 ease-spring"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <span class="ai-process-label">Quá trình suy nghĩ & thực thi</span>
+          <span class="ai-process-meta text-[11px] font-mono opacity-75" style="color: var(--text-muted);"></span>
+        </div>
+        <div class="ai-process-body hidden mt-1.5 pl-3 border-l-2 space-y-2"
+             style="border-color: var(--border-subtle);"></div>
+      `;
+
+      if (container.contentBody.firstChild) {
+        container.contentBody.insertBefore(groupEl, container.contentBody.firstChild);
+      } else {
+        container.contentBody.appendChild(groupEl);
       }
 
-      const raw = container._activeRawText;
+      container._processGroup = groupEl;
+      container._processGroupBody = groupEl.querySelector ? groupEl.querySelector('.ai-process-body') : groupEl.lastElementChild;
+      container._processGroupLabel = groupEl.querySelector ? groupEl.querySelector('.ai-process-label') : null;
+      container._processGroupMeta = groupEl.querySelector ? groupEl.querySelector('.ai-process-meta') : null;
+      updateAiProcessGroupSummary(container);
+      return container._processGroupBody;
+    }
+
+    function updateAiProcessGroupSummary(container) {
+      if (!container || !container._processGroup) return;
+      const thoughts = container._thoughtCount || 0;
+      const tools = container._toolCount || 0;
+      const parts = [];
+      if (thoughts > 0) parts.push(thoughts + ' suy nghĩ');
+      if (tools > 0) parts.push(tools + ' thực thi');
+      if (container._processGroupLabel) {
+        container._processGroupLabel.textContent = 'Quá trình suy nghĩ & thực thi';
+      }
+      if (container._processGroupMeta) {
+        container._processGroupMeta.textContent = parts.length ? '(' + parts.join(' • ') + ')' : '';
+      }
+    }
+
+    function toggleAiProcessGroup(btn) {
+      if (!btn) return;
+      if (typeof soundEffects !== 'undefined' && soundEffects && typeof soundEffects.playClick === 'function') {
+        soundEffects.playClick();
+      }
+      const group = btn.closest ? btn.closest('.ai-process-group') : btn.parentElement;
+      const body = group && group.querySelector ? group.querySelector('.ai-process-body') : null;
+      const chevron = btn.querySelector ? btn.querySelector('.ai-process-chevron') : null;
+      if (!body) return;
+      const isHidden = body.classList.toggle('hidden');
+      const isOpen = !isHidden;
+      if (btn.setAttribute) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      if (chevron && chevron.classList) chevron.classList.toggle('rotate-90', isOpen);
+    }
+    window.toggleAiProcessGroup = toggleAiProcessGroup;
+
+    function moveActiveTextToProcessGroup(container) {
+      if (!container || !container.activeTextContainer) return;
+      const block = container.activeTextContainer;
+      if (block.querySelectorAll) {
+        block.querySelectorAll('.streaming-cursor').forEach(el => el.remove());
+      }
+      if (block.innerHTML && block.innerHTML.trim()) {
+        const processBody = ensureAiProcessGroup(container);
+        if (processBody) processBody.appendChild(block);
+        updateAiProcessGroupSummary(container);
+      } else if (typeof block.remove === 'function') {
+        block.remove();
+      }
+      container.activeTextContainer = null;
+      container._activeRawText = '';
+      container._thoughtElement = null;
+    }
+
+    // PARSED REASONING & MARKDOWN RENDERER (Supports <think>...</think> DeepSeek / Claude / o1)
+    function renderAiTextNow(container) {
+      if (!container || !container.activeTextContainer) return;
+      const raw = container._activeRawText || '';
       const thinkStart = raw.indexOf('<think>');
 
       if (thinkStart !== -1) {
@@ -5789,33 +7413,68 @@
         const thinkingPart = (thinkEnd !== -1) ? raw.substring(thinkStart + 7, thinkEnd) : raw.substring(thinkStart + 7);
         const answerPart = (thinkEnd !== -1) ? raw.substring(thinkEnd + 8) : '';
 
+        const isThinkingDone = (thinkEnd !== -1);
+        const usePlainHeader = (window.USE_PLAIN_PROCESS_HEADER !== false);
         if (!container._thoughtElement) {
           const details = document.createElement('details');
-          details.className = 'thought-process-card mb-3 rounded-xl border overflow-hidden text-xs';
-          details.style.background = 'var(--bg-surface)';
-          details.style.borderColor = 'var(--border-subtle)';
-          details.open = true;
-          container.contentBody.insertBefore(details, container.activeTextContainer);
+          details.open = false;
+          if (usePlainHeader) {
+            details.className = 'thought-process-card my-1.5 text-xs';
+            details.innerHTML = `
+              <summary class="py-1 cursor-pointer select-none flex items-center justify-between font-mono text-[11px] opacity-90 hover:opacity-100 transition-opacity" style="color: var(--text-muted);">
+                <div class="flex items-center space-x-2">
+                  <span class="thought-brain-icon ${isThinkingDone ? '' : 'animate-pulse'}">🧠</span>
+                  <span class="font-semibold text-blue-400">Quá trình suy nghĩ</span>
+                  <span class="text-[10px] opacity-75 font-normal">(nhấp để mở/thu gọn)</span>
+                </div>
+                <span class="thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ${isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse'}">
+                  ${isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...'}
+                </span>
+              </summary>
+              <div class="thought-body mt-1.5 p-3 rounded-xl border text-[12px] font-mono leading-relaxed whitespace-pre-wrap opacity-85 select-text" style="background: var(--bg-surface); border-color: var(--border-subtle); color: var(--text-sub);"></div>
+            `;
+          } else {
+            details.className = 'thought-process-card mb-3 rounded-xl border overflow-hidden text-xs';
+            details.style.background = 'var(--bg-surface)';
+            details.style.borderColor = 'var(--border-subtle)';
+            details.innerHTML = `
+              <summary class="px-3 py-2 cursor-pointer select-none flex items-center justify-between font-mono text-[11px]" style="background: var(--bg-hover); color: var(--text-muted);">
+                <div class="flex items-center space-x-2">
+                  <span class="thought-brain-icon ${isThinkingDone ? '' : 'animate-pulse'}">🧠</span>
+                  <span class="font-semibold text-blue-400">Quá trình suy nghĩ</span>
+                  <span class="text-[10px] opacity-75 font-normal">(nhấp để mở/thu gọn)</span>
+                </div>
+                <span class="thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ${isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse'}">
+                  ${isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...'}
+                </span>
+              </summary>
+              <div class="thought-body p-3 text-[12px] font-mono leading-relaxed whitespace-pre-wrap opacity-85 border-t select-text" style="border-color: var(--border-subtle); color: var(--text-sub);"></div>
+            `;
+          }
+          const processBody = ensureAiProcessGroup(container);
+          if (processBody) {
+            processBody.appendChild(details);
+          } else {
+            container.contentBody.insertBefore(details, container.activeTextContainer);
+          }
           container._thoughtElement = details;
+          container._thoughtCount = (container._thoughtCount || 0) + 1;
+          updateAiProcessGroupSummary(container);
         }
 
-        const isThinkingDone = (thinkEnd !== -1);
-        container._thoughtElement.innerHTML = `
-          <summary class="px-3 py-2 cursor-pointer select-none flex items-center justify-between font-mono text-[11px]" style="background: var(--bg-hover); color: var(--text-muted);">
-            <div class="flex items-center space-x-2">
-              <span class="${isThinkingDone ? '' : 'animate-pulse'}">🧠</span>
-              <span class="font-semibold text-blue-400">Quá trình suy nghĩ</span>
-              <span class="text-[10px] opacity-75 font-normal">(nhấp để thu gọn/mở)</span>
-            </div>
-            <span class="thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ${isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse'}">
-              ${isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...'}
-            </span>
-          </summary>
-          <div class="p-3 text-[12px] font-mono leading-relaxed whitespace-pre-wrap opacity-85 border-t select-text" style="border-color: var(--border-subtle); color: var(--text-sub);">${escapeHtml(thinkingPart.trim())}</div>
-        `;
+        const brainEl = container._thoughtElement.querySelector('.thought-brain-icon');
+        if (brainEl) brainEl.className = 'thought-brain-icon ' + (isThinkingDone ? '' : 'animate-pulse');
+        const timerEl = container._thoughtElement.querySelector('.thought-timer');
+        if (timerEl) {
+          timerEl.className = 'thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ' +
+            (isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse');
+          timerEl.textContent = isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...';
+        }
+        const thoughtBodyEl = container._thoughtElement.querySelector('.thought-body');
+        if (thoughtBodyEl) thoughtBodyEl.textContent = thinkingPart.trim();
 
         const parsedAnswer = answerPart.trim() ? marked.parse(answerPart) : '';
-        const cursor = isGenerating && !container.isHistorical ? '<span class="streaming-cursor ml-1"></span>' : '';
+        const cursor = (isGenerating && !container.isHistorical && parsedAnswer) ? '<span class="streaming-cursor ml-1"></span>' : '';
         container.activeTextContainer.innerHTML = parsedAnswer + cursor;
       } else {
         const cursor = isGenerating && !container.isHistorical ? '<span class="streaming-cursor ml-1"></span>' : '';
@@ -5825,6 +7484,88 @@
       if (!container.isHistorical) notifyNewMessageArrived();
       if (!isGenerating || container.isHistorical) {
         enhanceChatElement(container.activeTextContainer);
+      }
+    }
+
+    function flushAiTextRender(container) {
+      if (!container) return;
+      if (container._renderRafId) {
+        cancelAnimationFrame(container._renderRafId);
+        container._renderRafId = null;
+      }
+      renderAiTextNow(container);
+    }
+
+    function closeActiveThoughtIfNeeded(container) {
+      if (container && container._activeRawText && container._activeRawText.indexOf('<think>') !== -1 && container._activeRawText.indexOf('</think>') === -1) {
+        container._activeRawText += '\n</think>\n';
+      }
+    }
+
+    function appendAiThinking(container, text) {
+      if (!text) return;
+      if (!container.activeTextContainer) {
+        const newBlock = document.createElement('div');
+        newBlock.className = 'markdown-body font-medium';
+        newBlock.style.color = 'var(--text-main)';
+        container.contentBody.appendChild(newBlock);
+        container.activeTextContainer = newBlock;
+        container._activeRawText = '';
+        container._thoughtElement = null;
+      }
+      if (!container._activeRawText) {
+        container._activeRawText = '<think>\n' + text;
+      } else if (container._activeRawText.indexOf('<think>') !== -1 && container._activeRawText.indexOf('</think>') === -1) {
+        container._activeRawText += text;
+      } else {
+        flushAiTextRender(container);
+        moveActiveTextToProcessGroup(container);
+        const newBlock = document.createElement('div');
+        newBlock.className = 'markdown-body font-medium';
+        newBlock.style.color = 'var(--text-main)';
+        container.contentBody.appendChild(newBlock);
+        container.activeTextContainer = newBlock;
+        container._activeRawText = '<think>\n' + text;
+        container._thoughtElement = null;
+      }
+      if (container.isHistorical || !isGenerating || typeof requestAnimationFrame !== 'function') {
+        flushAiTextRender(container);
+      } else if (!container._renderRafId) {
+        container._renderRafId = requestAnimationFrame(() => {
+          container._renderRafId = null;
+          renderAiTextNow(container);
+        });
+      }
+    }
+
+    function appendAiText(container, text) {
+      if (!container.activeTextContainer) {
+        const newBlock = document.createElement('div');
+        newBlock.className = 'markdown-body font-medium';
+        newBlock.style.color = 'var(--text-main)';
+        container.contentBody.appendChild(newBlock);
+        container.activeTextContainer = newBlock;
+        container._activeRawText = '';
+        container._thoughtElement = null;
+      }
+      if (!container._activeRawText) container._activeRawText = '';
+      if (typeof text === 'string' && text.indexOf('<think>') === -1 && text.indexOf('</think>') === -1) {
+        closeActiveThoughtIfNeeded(container);
+      }
+      container._activeRawText += text;
+      container.addResponseText(text);
+      if (container.historyItem) {
+        const content = container.historyItem.rawContent;
+        if (!content.length) content.push({ type: 'text', text: '' });
+        content[0].text += text;
+      }
+      if (container.isHistorical || !isGenerating || typeof requestAnimationFrame !== 'function') {
+        flushAiTextRender(container);
+      } else if (!container._renderRafId) {
+        container._renderRafId = requestAnimationFrame(() => {
+          container._renderRafId = null;
+          renderAiTextNow(container);
+        });
       }
     }
 
@@ -5844,16 +7585,33 @@
       container.contentBody.appendChild(notice);
     }
 
+    const TOOL_OUTPUT_PREVIEW_LIMIT = 24000;
+
+    function formatToolOutputForDisplay(str) {
+      if (!str || str.length <= TOOL_OUTPUT_PREVIEW_LIMIT) return { text: str, truncated: false };
+      const hiddenCount = str.length - TOOL_OUTPUT_PREVIEW_LIMIT;
+      return {
+        text: str.slice(0, TOOL_OUTPUT_PREVIEW_LIMIT) + `\n\n... [Đã rút gọn ${hiddenCount.toLocaleString()} ký tự để tối ưu hiệu năng hiển thị. Bấm "Xem toàn bộ" hoặc "Sao chép kết quả" ở trên]`,
+        truncated: true
+      };
+    }
+
     function appendToolCard(container, toolName, args, isRunning = false, output = null, isError = false) {
-      container.activeTextContainer = null;
-      container._activeRawText = '';
+      closeActiveThoughtIfNeeded(container);
+      flushAiTextRender(container);
+      moveActiveTextToProcessGroup(container);
 
       const cardId = 'card_' + Math.random().toString(36).substring(2, 9);
       const card = document.createElement('div');
       card.id = cardId;
-      card.className = 'rounded-xl border my-2.5 overflow-hidden text-xs ease-spring transition-all';
-      card.style.background = 'var(--tool-bg)';
-      card.style.borderColor = isError ? 'rgba(239, 68, 68, 0.4)' : 'var(--tool-border)';
+      const usePlainHeader = (window.USE_PLAIN_PROCESS_HEADER !== false);
+      if (usePlainHeader) {
+        card.className = 'my-1.5 text-xs ease-spring transition-all';
+      } else {
+        card.className = 'rounded-xl border my-2.5 overflow-hidden text-xs ease-spring transition-all';
+        card.style.background = 'var(--tool-bg)';
+        card.style.borderColor = isError ? 'rgba(239, 68, 68, 0.4)' : 'var(--tool-border)';
+      }
 
       let displayParam = '';
       if (typeof args === 'object' && args !== null) {
@@ -5893,12 +7651,24 @@
 
       const argsFormatted = typeof args === 'object' ? JSON.stringify(args, null, 2) : String(args);
       const outputText = output !== null && output !== undefined ? String(output) : '';
+      const formattedOut = formatToolOutputForDisplay(outputText);
+
+      const headerClass = usePlainHeader
+        ? 'py-1 flex items-center justify-between cursor-pointer select-none opacity-90 hover:opacity-100 transition-opacity'
+        : 'px-3.5 py-2.5 flex items-center justify-between cursor-pointer select-none transition-colors hover:bg-[var(--bg-hover)]';
+      const headerStyle = usePlainHeader ? '' : 'background: var(--tool-header-bg);';
+      const diffBarClass = usePlainHeader
+        ? 'hidden mt-1 rounded-xl border divide-y font-mono text-[11.5px] overflow-hidden'
+        : 'hidden border-t divide-y font-mono text-[11.5px]';
+      const bodyClass = usePlainHeader
+        ? 'mt-1.5 p-3.5 rounded-xl border font-mono text-[11px] select-text hidden space-y-3'
+        : 'p-3.5 border-t font-mono text-[11px] select-text hidden space-y-3';
 
       card.innerHTML = `
-        <div class="px-3.5 py-2.5 flex items-center justify-between cursor-pointer select-none transition-colors hover:bg-[var(--bg-hover)]"
-             style="background: var(--tool-header-bg);"
+        <div class="${headerClass}"
+             style="${headerStyle}"
              onclick="toggleCard('${cardId}')" title="Bấm để đóng / mở chi tiết tác vụ">
-          <div class="flex items-center space-x-2.5 min-w-0 flex-1 mr-3">
+          <div class="flex items-center space-x-2 min-w-0 flex-1 mr-3">
             ${iconSvg}
             <span class="font-semibold text-xs text-[var(--text-main)] shrink-0">${escapeHtml(friendlyTool)}</span>
             <span class="font-mono text-[11px] truncate opacity-80" style="color: var(--text-sub);">${escapeHtml(displayParam)}</span>
@@ -5926,7 +7696,9 @@
           </div>
         </div>
 
-        <div id="body_${cardId}" class="p-3.5 border-t font-mono text-[11px] select-text hidden space-y-3"
+        <div id="fileDiffBar_${cardId}" class="${diffBarClass}" style="border-color: var(--tool-border); background: var(--bg-surface);"></div>
+
+        <div id="body_${cardId}" class="${bodyClass}"
              style="border-color: var(--tool-border); color: var(--text-sub); background: var(--bg-surface);">
           
           <!-- Section 1: Arguments / Command -->
@@ -5947,20 +7719,33 @@
           <div class="space-y-1">
             <div class="flex items-center justify-between text-[10px] uppercase font-bold tracking-wider text-zinc-500">
               <span>Kết quả phản hồi của Tool:</span>
-              <button id="copyOutBtn_${cardId}" onclick="event.stopPropagation(); copyOutputFromCard('${cardId}', this)" 
-                      class="px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] text-zinc-400 hover:text-white transition-colors ${outputText ? '' : 'hidden'}">
-                Sao chép kết quả
-              </button>
+              <div class="flex items-center space-x-1">
+                <button id="expandOutBtn_${cardId}" onclick="event.stopPropagation(); expandToolCardOutput('${cardId}', this)"
+                        class="px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] text-blue-400 hover:text-blue-300 transition-colors ${formattedOut.truncated ? '' : 'hidden'}">
+                  Xem toàn bộ
+                </button>
+                <button id="copyOutBtn_${cardId}" onclick="event.stopPropagation(); copyOutputFromCard('${cardId}', this)" 
+                        class="px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] text-zinc-400 hover:text-white transition-colors ${outputText ? '' : 'hidden'}">
+                  Sao chép kết quả
+                </button>
+              </div>
             </div>
             <pre id="outputPre_${cardId}" class="m-0 p-2.5 rounded-lg border overflow-x-auto whitespace-pre-wrap max-h-72 text-[11px] ${isError ? 'text-rose-400 border-rose-500/30' : ''}" 
-                 style="background: #09090b; border-color: var(--border-subtle); color: ${isError ? '#f87171' : '#e4e4e7'};">${escapeHtml(outputText || (isRunning ? 'Đang chờ tác vụ hoàn thành và trả về kết quả...' : '(Không có kết quả văn bản trả về)'))}</pre>
+                 style="background: #09090b; border-color: var(--border-subtle); color: ${isError ? '#f87171' : '#e4e4e7'};">${escapeHtml(formattedOut.text || (isRunning ? 'Đang chờ tác vụ hoàn thành và trả về kết quả...' : '(Không có kết quả văn bản trả về)'))}</pre>
           </div>
 
         </div>
       `;
 
-      container.contentBody.appendChild(card);
-      scrollToBottom();
+      const processBody = ensureAiProcessGroup(container);
+      if (processBody) {
+        processBody.appendChild(card);
+      } else {
+        container.contentBody.appendChild(card);
+      }
+      container._toolCount = (container._toolCount || 0) + 1;
+      updateAiProcessGroupSummary(container);
+      if (!container.isHistorical) notifyNewMessageArrived();
 
       card._cardData = {
         cardId,
@@ -5969,7 +7754,52 @@
         output: outputText
       };
 
+      if (!isRunning) {
+        renderToolCardFileChanges(card, isError);
+      }
+
       return card;
+    }
+
+    function renderToolCardFileChanges(card, isError = false) {
+      if (!card || !card._cardData) return;
+      const { cardId, toolName, args, output } = card._cardData;
+      const mutations = extractToolFileMutations(toolName, args, output, isError);
+      if (!mutations || mutations.length === 0) return;
+
+      recordToolMutationsInSession(mutations);
+      const bar = card.querySelector ? card.querySelector('#fileDiffBar_' + cardId) : document.getElementById('fileDiffBar_' + cardId);
+      if (!bar) return;
+
+      bar.innerHTML = mutations.map(m => {
+        const safePath = escapeHtml(m.path).replace(/'/g, "\\'");
+        const fileName = m.path.split(/[\\\/]/).pop() || m.path;
+        const statusPill = m.status === 'added'
+          ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 shrink-0">MỚI</span>'
+          : m.status === 'deleted'
+            ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/25 shrink-0">XÓA</span>'
+            : '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25 shrink-0">SỬA</span>';
+        const statsHtml = m.status === 'deleted'
+          ? '<span class="text-rose-400 font-bold text-[11px] shrink-0">Đã xóa file</span>'
+          : `<span class="inline-flex items-center gap-1.5 font-bold text-[11px] shrink-0"><span class="text-emerald-400">+${m.added || 0}</span><span class="text-rose-400">-${m.removed || 0}</span></span>`;
+        return `
+          <div onclick="event.stopPropagation(); previewLocalFile('${safePath}', event, 'diff')"
+               class="px-3.5 py-2 flex items-center justify-between gap-2 cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+               style="border-color: var(--tool-border);"
+               title="Nhấn để xem dòng xanh (thêm) / dòng đỏ (xóa) của ${escapeHtml(m.path)}">
+            <div class="flex items-center gap-2 min-w-0">
+              ${statusPill}
+              <span class="font-semibold truncate" style="color: var(--text-main);">${escapeHtml(fileName)}</span>
+              <span class="text-[10.5px] truncate opacity-65 hidden sm:inline" style="color: var(--text-sub);">${escapeHtml(m.path)}</span>
+            </div>
+            <div class="flex items-center gap-2.5 shrink-0">
+              ${statsHtml}
+              <span class="text-[10.5px] font-sans font-semibold text-blue-400 hover:underline">Xem +/- →</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      bar.classList.remove('hidden');
     }
 
     function updateToolCardResult(card, outputText, isError = false) {
@@ -5991,31 +7821,47 @@
         `;
       }
 
+      const expandBtn = document.getElementById('expandOutBtn_' + cardId);
+      const fullStr = outputText ? String(outputText) : '';
+      const formattedOut = formatToolOutputForDisplay(fullStr);
       if (outPre) {
-        const str = outputText ? String(outputText) : '(Không có kết quả văn bản trả về)';
-        outPre.innerText = str;
+        outPre.textContent = formattedOut.text || '(Không có kết quả văn bản trả về)';
         if (isError) {
           outPre.style.color = '#f87171';
         }
       }
-
+      if (expandBtn) {
+        if (formattedOut.truncated) expandBtn.classList.remove('hidden');
+        else expandBtn.classList.add('hidden');
+      }
       if (copyBtn && outputText) {
         copyBtn.classList.remove('hidden');
       }
-
       if (card._cardData) {
-        card._cardData.output = outputText;
+        card._cardData.output = fullStr;
       }
+      renderToolCardFileChanges(card, isError);
+    }
+
+    function expandToolCardOutput(cardId, btn) {
+      const card = document.getElementById(cardId);
+      const outPre = document.getElementById('outputPre_' + cardId);
+      if (outPre && card && card._cardData && card._cardData.output) {
+        outPre.textContent = card._cardData.output;
+      }
+      if (btn) btn.classList.add('hidden');
     }
 
     function copyOutputFromCard(cardId, btn) {
+      const card = document.getElementById(cardId);
       const outPre = document.getElementById('outputPre_' + cardId);
-      if (!outPre) return;
-      copyTextToClipboard(outPre.innerText, btn);
+      const fullText = (card && card._cardData && card._cardData.output) ? card._cardData.output : (outPre ? outPre.textContent : '');
+      if (!fullText) return;
+      copyTextToClipboard(fullText, btn);
     }
 
     function copyTextToClipboard(text, btn) {
-      navigator.clipboard.writeText(text).then(() => {
+      window.writeTextToClipboard(text).then(() => {
         if (btn) {
           const oldText = btn.innerText;
           btn.innerText = 'Đã chép!';
@@ -6069,15 +7915,23 @@
           currentSessionTitle.innerText = data.title;
         }
         const streamSessionId = data.session_id || data.sessionId;
+        if (streamSessionId) setSessionModel(streamSessionId, data.model || currentSelectedModel);
         if (streamSessionId && streamSessionId !== currentSessionId) {
           currentSessionId = streamSessionId;
           updateSessionUrl(currentSessionId, true);
           loadWorkspaceTree();
         }
+      } else if (type === 'thinking') {
+        const thoughtVal = (data.text !== undefined) ? data.text : data.value;
+        if (thoughtVal) {
+          appendAiThinking(aiContainer, thoughtVal);
+          aiContainer.updateProgress('Đang suy luận...');
+        }
       } else if (type === 'stdout' || type === 'text') {
         const textVal = (data.text !== undefined) ? data.text : data.value;
         if (textVal) {
           appendAiText(aiContainer, textVal);
+          aiContainer.updateProgress('Đang phản hồi...');
           appendTerminalLog('text', textVal);
         }
       } else if (type === 'status') {
@@ -6087,10 +7941,10 @@
         }
       } else if (type === 'tool_call') {
         lastRunningToolCard = appendToolCard(aiContainer, data.tool || data.name, data.args, true);
-        aiContainer.updateProgress('Thực thi: ' + (data.tool || data.name));
+        aiContainer.updateProgress('Đang thực thi: ' + (data.tool || data.name));
       } else if (type === 'tool_result') {
         updateToolCardResult(lastRunningToolCard, data.output, data.isError);
-        aiContainer.updateProgress('Đã xong tác vụ');
+        aiContainer.updateProgress('Đang xử lý kết quả & tiếp tục...');
       } else if (type === 'stderr' && data.text) {
         appendTerminalLog('cmd', data.text);
       } else if (type === 'raw_log' && data.line) {
@@ -6099,14 +7953,26 @@
         appendAiText(aiContainer, '\n\n> **Lỗi thực thi:** ' + data.error + '\n');
         appendTerminalLog('error', data.error);
       } else if (type === 'done' || type === 'finish' || type === 'complete') {
+        closeActiveThoughtIfNeeded(aiContainer);
+        flushAiTextRender(aiContainer);
+        if (aiContainer.activeTextContainer && !aiContainer.activeTextContainer.innerHTML.trim()) {
+          aiContainer.activeTextContainer.remove();
+          aiContainer.activeTextContainer = null;
+        }
+        if (!aiContainer.activeTextContainer && aiContainer._toolCount > 0 && !aiContainer._toolDoneNoticeShown) {
+          aiContainer._toolDoneNoticeShown = true;
+          appendToolDoneNotice(aiContainer);
+        }
+        const resolvedSessionId = data.session_id || data.sessionId;
+        if (resolvedSessionId && resolvedSessionId !== currentSessionId) { currentSessionId = resolvedSessionId; updateSessionUrl(currentSessionId, true); }
         lastStreamedTurnSessionId = currentSessionId;
         lastTurnCompletedAt = Date.now();
         if (lastRunningToolCard) {
           updateToolCardResult(lastRunningToolCard, lastRunningToolCard._cardData?.output || null, false);
         }
-        aiContainer.completedAt = Date.now();
+        if (!aiContainer.completedAt) aiContainer.completedAt = Date.now();
         aiContainer.finishProgress('Tác vụ đã hoàn thành');
-        soundEffects.playChime();
+        if (!aiContainer._chimePlayed) { aiContainer._chimePlayed = true; soundEffects.playChime(); }
         if (termStatus) termStatus.innerText = 'Done';
       }
     }
@@ -6115,26 +7981,49 @@
     function consumeEventSourceStream(sessionId, aiContainer) {
       return new Promise((resolve) => {
         if (window.activeChatEventSource) {
-          try { window.activeChatEventSource.close(); } catch (_) {}
+          const prevEs = window.activeChatEventSource;
           window.activeChatEventSource = null;
+          if (typeof prevEs._closeAndDone === 'function') {
+            try { prevEs._closeAndDone(); } catch (_) {}
+          } else {
+            try { prevEs.close(); } catch (_) {}
+          }
         }
 
         const url = '/api/chat/stream?sessionId=' + encodeURIComponent(sessionId) + '&_t=' + Date.now();
         const es = new EventSource(url);
-        window.activeChatEventSource = es;
 
         let isCompleted = false;
+        let errorTimer = null;
+        let completeTimer = null;
 
         function closeAndDone() {
           if (!isCompleted) {
             isCompleted = true;
+            if (errorTimer) { clearTimeout(errorTimer); errorTimer = null; }
+            if (completeTimer) { clearTimeout(completeTimer); completeTimer = null; }
+            closeActiveThoughtIfNeeded(aiContainer);
+            flushAiTextRender(aiContainer);
+            if (aiContainer.viewVersion === sessionViewVersion) {
+              if (lastRunningToolCard) {
+                updateToolCardResult(lastRunningToolCard, lastRunningToolCard._cardData?.output || null, false);
+              }
+              if (!aiContainer.completedAt) aiContainer.completedAt = Date.now();
+              aiContainer.finishProgress('Đã dừng tác vụ');
+            }
             if (window.activeChatEventSource === es) window.activeChatEventSource = null;
             try { es.close(); } catch (_) {}
             resolve();
           }
         }
+        es._closeAndDone = closeAndDone;
+        window.activeChatEventSource = es;
 
         function onEventData(e) {
+          if (errorTimer) {
+            clearTimeout(errorTimer);
+            errorTimer = null;
+          }
           if (isCompleted || aiContainer.viewVersion !== sessionViewVersion) {
             closeAndDone();
             return;
@@ -6142,8 +8031,10 @@
           try {
             const data = JSON.parse(e.data);
             handleSessionStreamEvent(data, aiContainer);
-            if (data.type === 'finish' || data.type === 'complete' || data.type === 'done') {
+            if (data.type === 'finish' || data.type === 'done') {
               closeAndDone();
+            } else if (data.type === 'complete' && !completeTimer) {
+              completeTimer = setTimeout(closeAndDone, 600);
             }
           } catch (err) {
             console.error('SSE parse error:', err, e.data);
@@ -6151,7 +8042,7 @@
         }
 
         const eventNames = [
-          'message', 'text', 'stdout', 'status', 'tool_call', 'tool_result',
+          'message', 'text', 'thinking', 'stdout', 'status', 'tool_call', 'tool_result',
           'stderr', 'raw_log', 'session_info', 'session_title', 'complete', 'finish', 'done', 'error'
         ];
         eventNames.forEach(evt => es.addEventListener(evt, onEventData));
@@ -6160,13 +8051,28 @@
           if (isCompleted) return;
           if (es.readyState === EventSource.CLOSED) {
             closeAndDone();
-          } else {
-            setTimeout(() => {
-              if (!isCompleted && es.readyState !== EventSource.OPEN) {
-                closeAndDone();
-              }
-            }, 1200);
+            return;
           }
+          if (errorTimer) clearTimeout(errorTimer);
+          errorTimer = setTimeout(async () => {
+            if (isCompleted || es.readyState === EventSource.OPEN) return;
+            try {
+              const checkRes = await fetch('/api/sessions?_t=' + Date.now());
+              if (checkRes.ok) {
+                const checkData = await checkRes.json();
+                const sessionsList = Array.isArray(checkData) ? checkData : (checkData?.sessions || []);
+                const stillRunning = sessionsList.some(
+                  s => (s.id === sessionId || s.name === sessionId || s.id === currentSessionId) && s.isRunning
+                );
+                if (stillRunning && !isCompleted && aiContainer.viewVersion === sessionViewVersion) {
+                  return;
+                }
+              }
+            } catch (_) {}
+            if (!isCompleted && es.readyState !== EventSource.OPEN) {
+              closeAndDone();
+            }
+          }, 4500);
         };
       });
     }
@@ -6209,7 +8115,12 @@
     async function reconnectRunningSession(sessionId, sessionInfo, friendlyTitle) {
       if (isGenerating) return;
       isGenerating = true;
+      if (currentSessionId !== sessionId) {
+        saveCurrentSessionDraft();
+      }
       currentSessionId = sessionId;
+      currentDraftSessionKey = String(sessionId || '__new__').trim();
+      restoreSessionDraft(sessionId);
       runningWorkspace = sessionInfo?.cwd || currentWorkspace;
 
       if (sessionInfo?.cwd) {
@@ -6217,6 +8128,10 @@
         const base = sessionInfo.cwd.split(/[\\/]/).pop() || sessionInfo.cwd;
         currentSessionFolder.innerText = base;
         currentSessionFolderTag.innerText = base;
+      }
+      if (sessionInfo?.model) {
+        setSessionModel(sessionId, sessionInfo.model);
+        applySessionModelSelection(sessionInfo.model);
       }
       updateSessionUrl(sessionId, true);
       currentSessionTitle.innerText = friendlyTitle || sessionId;
@@ -6258,30 +8173,48 @@
         appendTerminalLog('error', 'Lỗi reconnect stream: ' + err.message);
       } finally {
         clearInterval(turnTimer);
+        const endedAt = aiContainer.completedAt || Date.now();
+        const finalElapsed = Math.max(0, endedAt - taskStartTime);
+        responseItem.elapsedMs = finalElapsed;
         responseItem.isRunning = false;
-        if (turnItem) turnItem.isRunning = false;
-        const finalElapsed = Date.now() - taskStartTime;
-        timing.textContent = timingLabel({ ...responseItem, elapsedMs: finalElapsed });
-        if (turnItem?.timingElement) {
-          turnItem.timingElement.textContent = timingLabel(turnItem);
+        if (turnItem) {
+          turnItem.elapsedMs = finalElapsed;
+          turnItem.isRunning = false;
+          if (turnItem.timingElement) {
+            turnItem.timingElement.textContent = timingLabel(turnItem);
+          }
         }
-        isGenerating = false;
+        timing.textContent = timingLabel(responseItem);
+        flushAiTextRender(aiContainer);
         if (aiContainer && aiContainer.contentBody) {
           enhanceChatElement(aiContainer.contentBody);
         }
-        runningWorkspace = null;
-        sendBtn.classList.remove('hidden');
-        stopBtn.classList.add('hidden');
-        sessionStatus.innerText = 'Sẵn sàng';
-        sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
-        stopLiveExecutionTimer(true);
-        loadWorkspaceTree();
+        if (aiContainer.viewVersion === sessionViewVersion) {
+          if (currentSessionId && turnItem) {
+            try {
+              const key = 'ai_hub_turn_timings:' + currentSessionId;
+              const records = JSON.parse(localStorage.getItem(key) || '[]');
+              records.push({ text: turnItem.text, startedAt: turnItem.startedAt, elapsedMs: finalElapsed });
+              localStorage.setItem(key, JSON.stringify(records));
+            } catch (_) {}
+          }
+          isGenerating = false;
+          runningWorkspace = null;
+          sendBtn.classList.remove('hidden');
+          stopBtn.classList.add('hidden');
+          sessionStatus.innerText = 'Sẵn sàng';
+          sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
+          stopLiveExecutionTimer(true);
+          loadWorkspaceTree(false);
+        }
       }
     }
 
     // SEND MESSAGE (USES EVENTSOURCE TO STREAM WORD-BY-WORD WITH ZERO MOBILE BUFFERING)
-    async function sendMessage() {
-      const prompt = promptInput.value.trim();
+    async function sendMessage(options = {}) {
+      const opts = (options && !(options instanceof Event) && typeof options === 'object') ? options : {};
+      const hasOverride = typeof opts.promptOverride === 'string';
+      const prompt = (hasOverride ? opts.promptOverride : promptInput.value).trim();
       if (!prompt || isGenerating) return;
       if (!currentWorkspace) {
         showToast('Vui lòng chọn workspace trước khi gửi tin nhắn.', 'info');
@@ -6293,9 +8226,18 @@
       promptHistory.push(prompt);
       promptHistoryIndex = promptHistory.length;
 
+      isChatUserScrolledUp = false;
       appendUserMessage(prompt);
-      promptInput.value = '';
-      autoResizeTextarea();
+      scrollToBottom(true);
+      if (!hasOverride) {
+        const draftKeyToClear = currentSessionId || currentDraftSessionKey;
+        promptInput.value = '';
+        setSessionDraft(draftKeyToClear, '');
+        autoResizeTextarea(false);
+        if (isMobileChatInput() && typeof promptInput.blur === 'function') {
+          promptInput.blur();
+        }
+      }
 
       isGenerating = true;
       runningWorkspace = currentWorkspace;
@@ -6307,6 +8249,7 @@
 
       appendTerminalLog('cmd', '[PROMPT] ' + prompt);
 
+      if (currentSessionId) setSessionModel(currentSessionId, currentSelectedModel);
       const aiContainer = createAiMessageContainer(currentSelectedModel, true);
       aiContainer.viewVersion = sessionViewVersion;
       const responseItem = { role: 'assistant', rawContent: [], startedAt: Date.now() };
@@ -6341,6 +8284,7 @@
             workspace: currentWorkspace,
             sessionId: currentSessionId,
             resume: !!currentSessionId,
+            rewindLastTurn: !!opts.rewindLastTurn,
             model: currentSelectedModel,
             streamMode: 'eventsource'
           })
@@ -6352,17 +8296,35 @@
         }
 
         const chatMeta = await res.json();
+        if (aiContainer.viewVersion !== sessionViewVersion) {
+          loadWorkspaceTree();
+          return;
+        }
         const activeSId = chatMeta.sessionId || currentSessionId;
+        if (activeSId) setSessionModel(activeSId, currentSelectedModel);
+        if (chatMeta.tempName) setSessionModel(chatMeta.tempName, currentSelectedModel);
         if (chatMeta.sessionId && chatMeta.sessionId !== currentSessionId) {
+          const prevDraftKey = currentDraftSessionKey;
           currentSessionId = chatMeta.sessionId;
+          currentDraftSessionKey = String(chatMeta.sessionId).trim();
+          if (prevDraftKey && prevDraftKey !== currentDraftSessionKey) {
+            const pendingTypedWhileStarting = promptInput ? promptInput.value : '';
+            setSessionDraft(prevDraftKey, '');
+            if (pendingTypedWhileStarting) {
+              setSessionDraft(currentDraftSessionKey, pendingTypedWhileStarting);
+            }
+          }
           updateSessionUrl(currentSessionId, true);
         }
+        loadWorkspaceTree();
 
         await consumeEventSourceStream(activeSId, aiContainer);
       } catch (err) {
-        appendAiText(aiContainer, '\n\n> ❌ **Không thể hoàn thành yêu cầu:** ' + err.message + '\n');
-        appendTerminalLog('error', 'Lỗi kết nối API: ' + err.message);
-        showToast('Lỗi gửi tin nhắn: ' + err.message, 'error');
+        if (aiContainer.viewVersion === sessionViewVersion) {
+          appendAiText(aiContainer, '\n\n> ❌ **Không thể hoàn thành yêu cầu:** ' + err.message + '\n');
+          appendTerminalLog('error', 'Lỗi kết nối API: ' + err.message);
+          showToast('Lỗi gửi tin nhắn: ' + err.message, 'error');
+        }
       } finally {
         clearInterval(turnTimer);
         const endedAt = aiContainer.completedAt || Date.now();
@@ -6374,32 +8336,66 @@
           if (turnItem.timingElement) turnItem.timingElement.textContent = timingLabel(turnItem);
         }
         timing.textContent = timingLabel(responseItem);
-        if (currentSessionId && turnItem && aiContainer.viewVersion === sessionViewVersion) {
-          try {
-            const key = 'ai_hub_turn_timings:' + currentSessionId;
-            const records = JSON.parse(localStorage.getItem(key) || '[]');
-            records.push({ text: turnItem.text, startedAt: turnItem.startedAt, elapsedMs: responseItem.elapsedMs });
-            localStorage.setItem(key, JSON.stringify(records));
-          } catch (_) {}
-        }
-        isGenerating = false;
+        flushAiTextRender(aiContainer);
         if (aiContainer && aiContainer.contentBody) {
           enhanceChatElement(aiContainer.contentBody);
         }
-        runningWorkspace = null;
-        sendBtn.classList.remove('hidden');
-        stopBtn.classList.add('hidden');
-        sessionStatus.innerText = 'Sẵn sàng';
-        sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
-        stopLiveExecutionTimer(true);
-        loadWorkspaceTree();
-        promptInput.focus();
+        if (aiContainer.viewVersion === sessionViewVersion) {
+          if (currentSessionId && turnItem) {
+            try {
+              const key = 'ai_hub_turn_timings:' + currentSessionId;
+              const records = JSON.parse(localStorage.getItem(key) || '[]');
+              records.push({ text: turnItem.text, startedAt: turnItem.startedAt, elapsedMs: responseItem.elapsedMs });
+              localStorage.setItem(key, JSON.stringify(records));
+            } catch (_) {}
+          }
+          isGenerating = false;
+          runningWorkspace = null;
+          sendBtn.classList.remove('hidden');
+          stopBtn.classList.add('hidden');
+          sessionStatus.innerText = 'Sẵn sàng';
+          sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
+          stopLiveExecutionTimer(true);
+          loadWorkspaceTree(false);
+          if (!isMobileChatInput()) {
+            promptInput.focus();
+          }
+        }
       }
     }
 
     sendBtn.addEventListener('click', sendMessage);
 
-    promptInput.addEventListener('keydown', (e) => {
+    function isMobileChatInput() {
+      if (typeof window === 'undefined') return false;
+      if (window.innerWidth < 768) return true;
+      if (typeof window.matchMedia === 'function') {
+        try {
+          if (window.matchMedia('(max-width: 767px), (pointer: coarse) and (hover: none)').matches) {
+            return true;
+          }
+        } catch (_) {}
+      }
+      if (typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '')) {
+        return true;
+      }
+      return false;
+    }
+
+    function syncComposerInputMode() {
+      if (!promptInput) return;
+      const isMobile = isMobileChatInput();
+      promptInput.setAttribute('enterkeyhint', isMobile ? 'enter' : 'send');
+      promptInput.setAttribute(
+        'placeholder',
+        isMobile
+          ? 'Giao việc cho AI Agent (Enter xuống dòng, bấm Gửi để gửi, gõ / mở lệnh)...'
+          : 'Giao việc cho AI Agent (Enter gửi, Shift+Enter xuống dòng, gõ / để mở lệnh)...'
+      );
+    }
+
+    function handlePromptInputKeydown(e) {
+      if (e.isComposing || e.keyCode === 229) return;
       if (e.key === 'ArrowUp' && promptInput.value === '') {
         e.preventDefault();
         if (promptHistory.length > 0) {
@@ -6416,14 +8412,28 @@
         }
       } else if (e.key === '/' && promptInput.value === '') {
         setTimeout(() => slashMenu.classList.remove('hidden'), 50);
-      } else if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
+      } else if (e.key === 'Enter') {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          sendMessage();
+          return;
+        }
+        if (isMobileChatInput()) {
+          // On mobile/touch devices, Enter inserts a newline; only tapping Send button sends.
+          return;
+        }
+        if (!e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
       }
-    });
+    }
+
+    // Bind composer input & stop events
+    promptInput.addEventListener('keydown', handlePromptInputKeydown);
+    syncComposerInputMode();
 
     stopBtn.addEventListener('click', async () => {
-      stopBtn.innerText = 'Đang dừng...';
       soundEffects.playClick();
       stopGeneration(true);
       showToast('Đã gửi yêu cầu dừng tiến trình', 'info');
@@ -6846,17 +8856,19 @@
         const res = await fetch('/api/delete-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId })
+          body: JSON.stringify({ id: sessionId, sessionId })
         });
         const data = await res.json();
         if (data.ok) {
           showToast('Đã xóa phiên thành công', 'success');
           soundEffects.playBop();
+          setSessionDraft(sessionId, '');
           if (pinnedSessionsSet.has(sessionId)) {
             pinnedSessionsSet.delete(sessionId);
             localStorage.setItem('ai_hub_pinned_sessions', JSON.stringify(Array.from(pinnedSessionsSet)));
           }
           if (currentSessionId === sessionId) {
+            if (promptInput) promptInput.value = '';
             newSession();
           } else {
             loadWorkspaceTree();
@@ -6980,22 +8992,32 @@
     initQuestionContext('chatFeed', 'chatQuestionContext');
     initQuestionContext('fullConvMessagesContainer', 'fullConvQuestionContext');
 
+    let _composerArrowRafId = 0;
     function updateComposerBottomArrow() {
+      _composerArrowRafId = 0;
       const arrow = document.getElementById('composerBottomArrow');
       const distance = chatFeed.scrollHeight - chatFeed.scrollTop - chatFeed.clientHeight;
       const isScrolledUp = distance > 8;
       if (arrow) arrow.hidden = !isScrolledUp;
     }
-    chatFeed.addEventListener('scroll', updateComposerBottomArrow, { passive: true });
-    new ResizeObserver(updateComposerBottomArrow).observe(chatFeed);
-    new MutationObserver(updateComposerBottomArrow).observe(chatFeed, { childList: true, subtree: true, characterData: true });
+    function scheduleComposerBottomArrow() {
+      if (_composerArrowRafId) return;
+      _composerArrowRafId = requestAnimationFrame(updateComposerBottomArrow);
+    }
+    chatFeed.addEventListener('scroll', scheduleComposerBottomArrow, { passive: true });
+    new ResizeObserver(scheduleComposerBottomArrow).observe(chatFeed);
+    new MutationObserver(scheduleComposerBottomArrow).observe(chatFeed, { childList: true, subtree: true, characterData: true });
     requestAnimationFrame(updateComposerBottomArrow);
 
     const composerOuter = document.querySelector('.composer-outer');
     function syncComposerOverlaySpace() {
-      const wasAtBottom = chatFeed.scrollHeight - chatFeed.scrollTop - chatFeed.clientHeight <= 8;
+      const wasAtBottom = !isChatUserScrolledUp && (chatFeed.scrollHeight - chatFeed.scrollTop - chatFeed.clientHeight <= 16);
       chatFeed.style.paddingBottom = (composerOuter.getBoundingClientRect().height + 20) + 'px';
-      if (wasAtBottom || initialBottomFollow) chatFeed.scrollTop = chatFeed.scrollHeight;
+      if (!isChatUserScrolledUp && (wasAtBottom || initialBottomFollow)) {
+        _programmaticScrollGuard = true;
+        chatFeed.scrollTop = chatFeed.scrollHeight;
+        _programmaticScrollGuard = false;
+      }
       updateComposerBottomArrow();
     }
     new ResizeObserver(syncComposerOverlaySpace).observe(composerOuter);
@@ -7004,10 +9026,16 @@
     // Follow the visible viewport when the phone keyboard opens without locking zoom.
     function syncMobileViewport() {
       const viewport = window.visualViewport;
-      if (window.innerWidth < 640 && (!viewport || viewport.scale === 1)) {
+      if (window.innerWidth < 1024 && (!viewport || viewport.scale === 1)) {
         document.documentElement.style.setProperty('--mobile-app-height', (viewport?.height || window.innerHeight) + 'px');
       } else {
         document.documentElement.style.removeProperty('--mobile-app-height');
+      }
+      if (typeof syncComposerInputMode === 'function') {
+        syncComposerInputMode();
+      }
+      if (typeof syncComposerOverlaySpace === 'function') {
+        requestAnimationFrame(syncComposerOverlaySpace);
       }
     }
     window.visualViewport?.addEventListener('resize', syncMobileViewport);
@@ -7038,7 +9066,7 @@
           if (currentSessionId && !isGenerating) {
             const activeMatch = allSessionsCache.find(s => (s.id === currentSessionId || s.name === currentSessionId) && s.isRunning);
             if (activeMatch) {
-              reconnectRunningSession(currentSessionId, { cwd: activeMatch.cwd }, activeMatch.name);
+              selectSession(currentSessionId, activeMatch.name, activeMatch.cwd || currentWorkspace, false);
             }
           }
         });

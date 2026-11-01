@@ -22,8 +22,17 @@ foreach ($line in $envLines) {
 $env:GOOSE_CLI_MIN_PRIORITY = "0.8"
 $env:GOOSE_SHOW_FULL_OUTPUT = "false"
 
-# Chi thi he thong (System Prompt) cho Goose Agent
-$SystemInstruction = "QUY TAC BAT BUOC:`n- Truoc khi goi lenh shell quan trong (build, deploy, sua file lon, tac dong he thong), BAT BUOC viet 1 cau sieu ngan (duoi 15 tu) thong bao muc dich cho nguoi dung truoc khi goi tool.`n- Voi cac thao tac doc nhe (ls, cat, grep nho), hay goi thang lenh de toi uu toc do phan hoi."
+# Chi thi he thong (System Prompt) toan cuc cho Goose Agent
+$SystemInstruction = @"
+QUY TAC BAT BUOC:
+- Truoc khi goi lenh shell quan trong (build, deploy, sua file lon, tac dong he thong), BAT BUOC viet 1 cau sieu ngan (duoi 15 tu) thong bao muc dich cho nguoi dung truoc khi goi tool.
+- Voi cac thao tac doc nhe (ls, cat, grep nho), hay goi thang lenh va gop thao tac de toi uu toc do phan hoi.
+- QUY CHUAN TOI UU TAI NGUYEN & DO MUOT:
+  + Khong doc toan bo file lon (>500 dong) khi chi sua doan nho; luu y chuan dong CRLF tren Windows.
+  + Backend/DB: Tranh execSync/spawn trong hot-path API; tranh loi N+1 query; doc SQLite che do readOnly va dong ket noi trong finally; dung TTL cache.
+  + Frontend/Stream: Chong goi trung (coalesce/debounce); don sach EventSource/timer/.streaming-cursor khi ket thuc hoac chuyen phien; thanh tien trinh (.live-progress-container) luon dat duoi .ai-content-body.
+  + Kiem chung & Tu hoc: Luon chay node --check hoac test lien quan sau khi sua code. Tham khao .goosehints tai workspace va cap nhat bai hoc moi vao D:\ai-hub\lessons.md.
+"@
 
 Clear-Host
 Write-Host "========================================================" -ForegroundColor Cyan

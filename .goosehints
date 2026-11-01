@@ -1,0 +1,14 @@
+# AI Hub Workspace Architecture & Rules (.goosehints)
+
+## 1. Cấu Trúc Trọng Tâm
+- **Web Server Backend**: `D:\ai-hub\ai-hub-web\server.js` (Node.js HTTP + SSE server, chạy mặc định trên `PORT=20130`, kết nối 9Router & điều phối tiến trình `goose.exe` đa phiên qua `activeSessions`).
+- **Web Pro UI Frontend**: `D:\ai-hub\ai-hub-web\public\index.html` (Single-page UI hỗ trợ chạy nhiều phiên song song, quản lý workspace, Git, file preview, terminal log).
+- **CLI Launchers**: `D:\ai-hub\run-ai.bat`, `D:\ai-hub\run-ai.ps1`, `D:\ai-hub\start-web.bat`.
+- **Cơ Sở Dữ Liệu Phiên Goose**: `%APPDATA%\Block\goose\data\sessions\sessions.db` (SQLite, đọc trực tiếp bằng `node:sqlite` ở chế độ `{ readOnly: true }`).
+- **Bộ Nhớ Bài Học Chung**: `D:\ai-hub\lessons.md` (Chứa quy chuẩn tối ưu tài nguyên và kinh nghiệm khắc phục lỗi).
+
+## 2. Quy Tắc Bắt Buộc Khi Sửa Đổi AI Hub
+- **Đa phiên (Multi-session)**: Luôn bảo toàn trạng thái `activeSessions` khi chuyển đổi qua lại giữa các phiên; không gửi lại prompt gây nhân đôi tin nhắn khi phiên đang chạy.
+- **Chỉ báo tiến trình (`.live-progress-container`)**: Phải đặt **dưới** `.ai-content-body` và hiển thị đúng trạng thái từng pha (`Đang suy luận...`, `Đang thực thi: ...`, `Đang xử lý kết quả & tiếp tục...`, `Đang phản hồi...`).
+- **Kiểm thử hồi quy**: Sau khi sửa `server.js` hoặc `public/index.html`, bắt buộc chạy tại `D:\ai-hub\ai-hub-web`:
+  - `cd /d D:\ai-hub\ai-hub-web & node --check server.js & for %f in (test_*.cjs) do @node "%f"`

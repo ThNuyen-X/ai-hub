@@ -10,7 +10,7 @@ function definition(name) {
   return source.slice(start, end < 0 ? source.length : end).split('\n    async function ')[0].split('\n    // ')[0];
 }
 const context = vm.createContext({ console, setTimeout, clearTimeout, Date, Number, String, Map });
-for (const name of ['extractSubagentsAndUserText', 'parseSubagentReports', 'normalizePromptForCompare', 'prepareRunningSessionHistoryItems', 'messageTime', 'timingLabel', 'safeStringifyCode', 'historyItemText', 'escapeHtml', 'escapeJs', 'buildHistoryItemsFromConversation']) {
+for (const name of ['extractSubagentsAndUserText', 'parseSubagentReports', 'normalizePromptForCompare', 'prepareRunningSessionHistoryItems', 'messageTime', 'timingLabel', 'safeStringifyCode', 'historyItemText', 'escapeHtml', 'escapeJs', 'isInternalConversationMessage', 'classifyInternalEntry', 'buildInternalItemTitle', 'appendInternalHistoryEntry', 'buildHistoryItemsFromConversation']) {
   new vm.Script(definition(name)).runInContext(context);
 }
 assert.equal(context.messageTime({created: 1700000000}), 1700000000000);
@@ -187,7 +187,11 @@ context.currentWorkspace = 'D:\\ai-hub';
 context.sessionFileChanges = new Map();
 context.localPathExistenceCache = new Map();
 context.Int32Array = Int32Array;
-for (const fnName of ['normalizeTrackPathKey', 'getRecordedFileChange', 'computeUnifiedLineDiff', 'parseUnifiedDiffToRows', 'extractToolFileMutations', 'recordToolMutationsInSession', 'isLocalFilePath']) {
+for (const fnName of [
+  'normalizeTrackPathKey', 'getRecordedFileChange', 'computeUnifiedLineDiff', 'parseUnifiedDiffToRows',
+  'isFailedToolOutput', 'unescapePythonLiteral', 'extractHelperPythonScriptMutations', 'extractShellPythonFileMutations',
+  'extractToolFileMutations', 'rebuildDiffFromSnippets', 'recordToolMutationsInSession', 'isLocalFilePath'
+]) {
   new vm.Script(definition(fnName)).runInContext(context);
 }
 
@@ -454,6 +458,49 @@ assert.equal(draftSandbox.promptInput.value, 'Đoạn chat đang gõ dở ở ph
 draftSandbox.setSessionDraft('session_A', '');
 assert.equal(draftSandbox.getSessionDraft('session_A'), '');
 
+// New-session unsent draft persistence across session switch & clicking "Tạo phiên mới" again
+const newSessionFnSrc = definition('newSession');
+assert.ok(newSessionFnSrc.includes('restoreSessionDraft(nextNewSessionKey)'), 'newSession() must restore pending new-session draft');
+assert.ok(!newSessionFnSrc.includes("promptInput.value = '';"), 'newSession() must not wipe unsent new-session draft');
+
+// 1) User opens new session (new-111) and types unsent message
+draftSandbox.currentSessionId = null;
+draftSandbox.currentDraftSessionKey = 'new-111';
+draftSandbox.promptInput.value = 'Tin nhắn nháp ở phiên mới chưa gửi';
+draftSandbox.autoResizeTextarea();
+assert.equal(draftSandbox.getSessionDraft('__new__'), 'Tin nhắn nháp ở phiên mới chưa gửi');
+
+// 2) User switches to existing Session B -> Session B is empty
+draftSandbox.saveCurrentSessionDraft();
+draftSandbox.currentSessionId = 'session_B';
+draftSandbox.currentDraftSessionKey = 'session_B';
+draftSandbox.restoreSessionDraft('session_B');
+assert.equal(draftSandbox.promptInput.value, '');
+
+// 3) User clicks "Tạo phiên mới" again (generates new-222) -> unsent draft is preserved!
+draftSandbox.saveCurrentSessionDraft();
+draftSandbox.currentSessionId = null;
+draftSandbox.currentDraftSessionKey = 'new-222';
+draftSandbox.restoreSessionDraft('new-222');
+assert.equal(draftSandbox.promptInput.value, 'Tin nhắn nháp ở phiên mới chưa gửi');
+
+// 4) Page reload (F5) hydration guard: saveCurrentSessionDraft before first restore must not wipe localStorage
+draftSandbox.sessionDraftsMap.clear();
+draftSandbox.sessionDraftHydrated = false;
+draftSandbox.promptInput.value = '';
+draftSandbox.currentSessionId = null;
+draftSandbox.currentDraftSessionKey = '__new__';
+draftSandbox.saveCurrentSessionDraft();
+assert.equal(draftStore.get('ai_hub_session_draft:__new__'), 'Tin nhắn nháp ở phiên mới chưa gửi');
+draftSandbox.restoreSessionDraft('new-333');
+assert.equal(draftSandbox.promptInput.value, 'Tin nhắn nháp ở phiên mới chưa gửi');
+
+// 5) Once sent in new session, draft is cleared for subsequent new sessions
+draftSandbox.setSessionDraft('new-333', '');
+draftSandbox.currentDraftSessionKey = 'new-444';
+draftSandbox.restoreSessionDraft('new-444');
+assert.equal(draftSandbox.promptInput.value, '');
+
 // (10) Collapsible thinking & execution process group (default collapsed above final answer)
 const processGroupSandbox = {
   window: {},
@@ -577,4 +624,202 @@ assert.ok(source.includes('window.USE_PLAIN_PROCESS_HEADER = true;'), 'Plain pro
 assert.ok(source.includes('id="fileDiffBar_${cardId}"'), 'File diff bar (xem file thay đổi) must be preserved');
 assert.ok(source.includes('id="outputPre_${cardId}"'), 'Dark output frame and light args frame must be preserved');
 
-console.log('Chat UI: 138 regression checks passed');
+// Verify internal / compaction messages (userVisible: false / # Conversation Summary) render as collapsible 1-line title cards instead of walls of text or duplicate user bubbles
+const compactedItems = context.buildHistoryItemsFromConversation([
+  { role: 'user', created: 1700010000, metadata: { userVisible: true, agentVisible: false }, content: [{ type: 'text', text: 'cái trang chủ của provt hãy để hiển thị đầy đủ các tính năng theo role đi' }] },
+  { role: 'assistant', created: 1700010002, metadata: { userVisible: true, agentVisible: false }, content: [{ type: 'thinking', thinking: 'Checking index.jsp' }] },
+  { role: 'user', created: 1700010010, metadata: { userVisible: false, agentVisible: true }, content: [{ type: 'text', text: '# Conversation Summary\n\n## User Intent\n- Hiển thị đầy đủ các tính năng' }] },
+  { role: 'assistant', created: 1700010011, metadata: { userVisible: false, agentVisible: true }, content: [{ type: 'text', text: 'Your context was compacted. The previous message contains a summary of the conversation so far.\nDo not mention that you read a summary or that conversation summarization occurred.' }] },
+  { role: 'user', created: 1700010012, metadata: { userVisible: false, agentVisible: true }, content: [{ type: 'text', text: 'cái trang chủ của provt hãy để hiển thị đầy đủ các tính năng theo role đi' }] },
+  { role: 'assistant', created: 1700010015, metadata: { userVisible: true, agentVisible: true }, content: [{ type: 'text', text: 'Đã cập nhật đầy đủ các tính năng theo role.' }] }
+]);
+assert.equal(compactedItems.filter(i => i.role === 'user').length, 1, 'Repeated prompt with userVisible:false must NOT create a duplicate user bubble');
+const internalItem = compactedItems.find(i => i.role === 'internal');
+assert.ok(internalItem, 'Compaction messages must be grouped into an internal history item');
+assert.equal(internalItem.entries.length, 3, 'All 3 consecutive compaction messages must be grouped into 1 collapsible internal card');
+assert.ok(internalItem.title.includes('Tin nhắn nội bộ hệ thống'), 'Internal item must have a 1-line title');
+assert.ok(context.historyItemText(internalItem).includes('# Conversation Summary'), 'Internal item must be searchable in Full Conversation Modal');
+assert.ok(source.includes('function renderInternalMessageCard('), 'renderInternalMessageCard must exist');
+assert.ok(source.includes('function toggleInternalMessageAccordion('), 'toggleInternalMessageAccordion must exist');
+
+// Regression checks for write tool (+597 -0) vs Session diff (+448 -157) sync & Diff Viewer CSS
+const diffContext = vm.createContext({
+  console, setTimeout, clearTimeout, Date, Number, String, Map, Set, Array, Object, Boolean, RegExp, JSON, Int32Array,
+  hubServerPlatform: 'win32',
+  currentWorkspace: 'E:\\SSO\\code\\sso',
+  currentSessionId: '20261102_10',
+  sessionFileChanges: new Map(),
+  _pendingFileDiffSyncSet: new Set(),
+  _syncedFileDiffKeys: new Set(),
+  _fileDiffSyncTimer: null,
+  _sessionHistoryMutationsSeeded: false,
+  _sessionHelperScriptsMap: new Map(),
+  _toolCardMutationsByKey: new Map()
+});
+for (const name of [
+  'escapeHtml', 'escapeJs', 'normalizeTrackPathKey', 'getRecordedFileChange',
+  'computeUnifiedLineDiff', 'parseUnifiedDiffToRows',
+  'isFailedToolOutput', 'unescapePythonLiteral',
+  'extractHelperPythonScriptMutations', 'extractShellPythonFileMutations',
+  'extractToolFileMutations',
+  'resetSessionFileChangeTracking', 'isSameTrackedFilePath',
+  'buildToolFileStatusPillHtml', 'buildToolFileStatsHtml',
+  'applyServerDiffToSessionAndDOM', 'scheduleFileDiffSync',
+  'applySessionFileChangesBatch', 'rebuildDiffFromSnippets',
+  'recordToolMutationsInSession', 'seedSessionFileChangesFromHistory'
+]) {
+  new vm.Script(definition(name)).runInContext(diffContext);
+}
+
+const jspPath = 'pro-vt-sso/src/main/webapp/WEB-INF/jsp/index.jsp';
+const mut1 = diffContext.extractToolFileMutations('write', { path: jspPath, content: Array.from({ length: 921 }, (_, i) => 'line ' + i).join('\n') }, 'Wrote ' + jspPath + ' (921 lines)', false);
+assert.equal(mut1.length, 1);
+assert.equal(mut1[0].isFullWrite, true);
+assert.equal(mut1[0].added, 921);
+diffContext.recordToolMutationsInSession(mut1, false);
+
+const mut2 = diffContext.extractToolFileMutations('write', { path: jspPath, content: Array.from({ length: 597 }, (_, i) => 'new ' + i).join('\n') }, 'Wrote ' + jspPath + ' (597 lines)', false);
+assert.equal(mut2[0].added, 597);
+diffContext.recordToolMutationsInSession(mut2, false);
+assert.equal(diffContext.getRecordedFileChange(jspPath).added, 597, 'Repeated full-file write must not sum 921 + 597');
+
+const mockDiffRow = {
+  attrs: { 'data-is-full-write': '1', 'data-path': jspPath },
+  pill: { outerHTML: '' },
+  stats: { outerHTML: '' },
+  getAttribute(k) { return this.attrs[k] || ''; },
+  querySelector(sel) { return sel === '.file-diff-status-pill' ? this.pill : (sel === '.file-diff-stats' ? this.stats : null); }
+};
+const mockBadge = {
+  attrs: { 'data-path': 'E:\\SSO\\code\\sso\\pro-vt-sso\\src\\main\\webapp\\WEB-INF\\jsp\\index.jsp' },
+  icon: { textContent: '🟢' },
+  diffPill: { className: 'path-diff-pill hidden', innerHTML: '' },
+  getAttribute(k) { return this.attrs[k] || ''; },
+  querySelector(sel) { return sel === '.path-icon' ? this.icon : (sel === '.path-diff-pill' ? this.diffPill : null); }
+};
+diffContext.document = {
+  querySelectorAll(sel) {
+    if (sel === '[data-file-diff-row="1"]') return [mockDiffRow];
+    if (sel === '.local-path-badge') return [mockBadge];
+    return [];
+  }
+};
+
+// Raw Git diff payload (without inSession/source='session') MUST be ignored so Git changes never leak in
+diffContext.applyServerDiffToSessionAndDOM(jspPath, {
+  success: true,
+  inGit: true,
+  hasChanges: true,
+  status: 'modified',
+  added: 999,
+  removed: 888,
+  path: 'E:\\SSO\\code\\sso\\pro-vt-sso\\src\\main\\webapp\\WEB-INF\\jsp\\index.jsp',
+  diff: '--- a/index.jsp\n+++ b/index.jsp\n@@ -1 +1 @@\n-git\n+leak'
+});
+assert.equal(diffContext.getRecordedFileChange(jspPath).added, 597, 'Git-only diff payload must be ignored');
+
+// Session-scoped diff payload MUST update session state and DOM badges
+diffContext.applyServerDiffToSessionAndDOM(jspPath, {
+  success: true,
+  inSession: true,
+  source: 'session',
+  hasChanges: true,
+  status: 'modified',
+  added: 448,
+  removed: 157,
+  path: 'E:\\SSO\\code\\sso\\pro-vt-sso\\src\\main\\webapp\\WEB-INF\\jsp\\index.jsp',
+  diff: '--- a/index.jsp\n+++ b/index.jsp\n@@ -1 +1 @@\n-old\n+new'
+});
+const syncedChange = diffContext.getRecordedFileChange(jspPath);
+assert.equal(syncedChange.serverSynced, true);
+assert.equal(syncedChange.status, 'modified');
+assert.equal(syncedChange.added, 448);
+assert.equal(syncedChange.removed, 157);
+assert.ok(mockDiffRow.pill.outerHTML.includes('SỬA'), 'Inline tool diff bar pill must update to SỬA');
+assert.ok(mockDiffRow.stats.outerHTML.includes('+448') && mockDiffRow.stats.outerHTML.includes('-157'), 'Inline tool diff bar stats must update from +597 -0 to +448 -157');
+assert.equal(mockBadge.icon.textContent, '📝');
+assert.ok(mockBadge.diffPill.innerHTML.includes('+448') && mockBadge.diffPill.innerHTML.includes('-157'), 'Inline path badge must update to +448 -157');
+
+// Historical scroll-up lazy render must not overwrite server-synced session diff
+diffContext.recordToolMutationsInSession(mut1, false);
+assert.equal(diffContext.getRecordedFileChange(jspPath).added, 448);
+assert.equal(diffContext.getRecordedFileChange(jspPath).removed, 157);
+
+// Failed edit tool calls (even with isError=false in legacy rows) must NOT record false diffs
+const ctrlPath = 'pro-vt-sso/src/main/java/com/viettel/manageruser/controller/ManagerUserController.java';
+const failedEditMuts = diffContext.extractToolFileMutations(
+  'edit',
+  { path: ctrlPath, before: 'old line', after: 'UserAccountRole.keepExistingAccountRoles();' },
+  'No match found for the specified text.\n\nDid you mean:\n...',
+  false
+);
+assert.equal(failedEditMuts.length, 0, 'Failed edit output must not produce false file mutations');
+
+// Sequential Python shell replacements must chain overlapping snippets into net session diff
+const pyCmd1 = `python -c "from pathlib import Path; p=Path('${ctrlPath}'); b=p.read_bytes(); old=b'if (!rolesBOList.isEmpty()) {\\r\\n    usersFormUpdate.setRoleCode(rolesBOList.get(0).getRoleCode());'; new=b'if (rolesBOList != null && !rolesBOList.isEmpty()) {\\r\\n    RolesBO accountRole = rolesBOList.get(0);\\r\\n    usersFormUpdate.setRoleCode(accountRole.getRoleCode());\\r\\n    UserAccountRole.keep(roleMap, accountRole);'; assert b.count(old)==1; p.write_bytes(b.replace(old,new))"`;
+const pyCmd2 = `python -c "from pathlib import Path; p=Path('${ctrlPath}'); b=p.read_bytes(); old=b'    UserAccountRole.keep(roleMap, accountRole);'; new=b'    roleMap.put(accountRole.getRoleCode(), accountRole.getRoleName());'; assert b.count(old)==1; p.write_bytes(b.replace(old,new))"`;
+diffContext.recordToolMutationsInSession(diffContext.extractToolFileMutations('shell', { command: pyCmd1 }, 'OK', false), false);
+diffContext.recordToolMutationsInSession(diffContext.extractToolFileMutations('shell', { command: pyCmd2 }, 'OK', false), false);
+const ctrlChange = diffContext.getRecordedFileChange(ctrlPath);
+assert.ok(ctrlChange, 'Python shell replacement on ManagerUserController.java must be tracked');
+assert.ok(ctrlChange.diff.includes('roleMap.put(accountRole.getRoleCode(), accountRole.getRoleName());'), 'Chained Python edit must reflect final code');
+assert.ok(!ctrlChange.diff.includes('UserAccountRole.keep'), 'Intermediate overwritten Python snippet must be merged out');
+
+// Scratch file created in session and later deleted via Path(...).unlink() must cancel out
+const helperMap = new Map();
+const scratchPath = 'update-temp-helper.py';
+const scratchWrite = diffContext.extractToolFileMutations('write', {
+  path: scratchPath,
+  content: "target = 'src/Foo.java'\nupdate(target, 'int a = 1;', 'int a = 2;')\n"
+}, 'Created update-temp-helper.py', false, helperMap);
+diffContext.recordToolMutationsInSession(scratchWrite, false);
+assert.ok(diffContext.getRecordedFileChange(scratchPath), 'Scratch script recorded when created');
+const helperRunAndDel = diffContext.extractToolFileMutations('shell', {
+  command: `python ${scratchPath} & python -c "from pathlib import Path; Path('${scratchPath}').unlink()"`
+}, 'Updated src/Foo.java', false, helperMap);
+diffContext.recordToolMutationsInSession(helperRunAndDel, false);
+assert.equal(diffContext.getRecordedFileChange(scratchPath), null, 'Deleted scratch file created in same session must cancel out');
+assert.ok(diffContext.getRecordedFileChange('src/Foo.java')?.diff.includes('+int a = 2;'), 'Helper python script target mutation must be tracked');
+
+// Diff Viewer CSS & Session-only API checks
+const diffCssBlock = html.match(/\.diff-viewer-table\s*\{[\s\S]*?\.diff-viewer-table\s+td\.diff-code\s*\{[\s\S]*?\}/);
+assert.ok(diffCssBlock, 'Diff viewer CSS block must exist');
+assert.ok(!/\.diff-row-add\s+td\.diff-code/.test(diffCssBlock[0]), 'td.diff-code must not use green text on added rows');
+assert.ok(!/\.diff-row-del\s+td\.diff-code/.test(diffCssBlock[0]), 'td.diff-code must not use red text on deleted rows');
+assert.ok(/td\.diff-code\s*\{[\s\S]*?color:\s*var\(--text-main\)/.test(diffCssBlock[0]), 'td.diff-code must keep var(--text-main) contrast across themes');
+assert.ok(diffCssBlock[0].includes('[data-theme="warm"] .diff-viewer-table tr.diff-row-add'), 'Warm theme green row background rule must exist');
+assert.ok(diffCssBlock[0].includes('[data-theme="warm"] .diff-viewer-table tr.diff-row-del'), 'Warm theme red row background rule must exist');
+assert.ok(!source.includes('/api/file-diff?'), 'Frontend must not query Git /api/file-diff anymore');
+assert.ok(source.includes('/api/session-file-diff?sessionId='), 'Frontend must query session-scoped /api/session-file-diff');
+assert.ok(html.includes('± Thay đổi trong phiên'), 'Diff modal tab must clarify session-scoped changes');
+
+// --- Gemini 3.8 Flash adaptive model switch & legacy -high migration ---
+const serverSrc = fs.readFileSync(require('node:path').join(__dirname, 'server.js'), 'utf8');
+assert.ok(html.includes('id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash"'), 'Frontend MODELS must use adaptive ag/gemini-3.8-flash');
+assert.ok(serverSrc.includes('id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash"'), 'Backend AVAILABLE_MODELS must use adaptive ag/gemini-3.8-flash');
+assert.ok(serverSrc.includes('normalizeModelId(data.model)'), 'Backend /api/chat must normalize legacy ag/gemini-3.8-flash-high');
+
+const modelsMatch = html.match(/const MODELS = \[[\s\S]*?\];/);
+const modelHelpersMatch = html.match(/const sessionModelsMap = new Map\(\);[\s\S]*?function applySessionModelSelection\(modelId\) \{[\s\S]*?\n    \}/);
+assert.ok(modelsMatch && modelHelpersMatch, 'Model helpers must exist in index.html');
+const mockStorage = new Map([['ai_hub_session_model:20261102_4', 'ag/gemini-3.8-flash-high']]);
+const modelCtx = {
+  currentSelectedModel: 'cx/gpt-6.1-sol',
+  allSessionsCache: [{ id: '20261102_4', name: 'cai-trang-chu', model: 'ag/gemini-3.8-flash-high' }],
+  localStorage: {
+    getItem(k) { return mockStorage.has(k) ? mockStorage.get(k) : null; },
+    setItem(k, v) { mockStorage.set(k, String(v)); }
+  },
+  renderModelSelector() {}
+};
+vm.createContext(modelCtx);
+vm.runInContext(`${modelsMatch[0]}\n${modelHelpersMatch[0]}`, modelCtx);
+assert.equal(modelCtx.normalizeModelId('ag/gemini-3.8-flash-high'), 'ag/gemini-3.8-flash');
+assert.equal(modelCtx.normalizeModelId('ag/gemini-4-argon-high'), 'ag/gemini-4-argon-high');
+assert.equal(modelCtx.resolveModelMeta('ag/gemini-3.8-flash-high').id, 'ag/gemini-3.8-flash');
+assert.equal(modelCtx.getSessionModel('20261102_4'), 'ag/gemini-3.8-flash');
+assert.equal(mockStorage.get('ai_hub_session_model:20261102_4'), 'ag/gemini-3.8-flash');
+modelCtx.applySessionModelSelection('ag/gemini-3.8-flash-high');
+assert.equal(modelCtx.currentSelectedModel, 'ag/gemini-3.8-flash');
+
+console.log('Chat UI: 177 regression checks passed');

@@ -11,9 +11,10 @@ call "%~dp0start-web.bat" --export-env
 REM Che do gon gang cho Goose (An log doc file va lenh shell dai dong)
 set GOOSE_CLI_MIN_PRIORITY=0.8
 set GOOSE_SHOW_FULL_OUTPUT=false
+set GOOSE_CONTEXT_LIMIT=400000
 
 REM Chi thi he thong (System Prompt) toan cuc cho Goose Agent
-set SYSTEM_INSTRUCTION=QUY TAC BAT BUOC: (1) Truoc khi goi lenh shell quan trong (build, deploy, sua file lon, tac dong he thong), BAT BUOC viet 1 cau sieu ngan (duoi 15 tu) thong bao muc dich truoc khi goi tool. (2) Voi thao tac doc nhe (ls, cat, grep nho), goi thang lenh va gop thao tac de toi uu toc do. (3) QUY CHUAN TOI UU TAI NGUYEN: Khong doc toan bo file lon khi chi sua doan nho; luu y CRLF tren Windows; tranh execSync/N+1 query; doc SQLite che do readOnly va dong trong finally; dung TTL cache; chong goi trung (coalesce) va don sach EventSource/timer tren UI; luon chay node --check hoac test sau khi sua code. (4) Tu dong doc .goosehints tai workspace va cap nhat bai hoc moi vao D:\ai-hub\lessons.md.
+set SYSTEM_INSTRUCTION=QUY TAC BAT BUOC: (1) Truoc khi goi lenh shell quan trong (build, deploy, sua file lon, tac dong he thong), BAT BUOC viet 1 cau sieu ngan (duoi 15 tu) thong bao muc dich truoc khi goi tool. (2) Voi thao tac doc nhe (ls, cat, grep nho), goi thang lenh va gop thao tac de toi uu toc do. (3) QUY CHUAN TOI UU TAI NGUYEN: Khong doc toan bo file lon (>500 dong) khi chi sua doan nho, CAM dung [System.IO.File]::ReadAllText(...) ^| Select-String gay tran context, hay dung Select-String -Path hoac doc theo khoang dong; luu y CRLF tren Windows; tranh execSync/N+1 query; doc SQLite che do readOnly va dong trong finally; dung TTL cache; chong goi trung (coalesce) va don sach EventSource/timer tren UI; luon chay node --check hoac test sau khi sua code. (4) Tu dong doc .goosehints tai workspace va cap nhat bai hoc moi vao D:\ai-hub\lessons.md.
 
 :CHECK_DIR
 for %%I in ("%CD%") do set "WORKSPACE_NAME=%%~nxI"
@@ -52,7 +53,7 @@ echo CHON AGENT & MODEL BAN MUON DUNG:
 echo.
 echo  [1] Claude Code (Anthropic)    - Agent tu hanh dinh nhat (chinh chu Claude)
 echo  [2] Goose + Codex/ChatGPT      - Agent tu hanh qua 9Router (cx/gpt-6.1-sol)
-echo  [3] Goose + Gemini 3.8 Flash   - Agent tu hanh qua 9Router (ag/gemini-3.8-flash-high)
+echo  [3] Goose + Gemini 3.8 Flash   - Agent tu hanh qua 9Router (ag/gemini-3.8-flash)
 echo  [4] Goose + Claude Sonnet      - Agent tu hanh qua 9Router (ag/claude-sonnet-5-5-high)
 echo  [5] Goose + Gemini 4 Argon     - Agent tu hanh qua 9Router (ag/gemini-4-argon-high)
 echo  [6] Aider (Pair Programming)   - Aider truyen thong (--yes-always)
@@ -89,7 +90,7 @@ goto END
 
 :RUN_GOOSE_GEMINI
 set GOOSE_PROVIDER=openai
-set GOOSE_MODEL=ag/gemini-3.8-flash-high
+set GOOSE_MODEL=ag/gemini-3.8-flash
 echo.
 echo Dang khoi chay Goose (Gemini Flash 9Router) tai: %CD%
 echo --------------------------------------------------------

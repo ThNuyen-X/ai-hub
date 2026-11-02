@@ -22,5 +22,13 @@ assert.ok(batSrc.includes(".goosehints"));
 const ps1Src = fs.readFileSync(path.resolve(__dirname, "..", "run-ai.ps1"), "utf8");
 assert.ok(ps1Src.includes("lessons.md"));
 assert.ok(ps1Src.includes(".goosehints"));
+assert.ok(promptForAiHub.includes("Select-String -Path"));
+assert.ok(promptForAiHub.includes("git grep -n -I"));
+assert.ok(promptForAiHub.includes("KHÔNG cài `rg`"));
+assert.ok(promptForAiHub.includes("3-6 lượt gọi tool"));
+assert.ok(promptForAiHub.includes("trích xuất và ghép trực tiếp trên đĩa"));
+assert.ok(serverSrc.includes('GOOSE_CONTEXT_LIMIT: process.env.GOOSE_CONTEXT_LIMIT || "400000"'));
+assert.ok(batSrc.includes("GOOSE_CONTEXT_LIMIT=400000"));
+assert.ok(ps1Src.includes('$env:GOOSE_CONTEXT_LIMIT = "400000"'));
 
-console.log("System instruction & memory: 10 checks passed");
+console.log("System instruction & memory: 18 checks passed");

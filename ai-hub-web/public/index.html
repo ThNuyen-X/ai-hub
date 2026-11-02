@@ -891,7 +891,7 @@
       border-color: transparent !important;
     }
 
-    /* Unified Diff Viewer (Green = Added, Red = Deleted) */
+    /* Unified Diff Viewer (Green/Red row backgrounds with high-contrast normal code text) */
     .diff-viewer-table {
       width: 100%;
       border-collapse: collapse;
@@ -900,39 +900,44 @@
       line-height: 1.55;
     }
     .diff-viewer-table tr.diff-row-add {
-      background: rgba(16, 185, 129, 0.15);
+      background: rgba(16, 185, 129, 0.18);
     }
-    .diff-viewer-table tr.diff-row-add td.diff-code,
     .diff-viewer-table tr.diff-row-add td.diff-sign {
       color: #34d399;
     }
-    html[data-theme="light"] .diff-viewer-table tr.diff-row-add {
-      background: rgba(16, 185, 129, 0.14);
+    [data-theme="light"] .diff-viewer-table tr.diff-row-add {
+      background: rgba(16, 185, 129, 0.17);
     }
-    html[data-theme="light"] .diff-viewer-table tr.diff-row-add td.diff-code,
-    html[data-theme="light"] .diff-viewer-table tr.diff-row-add td.diff-sign {
+    [data-theme="warm"] .diff-viewer-table tr.diff-row-add {
+      background: rgba(16, 185, 129, 0.21);
+    }
+    [data-theme="light"] .diff-viewer-table tr.diff-row-add td.diff-sign,
+    [data-theme="warm"] .diff-viewer-table tr.diff-row-add td.diff-sign {
       color: #047857;
     }
     .diff-viewer-table tr.diff-row-del {
-      background: rgba(244, 63, 94, 0.16);
+      background: rgba(244, 63, 94, 0.19);
     }
-    .diff-viewer-table tr.diff-row-del td.diff-code,
     .diff-viewer-table tr.diff-row-del td.diff-sign {
       color: #fb7185;
     }
-    html[data-theme="light"] .diff-viewer-table tr.diff-row-del {
-      background: rgba(244, 63, 94, 0.13);
+    [data-theme="light"] .diff-viewer-table tr.diff-row-del {
+      background: rgba(244, 63, 94, 0.16);
     }
-    html[data-theme="light"] .diff-viewer-table tr.diff-row-del td.diff-code,
-    html[data-theme="light"] .diff-viewer-table tr.diff-row-del td.diff-sign {
+    [data-theme="warm"] .diff-viewer-table tr.diff-row-del {
+      background: rgba(244, 63, 94, 0.19);
+    }
+    [data-theme="light"] .diff-viewer-table tr.diff-row-del td.diff-sign,
+    [data-theme="warm"] .diff-viewer-table tr.diff-row-del td.diff-sign {
       color: #be123c;
     }
     .diff-viewer-table tr.diff-row-hunk {
-      background: rgba(59, 130, 246, 0.11);
+      background: rgba(59, 130, 246, 0.12);
       color: #60a5fa;
     }
-    html[data-theme="light"] .diff-viewer-table tr.diff-row-hunk {
-      background: rgba(59, 130, 246, 0.10);
+    [data-theme="light"] .diff-viewer-table tr.diff-row-hunk,
+    [data-theme="warm"] .diff-viewer-table tr.diff-row-hunk {
+      background: rgba(37, 99, 235, 0.11);
       color: #1d4ed8;
     }
     .diff-viewer-table td.diff-ln {
@@ -2447,7 +2452,7 @@
         <div class="flex items-center gap-1.5">
           <button id="fileTabDiffBtn" type="button" onclick="switchFilePreviewTab('diff')"
                   class="px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border">
-            <span>± Thay đổi (Xanh/Đỏ)</span>
+            <span>± Thay đổi trong phiên</span>
           </button>
           <button id="fileTabFullBtn" type="button" onclick="switchFilePreviewTab('full')"
                   class="px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border">
@@ -2465,7 +2470,7 @@
         <!-- Diff View -->
         <div id="filePreviewDiffContainer" class="hidden w-full">
           <div id="filePreviewDiffEmpty" class="hidden p-8 text-center text-xs" style="color: var(--text-sub);">
-            File này hiện không có dòng thêm/xóa nào so với bản gốc.
+            File này không có thay đổi nào trong phiên làm việc hiện tại.
           </div>
           <table id="filePreviewDiffTable" class="diff-viewer-table">
             <tbody id="filePreviewDiffTableBody"></tbody>
@@ -2616,7 +2621,7 @@
     // MODELS DEFINITIONS
     const MODELS = [
       { id: "cx/gpt-6.1-sol", name: "Codex", full: "cx/gpt-6.1-sol", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "ag/gemini-3.8-flash-high", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash-high", provider: "Google", tag: "Tốc độ cao, ngữ cảnh lớn", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
       { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
       { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" }
     ];
@@ -4200,8 +4205,164 @@
       return { rows, added, removed };
     }
 
-    function extractToolFileMutations(toolName, args, outputText, isError) {
+    function isFailedToolOutput(toolName, outputText) {
+      if (!outputText || typeof outputText !== 'string') return false;
+      const trimmed = outputText.trim();
+      if (!trimmed) return false;
+      const lower = String(toolName || '').toLowerCase();
+      if (/^(?:Error:|Failed to |No match found for |Could not find |File not found|ENOENT:|EACCES:|EPERM:|Permission denied)/i.test(trimmed)) {
+        return true;
+      }
+      if (lower.includes('edit') || lower.includes('replace')) {
+        if (/^No match found\b|\bnot found in file\b|\bmultiple matches found\b/i.test(trimmed)) {
+          return true;
+        }
+      }
+      if (lower.includes('shell') || lower.includes('cmd') || lower.includes('bash')) {
+        if (/Traceback \(most recent call last\):|\bAssertionError\b|\bCommand exited with code [1-9]\d*\b/.test(trimmed)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function unescapePythonLiteral(raw) {
+      if (typeof raw !== 'string') return '';
+      return raw
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '')
+        .replace(/\\t/g, '\t')
+        .replace(/\\'/g, "'")
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\');
+    }
+
+    function extractHelperPythonScriptMutations(scriptText) {
+      if (!scriptText || typeof scriptText !== 'string') return [];
+      const vars = new Map();
+      const lines = scriptText.replace(/\r\n/g, '\n').split('\n');
+      for (const ln of lines) {
+        const assignLit = ln.match(/^\s*([a-zA-Z_]\w*)\s*=\s*['"]([^'"]+)['"]\s*$/);
+        if (assignLit) {
+          vars.set(assignLit[1], assignLit[2]);
+          continue;
+        }
+        const assignConcat = ln.match(/^\s*([a-zA-Z_]\w*)\s*=\s*([a-zA-Z_]\w*)\s*\+\s*['"]([^'"]+)['"]\s*$/);
+        if (assignConcat && vars.has(assignConcat[2])) {
+          vars.set(assignConcat[1], vars.get(assignConcat[2]) + assignConcat[3]);
+        }
+      }
+
+      const out = [];
+      const resolvePathExpr = (expr) => {
+        const t = String(expr || '').trim();
+        const lit = t.match(/^['"]([^'"]+)['"]$/);
+        if (lit) return lit[1];
+        if (vars.has(t)) return vars.get(t);
+        const cat = t.match(/^([a-zA-Z_]\w*)\s*\+\s*['"]([^'"]+)['"]$/);
+        if (cat && vars.has(cat[1])) return vars.get(cat[1]) + cat[2];
+        return '';
+      };
+
+      // Track variable reassignments right before update(...) calls
+      const stmtRe = /(?:^|\n)\s*([a-zA-Z_]\w*)\s*=\s*(?:([a-zA-Z_]\w*)\s*\+\s*)?['"]([^'"]+)['"]\s*(?=\n)|update\(\s*([^,]+?)\s*,\s*(?:'''([\s\S]*?)'''|"""([\s\S]*?)"""|'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")\s*,\s*(?:'''([\s\S]*?)'''|"""([\s\S]*?)"""|'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")\s*\)/g;
+      const liveVars = new Map(vars);
+      let m;
+      while ((m = stmtRe.exec(scriptText)) !== null) {
+        if (m[1]) {
+          const prefix = m[2] ? (liveVars.get(m[2]) || '') : '';
+          liveVars.set(m[1], prefix + m[3]);
+          continue;
+        }
+        const rawTarget = String(m[4] || '').trim();
+        let resolvedPath = '';
+        const lit = rawTarget.match(/^['"]([^'"]+)['"]$/);
+        if (lit) resolvedPath = lit[1];
+        else if (liveVars.has(rawTarget)) resolvedPath = liveVars.get(rawTarget);
+        else {
+          const cat = rawTarget.match(/^([a-zA-Z_]\w*)\s*\+\s*['"]([^'"]+)['"]$/);
+          if (cat && liveVars.has(cat[1])) resolvedPath = liveVars.get(cat[1]) + cat[2];
+          else resolvedPath = resolvePathExpr(rawTarget);
+        }
+        if (!resolvedPath) continue;
+        const oldRaw = m[5] ?? m[6] ?? (m[7] !== undefined ? unescapePythonLiteral(m[7]) : (m[8] !== undefined ? unescapePythonLiteral(m[8]) : ''));
+        const newRaw = m[9] ?? m[10] ?? (m[11] !== undefined ? unescapePythonLiteral(m[11]) : (m[12] !== undefined ? unescapePythonLiteral(m[12]) : ''));
+        const d = computeUnifiedLineDiff(oldRaw, newRaw, resolvedPath);
+        if (d.diff) {
+          out.push({
+            path: resolvedPath,
+            status: 'modified',
+            added: d.added,
+            removed: d.removed,
+            diff: d.diff,
+            beforeSnippet: oldRaw,
+            afterSnippet: newRaw
+          });
+        }
+      }
+      return out;
+    }
+
+    function extractShellPythonFileMutations(cmd, helperScriptsMap) {
+      if (!cmd || typeof cmd !== 'string') return [];
+      const out = [];
+
+      // 1. Inline python -c Path('...').read_bytes/read_text ... old=... new=... .replace(old, new)
+      if (/\bpython(?:3)?\b/i.test(cmd) && /\.replace\s*\(\s*old\s*,\s*new/.test(cmd) && /\.write_(?:bytes|text)\s*\(/.test(cmd)) {
+        const pathMatch = cmd.match(/Path\(\s*['"]([^'"]+)['"]\s*\)/);
+        const oldMatch = cmd.match(/\bold\s*=\s*b?(?:'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")/);
+        const newMatch = cmd.match(/\bnew\s*=\s*b?(?:'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")/);
+        if (pathMatch && pathMatch[1] && oldMatch && newMatch) {
+          const target = pathMatch[1].trim();
+          const oldStr = unescapePythonLiteral(oldMatch[1] ?? oldMatch[2] ?? '');
+          const newStr = unescapePythonLiteral(newMatch[1] ?? newMatch[2] ?? '');
+          const d = computeUnifiedLineDiff(oldStr, newStr, target);
+          if (d.diff) {
+            out.push({
+              path: target,
+              status: 'modified',
+              added: d.added,
+              removed: d.removed,
+              diff: d.diff,
+              beforeSnippet: oldStr,
+              afterSnippet: newStr
+            });
+          }
+        }
+      }
+
+      // 2. Helper python script executed in shell (e.g. python update-vneid-requests.py)
+      if (helperScriptsMap && helperScriptsMap.size > 0 && /\bpython(?:3)?\s+/i.test(cmd)) {
+        const runRe = /\bpython(?:3)?\s+["']?([^"'\s;&|]+\.py)["']?/gi;
+        let rm;
+        while ((rm = runRe.exec(cmd)) !== null) {
+          const scriptPath = rm[1].trim();
+          const scriptKey = normalizeTrackPathKey(scriptPath);
+          const baseKey = normalizeTrackPathKey(scriptPath.split(/[\\\/]/).pop() || '');
+          const scriptBody = helperScriptsMap.get(scriptKey) || helperScriptsMap.get(baseKey);
+          if (scriptBody) {
+            out.push(...extractHelperPythonScriptMutations(scriptBody));
+          }
+        }
+      }
+
+      // 3. Python Path('...').unlink() or os.remove('...') / os.unlink('...')
+      const pyDelRe = /(?:Path\(\s*['"]([^'"]+)['"]\s*\)\.unlink\s*\(|os\.(?:remove|unlink)\s*\(\s*['"]([^'"]+)['"]\s*\))/g;
+      let dm;
+      while ((dm = pyDelRe.exec(cmd)) !== null) {
+        const delTarget = (dm[1] || dm[2] || '').trim();
+        if (delTarget) {
+          out.push({ path: delTarget, status: 'deleted', added: 0, removed: 0, diff: '' });
+        }
+      }
+
+      return out;
+    }
+
+    function extractToolFileMutations(toolName, args, outputText, isError, helperScriptsMap = null) {
       if (isError || !args) return [];
+      if (isFailedToolOutput(toolName, outputText)) return [];
       let parsedArgs = args;
       if (typeof args === 'string') {
         try { parsedArgs = JSON.parse(args); } catch (_) { parsedArgs = null; }
@@ -4216,22 +4377,36 @@
       if (targetPath && (lower.includes('edit') || lower.includes('replace') || ('before' in parsedArgs && 'after' in parsedArgs) || ('old_string' in parsedArgs && 'new_string' in parsedArgs))) {
         if (Array.isArray(parsedArgs.edits)) {
           const chunks = [];
+          const editSnippets = [];
           let totalAdd = 0, totalRem = 0;
           parsedArgs.edits.forEach(ed => {
             const bef = ed.before ?? ed.old_string ?? ed.oldText ?? '';
             const aft = ed.after ?? ed.new_string ?? ed.newText ?? '';
             const d = computeUnifiedLineDiff(bef, aft, targetPath);
-            if (d.diff) { chunks.push(d.diff); totalAdd += d.added; totalRem += d.removed; }
+            if (d.diff) {
+              chunks.push(d.diff);
+              totalAdd += d.added;
+              totalRem += d.removed;
+              editSnippets.push({ before: String(bef).replace(/\r\n/g, '\n'), after: String(aft).replace(/\r\n/g, '\n') });
+            }
           });
           if (chunks.length > 0) {
-            mutations.push({ path: targetPath, status: 'modified', added: totalAdd, removed: totalRem, diff: chunks.join('\n') });
+            mutations.push({ path: targetPath, status: 'modified', added: totalAdd, removed: totalRem, diff: chunks.join('\n'), snippets: editSnippets });
           }
         } else {
           const bef = parsedArgs.before ?? parsedArgs.old_string ?? parsedArgs.old_str ?? parsedArgs.search ?? '';
           const aft = parsedArgs.after ?? parsedArgs.new_string ?? parsedArgs.new_str ?? parsedArgs.replace ?? '';
           const d = computeUnifiedLineDiff(bef, aft, targetPath);
-          const status = (!bef && aft) ? 'added' : ((bef && !aft) ? 'modified' : 'modified');
-          mutations.push({ path: targetPath, status, added: d.added, removed: d.removed, diff: d.diff });
+          const status = (!bef && aft) ? 'added' : 'modified';
+          mutations.push({
+            path: targetPath,
+            status,
+            added: d.added,
+            removed: d.removed,
+            diff: d.diff,
+            beforeSnippet: bef,
+            afterSnippet: aft
+          });
         }
         return mutations;
       }
@@ -4239,16 +4414,23 @@
       // 2. write / create_file
       if (targetPath && (lower === 'write' || lower.endsWith('__write') || lower.endsWith(':write') || lower.includes('write_file') || lower.includes('create_file') || ('content' in parsedArgs && !lower.includes('read')))) {
         const content = String(parsedArgs.content ?? '');
+        if (helperScriptsMap && targetPath.toLowerCase().endsWith('.py')) {
+          helperScriptsMap.set(normalizeTrackPathKey(targetPath), content);
+          helperScriptsMap.set(normalizeTrackPathKey(targetPath.split(/[\\\/]/).pop() || ''), content);
+        }
         const existing = getRecordedFileChange(targetPath);
-        const isOverwrite = /overwrit|updated/i.test(String(outputText || '')) || Boolean(existing);
-        const d = computeUnifiedLineDiff('', content, targetPath);
+        const isOverwrite = /overwrit|updated/i.test(String(outputText || '')) || Boolean(existing && !existing.createdInSession);
+        const baseText = (existing && existing.createdInSession) ? '' : '';
+        const d = computeUnifiedLineDiff(baseText, content, targetPath);
         mutations.push({
           path: targetPath,
-          status: isOverwrite ? 'modified' : 'added',
+          status: (existing && existing.createdInSession) ? 'added' : (isOverwrite ? 'modified' : 'added'),
           added: d.added,
           removed: 0,
           diff: d.diff,
-          fullContent: content
+          fullContent: content,
+          isFullWrite: true,
+          createdInSession: existing ? Boolean(existing.createdInSession) : !isOverwrite
         });
         return mutations;
       }
@@ -4264,18 +4446,22 @@
           if (!p) return;
           const parsed = parseUnifiedDiffToRows(blk);
           const st = m1 ? (m1[1] === 'Add' ? 'added' : m1[1] === 'Delete' ? 'deleted' : 'modified') : 'modified';
-          mutations.push({ path: p, status: st, added: parsed.added, removed: parsed.removed, diff: blk });
+          mutations.push({ path: p, status: st, added: parsed.added, removed: parsed.removed, diff: blk, createdInSession: st === 'added' });
         });
         return mutations;
       }
 
-      // 4. delete / remove file tool or shell delete command
+      // 4. delete / remove file tool or shell command (including Python unlink / replace scripts)
       if (targetPath && (lower.includes('delete') || lower.includes('remove') || lower.includes('unlink'))) {
         mutations.push({ path: targetPath, status: 'deleted', added: 0, removed: 0, diff: '' });
         return mutations;
       }
       if ((lower.includes('shell') || lower.includes('cmd') || lower.includes('bash')) && typeof parsedArgs.command === 'string') {
         const cmd = parsedArgs.command.trim();
+        const pyMuts = extractShellPythonFileMutations(cmd, helperScriptsMap);
+        if (pyMuts.length > 0) {
+          mutations.push(...pyMuts);
+        }
         const delMatch = cmd.match(/(?:^|[;&|]\s*)(?:Remove-Item|del|erase|rm|git\s+rm)\s+(?:(?:-[a-zA-Z\-]+|\/[a-zA-Z]{1,3})\s+)*["']?([^"';&|\r\n]+?)["']?(?:\s|$)/i);
         if (delMatch && delMatch[1] && !delMatch[1].includes('*')) {
           const cand = delMatch[1].trim();
@@ -4288,31 +4474,342 @@
       return mutations;
     }
 
-    function recordToolMutationsInSession(mutations) {
+    let _pendingFileDiffSyncSet = new Set();
+    let _syncedFileDiffKeys = new Set();
+    let _fileDiffSyncTimer = null;
+    let _sessionHistoryMutationsSeeded = false;
+    let _sessionHelperScriptsMap = new Map();
+    let _toolCardMutationsByKey = new Map();
+
+    function resetSessionFileChangeTracking() {
+      sessionFileChanges.clear();
+      _pendingFileDiffSyncSet.clear();
+      _syncedFileDiffKeys.clear();
+      _sessionHistoryMutationsSeeded = false;
+      _sessionHelperScriptsMap.clear();
+      _toolCardMutationsByKey.clear();
+      if (_fileDiffSyncTimer) {
+        clearTimeout(_fileDiffSyncTimer);
+        _fileDiffSyncTimer = null;
+      }
+    }
+
+    function isSameTrackedFilePath(pathA, pathB) {
+      const ka = normalizeTrackPathKey(pathA);
+      const kb = normalizeTrackPathKey(pathB);
+      if (!ka || !kb) return false;
+      if (ka === kb) return true;
+      const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
+      const wsKey = ws ? normalizeTrackPathKey(ws.replace(/[\\\/]+$/, '')) : '';
+      const fullA = (wsKey && !/^[a-zA-Z]:\//.test(ka) && !ka.startsWith('/')) ? (wsKey + '/' + ka.replace(/^\.\//, '')) : ka;
+      const fullB = (wsKey && !/^[a-zA-Z]:\//.test(kb) && !kb.startsWith('/')) ? (wsKey + '/' + kb.replace(/^\.\//, '')) : kb;
+      if (fullA === fullB) return true;
+      if ((ka.includes('/') && fullB.endsWith('/' + ka)) || (kb.includes('/') && fullA.endsWith('/' + kb))) return true;
+      return false;
+    }
+
+    function buildToolFileStatusPillHtml(status) {
+      if (status === 'added') {
+        return '<span class="file-diff-status-pill px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 shrink-0">MỚI</span>';
+      }
+      if (status === 'deleted') {
+        return '<span class="file-diff-status-pill px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/25 shrink-0">XÓA</span>';
+      }
+      return '<span class="file-diff-status-pill px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25 shrink-0">SỬA</span>';
+    }
+
+    function buildToolFileStatsHtml(status, added, removed) {
+      if (status === 'deleted') {
+        return '<span class="file-diff-stats text-rose-400 font-bold text-[11px] shrink-0">Đã xóa file</span>';
+      }
+      return `<span class="file-diff-stats inline-flex items-center gap-1.5 font-bold text-[11px] shrink-0"><span class="text-emerald-400">+${added || 0}</span><span class="text-rose-400">-${removed || 0}</span></span>`;
+    }
+
+    function applyServerDiffToSessionAndDOM(rawPath, diffRes) {
+      const isSessionDiff = Boolean(diffRes && (diffRes.inSession || diffRes.source === 'session'));
+      if (!rawPath || !diffRes || !diffRes.success || !isSessionDiff || !diffRes.hasChanges) return;
+      if (!diffRes.status || diffRes.status === 'unchanged') return;
+
+      const key = normalizeTrackPathKey(rawPath);
+      const existing = getRecordedFileChange(rawPath) || {};
+      const updated = {
+        ...existing,
+        path: existing.path || rawPath,
+        status: diffRes.status,
+        added: typeof diffRes.added === 'number' ? diffRes.added : (existing.added || 0),
+        removed: typeof diffRes.removed === 'number' ? diffRes.removed : (existing.removed || 0),
+        diff: (diffRes.diff && diffRes.diff.trim()) ? diffRes.diff : (existing.diff || ''),
+        serverSynced: true
+      };
+
+      if (key) {
+        sessionFileChanges.set(key, updated);
+        _syncedFileDiffKeys.add(key);
+      }
+      if (diffRes.path) {
+        const resolvedKey = normalizeTrackPathKey(diffRes.path);
+        if (resolvedKey) {
+          sessionFileChanges.set(resolvedKey, updated);
+          _syncedFileDiffKeys.add(resolvedKey);
+        }
+      }
+      const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
+      if (ws && !/^[a-zA-Z]:[\\\/]/.test(rawPath) && !rawPath.startsWith('/')) {
+        const absKey = normalizeTrackPathKey(ws.replace(/[\\\/]+$/, '') + '/' + rawPath.replace(/^\.\/+|^\.\\+/, ''));
+        if (absKey) {
+          sessionFileChanges.set(absKey, updated);
+          _syncedFileDiffKeys.add(absKey);
+        }
+      }
+
+      if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+
+      // Update full-write tool card rows (which lacked original 'before' content in DB)
+      const diffRows = document.querySelectorAll('[data-file-diff-row="1"]');
+      diffRows.forEach(row => {
+        if (row.getAttribute('data-is-full-write') !== '1') return;
+        const rowPath = row.getAttribute('data-path') || '';
+        if (!isSameTrackedFilePath(rowPath, rawPath) && (!diffRes.path || !isSameTrackedFilePath(rowPath, diffRes.path))) return;
+        const pillEl = row.querySelector('.file-diff-status-pill');
+        if (pillEl) pillEl.outerHTML = buildToolFileStatusPillHtml(updated.status);
+        const statsEl = row.querySelector('.file-diff-stats');
+        if (statsEl) statsEl.outerHTML = buildToolFileStatsHtml(updated.status, updated.added, updated.removed);
+      });
+
+      // Update inline path badges in assistant messages
+      const badges = document.querySelectorAll('.local-path-badge');
+      badges.forEach(badge => {
+        const badgePath = badge.getAttribute('data-path') || '';
+        if (!isSameTrackedFilePath(badgePath, rawPath) && (!diffRes.path || !isSameTrackedFilePath(badgePath, diffRes.path))) return;
+        const iconEl = badge.querySelector('.path-icon');
+        if (iconEl) {
+          iconEl.textContent = updated.status === 'deleted' ? '🗑️' : updated.status === 'added' ? '🟢' : '📝';
+        }
+        const diffPillEl = badge.querySelector('.path-diff-pill');
+        if (diffPillEl) {
+          diffPillEl.className = updated.status === 'deleted'
+            ? 'path-diff-pill text-[10px] font-bold text-rose-400'
+            : 'path-diff-pill text-[10px] font-bold';
+          diffPillEl.innerHTML = updated.status === 'deleted'
+            ? 'ĐÃ XÓA'
+            : `<span class="text-emerald-400">+${updated.added || 0}</span> <span class="text-rose-400">-${updated.removed || 0}</span>`;
+        }
+      });
+    }
+
+    function scheduleFileDiffSync(rawPath) {
+      if (!rawPath || typeof fetch !== 'function' || typeof document === 'undefined') return;
+      if (!document.getElementById || !document.getElementById('chatFeed')) return;
+      const key = normalizeTrackPathKey(rawPath);
+      if (!key || _syncedFileDiffKeys.has(key)) return;
+      _pendingFileDiffSyncSet.add(rawPath.trim());
+      if (!_fileDiffSyncTimer) {
+        _fileDiffSyncTimer = setTimeout(flushPendingFileDiffSync, 80);
+      }
+    }
+
+    async function flushPendingFileDiffSync() {
+      _fileDiffSyncTimer = null;
+      if (_pendingFileDiffSyncSet.size === 0 || typeof fetch !== 'function') return;
+      const pathsToSync = Array.from(_pendingFileDiffSyncSet);
+      _pendingFileDiffSyncSet.clear();
+
+      const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
+      const capturedView = typeof sessionViewVersion !== 'undefined' ? sessionViewVersion : 0;
+
+      const uniquePaths = [];
+      const seenKeys = new Set();
+      for (const p of pathsToSync) {
+        const k = normalizeTrackPathKey(p);
+        if (!k || seenKeys.has(k) || _syncedFileDiffKeys.has(k)) continue;
+        seenKeys.add(k);
+        uniquePaths.push(p);
+      }
+      if (uniquePaths.length === 0) return;
+
+      const sid = (typeof currentSessionId !== 'undefined' && currentSessionId) ? String(currentSessionId).trim() : '';
+      if (!sid) return;
+
+      await Promise.all(uniquePaths.map(async (rawPath) => {
+        const k = normalizeTrackPathKey(rawPath);
+        try {
+          const res = await fetch(`/api/session-file-diff?sessionId=${encodeURIComponent(sid)}&path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`);
+          if (!res.ok) return;
+          const diffRes = await res.json();
+          if (typeof sessionViewVersion !== 'undefined' && sessionViewVersion !== capturedView) return;
+          if (k) _syncedFileDiffKeys.add(k);
+          if (diffRes && diffRes.success && diffRes.inSession && diffRes.hasChanges) {
+            applyServerDiffToSessionAndDOM(rawPath, diffRes);
+          }
+        } catch (_) {}
+      }));
+    }
+
+    function applySessionFileChangesBatch(filesList) {
+      if (!Array.isArray(filesList) || filesList.length === 0) return;
+      for (const entry of filesList) {
+        if (!entry || (!entry.path && !entry.relPath)) continue;
+        applyServerDiffToSessionAndDOM(entry.relPath || entry.path, {
+          ...entry,
+          success: true,
+          inSession: true,
+          source: 'session',
+          hasChanges: entry.status !== 'unchanged'
+        });
+      }
+    }
+
+    function rebuildDiffFromSnippets(snippets, targetPath) {
+      let totalAdd = 0;
+      let totalRem = 0;
+      const chunks = [];
+      snippets.forEach((sn, idx) => {
+        const d = computeUnifiedLineDiff(sn.before, sn.after, targetPath);
+        if (!d.diff) return;
+        totalAdd += d.added;
+        totalRem += d.removed;
+        if (idx === 0) {
+          chunks.push(d.diff);
+        } else {
+          const stripped = d.diff.split('\n').filter(l => !l.startsWith('--- ') && !l.startsWith('+++ ')).join('\n');
+          if (stripped) chunks.push(stripped);
+        }
+      });
+      return { diff: chunks.join('\n'), added: totalAdd, removed: totalRem };
+    }
+
+    function recordToolMutationsInSession(mutations, isLive = false) {
       if (!Array.isArray(mutations) || mutations.length === 0) return;
+      const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
+      const buildAbsKey = (p) => {
+        if (ws && !/^[a-zA-Z]:[\\\/]/.test(p) && !p.startsWith('/')) {
+          return normalizeTrackPathKey(ws.replace(/[\\\/]+$/, '') + '/' + p.replace(/^\.\/+|^\.\\+/, ''));
+        }
+        return '';
+      };
+
       for (const mut of mutations) {
         if (!mut || !mut.path) continue;
         const key = normalizeTrackPathKey(mut.path);
         if (!key) continue;
-        const existing = sessionFileChanges.get(key);
-        if (existing && existing.diff && mut.diff && mut.status === 'modified') {
-          const stripHeader = mut.diff.split('\n').filter(l => !l.startsWith('--- ') && !l.startsWith('+++ ')).join('\n');
-          sessionFileChanges.set(key, {
-            path: mut.path,
-            status: existing.status === 'added' ? 'added' : 'modified',
-            added: (existing.added || 0) + (mut.added || 0),
-            removed: (existing.removed || 0) + (mut.removed || 0),
-            diff: existing.diff + '\n' + stripHeader,
-            fullContent: mut.fullContent ?? existing.fullContent
-          });
+        const absKey = buildAbsKey(mut.path);
+        const existing = sessionFileChanges.get(key) || (absKey ? sessionFileChanges.get(absKey) : null);
+        if (!isLive && existing && existing.serverSynced) {
+          continue;
+        }
+
+        // Scratch file created and later deleted within the same session -> net zero session change
+        if (mut.status === 'deleted' && existing && existing.createdInSession && !existing.serverSynced) {
+          sessionFileChanges.delete(key);
+          if (absKey) sessionFileChanges.delete(absKey);
+          continue;
+        }
+
+        const incomingSnippets = Array.isArray(mut.snippets)
+          ? mut.snippets.map(sn => ({ before: String(sn.before ?? '').replace(/\r\n/g, '\n'), after: String(sn.after ?? '').replace(/\r\n/g, '\n') }))
+          : (mut.beforeSnippet !== undefined && mut.afterSnippet !== undefined
+              ? [{ before: String(mut.beforeSnippet ?? '').replace(/\r\n/g, '\n'), after: String(mut.afterSnippet ?? '').replace(/\r\n/g, '\n') }]
+              : null);
+
+        if (existing && !existing.serverSynced && mut.status === 'modified' && !mut.isFullWrite) {
+          if (Array.isArray(existing.snippets) && existing.snippets.length > 0 && incomingSnippets) {
+            const mergedSnippets = existing.snippets.map(sn => ({ ...sn }));
+            for (const inc of incomingSnippets) {
+              const overlap = inc.before ? mergedSnippets.find(sn => sn.after && sn.after.includes(inc.before)) : null;
+              if (overlap) {
+                overlap.after = overlap.after.replace(inc.before, inc.after);
+              } else {
+                mergedSnippets.push(inc);
+              }
+            }
+            const rebuilt = rebuildDiffFromSnippets(mergedSnippets, existing.path || mut.path);
+            if (!rebuilt.diff) {
+              if (!existing.createdInSession) {
+                sessionFileChanges.delete(key);
+                if (absKey) sessionFileChanges.delete(absKey);
+                continue;
+              }
+            } else {
+              sessionFileChanges.set(key, {
+                ...existing,
+                path: existing.path || mut.path,
+                status: existing.status === 'added' ? 'added' : 'modified',
+                added: rebuilt.added,
+                removed: rebuilt.removed,
+                diff: rebuilt.diff,
+                snippets: mergedSnippets,
+                fullContent: mut.fullContent ?? existing.fullContent
+              });
+            }
+          } else if (existing.diff && mut.diff) {
+            const stripHeader = mut.diff.split('\n').filter(l => !l.startsWith('--- ') && !l.startsWith('+++ ')).join('\n');
+            sessionFileChanges.set(key, {
+              ...existing,
+              path: existing.path || mut.path,
+              status: existing.status === 'added' ? 'added' : 'modified',
+              added: (existing.added || 0) + (mut.added || 0),
+              removed: (existing.removed || 0) + (mut.removed || 0),
+              diff: existing.diff + '\n' + stripHeader,
+              fullContent: mut.fullContent ?? existing.fullContent
+            });
+          } else {
+            sessionFileChanges.set(key, {
+              ...mut,
+              snippets: incomingSnippets || undefined,
+              createdInSession: Boolean(existing.createdInSession),
+              status: existing.status === 'added' ? 'added' : mut.status
+            });
+          }
         } else {
-          sessionFileChanges.set(key, { ...mut });
+          sessionFileChanges.set(key, {
+            ...mut,
+            snippets: incomingSnippets || undefined,
+            createdInSession: existing ? Boolean(existing.createdInSession) : Boolean(mut.createdInSession),
+            status: existing
+              ? (mut.status === 'deleted' ? 'deleted' : (existing.status === 'added' && !existing.serverSynced ? 'added' : 'modified'))
+              : mut.status
+          });
         }
-        const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? currentWorkspace : '';
-        if (ws && !/^[a-zA-Z]:[\\\/]/.test(mut.path) && !mut.path.startsWith('/')) {
-          const absKey = normalizeTrackPathKey(ws.replace(/[\\\/]+$/, '') + '/' + mut.path.replace(/^\.\/+|^\.\\+/, ''));
+
+        if (isLive && typeof _syncedFileDiffKeys !== 'undefined') _syncedFileDiffKeys.delete(key);
+        if (absKey && sessionFileChanges.has(key)) {
           sessionFileChanges.set(absKey, sessionFileChanges.get(key));
+          if (isLive && typeof _syncedFileDiffKeys !== 'undefined') _syncedFileDiffKeys.delete(absKey);
         }
+        if (isLive && typeof scheduleFileDiffSync === 'function') {
+          scheduleFileDiffSync(mut.path);
+        }
+      }
+    }
+
+    function seedSessionFileChangesFromHistory(historyItems, serverSessionChanges) {
+      _sessionHelperScriptsMap.clear();
+      if (Array.isArray(historyItems) && historyItems.length > 0) {
+        for (const item of historyItems) {
+          if (!item || (item.role !== 'assistant' && item.role !== 'internal')) continue;
+          const rawArr = Array.isArray(item.rawContent) ? item.rawContent : [];
+          for (const c of rawArr) {
+            if (!c) continue;
+            if (c.type === 'toolRequest') {
+              const toolName = c.toolCall?.value?.name || c.name || 'tool';
+              const toolArgs = c.toolCall?.value?.arguments || c.arguments || {};
+              const resp = c.id && item.toolResponsesMap ? item.toolResponsesMap.get(c.id) : null;
+              const toolOutput = resp ? resp.output : null;
+              const isErr = resp ? resp.isError : false;
+              const muts = extractToolFileMutations(toolName, toolArgs, toolOutput, isErr, _sessionHelperScriptsMap);
+              if (muts.length > 0) recordToolMutationsInSession(muts, false);
+            } else if (c.tool_use) {
+              const toolName = c.tool_use.name || 'tool';
+              const toolArgs = c.tool_use.input || {};
+              const muts = extractToolFileMutations(toolName, toolArgs, c.tool_use.output || null, false, _sessionHelperScriptsMap);
+              if (muts.length > 0) recordToolMutationsInSession(muts, false);
+            }
+          }
+        }
+      }
+      _sessionHistoryMutationsSeeded = true;
+      if (Array.isArray(serverSessionChanges) && serverSessionChanges.length > 0) {
+        applySessionFileChangesBatch(serverSessionChanges);
       }
     }
 
@@ -4376,14 +4873,14 @@
         ? (recorded.status === 'deleted' ? '🗑️' : recorded.status === 'added' ? '🟢' : '📝')
         : (isDir ? '📁' : '📄');
       const display = escapeHtml(displayText || p);
-      const safePath = escapeHtml(p).replace(/'/g, "\\'");
+      const safePath = escapeJs(p);
       const unverifiedAttr = isVerified ? '' : ' data-unverified="1"';
       const plainAttr = fromPlainText ? ' data-from-plain="1"' : '';
       const diffPill = recorded
         ? (recorded.status === 'deleted'
-            ? '<span class="text-[10px] font-bold text-rose-400">ĐÃ XÓA</span>'
-            : `<span class="text-[10px] font-bold"><span class="text-emerald-400">+${recorded.added || 0}</span> <span class="text-rose-400">-${recorded.removed || 0}</span></span>`)
-        : '';
+            ? '<span class="path-diff-pill text-[10px] font-bold text-rose-400">ĐÃ XÓA</span>'
+            : `<span class="path-diff-pill text-[10px] font-bold"><span class="text-emerald-400">+${recorded.added || 0}</span> <span class="text-rose-400">-${recorded.removed || 0}</span></span>`)
+        : '<span class="path-diff-pill hidden"></span>';
       const openBtnHtml = (!recorded || recorded.status !== 'deleted')
         ? `<button type="button" class="path-btn" onclick="openLocalPath('${safePath}', event)" title="Mở trên PC">🖥️ PC</button>`
         : '';
@@ -4686,8 +5183,23 @@
       return { added: parsed.added, removed: parsed.removed, hasRows: true };
     }
 
+    function resolvePathFromClickEvent(rawPath, e) {
+      if (e) {
+        const fromCurrent = e.currentTarget && typeof e.currentTarget.getAttribute === 'function'
+          ? e.currentTarget.getAttribute('data-path')
+          : null;
+        if (fromCurrent) return fromCurrent;
+        const fromClosest = e.target && typeof e.target.closest === 'function'
+          ? e.target.closest('[data-path]')?.getAttribute('data-path')
+          : null;
+        if (fromClosest) return fromClosest;
+      }
+      return rawPath;
+    }
+
     window.openLocalPath = async function(rawPath, e) {
       if (e) e.stopPropagation();
+      rawPath = resolvePathFromClickEvent(rawPath, e);
       try {
         showToast('Đang mở: ' + rawPath + '...', 'info', 1800);
         const res = await fetch('/api/open-path', {
@@ -4713,14 +5225,21 @@
       }
     };
 
-    window.previewLocalFile = async function(rawPath, e, preferredMode = 'auto') {
+    window.previewLocalFile = async function(rawPath, e, preferredMode = 'auto', cardMutationKey = '') {
       if (e) e.stopPropagation();
+      rawPath = resolvePathFromClickEvent(rawPath, e);
       try {
         const ws = (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '') || '';
-        const recorded = getRecordedFileChange(rawPath);
+        const sid = (typeof currentSessionId !== 'undefined' && currentSessionId) ? String(currentSessionId).trim() : '';
+        const cardMut = (cardMutationKey && _toolCardMutationsByKey.has(cardMutationKey))
+          ? _toolCardMutationsByKey.get(cardMutationKey)
+          : null;
+        const recorded = getRecordedFileChange(rawPath) || cardMut;
 
         const [diffRes, previewRes] = await Promise.all([
-          fetch(`/api/file-diff?path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`).then(r => r.json()).catch(() => null),
+          sid
+            ? fetch(`/api/session-file-diff?sessionId=${encodeURIComponent(sid)}&path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`).then(r => r.json()).catch(() => null)
+            : Promise.resolve(null),
           fetch(`/api/file-preview?path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`).then(r => r.json()).catch(() => null)
         ]);
 
@@ -4730,7 +5249,7 @@
         }
 
         const hasServerPreview = Boolean(previewRes && previewRes.success);
-        const hasServerDiff = Boolean(diffRes && diffRes.success && diffRes.diff && diffRes.diff.trim());
+        const hasServerDiff = Boolean(diffRes && diffRes.success && diffRes.inSession && diffRes.hasChanges && ((diffRes.diff && diffRes.diff.trim()) || diffRes.status === 'deleted'));
         const hasRecordedDiff = Boolean(recorded && (recorded.diff || recorded.status === 'deleted'));
 
         if (!hasServerPreview && !hasServerDiff && !hasRecordedDiff) {
@@ -4760,21 +5279,26 @@
 
         let effectiveDiff = '';
         let effectiveStatus = 'unchanged';
-        if (hasServerDiff && diffRes.status && diffRes.status !== 'unchanged') {
-          effectiveDiff = diffRes.diff;
+        // If clicked from a specific non-full-write tool card step, prefer that step's diff unless user inspects session-level or full-write
+        if (cardMut && !cardMut.isFullWrite && cardMut.diff && preferredMode === 'step-diff') {
+          effectiveDiff = cardMut.diff;
+          effectiveStatus = cardMut.status || 'modified';
+        } else if (hasServerDiff && diffRes.status && diffRes.status !== 'unchanged') {
+          effectiveDiff = diffRes.diff || '';
           effectiveStatus = diffRes.status;
+          applyServerDiffToSessionAndDOM(rawPath, diffRes);
         } else if (recorded && recorded.diff) {
           effectiveDiff = recorded.diff;
           effectiveStatus = recorded.status || 'modified';
-        } else if ((diffRes && diffRes.status === 'deleted') || (recorded && recorded.status === 'deleted')) {
+        } else if ((hasServerDiff && diffRes.status === 'deleted') || (recorded && recorded.status === 'deleted')) {
           effectiveStatus = 'deleted';
-          effectiveDiff = (diffRes && diffRes.diff) || (recorded && recorded.diff) || '';
+          effectiveDiff = (hasServerDiff && diffRes.diff) || (recorded && recorded.diff) || '';
         }
 
         currentPreviewDiffRaw = effectiveDiff;
         const renderedDiff = renderDiffTableIntoModal(effectiveDiff);
-        const effectiveAdded = renderedDiff.hasRows ? renderedDiff.added : ((diffRes && diffRes.added) || (recorded && recorded.added) || 0);
-        const effectiveRemoved = renderedDiff.hasRows ? renderedDiff.removed : ((diffRes && diffRes.removed) || (recorded && recorded.removed) || 0);
+        const effectiveAdded = renderedDiff.hasRows ? renderedDiff.added : ((hasServerDiff ? diffRes.added : 0) || (recorded && recorded.added) || 0);
+        const effectiveRemoved = renderedDiff.hasRows ? renderedDiff.removed : ((hasServerDiff ? diffRes.removed : 0) || (recorded && recorded.removed) || 0);
 
         currentPreviewIsImage = Boolean(hasServerPreview && previewRes.isImage);
         currentPreviewHasFull = Boolean(hasServerPreview || (recorded && recorded.fullContent));
@@ -4797,7 +5321,7 @@
         } else {
           sizeEl.textContent = effectiveStatus === 'deleted' ? 'Đã xóa khỏi đĩa' : '';
           if (openBtn) openBtn.classList.add('hidden');
-          codeEl.textContent = currentPreviewFullRaw || '(File đã bị xóa — xem tab Thay đổi Xanh/Đỏ để kiểm tra các dòng đã xóa)';
+          codeEl.textContent = currentPreviewFullRaw || '(File đã bị xóa — xem tab Thay đổi trong phiên để kiểm tra các dòng đã xóa)';
         }
 
         if (statusBadgeEl) {
@@ -4827,15 +5351,15 @@
         const emptyEl = document.getElementById('filePreviewDiffEmpty');
         if (emptyEl && !renderedDiff.hasRows) {
           emptyEl.textContent = effectiveStatus === 'deleted'
-            ? 'File này đã bị xóa (không có bản lưu trước đó trong Git để đối chiếu từng dòng).'
-            : 'File này hiện không có dòng thêm (+) hay xóa (-) nào chưa commit.';
+            ? 'File này đã bị xóa trong phiên làm việc hiện tại.'
+            : 'File này không có thay đổi nào trong phiên làm việc hiện tại.';
         }
 
         if (fullBtn) {
           fullBtn.disabled = false;
         }
 
-        const shouldShowDiff = preferredMode === 'diff' ||
+        const shouldShowDiff = preferredMode === 'diff' || preferredMode === 'step-diff' ||
           (preferredMode === 'auto' && (renderedDiff.hasRows || effectiveStatus === 'deleted'));
 
         switchFilePreviewTab(shouldShowDiff ? 'diff' : 'full');
@@ -4849,6 +5373,7 @@
       if (e && e.currentTarget && e.currentTarget.getAttribute && e.currentTarget.getAttribute('data-unverified') === '1') {
         return;
       }
+      rawPath = resolvePathFromClickEvent(rawPath, e);
       const recorded = getRecordedFileChange(rawPath);
       const cached = localPathExistenceCache.get(buildPathCacheKey(rawPath));
       const isDir = !recorded && (cached && cached.exists ? Boolean(cached.isDir) : (!/\.[a-zA-Z0-9]{1,8}$/.test(rawPath) || rawPath.endsWith('/') || rawPath.endsWith('\\')));
@@ -5310,19 +5835,26 @@
     // PER-SESSION MODEL MEMORY & SPA FAVICON SYNC
     const sessionModelsMap = new Map();
 
+    function normalizeModelId(modelId) {
+      if (modelId === 'ag/gemini-3.8-flash-high') return 'ag/gemini-3.8-flash';
+      return modelId;
+    }
+
     function resolveModelMeta(modelId) {
-      if (!modelId) return MODELS[0];
-      const exact = MODELS.find(m => m.id === modelId || m.full === modelId);
+      const normalized = normalizeModelId(modelId);
+      if (!normalized) return MODELS[0];
+      const exact = MODELS.find(m => m.id === normalized || m.full === normalized);
       if (exact) return exact;
-      const lower = String(modelId).toLowerCase();
+      const lower = String(normalized).toLowerCase();
       if (lower.includes('claude')) return MODELS.find(m => m.iconType === 'claude') || MODELS[0];
       if (lower.includes('flash')) return MODELS.find(m => m.id.includes('flash')) || MODELS[1] || MODELS[0];
       if (lower.includes('argon') || lower.includes('gemini')) return MODELS.find(m => m.id.includes('argon')) || MODELS[3] || MODELS[0];
       if (lower.includes('gpt') || lower.includes('codex')) return MODELS[0];
-      return { id: modelId, name: modelId, full: modelId, provider: 'AI', tag: 'Mô hình phiên hiện tại', iconType: 'openai', iconBg: 'rgba(16, 185, 129, 0.1)' };
+      return { id: normalized, name: normalized, full: normalized, provider: 'AI', tag: 'Mô hình phiên hiện tại', iconType: 'openai', iconBg: 'rgba(16, 185, 129, 0.1)' };
     }
 
     function setSessionModel(sessionId, modelId) {
+      modelId = normalizeModelId(modelId);
       if (!sessionId || !modelId) return;
       const key = String(sessionId).trim();
       if (!key) return;
@@ -5350,36 +5882,41 @@
       if (!sessionId) return null;
       const key = String(sessionId).trim();
       if (!key) return null;
-      if (sessionModelsMap.has(key)) return sessionModelsMap.get(key);
+      if (sessionModelsMap.has(key)) return normalizeModelId(sessionModelsMap.get(key));
       try {
         const saved = localStorage.getItem('ai_hub_session_model:' + key);
         if (saved) {
-          sessionModelsMap.set(key, saved);
-          return saved;
+          const normSaved = normalizeModelId(saved);
+          sessionModelsMap.set(key, normSaved);
+          if (normSaved !== saved) {
+            try { localStorage.setItem('ai_hub_session_model:' + key, normSaved); } catch (_) {}
+          }
+          return normSaved;
         }
       } catch (_) {}
       if (explicitOnly) return null;
       if (Array.isArray(allSessionsCache)) {
         const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
         if (matched) {
-          if (matched.id && sessionModelsMap.has(matched.id)) return sessionModelsMap.get(matched.id);
-          if (matched.name && sessionModelsMap.has(matched.name)) return sessionModelsMap.get(matched.name);
+          if (matched.id && sessionModelsMap.has(matched.id)) return normalizeModelId(sessionModelsMap.get(matched.id));
+          if (matched.name && sessionModelsMap.has(matched.name)) return normalizeModelId(sessionModelsMap.get(matched.name));
           try {
             const byId = matched.id ? localStorage.getItem('ai_hub_session_model:' + matched.id) : null;
-            if (byId) return byId;
+            if (byId) return normalizeModelId(byId);
             const byName = matched.name ? localStorage.getItem('ai_hub_session_model:' + matched.name) : null;
-            if (byName) return byName;
+            if (byName) return normalizeModelId(byName);
           } catch (_) {}
-          if (matched.model) return matched.model;
+          if (matched.model) return normalizeModelId(matched.model);
         }
       }
       return null;
     }
 
     function applySessionModelSelection(modelId) {
-      if (!modelId) return;
-      if (currentSelectedModel !== modelId) {
-        currentSelectedModel = modelId;
+      const normalized = normalizeModelId(modelId);
+      if (!normalized) return;
+      if (currentSelectedModel !== normalized) {
+        currentSelectedModel = normalized;
       }
       renderModelSelector();
     }
@@ -5387,10 +5924,14 @@
     // PER-SESSION DRAFT INPUT MEMORY
     const sessionDraftsMap = new Map();
     let currentDraftSessionKey = '__new__';
+    let sessionDraftHydrated = false;
 
     function setSessionDraft(sessionId, draftText) {
-      const key = String(sessionId || currentDraftSessionKey || '__new__').trim();
-      if (!key) return;
+      if (typeof sessionDraftHydrated !== 'undefined') sessionDraftHydrated = true;
+      const rawKey = String(sessionId || currentDraftSessionKey || '__new__').trim();
+      if (!rawKey) return;
+      const isNewDraft = rawKey === '__new__' || rawKey.startsWith('new-');
+      const key = isNewDraft ? '__new__' : rawKey;
       const val = String(draftText ?? '');
       const storeKey = (k) => {
         if (!k) return;
@@ -5403,7 +5944,11 @@
         }
       };
       storeKey(key);
-      if (Array.isArray(allSessionsCache)) {
+      if (isNewDraft && rawKey !== '__new__') {
+        sessionDraftsMap.delete(rawKey);
+        try { localStorage.removeItem('ai_hub_session_draft:' + rawKey); } catch (_) {}
+      }
+      if (!isNewDraft && Array.isArray(allSessionsCache)) {
         const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
         if (matched) {
           if (matched.id && matched.id !== key) storeKey(matched.id);
@@ -5413,8 +5958,10 @@
     }
 
     function getSessionDraft(sessionId) {
-      const key = String(sessionId || currentDraftSessionKey || '__new__').trim();
-      if (!key) return '';
+      const rawKey = String(sessionId || currentDraftSessionKey || '__new__').trim();
+      if (!rawKey) return '';
+      const isNewDraft = rawKey === '__new__' || rawKey.startsWith('new-');
+      const key = isNewDraft ? '__new__' : rawKey;
       if (sessionDraftsMap.has(key)) return sessionDraftsMap.get(key) || '';
       try {
         const saved = localStorage.getItem('ai_hub_session_draft:' + key);
@@ -5422,8 +5969,19 @@
           sessionDraftsMap.set(key, saved);
           return saved;
         }
+        if (isNewDraft && rawKey !== '__new__') {
+          const legacySaved = localStorage.getItem('ai_hub_session_draft:' + rawKey);
+          if (legacySaved !== null) {
+            sessionDraftsMap.set('__new__', legacySaved);
+            try {
+              localStorage.setItem('ai_hub_session_draft:__new__', legacySaved);
+              localStorage.removeItem('ai_hub_session_draft:' + rawKey);
+            } catch (_) {}
+            return legacySaved;
+          }
+        }
       } catch (_) {}
-      if (Array.isArray(allSessionsCache)) {
+      if (!isNewDraft && Array.isArray(allSessionsCache)) {
         const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
         if (matched) {
           if (matched.id && sessionDraftsMap.has(matched.id)) return sessionDraftsMap.get(matched.id) || '';
@@ -5447,12 +6005,14 @@
 
     function saveCurrentSessionDraft() {
       if (!promptInput) return;
+      if (typeof sessionDraftHydrated !== 'undefined' && !sessionDraftHydrated && !promptInput.value) return;
       const activeKey = currentSessionId || currentDraftSessionKey || '__new__';
       setSessionDraft(activeKey, promptInput.value);
     }
 
     function restoreSessionDraft(sessionId) {
       if (!promptInput) return;
+      if (typeof sessionDraftHydrated !== 'undefined') sessionDraftHydrated = true;
       const targetKey = sessionId || currentDraftSessionKey || '__new__';
       const draft = getSessionDraft(targetKey);
       promptInput.value = draft;
@@ -5512,6 +6072,7 @@
     }
 
     function selectModel(modelId) {
+      modelId = normalizeModelId(modelId);
       currentSelectedModel = modelId;
       localStorage.setItem('ai_hub_model', modelId);
       if (currentSessionId) {
@@ -6012,7 +6573,7 @@
       const nextNewSessionKey = 'new-' + safeRandomId();
       currentDraftSessionKey = nextNewSessionKey;
       isChatUserScrolledUp = false;
-      sessionFileChanges.clear();
+      resetSessionFileChangeTracking();
       if (updateUrl && currentWorkspace) updateSessionUrl(nextNewSessionKey);
       currentSessionTitle.innerText = 'Cuộc trò chuyện mới';
       chatFeed.innerHTML = '';
@@ -6025,8 +6586,7 @@
       }
       chatFeed.appendChild(banner);
 
-      promptInput.value = '';
-      autoResizeTextarea(false);
+      restoreSessionDraft(nextNewSessionKey);
       if (!isMobileChatInput()) {
         promptInput.focus();
       }
@@ -6688,7 +7248,15 @@
         if (infoRes && Array.isArray(infoRes.drives) && infoRes.drives.length > 0) hubLocalDrives = infoRes.drives;
 
         allSessionsCache = sessionsRes || [];
-        const selectedSession = allSessionsCache.find(s => s.id === currentSessionId);
+        const selectedSession = allSessionsCache.find(s => s.id === currentSessionId || (s.tempName && s.tempName === currentSessionId));
+        if (selectedSession && selectedSession.id && currentSessionId && currentSessionId !== selectedSession.id && selectedSession.tempName === currentSessionId) {
+          const oldTempId = currentSessionId;
+          currentSessionId = selectedSession.id;
+          if (currentDraftSessionKey === oldTempId) {
+            currentDraftSessionKey = String(selectedSession.id).trim();
+          }
+          updateSessionUrl(currentSessionId, true);
+        }
         if (selectedSession) currentSessionTitle.innerText = selectedSession.name;
         if (currentSessionId && /^\/[^/]+\/[^/]+\/?$/.test(window.location.pathname)) {
           updateSessionUrl(currentSessionId, true);
@@ -6699,10 +7267,11 @@
 
         // Auto-reconnect if running task
         if (allowAutoReconnect && infoRes.isBusy && infoRes.activeSessionId && !isGenerating) {
-          const matched = (sessionsRes || []).find(s => s.id === infoRes.activeSessionId);
-          const friendlyTitle = matched ? matched.name : infoRes.activeSessionId;
+          const matched = (sessionsRes || []).find(s => s.id === infoRes.activeSessionId || (s.tempName && s.tempName === infoRes.activeSessionId));
+          const targetSessionId = matched?.id || infoRes.activeSessionId;
+          const friendlyTitle = matched ? matched.name : (infoRes.activeSessionInfo?.title || infoRes.activeSessionId);
           setTimeout(() => {
-            if (allowAutoReconnect && !isGenerating) reconnectRunningSession(infoRes.activeSessionId, infoRes.activeSessionInfo, friendlyTitle);
+            if (allowAutoReconnect && !isGenerating) reconnectRunningSession(targetSessionId, infoRes.activeSessionInfo, friendlyTitle);
           }, 50);
         }
 
@@ -6752,9 +7321,22 @@
               ? [{ sessionId: currentSessionId, cwd: runningWorkspace || currentWorkspace, title: currentSessionTitle?.innerText || currentSessionId }]
               : []));
 
+        const isMatchingSessionEntry = (s, act) => {
+          if (!s || !act) return false;
+          const actIds = [act.sessionId, act.tempName, act.resolvedDbId].filter(Boolean);
+          const sIds = [s.id, s.tempName, s.name].filter(Boolean);
+          if (actIds.some(id => sIds.includes(id))) return true;
+          if (act.title && s.name === act.title && s.isRunning && (String(act.sessionId || '').startsWith('session_') || String(s.id || '').startsWith('session_'))) {
+            const actWs = normPath(act.cwd || runningWorkspace || currentWorkspace);
+            const sWs = normPath(s.cwd || currentWorkspace);
+            if (actWs === sWs) return true;
+          }
+          return false;
+        };
+
         for (const group of Object.values(grouped)) {
           group.sessions.forEach(s => {
-            const matchRunning = activeList.some(a => a && a.sessionId && (s.id === a.sessionId || s.name === a.sessionId));
+            const matchRunning = activeList.some(a => isMatchingSessionEntry(s, a));
             s.isRunning = !!(matchRunning || s.isRunning);
           });
         }
@@ -6763,7 +7345,7 @@
           if (!act || !act.sessionId) continue;
           let foundInAnyGroup = false;
           for (const group of Object.values(grouped)) {
-            if (group.sessions.some(s => s.id === act.sessionId || s.name === act.sessionId)) {
+            if (group.sessions.some(s => isMatchingSessionEntry(s, act))) {
               foundInAnyGroup = true;
               break;
             }
@@ -6778,7 +7360,8 @@
               ? currentSessionTitle.innerText
               : act.sessionId);
             grouped[targetK].sessions.unshift({
-              id: act.sessionId,
+              id: act.resolvedDbId || act.sessionId,
+              ...(act.tempName ? { tempName: act.tempName } : {}),
               name: dispName,
               cwd: targetWs,
               isRunning: true
@@ -6864,7 +7447,7 @@
                 <div class="text-[11px] py-1 px-2 italic" style="color: var(--text-sub);">Chưa có phiên làm việc</div>
               ` : `
                 ${visibleSessions.map(s => {
-                  const isSelected = (currentSessionId && (s.id === currentSessionId || s.name === currentSessionId));
+                  const isSelected = (currentSessionId && (s.id === currentSessionId || (s.tempName && s.tempName === currentSessionId) || s.name === currentSessionId));
                   const isPinned = pinnedSessionsSet.has(s.id);
                   const relTime = formatRelativeTime(s.updated_at || s.created_at);
                   return `
@@ -6961,7 +7544,7 @@
       if (badge) badge.innerText = pinned.length;
 
       list.innerHTML = pinned.map(s => {
-        const isSelected = (currentSessionId && (s.id === currentSessionId || s.name === currentSessionId));
+        const isSelected = (currentSessionId && (s.id === currentSessionId || (s.tempName && s.tempName === currentSessionId) || s.name === currentSessionId));
         return `
           <div class="session-item group/pin flex items-center justify-between px-2 py-1 rounded-md text-xs cursor-pointer ease-spring ${
                  isSelected ? 'font-semibold bg-[var(--bg-surface)] text-[var(--text-main)]' : 'hover:bg-[var(--bg-hover)] text-[var(--text-sub)]'
@@ -7249,6 +7832,195 @@
       }
     }
 
+    function isInternalConversationMessage(msg, normalizedText) {
+      const text = String(normalizedText || '').trim();
+      if (!text) return false;
+      if (msg && msg.metadata && msg.metadata.userVisible === false && !msg.metadata.turnContext) {
+        return true;
+      }
+      if (/^#\s*Conversation Summary\b/i.test(text)) return true;
+      if (/^Your context was compacted\.\s*The previous message contains a summary/i.test(text)) return true;
+      return false;
+    }
+
+    function classifyInternalEntry(role, rawText) {
+      const text = String(rawText || '').trim();
+      if (/^#\s*Conversation Summary\b/i.test(text)) {
+        return {
+          kind: 'summary',
+          label: 'Bản tóm tắt ngữ cảnh (Conversation Summary)',
+          text
+        };
+      }
+      if (/^Your context was compacted\./i.test(text)) {
+        return {
+          kind: 'compaction_notice',
+          label: 'Thông báo nén ngữ cảnh hệ thống',
+          text
+        };
+      }
+      return {
+        kind: role === 'assistant' ? 'internal_assistant' : 'internal_prompt',
+        label: role === 'assistant' ? 'Phản hồi nội bộ hệ thống' : 'Ngữ cảnh yêu cầu tiếp nối (Nội bộ)',
+        text
+      };
+    }
+
+    function buildInternalItemTitle(entries) {
+      const list = Array.isArray(entries) ? entries : [];
+      const hasSummary = list.some(e => e.kind === 'summary' || e.kind === 'compaction_notice');
+      if (hasSummary) {
+        return 'Tin nhắn nội bộ hệ thống — Đã tóm tắt & nén ngữ cảnh tự động (Conversation Summary)';
+      }
+      const firstLine = String(list[0]?.text || '')
+        .replace(/\r?\n+/g, ' ')
+        .replace(/^#+\s*/, '')
+        .trim();
+      const preview = firstLine.length > 72 ? (firstLine.slice(0, 72) + '…') : firstLine;
+      return preview ? `Tin nhắn nội bộ hệ thống — ${preview}` : 'Tin nhắn nội bộ hệ thống';
+    }
+
+    function appendInternalHistoryEntry(items, msg, rawText) {
+      const text = String(rawText || '').trim();
+      if (!text) return;
+      const msgTime = messageTime(msg);
+      const entry = classifyInternalEntry(msg.role, text);
+      const prevItem = items[items.length - 1];
+      if (prevItem && prevItem.role === 'internal') {
+        prevItem.entries.push(entry);
+        prevItem.title = buildInternalItemTitle(prevItem.entries);
+        prevItem.text = prevItem.entries.map(e => `[${e.label}]\n${e.text}`).join('\n\n---\n\n');
+        if (msgTime) prevItem.endedAt = msgTime;
+      } else {
+        const entries = [entry];
+        items.push({
+          role: 'internal',
+          entries,
+          title: buildInternalItemTitle(entries),
+          text: `[${entry.label}]\n${entry.text}`,
+          startedAt: msgTime,
+          endedAt: msgTime
+        });
+      }
+    }
+
+    function renderInternalMessageCard(item, container, prepend = false) {
+      const row = document.createElement('div');
+      row.className = 'internal-message-row w-full my-2.5 px-1 sm:px-2 internal-turn-card';
+      row.dataset.turnQuestion = item.questionText || '';
+
+      const entries = Array.isArray(item.entries) && item.entries.length > 0
+        ? item.entries
+        : [{ kind: 'summary', label: 'Nội dung nội bộ', text: item.text || '' }];
+      const cardId = 'intcard_' + Math.random().toString(36).substring(2, 9);
+      const fullTextToCopy = item.text || entries.map(e => `[${e.label}]\n${e.text}`).join('\n\n---\n\n');
+      window._codeSnippets[cardId] = fullTextToCopy.trim();
+
+      const titleText = item.title || buildInternalItemTitle(entries);
+      const timeStr = item.startedAt ? new Date(item.startedAt).toLocaleString('vi-VN') : '';
+
+      let sectionsHtml = '';
+      entries.forEach((entry, idx) => {
+        const entrySnippetId = cardId + '_' + idx;
+        window._codeSnippets[entrySnippetId] = (entry.text || '').trim();
+        let parsedHtml = '';
+        try {
+          parsedHtml = marked.parse(entry.text || '');
+        } catch (_) {
+          parsedHtml = `<p class="whitespace-pre-wrap">${escapeHtml(entry.text || '')}</p>`;
+        }
+        sectionsHtml += `
+          <div class="rounded-lg border overflow-hidden ${idx > 0 ? 'mt-2.5' : ''}"
+               style="border-color: var(--border-subtle); background: var(--bg-card);">
+            <div class="px-3 py-1.5 flex items-center justify-between text-[11px] border-b select-none"
+                 style="background: var(--tool-header-bg); border-color: var(--border-subtle); color: var(--text-sub);">
+              <span class="font-semibold text-[var(--text-main)] truncate">${escapeHtml(entry.label || 'Tin nhắn nội bộ')}</span>
+              <button onclick="copySnippet('${entrySnippetId}', this)"
+                      class="opacity-80 hover:opacity-100 text-[10.5px] px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)] flex items-center gap-1 text-[var(--text-sub)] hover:text-[var(--text-main)]"
+                      title="Sao chép phần này">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span>Chép</span>
+              </button>
+            </div>
+            <div class="p-3 sm:p-3.5 text-xs sm:text-[13px] leading-relaxed internal-markdown-body markdown-body">
+              ${parsedHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      row.innerHTML = `
+        <div class="max-w-4xl mx-auto rounded-xl border shadow-2xs overflow-hidden transition-all duration-200"
+             style="background: var(--bg-card); border-color: var(--border-subtle);">
+          <div class="px-3 py-2 sm:px-3.5 sm:py-2 flex items-center justify-between gap-2 cursor-pointer select-none hover:bg-[var(--bg-hover)] transition-colors"
+               onclick="toggleInternalMessageAccordion('${cardId}')"
+               style="background: var(--tool-header-bg);"
+               title="Bấm để đóng/mở nội dung tin nhắn nội bộ">
+            <div class="flex items-center space-x-2 min-w-0">
+              <span class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border"
+                    style="background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24;">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+              </span>
+              <span class="internal-card-title text-xs font-medium text-[var(--text-main)] truncate">${escapeHtml(titleText)}</span>
+              <span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono shrink-0"
+                    style="background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25);">
+                Nội bộ
+              </span>
+            </div>
+            <div class="flex items-center space-x-1.5 shrink-0" onclick="event.stopPropagation()">
+              ${timeStr ? `<span class="internal-card-timing hidden md:inline font-mono text-[10.5px] text-[var(--text-sub)] mr-1">${escapeHtml(timeStr)}</span>` : ''}
+              <button onclick="copySnippet('${cardId}', this)"
+                      class="opacity-80 hover:opacity-100 ease-spring text-[10.5px] px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] flex items-center gap-1 text-[var(--text-sub)] hover:text-[var(--text-main)]"
+                      title="Sao chép toàn bộ tin nhắn nội bộ này">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span class="hidden sm:inline">Sao chép</span>
+              </button>
+              <button onclick="toggleInternalMessageAccordion('${cardId}')"
+                      class="px-2 py-0.5 rounded text-[10.5px] font-medium flex items-center gap-1 text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors"
+                      title="Đóng / Mở để xem chi tiết">
+                <span id="internal_toggle_label_${cardId}">Xem</span>
+                <svg id="internal_chevron_${cardId}" style="transform: rotate(-90deg);" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="internal_content_${cardId}" class="p-2.5 sm:p-3 border-t hidden max-h-[65vh] overflow-y-auto"
+               style="border-color: var(--border-subtle); background: var(--bg-main);">
+            ${sectionsHtml}
+          </div>
+        </div>
+      `;
+
+      enhanceChatElement(row);
+      addMessageTiming(row, item);
+
+      if (prepend && container.firstChild) {
+        container.insertBefore(row, container.firstChild);
+      } else {
+        container.appendChild(row);
+      }
+    }
+
+    function toggleInternalMessageAccordion(cardId) {
+      const content = document.getElementById('internal_content_' + cardId);
+      const chevron = document.getElementById('internal_chevron_' + cardId);
+      const label = document.getElementById('internal_toggle_label_' + cardId);
+      if (!content) return;
+      const isHidden = content.classList.contains('hidden');
+      if (isHidden) {
+        content.classList.remove('hidden');
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+        if (label) label.textContent = 'Đóng';
+      } else {
+        content.classList.add('hidden');
+        if (chevron) chevron.style.transform = 'rotate(-90deg)';
+        if (label) label.textContent = 'Xem';
+      }
+    }
+
     function buildHistoryItemsFromConversation(conversation) {
       const items = [];
       const toolResponsesMap = new Map();
@@ -7299,21 +8071,41 @@
             const extracted = extractSubagentsAndUserText(fullPrompt);
             if (extracted.subagents && extracted.subagents.length > 0) {
               if (extracted.userText) {
-                items.push({ role: 'user', text: extracted.userText, startedAt: messageTime(msg) });
+                if (isInternalConversationMessage(msg, extracted.userText)) {
+                  appendInternalHistoryEntry(items, msg, extracted.userText);
+                } else {
+                  items.push({ role: 'user', text: extracted.userText, startedAt: messageTime(msg) });
+                }
               }
               items.push({ role: 'subagent', subagents: extracted.subagents, text: fullPrompt, startedAt: messageTime(msg) });
+            } else if (isInternalConversationMessage(msg, fullPrompt)) {
+              appendInternalHistoryEntry(items, msg, fullPrompt);
             } else {
               items.push({ role: 'user', text: fullPrompt, startedAt: messageTime(msg) });
             }
           }
         } else if (msg.role === 'assistant') {
+          const contentArr = Array.isArray(msg.content) ? msg.content : [];
+          const hasToolOrThinking = contentArr.some(c => c && (c.type === 'toolRequest' || c.tool_use || c.type === 'thinking' || c.thinking));
+          const assistantTexts = [];
+          contentArr.forEach(c => {
+            if (typeof c === 'string') assistantTexts.push(c);
+            else if (c && (c.type === 'text' || c.text)) {
+              assistantTexts.push(typeof c.text === 'string' ? c.text : (c.text?.value || ''));
+            }
+          });
+          const joinedAssistantText = assistantTexts.join('\n').trim();
+          if (!hasToolOrThinking && isInternalConversationMessage(msg, joinedAssistantText)) {
+            appendInternalHistoryEntry(items, msg, joinedAssistantText);
+            return;
+          }
           const msgTime = messageTime(msg);
           const prevItem = items[items.length - 1];
           if (prevItem && prevItem.role === 'assistant') {
-            prevItem.rawContent = prevItem.rawContent.concat(msg.content || []);
+            prevItem.rawContent = prevItem.rawContent.concat(contentArr);
             if (msgTime) prevItem.endedAt = msgTime;
           } else {
-            items.push({ role: 'assistant', rawContent: [...(msg.content || [])], toolResponsesMap, startedAt: msgTime, endedAt: msgTime });
+            items.push({ role: 'assistant', rawContent: [...contentArr], toolResponsesMap, startedAt: msgTime, endedAt: msgTime });
           }
         }
       });
@@ -7327,7 +8119,7 @@
           item.questionText = turn.text;
           item.questionItem = turn;
         }
-        if (item.role !== 'user' && item.role !== 'subagent' && turn && turn.startedAt && (item.endedAt || item.startedAt)) {
+        if (item.role !== 'user' && item.role !== 'subagent' && item.role !== 'internal' && turn && turn.startedAt && (item.endedAt || item.startedAt)) {
           turn.elapsedMs = Math.max(0, (item.endedAt || item.startedAt) - turn.startedAt);
           item.elapsedMs = turn.elapsedMs;
         }
@@ -7404,8 +8196,8 @@
     }
 
     function addMessageTiming(row, item) {
-      if (item.role === 'subagent') {
-        const footerTiming = row.querySelector('.subagent-card-footer-timing');
+      if (item.role === 'subagent' || item.role === 'internal') {
+        const footerTiming = row.querySelector('.subagent-card-footer-timing, .internal-card-timing');
         if (footerTiming && item.startedAt) {
           footerTiming.textContent = new Date(item.startedAt).toLocaleString('vi-VN');
         }
@@ -7428,6 +8220,8 @@
     function renderSingleHistoryItem(item, container, prepend = false) {
       if (item.role === 'subagent') {
         renderSubagentReportCard(item, container, prepend);
+      } else if (item.role === 'internal') {
+        renderInternalMessageCard(item, container, prepend);
       } else if (item.role === 'user') {
         const row = document.createElement('div');
         row.className = 'user-message-row w-full flex justify-end my-3 px-1 sm:px-2 group';
@@ -7579,7 +8373,14 @@
     }
 
     async function selectSession(sessionId, sessionTitle, wsPath, updateUrl = true) {
-      if (sessionId === currentSessionId && isGenerating && window.activeChatEventSource) {
+      const matchedCurrent = allSessionsCache.find(s => s.id === sessionId || (s.tempName && s.tempName === sessionId) || s.name === sessionId);
+      const isSameAsCurrent = (sessionId === currentSessionId) ||
+        Boolean(matchedCurrent && currentSessionId && (matchedCurrent.id === currentSessionId || matchedCurrent.tempName === currentSessionId));
+      if (isSameAsCurrent && isGenerating && window.activeChatEventSource) {
+        if (matchedCurrent && matchedCurrent.id && currentSessionId !== matchedCurrent.id) {
+          currentSessionId = matchedCurrent.id;
+          updateSessionUrl(currentSessionId, true);
+        }
         if (window.innerWidth < 1024) {
           const sidebar = document.getElementById('sidebar');
           const backdrop = document.getElementById('sidebarBackdrop');
@@ -7599,7 +8400,7 @@
       const viewVersion = ++sessionViewVersion;
       allowAutoReconnect = false;
       isChatUserScrolledUp = false;
-      sessionFileChanges.clear();
+      resetSessionFileChangeTracking();
       currentSessionHistoryItems = [];
       currentHistoryRenderIndex = 0;
       closeFullConversationModal();
@@ -7667,6 +8468,7 @@
         if (!data || !data.conversation || data.conversation.length === 0) {
           currentSessionHistoryItems = [];
           currentHistoryRenderIndex = 0;
+          seedSessionFileChangesFromHistory([], data?.sessionFileChanges);
           if (data?.isRunning && data?.activeSessionInfo) {
             runningTurnState = prepareRunningSessionHistoryItems(currentSessionHistoryItems, data.activeSessionInfo);
           } else if (!data?.isRunning) {
@@ -7678,6 +8480,7 @@
           }
         } else {
           currentSessionHistoryItems = buildHistoryItemsFromConversation(data.conversation);
+          seedSessionFileChangesFromHistory(currentSessionHistoryItems, data?.sessionFileChanges);
           if (data.isRunning && data.activeSessionInfo) {
             runningTurnState = prepareRunningSessionHistoryItems(currentSessionHistoryItems, data.activeSessionInfo);
           }
@@ -7730,6 +8533,7 @@
 
     function historyItemText(item) {
       if (item.role === 'user') return item.text || '';
+      if (item.role === 'internal') return (item.title || '') + '\n' + (item.text || '');
       if (item.role === 'subagent') {
         return (item.subagents || []).map(s => `[Subagent ${s.id} - ${s.status}] ${s.summary}`).join('\n');
       }
@@ -7876,6 +8680,8 @@
       currentSessionHistoryItems.forEach(item => {
         if (item.role === 'user') {
           lines.push(`### [BẠN]:\n${item.text}\n`);
+        } else if (item.role === 'internal') {
+          lines.push(`### [TIN NHẮN NỘI BỘ - ${item.title || 'Hệ thống'}]:\n${item.text}\n`);
         } else if (item.role === 'subagent') {
           const subText = (item.subagents || []).map(s => `#### [Subagent ${s.id} - ${s.status.toUpperCase()}]:\n${s.summary}`).join('\n\n');
           lines.push(`### [BÁO CÁO SUBAGENT]:\n${subText}\n`);
@@ -8530,29 +9336,32 @@
       return card;
     }
 
-    function renderToolCardFileChanges(card, isError = false) {
+    function renderToolCardFileChanges(card, isError = false, isLive = false) {
       if (!card || !card._cardData) return;
       const { cardId, toolName, args, output } = card._cardData;
-      const mutations = extractToolFileMutations(toolName, args, output, isError);
+      const mutations = extractToolFileMutations(toolName, args, output, isError, _sessionHelperScriptsMap);
       if (!mutations || mutations.length === 0) return;
 
-      recordToolMutationsInSession(mutations);
+      if (isLive || !_sessionHistoryMutationsSeeded) {
+        recordToolMutationsInSession(mutations, isLive);
+      }
       const bar = card.querySelector ? card.querySelector('#fileDiffBar_' + cardId) : document.getElementById('fileDiffBar_' + cardId);
       if (!bar) return;
 
-      bar.innerHTML = mutations.map(m => {
-        const safePath = escapeHtml(m.path).replace(/'/g, "\\'");
+      bar.innerHTML = mutations.map((m, idx) => {
+        const cardMutKey = cardId + ':' + idx;
+        _toolCardMutationsByKey.set(cardMutKey, m);
+        const synced = m.isFullWrite ? getRecordedFileChange(m.path) : null;
+        const effectiveStatus = (synced && synced.serverSynced) ? synced.status : m.status;
+        const effectiveAdded = (synced && synced.serverSynced) ? synced.added : (m.added || 0);
+        const effectiveRemoved = (synced && synced.serverSynced) ? synced.removed : (m.removed || 0);
+        const safePath = escapeJs(m.path);
+        const safeMutKey = escapeJs(cardMutKey);
         const fileName = m.path.split(/[\\\/]/).pop() || m.path;
-        const statusPill = m.status === 'added'
-          ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 shrink-0">MỚI</span>'
-          : m.status === 'deleted'
-            ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/25 shrink-0">XÓA</span>'
-            : '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25 shrink-0">SỬA</span>';
-        const statsHtml = m.status === 'deleted'
-          ? '<span class="text-rose-400 font-bold text-[11px] shrink-0">Đã xóa file</span>'
-          : `<span class="inline-flex items-center gap-1.5 font-bold text-[11px] shrink-0"><span class="text-emerald-400">+${m.added || 0}</span><span class="text-rose-400">-${m.removed || 0}</span></span>`;
+        const statusPill = buildToolFileStatusPillHtml(effectiveStatus);
+        const statsHtml = buildToolFileStatsHtml(effectiveStatus, effectiveAdded, effectiveRemoved);
         return `
-          <div onclick="event.stopPropagation(); previewLocalFile('${safePath}', event, 'diff')"
+          <div data-file-diff-row="1" data-is-full-write="${m.isFullWrite ? '1' : '0'}" data-path="${escapeHtml(m.path)}" onclick="event.stopPropagation(); previewLocalFile('${safePath}', event, 'diff', '${safeMutKey}')"
                class="px-3.5 py-2 flex items-center justify-between gap-2 cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
                style="border-color: var(--tool-border);"
                title="Nhấn để xem dòng xanh (thêm) / dòng đỏ (xóa) của ${escapeHtml(m.path)}">
@@ -8609,7 +9418,7 @@
       if (card._cardData) {
         card._cardData.output = fullStr;
       }
-      renderToolCardFileChanges(card, isError);
+      renderToolCardFileChanges(card, isError, true);
     }
 
     function expandToolCardOutput(cardId, btn) {
@@ -8714,6 +9523,10 @@
       } else if (type === 'tool_result') {
         updateToolCardResult(lastRunningToolCard, data.output, data.isError);
         aiContainer.updateProgress('Đang xử lý kết quả & tiếp tục...');
+      } else if (type === 'session_file_diffs') {
+        if (Array.isArray(data.files)) {
+          applySessionFileChangesBatch(data.files);
+        }
       } else if (type === 'stderr' && data.text) {
         appendTerminalLog('cmd', data.text);
       } else if (type === 'raw_log' && data.line) {
@@ -8734,6 +9547,9 @@
         }
         const resolvedSessionId = data.session_id || data.sessionId;
         if (resolvedSessionId && resolvedSessionId !== currentSessionId) { currentSessionId = resolvedSessionId; updateSessionUrl(currentSessionId, true); }
+        if (Array.isArray(data.sessionFileChanges) && data.sessionFileChanges.length > 0) {
+          applySessionFileChangesBatch(data.sessionFileChanges);
+        }
         lastStreamedTurnSessionId = currentSessionId;
         lastTurnCompletedAt = Date.now();
         if (lastRunningToolCard) {
@@ -8812,7 +9628,7 @@
 
         const eventNames = [
           'message', 'text', 'thinking', 'stdout', 'status', 'tool_call', 'tool_result',
-          'stderr', 'raw_log', 'session_info', 'session_title', 'complete', 'finish', 'done', 'error'
+          'stderr', 'raw_log', 'session_info', 'session_title', 'session_file_diffs', 'complete', 'finish', 'done', 'error'
         ];
         eventNames.forEach(evt => es.addEventListener(evt, onEventData));
 
@@ -8831,7 +9647,7 @@
                 const checkData = await checkRes.json();
                 const sessionsList = Array.isArray(checkData) ? checkData : (checkData?.sessions || []);
                 const stillRunning = sessionsList.some(
-                  s => (s.id === sessionId || s.name === sessionId || s.id === currentSessionId) && s.isRunning
+                  s => (s.id === sessionId || s.tempName === sessionId || s.name === sessionId || s.id === currentSessionId || (s.tempName && s.tempName === currentSessionId)) && s.isRunning
                 );
                 if (stillRunning && !isCompleted && aiContainer.viewVersion === sessionViewVersion) {
                   return;
@@ -9814,7 +10630,11 @@
     // INITIALIZATION
     const savedTheme = localStorage.getItem('ai_hub_theme') || 'warm';
     setTheme(savedTheme);
-    const savedModel = localStorage.getItem('ai_hub_model') || 'cx/gpt-6.1-sol';
+    const rawSavedModel = localStorage.getItem('ai_hub_model') || 'cx/gpt-6.1-sol';
+    const savedModel = normalizeModelId(rawSavedModel);
+    if (savedModel !== rawSavedModel) {
+      try { localStorage.setItem('ai_hub_model', savedModel); } catch (_) {}
+    }
     currentSelectedModel = savedModel;
     renderModelSelector();
     updateSoundUI();

@@ -21,6 +21,7 @@ foreach ($line in $envLines) {
 # Che do gon gang cho Goose (An cac log doc file, dump code thua tren terminal)
 $env:GOOSE_CLI_MIN_PRIORITY = "0.8"
 $env:GOOSE_SHOW_FULL_OUTPUT = "false"
+$env:GOOSE_CONTEXT_LIMIT = "400000"
 
 # Chi thi he thong (System Prompt) toan cuc cho Goose Agent
 $SystemInstruction = @"
@@ -28,7 +29,7 @@ QUY TAC BAT BUOC:
 - Truoc khi goi lenh shell quan trong (build, deploy, sua file lon, tac dong he thong), BAT BUOC viet 1 cau sieu ngan (duoi 15 tu) thong bao muc dich cho nguoi dung truoc khi goi tool.
 - Voi cac thao tac doc nhe (ls, cat, grep nho), hay goi thang lenh va gop thao tac de toi uu toc do phan hoi.
 - QUY CHUAN TOI UU TAI NGUYEN & DO MUOT:
-  + Khong doc toan bo file lon (>500 dong) khi chi sua doan nho; luu y chuan dong CRLF tren Windows.
+  + Khong doc toan bo file lon (>500 dong) khi chi sua doan nho; CAM dung [System.IO.File]::ReadAllText(...) | Select-String gay tran context, hay dung Select-String -Path hoac doc theo khoang dong; luu y chuan dong CRLF tren Windows.
   + Backend/DB: Tranh execSync/spawn trong hot-path API; tranh loi N+1 query; doc SQLite che do readOnly va dong ket noi trong finally; dung TTL cache.
   + Frontend/Stream: Chong goi trung (coalesce/debounce); don sach EventSource/timer/.streaming-cursor khi ket thuc hoac chuyen phien; thanh tien trinh (.live-progress-container) luon dat duoi .ai-content-body.
   + Kiem chung & Tu hoc: Luon chay node --check hoac test lien quan sau khi sua code. Tham khao .goosehints tai workspace va cap nhat bai hoc moi vao D:\ai-hub\lessons.md.
@@ -79,7 +80,7 @@ Write-Host "CHON AGENT & MODEL BAN MUON DUNG:" -ForegroundColor White
 Write-Host ""
 Write-Host "  [1] Claude Code (Anthropic)    - Agent tu hanh dinh nhat (chinh chu Claude)" -ForegroundColor Green
 Write-Host "  [2] Goose + Codex/ChatGPT      - Agent tu hanh qua 9Router (cx/gpt-6.1-sol)" -ForegroundColor Yellow
-Write-Host "  [3] Goose + Gemini 3.8 Flash   - Agent tu hanh qua 9Router (ag/gemini-3.8-flash-high)" -ForegroundColor Cyan
+Write-Host "  [3] Goose + Gemini 3.8 Flash   - Agent tu hanh qua 9Router (ag/gemini-3.8-flash)" -ForegroundColor Cyan
 Write-Host "  [4] Goose + Claude Sonnet      - Agent tu hanh qua 9Router (ag/claude-sonnet-5-5-high)" -ForegroundColor Magenta
 Write-Host "  [5] Goose + Gemini 4 Argon     - Agent tu hanh qua 9Router (ag/gemini-4-argon-high)" -ForegroundColor Red
 Write-Host "  [6] Aider (Pair Programming)   - Aider truyen thong (--yes-always)" -ForegroundColor Gray
@@ -106,7 +107,7 @@ switch ($choice) {
     }
     "3" {
         $env:GOOSE_PROVIDER = "openai"
-        $env:GOOSE_MODEL = "ag/gemini-3.8-flash-high"
+        $env:GOOSE_MODEL = "ag/gemini-3.8-flash"
         Write-Host ""
         Write-Host "Dang khoi chay Goose (Gemini Flash 9Router) tai: $CurrentDir" -ForegroundColor Cyan
         Write-Host "--------------------------------------------------------" -ForegroundColor Gray

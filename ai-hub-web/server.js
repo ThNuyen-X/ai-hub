@@ -9,6 +9,15 @@ const { DatabaseSync } = require("node:sqlite");
 const { isTechnicalSessionName, sessionTitle, titleFromContent } = require("./session-title.cjs");
 const { cleanWorkspacePath, workspaceKey } = require("./workspace-path.cjs");
 const { buildSystemInstruction } = require("./system-instruction.cjs");
+const {
+  startTurnSnapshot,
+  captureExplicitToolPaths,
+  syncTurnChanges,
+  finalizeTurnSnapshotSync,
+  deleteSessionDiffStore,
+  getSessionFileChangesSummary,
+  getSessionSingleFileDiff
+} = require("./session-file-diff.cjs");
 
 // Tu dong ghi log vao server.log va ghi server.pid
 const LOG_DIR = path.join(process.env.LOCALAPPDATA || process.env.USERPROFILE || ".", "ai-hub", "logs");
@@ -254,10 +263,16 @@ function attachClientToActiveSession(res, sessionId) {
   if (ctx) attachClientToSession(res, ctx);
 }
 
+// Chuan hoa legacy model ID (chuyen ag/gemini-3.8-flash-high sang adaptive ag/gemini-3.8-flash)
+function normalizeModelId(modelId) {
+  if (modelId === "ag/gemini-3.8-flash-high") return "ag/gemini-3.8-flash";
+  return modelId;
+}
+
 // Cac model co san tren 9Router
 const AVAILABLE_MODELS = [
   { id: "cx/gpt-6.1-sol", name: "Codex", full: "cx/gpt-6.1-sol", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", iconType: "openai" },
-  { id: "ag/gemini-3.8-flash-high", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash-high", provider: "Google", tag: "Tốc độ cao, ngữ cảnh lớn", iconType: "gemini" },
+  { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini" },
   { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude" },
   { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" }
 ];
@@ -743,14 +758,14 @@ function findMatchingFolder(targetName, sampleFile) {
 const sessionModels = new Map();
 function extractSessionModel(modelConfigJson, sessionId, sessionName) {
   const runningCtx = (sessionId && getRunningSession(sessionId, true)) || (sessionName && getRunningSession(sessionName, true));
-  if (runningCtx && runningCtx.info && runningCtx.info.model) return runningCtx.info.model;
-  if (sessionId && sessionModels.has(sessionId)) return sessionModels.get(sessionId);
-  if (sessionName && sessionModels.has(sessionName)) return sessionModels.get(sessionName);
+  if (runningCtx && runningCtx.info && runningCtx.info.model) return normalizeModelId(runningCtx.info.model);
+  if (sessionId && sessionModels.has(sessionId)) return normalizeModelId(sessionModels.get(sessionId));
+  if (sessionName && sessionModels.has(sessionName)) return normalizeModelId(sessionModels.get(sessionName));
   if (modelConfigJson && typeof modelConfigJson === "string") {
     try {
       const parsed = JSON.parse(modelConfigJson);
       const m = parsed?.model_name || parsed?.model || null;
-      if (m) return m;
+      if (m) return normalizeModelId(m);
     } catch {}
   }
   return null;
@@ -776,10 +791,12 @@ function getSessionsList() {
       } catch {}
       return rows.map(({ first_prompt, ...session }) => {
         const resolvedModel = extractSessionModel(modelConfigMap.get(session.id), session.id, session.name);
+        const techName = isTechnicalSessionName(session.name) ? session.name : null;
         return {
           ...session,
           cwd: cleanWorkspacePath(session.cwd),
-          name: isTechnicalSessionName(session.name) ? titleFromContent(first_prompt) : session.name,
+          name: techName ? titleFromContent(first_prompt) : session.name,
+          ...(techName ? { tempName: techName } : {}),
           date: session.updated_at,
           ...(resolvedModel ? { model: resolvedModel } : {})
         };
@@ -914,7 +931,27 @@ function getSystemInfo() {
     _cachedTailscaleIpAt = now;
   }
   const tailscaleIp = _cachedTailscaleIp;
-  const latestCtx = activeSessions.values().next().value || null;
+  for (const ctx of activeSessions.values()) {
+    if (ctx && !ctx.isFinished && !ctx.resolvedDbId) {
+      try {
+        const stored = findStoredSession(ctx.sessionId);
+        if (stored && stored.id) ctx.resolvedDbId = stored.id;
+      } catch {}
+    }
+  }
+  const activeCtxList = Array.from(new Set(activeSessions.values())).filter(c => c && !c.isFinished);
+  const latestCtx = activeCtxList[0] || null;
+  const formatActiveInfo = (c) => {
+    if (!c) return null;
+    const resolvedId = c.resolvedDbId || c.info?.sessionId || c.sessionId;
+    const tempName = c.tempName || (c.sessionId && c.sessionId !== resolvedId ? c.sessionId : null);
+    return {
+      ...c.info,
+      sessionId: resolvedId,
+      ...(tempName ? { tempName } : {}),
+      ...(c.resolvedDbId ? { resolvedDbId: c.resolvedDbId } : {})
+    };
+  };
   return {
     tailscaleIp,
     vpsHost: `${NINE_ROUTER_IP}:${NINE_ROUTER_PORT}`,
@@ -924,10 +961,10 @@ function getSystemInfo() {
     platform: process.platform,
     drives: getAvailableDrives(),
     gooseFound: fs.existsSync(GOOSE_PATH),
-    activeSessionId: latestCtx ? latestCtx.sessionId : null,
-    activeSessionInfo: latestCtx ? latestCtx.info : null,
-    activeSessions: Array.from(activeSessions.values()).map(c => c.info),
-    isBusy: activeSessions.size > 0
+    activeSessionId: latestCtx ? (latestCtx.resolvedDbId || latestCtx.info?.sessionId || latestCtx.sessionId) : null,
+    activeSessionInfo: formatActiveInfo(latestCtx),
+    activeSessions: activeCtxList.map(formatActiveInfo).filter(Boolean),
+    isBusy: activeCtxList.length > 0
   };
 }
 
@@ -1047,12 +1084,17 @@ const server = http.createServer((req, res) => {
       }
     }
     const list = getSessionsList().map(s => {
-      const runningCtx = getRunningSession(s.id, true) || getRunningSession(s.name, true);
+      const runningCtx = getRunningSession(s.id, true) || (s.tempName && getRunningSession(s.tempName, true)) || getRunningSession(s.name, true);
+      if (runningCtx && s.id && !runningCtx.resolvedDbId) {
+        runningCtx.resolvedDbId = s.id;
+      }
       const isRunning = !!(runningCtx && !runningCtx.isFinished);
       const model = runningCtx?.info?.model || s.model || extractSessionModel(null, s.id, s.name);
+      const tempName = runningCtx?.tempName || s.tempName || (runningCtx?.sessionId && runningCtx.sessionId !== s.id ? runningCtx.sessionId : null);
       return {
         ...s,
-        name: (isRunning && isTechnicalSessionName(s.name) && runningCtx.info?.title) ? runningCtx.info.title : s.name,
+        name: (isRunning && (isTechnicalSessionName(s.name) || !s.name || s.name === 'Cuộc trò chuyện mới') && runningCtx.info?.title) ? runningCtx.info.title : s.name,
+        ...(tempName ? { tempName } : {}),
         ...(model ? { model } : {}),
         isRunning
       };
@@ -1060,14 +1102,15 @@ const server = http.createServer((req, res) => {
     for (const ctx of activeSessions.values()) {
       if (!ctx || ctx.isFinished) continue;
       const alreadyInList = list.some(s =>
-        s.id === ctx.sessionId || s.name === ctx.sessionId ||
-        (ctx.resolvedDbId && s.id === ctx.resolvedDbId) ||
-        (ctx.tempName && (s.id === ctx.tempName || s.name === ctx.tempName)) ||
-        (ctx.info?.sessionId && (s.id === ctx.info.sessionId || s.name === ctx.info.sessionId))
+        s.id === ctx.sessionId || s.name === ctx.sessionId || s.tempName === ctx.sessionId ||
+        (ctx.resolvedDbId && (s.id === ctx.resolvedDbId || s.tempName === ctx.resolvedDbId)) ||
+        (ctx.tempName && (s.id === ctx.tempName || s.name === ctx.tempName || s.tempName === ctx.tempName)) ||
+        (ctx.info?.sessionId && (s.id === ctx.info.sessionId || s.name === ctx.info.sessionId || s.tempName === ctx.info.sessionId))
       );
       if (!alreadyInList) {
         list.unshift({
           id: ctx.resolvedDbId || ctx.info?.sessionId || ctx.sessionId,
+          ...(ctx.tempName ? { tempName: ctx.tempName } : {}),
           name: ctx.info?.title || ctx.sessionId,
           cwd: cleanWorkspacePath(ctx.info?.cwd || ""),
           date: new Date(ctx.info?.startTime || Date.now()).toISOString(),
@@ -1105,6 +1148,15 @@ const server = http.createServer((req, res) => {
         if (runningCtx.info.model) detail.model = runningCtx.info.model;
       }
     }
+    const resolvedDetailId = detail.id || runningCtx?.info?.sessionId || id;
+    let sessionChanges = getSessionFileChangesSummary(resolvedDetailId);
+    if ((!sessionChanges || sessionChanges.length === 0) && runningCtx?.tempName && runningCtx.tempName !== resolvedDetailId) {
+      sessionChanges = getSessionFileChangesSummary(runningCtx.tempName);
+    }
+    if ((!sessionChanges || sessionChanges.length === 0) && id !== resolvedDetailId) {
+      sessionChanges = getSessionFileChangesSummary(id);
+    }
+    detail.sessionFileChanges = sessionChanges || [];
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(detail));
     return;
@@ -1362,6 +1414,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Xem thay doi file theo phien lam viec (Session-only Diff, khong lay tu Git)
+  if (req.method === "GET" && pathname === "/api/session-file-diff") {
+    try {
+      const sessionId = (urlObj.searchParams.get("sessionId") || "").trim();
+      const targetPath = (urlObj.searchParams.get("path") || "").trim();
+      const workspace = (urlObj.searchParams.get("workspace") || "").trim();
+      if (!targetPath) {
+        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: "Thiếu tham số path" }));
+        return;
+      }
+      const runningCtx = sessionId ? getRunningSession(sessionId) : null;
+      const effectiveSessionId = runningCtx?.info?.sessionId || runningCtx?.sessionId || sessionId;
+      let result = getSessionSingleFileDiff(effectiveSessionId, targetPath, workspace);
+      if (!result.inSession && runningCtx?.tempName && runningCtx.tempName !== effectiveSessionId) {
+        result = getSessionSingleFileDiff(runningCtx.tempName, targetPath, workspace);
+      }
+      if (!result.inSession && sessionId && sessionId !== effectiveSessionId) {
+        result = getSessionSingleFileDiff(sessionId, targetPath, workspace);
+      }
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ success: false, error: err.message || "Lỗi đọc thay đổi file trong phiên" }));
+    }
+    return;
+  }
+
   // API: Xem thay doi file (Git Diff: dong xanh them / dong do xoa)
   if (req.method === "GET" && pathname === "/api/file-diff") {
     (async () => {
@@ -1569,6 +1650,7 @@ const server = http.createServer((req, res) => {
         }
         const result = deleteSession(id);
         if (result && result.ok) {
+          deleteSessionDiffStore(id);
           broadcastHubEvent("sessions_updated", { type: "session_deleted", sessionId: id });
         }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
@@ -1629,6 +1711,14 @@ const server = http.createServer((req, res) => {
             }
           }
         } catch {}
+        let stoppedFileChanges = [];
+        try {
+          const stopSid = targetCtx.info?.sessionId || targetCtx.sessionId;
+          if (targetCtx.turnDiffTracker && stopSid) {
+            stoppedFileChanges = syncTurnChanges(targetCtx.turnDiffTracker, stopSid, { explicitOnly: false, allowWorkspaceScan: true });
+            targetCtx.turnDiffTracker.finalized = true;
+          }
+        } catch {}
         targetCtx.isFinished = true;
         recentlyCompletedSessions.set(targetCtx.sessionId, targetCtx);
         if (targetCtx.tempName) recentlyCompletedSessions.set(targetCtx.tempName, targetCtx);
@@ -1638,8 +1728,11 @@ const server = http.createServer((req, res) => {
           if (targetCtx.tempName) recentlyCompletedSessions.delete(targetCtx.tempName);
           if (targetCtx.info?.sessionId) recentlyCompletedSessions.delete(targetCtx.info.sessionId);
         }, 15000);
+        if (stoppedFileChanges.length > 0) {
+          broadcastToSession(targetCtx, "session_file_diffs", { sessionId: targetCtx.info?.sessionId || targetCtx.sessionId, files: stoppedFileChanges });
+        }
         broadcastToSession(targetCtx, "stderr", { text: "Tiến trình đã được dừng bởi người dùng." });
-        broadcastToSession(targetCtx, "finish", { exitCode: -1, sessionId: targetCtx.sessionId, session_id: targetCtx.sessionId });
+        broadcastToSession(targetCtx, "finish", { exitCode: -1, sessionId: targetCtx.sessionId, session_id: targetCtx.sessionId, sessionFileChanges: stoppedFileChanges });
         for (const c of targetCtx.clients) {
           try { c.end(); } catch {}
         }
@@ -1713,7 +1806,7 @@ const server = http.createServer((req, res) => {
       try { data = JSON.parse(body); } catch {}
 
       const prompt = data.prompt || "";
-      const model = data.model || "cx/gpt-6.1-sol";
+      const model = normalizeModelId(data.model) || "cx/gpt-6.1-sol";
       const rawCwd = data.cwd || data.workspace;
       const cwd = (rawCwd && fs.existsSync(rawCwd)) ? rawCwd : ((process.env.AI_HUB_DEFAULT_WORKSPACE && fs.existsSync(process.env.AI_HUB_DEFAULT_WORKSPACE)) ? process.env.AI_HUB_DEFAULT_WORKSPACE : process.cwd());
       let sessionId = data.sessionId || `session_${Date.now()}`;
@@ -1787,6 +1880,7 @@ const server = http.createServer((req, res) => {
         sessionId,
         tempName: (!resume && sessionId.startsWith('session_')) ? sessionId : null,
         info: { model, cwd, sessionId, prompt: rawPrompt, title, startTime: Date.now() },
+        turnDiffTracker: startTurnSnapshot(cwd),
         events: [],
         clients: new Set((data.streamMode === "eventsource") ? [] : [res])
       };
@@ -1820,6 +1914,7 @@ const server = http.createServer((req, res) => {
         OPENAI_API_BASE: `http://${NINE_ROUTER_IP}:${NINE_ROUTER_PORT}/v1`,
         GOOSE_PROVIDER: "openai",
         GOOSE_MODEL: model,
+        GOOSE_CONTEXT_LIMIT: process.env.GOOSE_CONTEXT_LIMIT || "400000",
         GOOSE_CLI_MIN_PRIORITY: "0.8",
         GOOSE_SHOW_FULL_OUTPUT: "false"
       };
@@ -1884,11 +1979,17 @@ const server = http.createServer((req, res) => {
                       broadcastToSession(sessionCtx, "thinking", { text: thoughtVal });
                     }
                   } else if (item.type === "toolRequest" && item.toolCall) {
+                    const reqToolName = item.toolCall.value?.name || "tool";
+                    const reqToolArgs = item.toolCall.value?.arguments || {};
+                    try {
+                      captureExplicitToolPaths(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, reqToolName, reqToolArgs, cwd);
+                    } catch {}
                     broadcastToSession(sessionCtx, "tool_call", {
-                      name: item.toolCall.value?.name || "tool",
-                      args: item.toolCall.value?.arguments || {}
+                      name: reqToolName,
+                      args: reqToolArgs
                     });
                   } else if (item.type === "toolResponse") {
+                    const isErr = Boolean(item.toolResult?.status === "error" || item.toolResult?.value?.isError || item.toolResult?.error);
                     let outStr = item.output || item.value || "";
                     if (!outStr && item.toolResult) {
                       const trVal = item.toolResult.value;
@@ -1902,19 +2003,31 @@ const server = http.createServer((req, res) => {
                         } else {
                           outStr = JSON.stringify(trVal, null, 2);
                         }
-                      } else {
+                      } else if (trVal !== undefined && trVal !== null) {
                         outStr = String(trVal || "");
+                      } else if (item.toolResult.error) {
+                        outStr = String(item.toolResult.error);
                       }
                     }
                     broadcastToSession(sessionCtx, "tool_result", {
                       output: outStr,
-                      id: item.id || ""
+                      id: item.id || "",
+                      isError: isErr
                     });
+                    if (!isErr && sessionCtx.turnDiffTracker) {
+                      try {
+                        const liveChanges = syncTurnChanges(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, { explicitOnly: true, allowWorkspaceScan: false });
+                        if (liveChanges.length > 0) {
+                          broadcastToSession(sessionCtx, "session_file_diffs", { sessionId: sessionCtx.info?.sessionId || sessionId, files: liveChanges });
+                        }
+                      } catch {}
+                    }
                   } else if (item.type === "error") {
                     broadcastToSession(sessionCtx, "error", { error: item.message || item.text || "Lỗi phản hồi" });
                   }
                 }
               } else if (parsed.type === "toolResponse") {
+                const isErr = Boolean(parsed.toolResult?.status === "error" || parsed.toolResult?.value?.isError || parsed.toolResult?.error);
                 let outStr = parsed.output || parsed.value || "";
                 if (!outStr && parsed.toolResult) {
                   const trVal = parsed.toolResult.value;
@@ -1928,14 +2041,25 @@ const server = http.createServer((req, res) => {
                     } else {
                       outStr = JSON.stringify(trVal, null, 2);
                     }
-                  } else {
+                  } else if (trVal !== undefined && trVal !== null) {
                     outStr = String(trVal || "");
+                  } else if (parsed.toolResult.error) {
+                    outStr = String(parsed.toolResult.error);
                   }
                 }
                 broadcastToSession(sessionCtx, "tool_result", {
                   output: outStr,
-                  id: parsed.id || ""
+                  id: parsed.id || "",
+                  isError: isErr
                 });
+                if (!isErr && sessionCtx.turnDiffTracker) {
+                  try {
+                    const liveChanges = syncTurnChanges(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, { explicitOnly: true, allowWorkspaceScan: false });
+                    if (liveChanges.length > 0) {
+                      broadcastToSession(sessionCtx, "session_file_diffs", { sessionId: sessionCtx.info?.sessionId || sessionId, files: liveChanges });
+                    }
+                  } catch {}
+                }
               } else if (parsed.type === "error") {
                 broadcastToSession(sessionCtx, "error", { error: parsed.error || "Lỗi tiến trình" });
               } else if (parsed.type === "complete") {
@@ -1981,6 +2105,16 @@ const server = http.createServer((req, res) => {
         } catch (err) {
           console.error("[SESSION RESOLVE] " + err.message);
         }
+        let finalFileChanges = [];
+        try {
+          finalFileChanges = finalizeTurnSnapshotSync(sessionCtx.turnDiffTracker, sessionCtx.tempName || sessionCtx.sessionId, sessionId);
+        } catch (err) {
+          console.error("[SESSION DIFF] " + err.message);
+        }
+        if (sessionCtx.isFinished) return;
+        if (finalFileChanges.length > 0) {
+          broadcastToSession(sessionCtx, "session_file_diffs", { sessionId, files: finalFileChanges });
+        }
         if (code !== 0 && code !== null) {
           broadcastToSession(sessionCtx, "stderr", { text: `Tiến trình kết thúc với mã lỗi: ${code}` });
         }
@@ -1994,7 +2128,7 @@ const server = http.createServer((req, res) => {
           if (sessionCtx.info?.sessionId) recentlyCompletedSessions.delete(sessionCtx.info.sessionId);
         }, 15000);
 
-        broadcastToSession(sessionCtx, "finish", { exitCode: code, sessionId, session_id: sessionId });
+        broadcastToSession(sessionCtx, "finish", { exitCode: code, sessionId, session_id: sessionId, sessionFileChanges: finalFileChanges });
 
         for (const c of sessionCtx.clients) {
           try { c.end(); } catch {}

@@ -272,7 +272,12 @@ assert.ok(html.includes('.user-message-row:not([data-latest-user-question="true"
 assert.ok(html.includes('.user-message-row:not([data-latest-user-question="true"]) .user-edit-sep'));
 assert.ok(source.includes('function syncLatestUserQuestionEditButton()'));
 assert.ok(source.includes('window.cancelInlineUserEdit = function(id)'));
-assert.ok(source.includes('window.saveInlineUserEditOnly = function(id)'));
+assert.ok(!source.includes('saveInlineUserEditOnly'), 'Edit box has no save-only action; it submits and regenerates');
+assert.ok(!source.includes('id="sessionStatus"') && !source.includes('id="sessionStatusDot"'), 'Composer has no running status chip');
+assert.ok(source.includes('function setSessionStatus(text, running)'));
+const editSubmit = source.slice(source.indexOf('class="user-edit-submit-btn'), source.indexOf('<span>Gửi</span>', source.indexOf('class="user-edit-submit-btn')));
+assert.ok(editSubmit.includes('var(--send-btn-bg)') && editSubmit.includes('var(--send-btn-text)'), 'Edit send button must use defined theme colors so it is visible');
+assert.ok(!/var\(--accent\)/.test(source), 'Undefined --accent variable must not be used');
 assert.ok(source.includes('window.submitInlineUserEdit = async function(id)'));
 assert.ok(source.includes('user-edit-submit-btn'));
 assert.ok(source.includes('title="Gửi câu hỏi và sinh lại câu trả lời (Enter)"'));

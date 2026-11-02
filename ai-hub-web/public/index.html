@@ -1893,12 +1893,6 @@
           
           <!-- Left: Status, Folder, Char Count -->
           <div class="flex items-center space-x-1 sm:space-x-1.5 text-[11px] shrink-0 min-w-0">
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[10px]"
-                  style="background: var(--badge-bg); color: var(--badge-text);" title="Trạng thái phiên làm việc">
-              <span id="sessionStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow shrink-0"></span>
-              <span id="sessionStatus" class="hidden sm:inline">Sẵn sàng</span>
-            </span>
-            
             <span id="currentSessionFolderTag" hidden></span>
 
             <span id="charCount" class="font-mono text-[10px] hidden sm:inline" style="color: var(--text-sub);">
@@ -6264,48 +6258,6 @@
       if (bubble) bubble.classList.remove('hidden');
     };
 
-    window.saveInlineUserEditOnly = function(id) {
-      const feed = document.getElementById('chatFeed');
-      if (!feed) return;
-      const row = feed.querySelector(`.user-message-row[data-snippet-id="${id}"]`)
-        || feed.querySelector('.user-message-row[data-latest-user-question="true"]');
-      if (!row) return;
-      const textarea = row.querySelector('.inline-user-edit-textarea');
-      const newPrompt = (textarea ? textarea.value : (window._codeSnippets[id] || row.dataset.questionText || '')).trim();
-      if (!newPrompt) {
-        showToast('Vui lòng nhập nội dung câu hỏi', 'info');
-        if (textarea) textarea.focus();
-        return;
-      }
-
-      // Update stored text
-      row.dataset.questionText = newPrompt;
-      window._codeSnippets[id] = newPrompt;
-
-      // Update bubble display
-      const bubble = row.querySelector('.user-bubble');
-      if (bubble) {
-        const isCodeLike = newPrompt.includes('\n') || newPrompt.startsWith('$') || newPrompt.includes('kubectl') || newPrompt.includes('curl ') || newPrompt.includes('SELECT ');
-        bubble.className = `user-bubble text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${isCodeLike ? 'font-mono text-[11.5px]' : 'font-medium'}`;
-        bubble.textContent = newPrompt;
-        bubble.classList.remove('hidden');
-      }
-
-      // Remove edit box
-      const inlineBox = row.querySelector('.inline-user-edit-box');
-      if (inlineBox) inlineBox.remove();
-
-      // Update currentSessionHistoryItems in memory
-      for (let i = currentSessionHistoryItems.length - 1; i >= 0; i--) {
-        if (currentSessionHistoryItems[i].role === 'user') {
-          currentSessionHistoryItems[i].text = newPrompt;
-          break;
-        }
-      }
-
-      showToast('Đã lưu nội dung câu hỏi', 'success');
-    };
-
     window.submitInlineUserEdit = async function(id) {
       const feed = document.getElementById('chatFeed');
       if (!feed) return;
@@ -6384,7 +6336,7 @@
 
       const editBox = document.createElement('div');
       editBox.className = 'inline-user-edit-box w-full mt-1 rounded-2xl border p-2.5 sm:p-3 shadow-md space-y-2.5';
-      editBox.style.cssText = 'background: var(--bg-card); border-color: var(--accent); min-width: min(84vw, 440px);';
+      editBox.style.cssText = 'background: var(--bg-card); border-color: var(--border); min-width: min(84vw, 440px);';
       editBox.innerHTML = `
         <textarea class="inline-user-edit-textarea w-full bg-transparent text-xs sm:text-[13px] leading-relaxed focus:outline-none resize-none"
                   rows="3"
@@ -6401,17 +6353,9 @@
               Hủy
             </button>
             <button type="button"
-                    onclick="saveInlineUserEditOnly('${id}')"
-                    class="px-2.5 py-1 rounded-lg text-[11.5px] font-medium border hover:opacity-80 transition flex items-center gap-1 shrink-0"
-                    style="border-color: var(--border); color: var(--text-main); background: var(--bg-surface);"
-                    title="Chỉ lưu nội dung câu hỏi">
-              <svg class="w-3 h-3 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span>Lưu</span>
-            </button>
-            <button type="button"
                     onclick="submitInlineUserEdit('${id}')"
-                    class="user-edit-submit-btn px-3 py-1 rounded-lg text-[11.5px] font-semibold text-white shadow-xs hover:opacity-90 transition flex items-center gap-1 shrink-0"
-                    style="background: var(--accent);"
+                    class="user-edit-submit-btn px-3.5 py-1.5 min-h-[34px] rounded-lg text-[12px] font-semibold shadow-sm hover:opacity-90 active:scale-95 transition flex items-center gap-1 shrink-0"
+                    style="background: var(--send-btn-bg); color: var(--send-btn-text);"
                     title="Gửi câu hỏi và sinh lại câu trả lời (Enter)">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
               <span>Gửi</span>
@@ -6459,8 +6403,13 @@
     const promptInput = document.getElementById('promptInput');
     const sendBtn = document.getElementById('sendBtn');
     const stopBtn = document.getElementById('stopBtn');
-    const sessionStatus = document.getElementById('sessionStatus');
-    const sessionStatusDot = document.getElementById('sessionStatusDot');
+    // The visible composer status chip was removed; keep status updates null-safe for any legacy host element.
+    function setSessionStatus(text, running) {
+      const label = document.getElementById('sessionStatus');
+      const dot = document.getElementById('sessionStatusDot');
+      if (label) label.innerText = text;
+      if (dot) dot.className = running ? 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping' : 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
+    }
     const currentSessionFolder = document.getElementById('currentSessionFolder');
     const currentSessionFolderTag = document.getElementById('currentSessionFolderTag');
     const currentSessionTitle = document.getElementById('currentSessionTitle');
@@ -7300,8 +7249,7 @@
         stopBtn.disabled = false;
         stopBtn.innerHTML = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>';
       }
-      sessionStatus.innerText = 'Sẵn sàng';
-      sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
+      setSessionStatus('Sẵn sàng', false);
       stopLiveExecutionTimer(true);
     }
 
@@ -10609,8 +10557,7 @@
 
       sendBtn.classList.add('hidden');
       stopBtn.classList.remove('hidden');
-      sessionStatus.innerText = 'Đang tiếp tục...';
-      sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
+      setSessionStatus('Đang tiếp tục...', true);
       const taskStartTime = sessionInfo?.startTime || Date.now();
       startLiveExecutionTimer(taskStartTime);
 
@@ -10673,8 +10620,7 @@
           runningWorkspace = null;
           sendBtn.classList.remove('hidden');
           stopBtn.classList.add('hidden');
-          sessionStatus.innerText = 'Sẵn sàng';
-          sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
+          setSessionStatus('Sẵn sàng', false);
           stopLiveExecutionTimer(true);
           loadWorkspaceTree(false);
         }
@@ -10714,8 +10660,7 @@
       runningWorkspace = currentWorkspace;
       sendBtn.classList.add('hidden');
       stopBtn.classList.remove('hidden');
-      sessionStatus.innerText = 'Đang thực thi...';
-      sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
+      setSessionStatus('Đang thực thi...', true);
       startLiveExecutionTimer();
 
       appendTerminalLog('cmd', '[PROMPT] ' + prompt);
@@ -10824,8 +10769,7 @@
           runningWorkspace = null;
           sendBtn.classList.remove('hidden');
           stopBtn.classList.add('hidden');
-          sessionStatus.innerText = 'Sẵn sàng';
-          sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
+          setSessionStatus('Sẵn sàng', false);
           stopLiveExecutionTimer(true);
           loadWorkspaceTree(false);
           if (!isMobileChatInput()) {

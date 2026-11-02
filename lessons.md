@@ -56,3 +56,5 @@
 - [Windows power scheduler] Separate WakeToRun from power-off tasks; cache task discovery, serialize updates, and restore AC wake settings on rollback. Import ScheduledTasks before defining test mocks to prevent module auto-loading from replacing mocks.
 
 - [Clipboard / PowerShell 5.1] CMD commands with cd /d and && must be wrapped as a single-quoted cmd.exe /d /s /c argument for PowerShell paste; double embedded apostrophes and validate by executing the clipboard text in powershell.exe.
+ 
+- **[AI tóm tắt truyện dài / Next route]**: Không nhét cả truyện vào 1 prompt; chia map-reduce, lưu biên bản vào DB để chạy tiếp từng bước (~30s/request, UI gọi lặp). Khóa advisory phải mở/đóng trên cùng 1 client. 

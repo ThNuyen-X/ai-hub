@@ -268,7 +268,10 @@ assert.ok(html.includes('.user-message-row:not([data-latest-user-question="true"
 assert.ok(html.includes('.user-message-row:not([data-latest-user-question="true"]) .user-edit-sep'));
 assert.ok(source.includes('function syncLatestUserQuestionEditButton()'));
 assert.ok(source.includes('window.cancelInlineUserEdit = function(id)'));
+assert.ok(source.includes('window.saveInlineUserEditOnly = function(id)'));
 assert.ok(source.includes('window.submitInlineUserEdit = async function(id)'));
+assert.ok(source.includes('user-edit-submit-btn'));
+assert.ok(source.includes('title="Gửi câu hỏi và sinh lại câu trả lời (Enter)"'));
 assert.ok(source.includes('await sendMessage({ promptOverride: newPrompt, rewindLastTurn: true });'));
 assert.ok(source.includes('rewindLastTurn: !!opts.rewindLastTurn'));
 assert.ok(serverSource.includes('function truncateLastUserTurn(sessionId, newTitlePrompt = "")'));

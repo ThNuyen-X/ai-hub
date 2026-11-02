@@ -1264,6 +1264,10 @@ const server = http.createServer((req, res) => {
           if (isDir) {
             const cp = spawn("explorer.exe", [resolved], { detached: true, stdio: "ignore" });
             cp.unref();
+          } else if (!payload.reveal && [".html", ".htm", ".jsp", ".java", ".js", ".cjs", ".mjs", ".ts", ".tsx", ".jsx", ".css", ".scss", ".json", ".xml", ".svg", ".md", ".txt", ".log", ".sql", ".py", ".go", ".rs", ".cs", ".c", ".h", ".cpp", ".yaml", ".yml", ".toml", ".properties", ".env", ".sh", ".bat", ".cmd", ".ps1"].includes(ext)) {
+            // Open source as text instead of launching browser associations or executing scripts.
+            const cp = spawn("notepad.exe", [resolved], { detached: true, stdio: "ignore" });
+            cp.unref();
           } else if ([".exe", ".bat", ".cmd", ".msi", ".ps1"].includes(ext) || payload.reveal) {
             const cp = spawn("explorer.exe", ["/select,", resolved], { detached: true, stdio: "ignore" });
             cp.unref();

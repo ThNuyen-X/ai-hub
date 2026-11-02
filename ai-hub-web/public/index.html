@@ -418,12 +418,23 @@
       border-color: #f59e0b;
       box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25);
     }
+    .local-path-badge,
+    .local-path-badge *,
+    [data-file-diff-row="1"],
+    [data-file-diff-row="1"] *,
+    [data-ws-folder-row="1"],
+    [data-ws-folder-row="1"] *,
+    #currentSessionWorkspaceBadge,
+    #currentSessionWorkspaceBadge * {
+      -webkit-touch-callout: none !important;
+      user-select: none !important;
+    }
     .local-path-badge .path-text {
       color: #38bdf8;
       text-decoration: underline;
       text-decoration-style: dotted;
       text-underline-offset: 2.5px;
-      user-select: text;
+      user-select: none;
       word-break: break-all;
     }
     [data-theme="warm"] .local-path-badge .path-text {
@@ -523,6 +534,24 @@
     }
 
     /* Responsive Toast Notification System */
+    .hub-inline-error { margin: 8px; font-size: 12px; color: var(--text-main); border-left: 2px solid #f43f5e; background: var(--bg-card); border-radius: 6px; }
+    .hub-inline-error summary { cursor: pointer; padding: 8px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-sub); }
+    .hub-error-detail { padding: 8px 12px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 220px; overflow: auto; border-top: 1px solid var(--border-subtle); }
+    @media (prefers-reduced-motion: reduce) {
+      .hub-skeleton, .hub-top-loading-track, .hub-inline-spinner { animation: none !important; }
+    }
+    @keyframes hubLoadingSpin { to { transform: rotate(360deg); } }
+    .workspace-running-spinner {
+      display: block;
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      transform-origin: center;
+      animation: hubLoadingSpin 1.1s linear infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .workspace-running-spinner { animation-duration: 3s; }
+    }
     #toastContainer {
       top: 20px;
       right: 20px;
@@ -571,16 +600,97 @@
       user-select: none !important;
       touch-action: pan-y;
     }
-    #sessionContextMenu {
+    #sessionContextMenu,
+    #pathContextMenu {
       transition: opacity 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    #sessionContextMenu.active {
+    #sessionContextMenu.active,
+    #pathContextMenu.active {
       opacity: 1 !important;
       pointer-events: auto !important;
     }
-    #sessionContextMenuPanel {
+    #sessionContextMenuPanel,
+    #pathContextMenuPanel {
       background-color: var(--bg-card) !important;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border) !important;
+    }
+
+    /* Unified Loading System: Top Glide Bar, Shimmer Skeletons & Inline Busy States */
+    #hubTopLoadingBar {
+      height: 2.5px;
+      overflow: hidden;
+      background: transparent;
+    }
+    #hubTopLoadingBar.is-loading {
+      opacity: 1 !important;
+    }
+    .hub-top-loading-track {
+      width: 42%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent 0%, #3b82f6 35%, #38bdf8 70%, transparent 100%);
+      animation: hubTopBarGlide 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      will-change: transform;
+    }
+    [data-theme="warm"] .hub-top-loading-track {
+      background: linear-gradient(90deg, transparent 0%, #d97706 35%, #f59e0b 70%, transparent 100%);
+    }
+    @keyframes hubTopBarGlide {
+      0% { transform: translateX(-110%); }
+      100% { transform: translateX(340%); }
+    }
+    .hub-skeleton {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.045) 25%, rgba(255, 255, 255, 0.11) 50%, rgba(255, 255, 255, 0.045) 75%);
+      background-size: 200% 100%;
+      animation: hubSkeletonShimmer 1.35s ease-in-out infinite;
+    }
+    [data-theme="light"] .hub-skeleton,
+    [data-theme="warm"] .hub-skeleton {
+      background: linear-gradient(90deg, rgba(15, 23, 42, 0.055) 25%, rgba(15, 23, 42, 0.125) 50%, rgba(15, 23, 42, 0.055) 75%);
+      background-size: 200% 100%;
+    }
+    @keyframes hubSkeletonShimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .hub-inline-spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 1.8px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 9999px;
+      animation: hubLoadingSpin 0.65s linear infinite;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .hub-row-busy {
+      opacity: 0.6 !important;
+      pointer-events: none !important;
+      position: relative;
+    }
+    .local-path-badge[data-path-loading="1"],
+    [data-file-diff-row="1"][data-path-loading="1"] {
+      border-color: #38bdf8 !important;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+    .local-path-badge[data-path-loading="1"] .path-icon {
+      display: inline-block;
+      animation: spin 0.75s linear infinite;
+    }
+    .local-path-badge[data-path-done="1"],
+    [data-file-diff-row="1"][data-path-done="1"] {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25);
+    }
+    .local-path-badge[data-path-error="1"],
+    [data-file-diff-row="1"][data-path-error="1"] {
+      border-color: #f43f5e !important;
+      box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.25);
     }
     .toast-item.toast-success {
       border-color: rgba(16, 185, 129, 0.45);
@@ -810,7 +920,8 @@
         margin: 0 auto;
         gap: 8px;
       }
-      #sessionContextMenu.active {
+      #sessionContextMenu.active,
+      #pathContextMenu.active {
         inset: 0 !important;
         top: 0 !important;
         left: 0 !important;
@@ -821,7 +932,8 @@
         justify-content: center !important;
         padding: 16px !important;
       }
-      #sessionContextMenu.active #sessionContextMenuPanel {
+      #sessionContextMenu.active #sessionContextMenuPanel,
+      #pathContextMenu.active #pathContextMenuPanel {
         width: calc(100% - 32px) !important;
         max-width: 320px !important;
         border-radius: 20px !important;
@@ -900,33 +1012,57 @@
       line-height: 1.55;
     }
     .diff-viewer-table tr.diff-row-add {
-      background: rgba(16, 185, 129, 0.18);
+      background: rgba(46, 160, 67, 0.08);
     }
     .diff-viewer-table tr.diff-row-add td.diff-sign {
       color: #34d399;
     }
     [data-theme="light"] .diff-viewer-table tr.diff-row-add {
-      background: rgba(16, 185, 129, 0.17);
+      background: rgba(46, 160, 67, 0.06);
     }
     [data-theme="warm"] .diff-viewer-table tr.diff-row-add {
-      background: rgba(16, 185, 129, 0.21);
+      background: #dce7d5;
     }
     [data-theme="light"] .diff-viewer-table tr.diff-row-add td.diff-sign,
     [data-theme="warm"] .diff-viewer-table tr.diff-row-add td.diff-sign {
       color: #047857;
     }
     .diff-viewer-table tr.diff-row-del {
-      background: rgba(244, 63, 94, 0.19);
+      background: rgba(248, 81, 73, 0.07);
     }
     .diff-viewer-table tr.diff-row-del td.diff-sign {
       color: #fb7185;
     }
     [data-theme="light"] .diff-viewer-table tr.diff-row-del {
-      background: rgba(244, 63, 94, 0.16);
+      background: rgba(248, 81, 73, 0.055);
     }
     [data-theme="warm"] .diff-viewer-table tr.diff-row-del {
-      background: rgba(244, 63, 94, 0.19);
+      background: #eedbd3;
     }
+    [data-theme="warm"] #filePreviewPre,
+    [data-theme="warm"] #filePreviewContent.hljs {
+      background: var(--bg-surface);
+      color: var(--text-main);
+    }
+    [data-theme="warm"] #filePreviewContent.hljs {
+      padding: 0;
+    }
+    /* Ink-based syntax palette stays readable on warm paper and muted diff rows. */
+    [data-theme="warm"] #filePreviewBody .hljs-keyword,
+    [data-theme="warm"] #filePreviewBody .hljs-selector-tag { color: #823c70; }
+    [data-theme="warm"] #filePreviewBody .hljs-string,
+    [data-theme="warm"] #filePreviewBody .hljs-regexp { color: #245d3b; }
+    [data-theme="warm"] #filePreviewBody .hljs-number,
+    [data-theme="warm"] #filePreviewBody .hljs-literal { color: #87401b; }
+    [data-theme="warm"] #filePreviewBody .hljs-title,
+    [data-theme="warm"] #filePreviewBody .hljs-built_in { color: #244f78; }
+    [data-theme="warm"] #filePreviewBody .hljs-comment,
+    [data-theme="warm"] #filePreviewBody .hljs-quote { color: #625b50; }
+    [data-theme="warm"] #filePreviewBody .hljs-attr,
+    [data-theme="warm"] #filePreviewBody .hljs-attribute,
+    [data-theme="warm"] #filePreviewBody .hljs-type { color: #705019; }
+    [data-theme="warm"] #filePreviewBody .hljs-name,
+    [data-theme="warm"] #filePreviewBody .hljs-tag { color: #753c2c; }
     [data-theme="light"] .diff-viewer-table tr.diff-row-del td.diff-sign,
     [data-theme="warm"] .diff-viewer-table tr.diff-row-del td.diff-sign {
       color: #be123c;
@@ -1003,6 +1139,11 @@
 </head>
 <body class="h-screen w-screen flex overflow-hidden">
 
+  <!-- Global Top Indeterminate Loading Progress Bar -->
+  <div id="hubTopLoadingBar" class="fixed top-0 left-0 right-0 z-[120] pointer-events-none opacity-0 transition-opacity duration-200" aria-hidden="true">
+    <div class="hub-top-loading-track"></div>
+  </div>
+
   <!-- Persistent Global SVG Definitions for Model Gradients -->
   <svg style="position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none;" aria-hidden="true" focusable="false">
     <defs>
@@ -1062,7 +1203,12 @@
     <!-- Workspace navigation -->
     <div class="p-2.5 border-b" style="border-color: var(--border-subtle);">
       <div class="flex items-center justify-between px-1 text-[11px]" style="color: var(--text-sub);">
-        <span class="font-medium">Workspaces</span>
+        <div class="flex items-center gap-1.5">
+          <span class="font-medium">Workspaces</span>
+          <span id="sidebarRefreshIndicator" class="hidden inline-flex items-center text-blue-400" title="Đang đồng bộ danh sách...">
+            <span class="hub-inline-spinner" style="width: 10px; height: 10px; border-width: 1.6px;"></span>
+          </span>
+        </div>
         <button id="btnExpandAll" onclick="toggleExpandAllWorkspaces()" class="hover:underline text-[10px]">
           Mở tất cả
         </button>
@@ -1083,11 +1229,30 @@
 
     <!-- Workspace Tree View (VS Code Tree Style) -->
     <div id="workspaceTree" class="flex-1 overflow-y-auto p-2 space-y-1">
-      <div class="p-4 text-center text-xs" style="color: var(--text-sub);">
-        <div class="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-        <span>Đang nạp danh sách dự án...</span>
+      <div class="space-y-2.5 p-1.5" aria-busy="true">
+        <div class="flex items-center gap-2 px-2 py-1.5">
+          <div class="hub-skeleton w-3.5 h-3.5 rounded"></div>
+          <div class="hub-skeleton h-3.5 w-28"></div>
+          <div class="hub-skeleton h-3.5 w-6 ml-auto rounded"></div>
+        </div>
+        <div class="pl-4 space-y-1.5">
+          <div class="hub-skeleton h-7 w-full rounded-lg"></div>
+          <div class="hub-skeleton h-7 w-11/12 rounded-lg"></div>
+          <div class="hub-skeleton h-7 w-4/5 rounded-lg"></div>
+        </div>
+        <div class="flex items-center gap-2 px-2 py-1.5 pt-2">
+          <div class="hub-skeleton w-3.5 h-3.5 rounded"></div>
+          <div class="hub-skeleton h-3.5 w-24"></div>
+          <div class="hub-skeleton h-3.5 w-5 ml-auto rounded"></div>
+        </div>
+        <div class="pl-4 space-y-1.5">
+          <div class="hub-skeleton h-7 w-10/12 rounded-lg"></div>
+          <div class="hub-skeleton h-7 w-3/4 rounded-lg"></div>
+        </div>
       </div>
     </div>
+
+
 
     <!-- Sidebar Bottom Footer: Storage & Settings -->
     <div class="p-3 border-t shrink-0 flex flex-col gap-2" style="border-color: var(--border); background-color: var(--bg-card);">
@@ -1187,7 +1352,8 @@
         <div class="hidden lg:flex items-center min-w-0 flex-1 gap-1.5 sm:gap-2 overflow-hidden">
           
           <!-- Workspace Badge -->
-          <button onclick="openWorkspaceModal()" 
+          <button id="currentSessionWorkspaceBadge"
+                  onclick="openWorkspaceModal()" 
                   type="button"
                   class="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-medium ease-spring hover:bg-[var(--bg-hover)] shrink-0 max-w-[85px] xs:max-w-[120px] sm:max-w-[170px] md:max-w-[210px] shadow-2xs group"
                   style="background: var(--bg-card); border-color: var(--border); color: var(--text-main);" 
@@ -2467,6 +2633,24 @@
 
       <!-- Preview Body -->
       <div id="filePreviewBody" class="flex-1 overflow-auto font-mono text-[12.5px] leading-relaxed select-text" style="background: var(--bg-surface);">
+        <!-- Instant Shimmer Loading Skeleton for File Diff & Content -->
+        <div id="filePreviewLoadingState" class="hidden p-4 space-y-2.5" role="status" aria-busy="true">
+          <div class="flex items-center gap-2 text-xs font-sans pb-2 border-b" style="border-color: var(--border-subtle); color: var(--text-sub);">
+            <span class="hub-inline-spinner text-blue-400"></span>
+            <span>Đang tải thay đổi & nội dung file...</span>
+          </div>
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center gap-3"><div class="hub-skeleton w-10 h-3.5"></div><div class="hub-skeleton h-3.5 w-2/3"></div></div>
+            <div class="flex items-center gap-3"><div class="hub-skeleton w-10 h-3.5"></div><div class="hub-skeleton h-3.5 w-1/2"></div></div>
+            <div class="flex items-center gap-3"><div class="hub-skeleton w-10 h-3.5"></div><div class="hub-skeleton h-3.5 w-5/6"></div></div>
+            <div class="flex items-center gap-3"><div class="hub-skeleton w-10 h-3.5"></div><div class="hub-skeleton h-3.5 w-3/4"></div></div>
+            <div class="flex items-center gap-3"><div class="hub-skeleton w-10 h-3.5"></div><div class="hub-skeleton h-3.5 w-3/5"></div></div>
+            <div class="flex items-center gap-3"><div class="hub-skeleton w-10 h-3.5"></div><div class="hub-skeleton h-3.5 w-4/5"></div></div>
+            <div class="flex items-center gap-3"><div class="hub-skeleton w-10 h-3.5"></div><div class="hub-skeleton h-3.5 w-2/5"></div></div>
+            <div class="flex items-center gap-3"><div class="hub-skeleton w-10 h-3.5"></div><div class="hub-skeleton h-3.5 w-9/12"></div></div>
+          </div>
+        </div>
+
         <!-- Diff View -->
         <div id="filePreviewDiffContainer" class="hidden w-full">
           <div id="filePreviewDiffEmpty" class="hidden p-8 text-center text-xs" style="color: var(--text-sub);">
@@ -2479,7 +2663,11 @@
 
         <!-- Full Content View -->
         <pre id="filePreviewPre" class="p-4 m-0"><code id="filePreviewContent" class="hljs"></code></pre>
-        <div id="filePreviewImageContainer" class="hidden flex items-center justify-center p-4">
+        <div id="filePreviewImageContainer" class="hidden flex flex-col items-center justify-center p-4 min-h-[220px]">
+          <div id="filePreviewImageLoading" class="hidden flex items-center gap-2 text-xs font-sans py-6" style="color: var(--text-sub);">
+            <span class="hub-inline-spinner text-blue-400"></span>
+            <span>Đang tải hình ảnh...</span>
+          </div>
           <img id="filePreviewImage" class="max-w-full max-h-[70vh] rounded-lg shadow-lg object-contain" src="" alt="preview" />
         </div>
       </div>
@@ -2578,8 +2766,59 @@
     </div>
   </div>
 
-  <!-- Toast Notification Stack Container (Responsive, Safe-Area & Above Modals) -->
-  <div id="toastContainer" class="fixed z-[100] flex flex-col pointer-events-none" aria-live="polite" aria-atomic="true"></div>
+  <!-- Custom Path Context Menu (Right-click & Mobile Long-Press on File / Folder Paths) -->
+  <div id="pathContextMenu" class="hidden fixed z-[96] select-none transition-all duration-150 ease-out opacity-0 pointer-events-none" role="menu" aria-label="Menu đường dẫn">
+    <div id="pathContextMenuBackdrop" class="fixed inset-0 bg-black/65 sm:hidden hidden"></div>
+
+    <div id="pathContextMenuPanel" class="relative w-[290px] max-w-[calc(100vw-32px)] rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-2xl p-2 text-xs text-[var(--text-main)] overflow-hidden">
+      <!-- Header: File/Folder Name & Full Path -->
+      <div class="px-3 py-2.5 mb-1.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)]/60">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start gap-2 min-w-0 flex-1">
+            <span id="pathContextMenuIcon" class="text-sm leading-none shrink-0 mt-0.5">📄</span>
+            <span id="pathContextMenuTitle" class="font-semibold text-[13px] text-[var(--text-main)] break-words whitespace-normal leading-snug block">Tên đường dẫn</span>
+          </div>
+          <span id="pathContextMenuStatus" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/20 shrink-0 hidden"></span>
+        </div>
+        <span id="pathContextMenuFullPath" class="font-mono text-[11px] text-[var(--text-sub)] break-all whitespace-normal leading-snug mt-1.5 block"></span>
+      </div>
+
+      <!-- Actions: View, Open, Copy Path -->
+      <div class="space-y-0.5">
+        <button id="pathCtxBtnPreview" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
+          <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          <span id="pathCtxPreviewLabel" class="flex-1 font-medium text-[13px]">Xem nội dung</span>
+        </button>
+
+        <button id="pathCtxBtnOpen" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
+          <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          <span id="pathCtxOpenLabel" class="flex-1 font-medium text-[13px]">Mở trên máy tính</span>
+        </button>
+
+        <div class="my-1 border-t border-[var(--border)]/60"></div>
+
+        <div id="workspaceOrderActions" class="hidden border-b border-[var(--border)] pb-1 mb-1">
+          <button type="button" data-workspace-order="up" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)]">↑ Đưa lên</button>
+          <button type="button" data-workspace-order="down" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)]">↓ Đưa xuống</button>
+          <button type="button" data-workspace-order="pin" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)]">Ghim lên đầu</button>
+        </div>
+        <button id="pathCtxBtnCopy" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
+          <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+          <span id="pathCtxCopyLabel" class="flex-1 font-medium text-[13px]">Sao chép đường dẫn</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Stack Container (Disabled per quiet AI chat UX) -->
+  <div id="toastContainer" class="fixed z-[100] flex flex-col pointer-events-none" aria-live="polite"></div>
 
   <!-- ========================================================
        CORE CLIENT JAVASCRIPT
@@ -2720,130 +2959,114 @@
       if (label) label.innerText = soundEffects.enabled ? 'Bật' : 'Tắt';
     }
 
-    // TOAST NOTIFICATION STACK (Responsive, Touch & Gestures, Auto Limit)
-    function showToast(message, type = "info", duration = 3500) {
-      const container = document.getElementById('toastContainer');
-      if (!container) return;
+    // QUIET AI CHAT UX: Toasts disabled; replaced by contextual loading indicators & skeletons
+    function buildInlineErrorHtml(title, message) {
+      return '<details class="hub-inline-error"><summary>' + escapeHtml(title) + '</summary><div class="hub-error-detail">' + escapeHtml(String(message || title)) + '</div></details>';
+    }
 
-      const MAX_TOASTS = 4;
-      const existingToasts = container.querySelectorAll('.toast-item:not(.toast-leave)');
-      if (existingToasts.length >= MAX_TOASTS) {
-        dismissToast(existingToasts[0]);
-      }
-
-      const icons = {
-        success: `<svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-        </svg>`,
-        error: `<svg class="w-4 h-4 text-rose-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
-        </svg>`,
-        warning: `<svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-        </svg>`,
-        info: `<svg class="w-4 h-4 text-sky-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
-        </svg>`
-      };
-
-      const selectedIcon = icons[type] || icons.info;
-      const safeMessage = typeof escapeHtml === 'function' ? escapeHtml(String(message)) : String(message);
-
+    // Only actionable errors and warnings interrupt the quiet chat UI.
+    function showToast(message, type = 'info') {
+      if (type !== 'error' && type !== 'warning') return;
+      const host = document.getElementById('toastContainer');
+      if (!host) return;
+      while (host.children.length >= 3) host.firstElementChild.remove();
       const toast = document.createElement('div');
-      toast.className = `toast-item toast-${type} toast-enter`;
-      toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+      toast.className = 'toast-item toast-' + type;
+      toast.setAttribute('role', 'alert');
+      const text = document.createElement('span');
+      text.style.cssText = 'flex:1;white-space:pre-wrap;overflow-wrap:anywhere';
+      text.textContent = String(message || 'Không thể hoàn tất thao tác');
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'toast-close-btn';
+      close.textContent = '×';
+      close.setAttribute('aria-label', 'Đóng thông báo lỗi');
+      let timer;
+      const dismiss = () => { clearTimeout(timer); toast.remove(); };
+      close.addEventListener('click', dismiss);
+      toast.append(text, close);
+      host.appendChild(toast);
+      timer = setTimeout(dismiss, 6500);
+    }
 
-      toast.innerHTML = `
-        ${selectedIcon}
-        <div class="flex-1 min-w-0 pr-1 text-xs font-medium leading-relaxed break-words select-text">
-          ${safeMessage}
+    let _topLoadingActiveCount = 0;
+    let _topLoadingHideTimer = null;
+
+    function beginTopLoading() {
+      _topLoadingActiveCount++;
+      if (_topLoadingHideTimer) {
+        clearTimeout(_topLoadingHideTimer);
+        _topLoadingHideTimer = null;
+      }
+      const bar = typeof document !== 'undefined' ? document.getElementById('hubTopLoadingBar') : null;
+      if (bar) bar.classList.add('is-loading');
+    }
+
+    function endTopLoading() {
+      _topLoadingActiveCount = Math.max(0, _topLoadingActiveCount - 1);
+      if (_topLoadingActiveCount > 0) return;
+      if (_topLoadingHideTimer) clearTimeout(_topLoadingHideTimer);
+      _topLoadingHideTimer = setTimeout(() => {
+        _topLoadingHideTimer = null;
+        if (_topLoadingActiveCount === 0) {
+          const bar = typeof document !== 'undefined' ? document.getElementById('hubTopLoadingBar') : null;
+          if (bar) bar.classList.remove('is-loading');
+        }
+      }, 120);
+    }
+
+    function buildWorkspaceTreeSkeletonHtml() {
+      return `
+        <div class="space-y-2.5 p-1.5" aria-busy="true">
+          <div class="flex items-center gap-2 px-2 py-1.5">
+            <div class="hub-skeleton w-3.5 h-3.5 rounded"></div>
+            <div class="hub-skeleton h-3.5 w-28"></div>
+            <div class="hub-skeleton h-3.5 w-6 ml-auto rounded"></div>
+          </div>
+          <div class="pl-4 space-y-1.5">
+            <div class="hub-skeleton h-7 w-full rounded-lg"></div>
+            <div class="hub-skeleton h-7 w-11/12 rounded-lg"></div>
+            <div class="hub-skeleton h-7 w-4/5 rounded-lg"></div>
+          </div>
+          <div class="flex items-center gap-2 px-2 py-1.5 pt-2">
+            <div class="hub-skeleton w-3.5 h-3.5 rounded"></div>
+            <div class="hub-skeleton h-3.5 w-24"></div>
+            <div class="hub-skeleton h-3.5 w-5 ml-auto rounded"></div>
+          </div>
+          <div class="pl-4 space-y-1.5">
+            <div class="hub-skeleton h-7 w-10/12 rounded-lg"></div>
+            <div class="hub-skeleton h-7 w-3/4 rounded-lg"></div>
+          </div>
         </div>
-        <button type="button" class="toast-close-btn" aria-label="Đóng thông báo">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-          </svg>
-        </button>
       `;
+    }
 
-      function dismissToast(target) {
-        if (!target || target.classList.contains('toast-leave')) return;
-        target.classList.add('toast-leave');
-        setTimeout(() => {
-          if (target.parentElement) target.remove();
-        }, 220);
-      }
+    function buildChatFeedSkeletonHtml(titleText = '') {
+      const safeTitle = titleText ? escapeHtml(titleText) : 'phiên làm việc';
+      return `
+        <div class="w-full max-w-4xl mx-auto px-2 sm:px-4 py-6 space-y-6 select-none" role="status" aria-busy="true">
+          <div class="flex items-center justify-center gap-2 text-xs pb-1" style="color: var(--text-sub);">
+            <span class="hub-inline-spinner text-blue-400"></span>
+            <span class="truncate max-w-[260px] sm:max-w-md">Đang tải ${safeTitle}...</span>
+          </div>
+        </div>
+      `;
+    }
 
-      const closeBtn = toast.querySelector('.toast-close-btn');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          dismissToast(toast);
-        });
-      }
-
-      let remainingTime = duration;
-      let startTime = Date.now();
-      let timerId = null;
-
-      function startTimer() {
-        if (duration <= 0) return;
-        startTime = Date.now();
-        timerId = setTimeout(() => {
-          dismissToast(toast);
-        }, remainingTime);
-      }
-
-      function pauseTimer() {
-        if (!timerId) return;
-        clearTimeout(timerId);
-        timerId = null;
-        remainingTime -= (Date.now() - startTime);
-        if (remainingTime < 800) remainingTime = 800;
-      }
-
-      toast.addEventListener('mouseenter', pauseTimer);
-      toast.addEventListener('mouseleave', startTimer);
-
-      let startX = 0;
-      let currentX = 0;
-      let isSwiping = false;
-
-      toast.addEventListener('touchstart', (e) => {
-        pauseTimer();
-        startX = e.touches[0].clientX;
-        isSwiping = true;
-      }, { passive: true });
-
-      toast.addEventListener('touchmove', (e) => {
-        if (!isSwiping) return;
-        currentX = e.touches[0].clientX;
-        const deltaX = currentX - startX;
-        if (Math.abs(deltaX) > 10) {
-          toast.style.transform = `translateX(${deltaX}px)`;
-          toast.style.opacity = `${Math.max(0.2, 1 - Math.abs(deltaX) / 220)}`;
-        }
-      }, { passive: true });
-
-      toast.addEventListener('touchend', (e) => {
-        if (!isSwiping) return;
-        isSwiping = false;
-        const deltaX = currentX - startX;
-        if (Math.abs(deltaX) > 80) {
-          const flyDirection = deltaX > 0 ? '120%' : '-120%';
-          toast.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
-          toast.style.transform = `translateX(${flyDirection})`;
-          toast.style.opacity = '0';
-          setTimeout(() => dismissToast(toast), 180);
-        } else {
-          toast.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
-          toast.style.transform = '';
-          toast.style.opacity = '';
-          startTimer();
-        }
-      });
-
-      container.appendChild(toast);
-      startTimer();
+    function buildFolderExplorerSkeletonHtml() {
+      return `
+        <div class="space-y-1.5 p-2" role="status" aria-busy="true">
+          <div class="flex items-center gap-2 px-2 py-1 text-[11px]" style="color: var(--text-sub);">
+            <span class="hub-inline-spinner text-blue-400"></span>
+            <span>Đang đọc danh sách thư mục...</span>
+          </div>
+          <div class="hub-skeleton h-8 w-full rounded-lg"></div>
+          <div class="hub-skeleton h-8 w-11/12 rounded-lg"></div>
+          <div class="hub-skeleton h-8 w-full rounded-lg"></div>
+          <div class="hub-skeleton h-8 w-10/12 rounded-lg"></div>
+          <div class="hub-skeleton h-8 w-4/5 rounded-lg"></div>
+        </div>
+      `;
     }
 
     // CUSTOM PROMPT DIALOG (Promise-based)
@@ -3002,6 +3225,7 @@
       const openBtn = document.getElementById('sessionCtxBtnOpen');
       if (!menu || !panel || !sessionData) return;
 
+      if (typeof closePathContextMenu === 'function') closePathContextMenu();
       currentContextMenuSession = sessionData;
 
       if (titleEl) {
@@ -3651,35 +3875,33 @@
     window.openFullscreenCode = function(codeId, lang) {
       soundEffects.playClick();
       activeFullscreenCodeId = codeId;
-      const code = window._codeSnippets[codeId] || '';
-      
+      const code = String((window._codeSnippets && window._codeSnippets[codeId]) ?? '');
+
       const modal = document.getElementById('fullscreenCodeModal');
       const langEl = document.getElementById('fullscreenCodeLang');
       const contentEl = document.getElementById('fullscreenCodeContent');
       const metaEl = document.getElementById('fullscreenCodeMeta');
       const preEl = document.getElementById('fullscreenCodePre');
+      if (!modal || !contentEl) return;
 
-      langEl.innerText = lang || 'code';
-      
-      if (rawCode.length <= 20000 && lang && hljs.getLanguage(lang)) {
-        try {
+      if (langEl) langEl.innerText = lang || 'code';
+
+      try {
+        if (code.length <= 200000 && lang && typeof hljs !== 'undefined' && hljs.getLanguage(lang)) {
           contentEl.innerHTML = hljs.highlight(code, { language: lang, ignoreIllegals: true }).value;
-        } catch (_) {
-          contentEl.innerText = code;
-        }
-      } else {
-        try {
+        } else if (code.length <= 20000 && typeof hljs !== 'undefined') {
           contentEl.innerHTML = hljs.highlightAuto(code).value;
-        } catch (_) {
-          contentEl.innerText = code;
+        } else {
+          contentEl.textContent = code;
         }
+      } catch (_) {
+        contentEl.textContent = code;
       }
 
-      const linesCount = code.split('\n').length;
-      metaEl.innerText = `${linesCount} dòng · ${code.length} ký tự`;
+      if (metaEl) metaEl.innerText = `${code.split('\n').length} dòng · ${code.length} ký tự`;
 
       fullscreenIsWrapped = false;
-      preEl.style.whiteSpace = 'pre';
+      if (preEl) preEl.style.whiteSpace = 'pre';
       const wrapBtn = document.getElementById('fullscreenWrapBtn');
       if (wrapBtn) wrapBtn.innerText = 'Xuống dòng: OFF';
 
@@ -5121,6 +5343,10 @@
       currentPreviewActiveTab = mode === 'diff' ? 'diff' : 'full';
       const diffBtn = document.getElementById('fileTabDiffBtn');
       const fullBtn = document.getElementById('fileTabFullBtn');
+      const loadingEl = document.getElementById('filePreviewLoadingState');
+      if (loadingEl && !loadingEl.classList.contains('hidden')) {
+        return;
+      }
       const diffContainer = document.getElementById('filePreviewDiffContainer');
       const preEl = document.getElementById('filePreviewPre');
       const imgContainer = document.getElementById('filePreviewImageContainer');
@@ -5153,6 +5379,22 @@
       }
     };
 
+    function getPreviewSyntaxLanguage(filePath) {
+      const ext = String(filePath || '').split('.').pop().toLowerCase();
+      const languages = { js: 'javascript', cjs: 'javascript', mjs: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript', java: 'java', jsp: 'xml', html: 'xml', xml: 'xml', svg: 'xml', css: 'css', scss: 'scss', json: 'json', py: 'python', sql: 'sql', sh: 'bash', bash: 'bash', ps1: 'powershell', bat: 'dos', cmd: 'dos', yml: 'yaml', yaml: 'yaml', md: 'markdown', c: 'c', h: 'c', cpp: 'cpp', cs: 'csharp', go: 'go', rs: 'rust' };
+      return languages[ext] || '';
+    }
+
+    function highlightDiffCodeLine(text, language) {
+      const highlighter = window.hljs;
+      if (!language || !highlighter || !highlighter.getLanguage(language) || text.length > 4000) return escapeHtml(text);
+      try {
+        return highlighter.highlight(text, { language, ignoreIllegals: true }).value;
+      } catch (_) {
+        return escapeHtml(text);
+      }
+    }
+
     function renderDiffTableIntoModal(diffText) {
       const tbody = document.getElementById('filePreviewDiffTableBody');
       const emptyEl = document.getElementById('filePreviewDiffEmpty');
@@ -5170,13 +5412,14 @@
       if (emptyEl) emptyEl.classList.add('hidden');
       if (tableEl) tableEl.classList.remove('hidden');
 
+      const language = diffText.length <= 200000 ? getPreviewSyntaxLanguage(currentPreviewedPath) : '';
       let html = '';
       for (const r of parsed.rows) {
         const rowClass = r.type === 'add' ? 'diff-row-add' : r.type === 'del' ? 'diff-row-del' : r.type === 'hunk' ? 'diff-row-hunk' : 'diff-row-ctx';
         if (r.type === 'hunk') {
           html += `<tr class="${rowClass}"><td class="diff-ln">...</td><td class="diff-ln">...</td><td class="diff-sign">@@</td><td class="diff-code">${escapeHtml(r.text)}</td></tr>`;
         } else {
-          html += `<tr class="${rowClass}"><td class="diff-ln">${r.oldNo}</td><td class="diff-ln">${r.newNo}</td><td class="diff-sign">${r.sign}</td><td class="diff-code">${escapeHtml(r.text)}</td></tr>`;
+          html += `<tr class="${rowClass}"><td class="diff-ln">${r.oldNo}</td><td class="diff-ln">${r.newNo}</td><td class="diff-sign">${r.sign}</td><td class="diff-code">${highlightDiffCodeLine(r.text, language)}</td></tr>`;
         }
       }
       tbody.innerHTML = html;
@@ -5197,11 +5440,37 @@
       return rawPath;
     }
 
+    let currentPreviewRequestVersion = 0;
+
+    function setFilePreviewLoadingState(isLoading) {
+      const loadingEl = document.getElementById('filePreviewLoadingState');
+      const diffContainer = document.getElementById('filePreviewDiffContainer');
+      const preEl = document.getElementById('filePreviewPre');
+      const imgContainer = document.getElementById('filePreviewImageContainer');
+      if (loadingEl) loadingEl.classList.toggle('hidden', !isLoading);
+      if (isLoading) {
+        if (diffContainer) diffContainer.classList.add('hidden');
+        if (preEl) preEl.classList.add('hidden');
+        if (imgContainer) imgContainer.classList.add('hidden');
+      }
+    }
+
     window.openLocalPath = async function(rawPath, e) {
       if (e) e.stopPropagation();
       rawPath = resolvePathFromClickEvent(rawPath, e);
+      const triggerEl = (e && e.target && typeof e.target.closest === 'function')
+        ? (e.target.closest('.local-path-badge, [data-file-diff-row="1"], #filePreviewOpenBtn') || e.currentTarget)
+        : (e && e.currentTarget ? e.currentTarget : null);
+      const iconEl = triggerEl && triggerEl.querySelector ? triggerEl.querySelector('.path-icon') : null;
+      const prevIcon = iconEl ? iconEl.textContent : '';
+
+      if (triggerEl && triggerEl.setAttribute) {
+        triggerEl.setAttribute('data-path-loading', '1');
+        if (iconEl) iconEl.textContent = '⏳';
+      }
+      if (typeof beginTopLoading === 'function') beginTopLoading();
+
       try {
-        showToast('Đang mở: ' + rawPath + '...', 'info', 1800);
         const res = await fetch('/api/open-path', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -5211,23 +5480,66 @@
           })
         });
         const data = await res.json();
-        if (data.success) {
-          if (data.isDir) {
-            showToast('📁 Đã mở thư mục trên PC: ' + (data.name || rawPath), 'success', 3500);
-          } else {
-            showToast('📄 Đã mở file trên PC: ' + (data.name || rawPath), 'success', 3500);
-          }
-        } else {
-          showToast('⚠️ ' + (data.error || 'Không thể mở đường dẫn này'), 'warning', 4000);
+        if (!res.ok || !data.success) showToast(data.error || 'Không mở được đường dẫn: ' + rawPath, 'error');
+        if (triggerEl && triggerEl.setAttribute) {
+          triggerEl.removeAttribute('data-path-loading');
+          if (iconEl) iconEl.textContent = data.success ? '✓' : prevIcon;
+          const stateAttr = data.success ? 'data-path-done' : 'data-path-error';
+          triggerEl.setAttribute(stateAttr, '1');
+          setTimeout(() => {
+            triggerEl.removeAttribute(stateAttr);
+            if (iconEl && iconEl.textContent === '✓') iconEl.textContent = prevIcon;
+          }, 900);
         }
       } catch (err) {
-        showToast('Lỗi mở đường dẫn: ' + err.message, 'error', 3500);
+        showToast(err.message, 'error');
+        if (triggerEl && triggerEl.setAttribute) {
+          triggerEl.removeAttribute('data-path-loading');
+          if (iconEl) iconEl.textContent = prevIcon;
+          triggerEl.setAttribute('data-path-error', '1');
+          setTimeout(() => triggerEl.removeAttribute('data-path-error'), 900);
+        }
+      } finally {
+        if (typeof endTopLoading === 'function') endTopLoading();
       }
     };
 
     window.previewLocalFile = async function(rawPath, e, preferredMode = 'auto', cardMutationKey = '') {
       if (e) e.stopPropagation();
       rawPath = resolvePathFromClickEvent(rawPath, e);
+      const reqVersion = ++currentPreviewRequestVersion;
+
+      const modal = document.getElementById('filePreviewModal');
+      const titleEl = document.getElementById('filePreviewTitle');
+      const statusBadgeEl = document.getElementById('filePreviewStatusBadge');
+      const diffStatsEl = document.getElementById('filePreviewDiffStats');
+      const sizeEl = document.getElementById('filePreviewSize');
+      const metaEl = document.getElementById('filePreviewMeta');
+      const preEl = document.getElementById('filePreviewPre');
+      const codeEl = document.getElementById('filePreviewContent');
+      const imgContainer = document.getElementById('filePreviewImageContainer');
+      const imgLoadingEl = document.getElementById('filePreviewImageLoading');
+      const imgEl = document.getElementById('filePreviewImage');
+      const openBtn = document.getElementById('filePreviewOpenBtn');
+      const fullBtn = document.getElementById('fileTabFullBtn');
+
+      currentPreviewDiffRaw = '';
+      currentPreviewFullRaw = '';
+      currentPreviewHasFull = false;
+      currentPreviewedPath = rawPath;
+      if (imgEl) { imgEl.onload = null; imgEl.onerror = null; }
+      const previousError = document.getElementById('filePreviewBody')?.querySelector('.hub-inline-error');
+      if (previousError) previousError.remove();
+      const quickName = String(rawPath || '').split(/[\\\/]/).pop() || rawPath;
+      if (titleEl) titleEl.textContent = quickName;
+      if (metaEl) metaEl.textContent = typeof resolveFullDisplayPath === 'function' ? resolveFullDisplayPath(rawPath) : rawPath;
+      if (statusBadgeEl) statusBadgeEl.className = 'hidden';
+      if (diffStatsEl) diffStatsEl.className = 'hidden';
+      if (sizeEl) sizeEl.textContent = 'Đang tải...';
+      setFilePreviewLoadingState(true);
+      if (modal) modal.classList.remove('hidden');
+      if (typeof beginTopLoading === 'function') beginTopLoading();
+
       try {
         const ws = (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '') || '';
         const sid = (typeof currentSessionId !== 'undefined' && currentSessionId) ? String(currentSessionId).trim() : '';
@@ -5243,7 +5555,11 @@
           fetch(`/api/file-preview?path=${encodeURIComponent(rawPath)}&workspace=${encodeURIComponent(ws)}`).then(r => r.json()).catch(() => null)
         ]);
 
+        if (reqVersion !== currentPreviewRequestVersion) return;
+
         if (previewRes && previewRes.isDir) {
+          setFilePreviewLoadingState(false);
+          if (modal) modal.classList.add('hidden');
           openLocalPath(rawPath, e);
           return;
         }
@@ -5252,30 +5568,27 @@
         const hasServerDiff = Boolean(diffRes && diffRes.success && diffRes.inSession && diffRes.hasChanges && ((diffRes.diff && diffRes.diff.trim()) || diffRes.status === 'deleted'));
         const hasRecordedDiff = Boolean(recorded && (recorded.diff || recorded.status === 'deleted'));
 
-        if (!hasServerPreview && !hasServerDiff && !hasRecordedDiff) {
-          showToast('⚠️ ' + ((previewRes && previewRes.error) || (diffRes && diffRes.error) || 'Không thể đọc nội dung file'), 'warning', 3800);
-          return;
-        }
-
-        const resolvedPath = (previewRes && previewRes.path) || (diffRes && diffRes.path) || rawPath;
-        const fileName = (previewRes && previewRes.name) || (diffRes && diffRes.name) || rawPath.split(/[\\\/]/).pop() || rawPath;
+        const resolvedPath = (previewRes && previewRes.path) || (diffRes && diffRes.path) || (typeof resolveFullDisplayPath === 'function' ? resolveFullDisplayPath(rawPath, recorded) : rawPath);
+        const fileName = (previewRes && previewRes.name) || (diffRes && diffRes.name) || quickName;
         currentPreviewedPath = resolvedPath;
 
-        const modal = document.getElementById('filePreviewModal');
-        const titleEl = document.getElementById('filePreviewTitle');
-        const statusBadgeEl = document.getElementById('filePreviewStatusBadge');
-        const diffStatsEl = document.getElementById('filePreviewDiffStats');
-        const sizeEl = document.getElementById('filePreviewSize');
-        const metaEl = document.getElementById('filePreviewMeta');
-        const preEl = document.getElementById('filePreviewPre');
-        const codeEl = document.getElementById('filePreviewContent');
-        const imgContainer = document.getElementById('filePreviewImageContainer');
-        const imgEl = document.getElementById('filePreviewImage');
-        const openBtn = document.getElementById('filePreviewOpenBtn');
-        const fullBtn = document.getElementById('fileTabFullBtn');
+        if (titleEl) titleEl.textContent = fileName;
+        if (metaEl) metaEl.textContent = resolvedPath;
+        setFilePreviewLoadingState(false);
 
-        titleEl.textContent = fileName;
-        metaEl.textContent = resolvedPath;
+        if (!hasServerPreview && !hasServerDiff && !hasRecordedDiff) {
+          currentPreviewIsImage = false;
+          currentPreviewDiffRaw = '';
+          currentPreviewFullRaw = '';
+          if (sizeEl) sizeEl.textContent = '';
+          if (openBtn) openBtn.classList.add('hidden');
+          if (codeEl) {
+            codeEl.textContent = '';
+            document.getElementById('filePreviewBody').insertAdjacentHTML('afterbegin', buildInlineErrorHtml('Không thể đọc file — xem chi tiết', (previewRes && previewRes.error) || (diffRes && diffRes.error) || 'File không còn tồn tại trên đĩa.')); 
+          }
+          switchFilePreviewTab('full');
+          return;
+        }
 
         let effectiveDiff = '';
         let effectiveStatus = 'unchanged';
@@ -5295,6 +5608,9 @@
           effectiveDiff = (hasServerDiff && diffRes.diff) || (recorded && recorded.diff) || '';
         }
 
+        const isStepDiff = Boolean(cardMut && !cardMut.isFullWrite && cardMut.diff && preferredMode === 'step-diff');
+        const diffTabLabel = document.getElementById('fileTabDiffBtn')?.querySelector('span');
+        if (diffTabLabel) diffTabLabel.textContent = isStepDiff ? '± Thay đổi của lần sửa này' : '± Thay đổi trong phiên';
         currentPreviewDiffRaw = effectiveDiff;
         const renderedDiff = renderDiffTableIntoModal(effectiveDiff);
         const effectiveAdded = renderedDiff.hasRows ? renderedDiff.added : ((hasServerDiff ? diffRes.added : 0) || (recorded && recorded.added) || 0);
@@ -5310,6 +5626,19 @@
           sizeEl.classList.remove('hidden');
           if (openBtn) openBtn.classList.remove('hidden');
           if (previewRes.isImage) {
+            if (imgLoadingEl) imgLoadingEl.classList.remove('hidden');
+            imgEl.classList.add('hidden');
+            imgEl.onload = () => {
+              if (reqVersion !== currentPreviewRequestVersion) return;
+              if (imgLoadingEl) imgLoadingEl.classList.add('hidden');
+              imgEl.classList.remove('hidden');
+            };
+            imgEl.onerror = () => {
+              if (reqVersion !== currentPreviewRequestVersion) return;
+              document.getElementById('filePreviewBody').insertAdjacentHTML('afterbegin', buildInlineErrorHtml('Không tải được ảnh — xem chi tiết', rawPath));
+              if (imgLoadingEl) imgLoadingEl.classList.add('hidden');
+              imgEl.classList.remove('hidden');
+            };
             imgEl.src = previewRes.imageUrl;
           } else {
             codeEl.textContent = previewRes.content || '';
@@ -5363,13 +5692,441 @@
           (preferredMode === 'auto' && (renderedDiff.hasRows || effectiveStatus === 'deleted'));
 
         switchFilePreviewTab(shouldShowDiff ? 'diff' : 'full');
-        modal.classList.remove('hidden');
+        if (modal) modal.classList.remove('hidden');
       } catch (err) {
-        showToast('Lỗi xem file: ' + err.message, 'error', 3500);
+        if (reqVersion !== currentPreviewRequestVersion) return;
+        setFilePreviewLoadingState(false);
+        if (codeEl) codeEl.textContent = '';
+        document.getElementById('filePreviewBody').insertAdjacentHTML('afterbegin', buildInlineErrorHtml('Lỗi tải file — xem chi tiết', err.message));
+        switchFilePreviewTab('full');
+      } finally {
+        if (typeof endTopLoading === 'function') endTopLoading();
       }
     };
 
+    function readWorkspaceOrder() {
+      try { return JSON.parse(localStorage.getItem('ai_hub_workspace_order') || '{}'); } catch (_) { return {}; }
+    }
+
+    function sortedWorkspaceEntries(grouped) {
+      const saved = readWorkspaceOrder();
+      const order = Array.isArray(saved.order) ? saved.order : [];
+      const pins = Array.isArray(saved.pins) ? saved.pins : [];
+      return Object.entries(grouped).sort(([a], [b]) => {
+        const pinDiff = Number(pins.includes(b)) - Number(pins.includes(a));
+        if (pinDiff) return pinDiff;
+        const ai = order.indexOf(a), bi = order.indexOf(b);
+        return (ai < 0 ? order.length : ai) - (bi < 0 ? order.length : bi);
+      });
+    }
+
+    function changeWorkspaceOrder(action) {
+      if (!currentContextMenuPath || !currentContextMenuPath.isWorkspace) return;
+      const key = normPath(currentContextMenuPath.rawPath);
+      const saved = readWorkspaceOrder();
+      const visibleOrder = Array.from(document.querySelectorAll('.workspace-group-item')).map(el => normPath(el.getAttribute('data-ws-path')));
+      // Persist the underlying order, never the pin-sorted display order.
+      const order = Array.isArray(saved.order) ? saved.order.filter(k => visibleOrder.includes(k)) : [];
+      for (const k of visibleOrder) if (!order.includes(k)) order.push(k);
+      let pins = Array.isArray(saved.pins) ? saved.pins : [];
+      const index = visibleOrder.indexOf(key);
+      if (action === 'pin') {
+        pins = pins.includes(key) ? pins.filter(p => p !== key) : [key, ...pins];
+      } else {
+        const target = index + (action === 'up' ? -1 : 1);
+        if (index >= 0 && target >= 0 && target < visibleOrder.length && pins.includes(key) === pins.includes(visibleOrder[target])) {
+          const from = order.indexOf(key);
+          const to = order.indexOf(visibleOrder[target]);
+          [order[from], order[to]] = [order[to], order[from]];
+        }
+      }
+      try { localStorage.setItem('ai_hub_workspace_order', JSON.stringify({ order, pins })); } catch (_) {}
+      closePathContextMenu();
+      loadWorkspaceTree();
+    }
+
+    let currentContextMenuPath = null;
+    let suppressNextPathClick = false;
+
+    function resolveFullDisplayPath(rawPath, recorded = null) {
+      const cleaned = String(rawPath || '').trim().replace(/^["'`]|["'`]$/g, '').trim();
+      if (!cleaned) return '';
+      const isWin = (typeof hubServerPlatform === 'undefined' || hubServerPlatform === 'win32');
+      if (isWin && (/^[a-zA-Z]:[\\\/]/.test(cleaned) || cleaned.startsWith('\\\\'))) {
+        return cleaned.replace(/\//g, '\\');
+      }
+      if (!isWin && cleaned.startsWith('/')) {
+        return cleaned;
+      }
+      const cached = (typeof localPathExistenceCache !== 'undefined' && typeof buildPathCacheKey === 'function')
+        ? localPathExistenceCache.get(buildPathCacheKey(cleaned))
+        : null;
+      if (cached && cached.path) {
+        return cached.path;
+      }
+      if (recorded && recorded.path && ((isWin && /^[a-zA-Z]:[\\\/]/.test(recorded.path)) || (!isWin && recorded.path.startsWith('/')))) {
+        return isWin ? recorded.path.replace(/\//g, '\\') : recorded.path;
+      }
+      const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? String(currentWorkspace).trim() : '';
+      if (ws) {
+        const sep = isWin ? '\\' : '/';
+        const trimmedWs = ws.replace(/[\\\/]+$/, '');
+        const trimmedRel = cleaned.replace(/^\.[\\\/]+/, '');
+        const joined = trimmedWs + sep + trimmedRel;
+        return isWin ? joined.replace(/\//g, '\\') : joined.replace(/\\/g, '/');
+      }
+      return cleaned;
+    }
+
+    function resolvePathContextTarget(target) {
+      if (!target || typeof target.closest !== 'function') return null;
+
+      const badge = target.closest('.local-path-badge');
+      if (badge) {
+        if (badge.getAttribute('data-unverified') === '1') return null;
+        const p = (badge.getAttribute('data-path') || '').trim();
+        if (!p) return null;
+        return { rawPath: p, isExplicitDir: false, cardMutKey: '' };
+      }
+
+      const fileAction = target.closest('[data-local-path-action="1"]');
+      if (fileAction) {
+        const p = (fileAction.getAttribute('data-path') || '').trim();
+        if (!p) return null;
+        return { rawPath: p, isExplicitDir: false, cardMutKey: fileAction.getAttribute('data-mut-key') || '' };
+      }
+
+      const diffRow = target.closest('[data-file-diff-row="1"]');
+      if (diffRow) {
+        const p = (diffRow.getAttribute('data-path') || '').trim();
+        if (!p) return null;
+        return { rawPath: p, isExplicitDir: false, cardMutKey: diffRow.getAttribute('data-mut-key') || '' };
+      }
+
+      const wsRow = target.closest('[data-ws-folder-row="1"]');
+      if (wsRow) {
+        if (target.closest('button')) return null;
+        const p = (wsRow.getAttribute('data-path') || '').trim();
+        if (!p) return null;
+        return { rawPath: p, isExplicitDir: true, isWorkspace: true, cardMutKey: '' };
+      }
+
+      const headerWsBtn = target.closest('#currentSessionWorkspaceBadge');
+      if (headerWsBtn) {
+        const ws = (typeof currentWorkspace !== 'undefined' && currentWorkspace) ? String(currentWorkspace).trim() : '';
+        if (!ws) return null;
+        return { rawPath: ws, isExplicitDir: true, cardMutKey: '' };
+      }
+
+      const previewMeta = target.closest('#filePreviewMeta');
+      if (previewMeta) {
+        const p = (typeof currentPreviewedPath !== 'undefined' && currentPreviewedPath) ? String(currentPreviewedPath).trim() : '';
+        if (!p) return null;
+        return { rawPath: p, isExplicitDir: false, cardMutKey: '' };
+      }
+
+      return null;
+    }
+
+    function buildPathContextMenuData(targetInfo) {
+      if (!targetInfo || !targetInfo.rawPath) return null;
+      const rawPath = String(targetInfo.rawPath).trim();
+      if (!rawPath) return null;
+      const recorded = typeof getRecordedFileChange === 'function' ? getRecordedFileChange(rawPath) : null;
+      const cached = (typeof localPathExistenceCache !== 'undefined' && typeof buildPathCacheKey === 'function')
+        ? localPathExistenceCache.get(buildPathCacheKey(rawPath))
+        : null;
+      const fullPath = resolveFullDisplayPath(rawPath, recorded);
+      const isDeleted = Boolean(recorded && recorded.status === 'deleted' && !(cached && cached.exists));
+      const isDir = Boolean(
+        targetInfo.isExplicitDir ||
+        (!recorded && ((cached && cached.exists) ? Boolean(cached.isDir) : (rawPath.endsWith('/') || rawPath.endsWith('\\'))))
+      );
+      const trimmedForName = (fullPath || rawPath).replace(/[\\\/]+$/, '');
+      const name = trimmedForName.split(/[\\\/]/).pop() || fullPath || rawPath;
+      return {
+        rawPath,
+        fullPath: fullPath || rawPath,
+        name,
+        isDir,
+        isDeleted,
+        recorded,
+        isWorkspace: Boolean(targetInfo.isWorkspace),
+        cardMutKey: targetInfo.cardMutKey || ''
+      };
+    }
+
+    function openPathContextMenu(pathData, clientX, clientY) {
+      const menu = document.getElementById('pathContextMenu');
+      const panel = document.getElementById('pathContextMenuPanel');
+      const backdrop = document.getElementById('pathContextMenuBackdrop');
+      const iconEl = document.getElementById('pathContextMenuIcon');
+      const titleEl = document.getElementById('pathContextMenuTitle');
+      const fullPathEl = document.getElementById('pathContextMenuFullPath');
+      const statusEl = document.getElementById('pathContextMenuStatus');
+      const previewBtn = document.getElementById('pathCtxBtnPreview');
+      const previewLabel = document.getElementById('pathCtxPreviewLabel');
+      const openBtn = document.getElementById('pathCtxBtnOpen');
+      const openLabel = document.getElementById('pathCtxOpenLabel');
+      if (!menu || !panel || !pathData || !pathData.rawPath) return;
+
+      if (typeof closeSessionContextMenu === 'function') closeSessionContextMenu();
+      if (typeof hideHubTooltip === 'function') hideHubTooltip();
+
+      currentContextMenuPath = pathData;
+      const orderActions = document.getElementById('workspaceOrderActions');
+      if (orderActions) {
+        orderActions.classList.toggle('hidden', !pathData.isWorkspace);
+        const pinButton = orderActions.querySelector?.('[data-workspace-order="pin"]');
+        if (pinButton && pathData.isWorkspace) {
+          const pins = readWorkspaceOrder().pins;
+          const isPinned = Array.isArray(pins) && pins.includes(normPath(pathData.rawPath));
+          pinButton.textContent = isPinned ? 'Bỏ ghim' : 'Ghim lên đầu';
+        }
+      }
+
+      if (iconEl) {
+        iconEl.textContent = pathData.isDir
+          ? '📁'
+          : (pathData.isDeleted ? '🗑️' : (pathData.recorded ? (pathData.recorded.status === 'added' ? '🟢' : '📝') : '📄'));
+      }
+      if (titleEl) {
+        titleEl.textContent = pathData.name || pathData.rawPath;
+        titleEl.setAttribute('title', pathData.fullPath || pathData.rawPath);
+      }
+      if (fullPathEl) {
+        fullPathEl.textContent = pathData.fullPath || pathData.rawPath;
+      }
+
+      if (statusEl) {
+        if (pathData.isDir) {
+          statusEl.textContent = 'THƯ MỤC';
+          statusEl.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/25 shrink-0';
+        } else if (pathData.isDeleted) {
+          statusEl.textContent = 'ĐÃ XÓA';
+          statusEl.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/25 shrink-0';
+        } else if (pathData.recorded) {
+          statusEl.innerHTML = `<span class="text-emerald-400">+${pathData.recorded.added || 0}</span> <span class="text-rose-400">-${pathData.recorded.removed || 0}</span>`;
+          statusEl.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border)] shrink-0';
+        } else {
+          statusEl.className = 'hidden';
+          statusEl.textContent = '';
+        }
+      }
+
+      if (previewBtn && previewLabel) {
+        previewBtn.classList.remove('hidden');
+        previewLabel.textContent = pathData.isDir
+          ? 'Xem thư mục'
+          : (pathData.recorded ? 'Xem thay đổi & nội dung' : 'Xem nội dung');
+      }
+
+      if (openBtn && openLabel) {
+        openLabel.textContent = pathData.isDir
+          ? 'Mở thư mục'
+          : (pathData.isDeleted ? 'Mở trên máy tính (đã xóa)' : 'Mở trên máy tính');
+        openBtn.disabled = Boolean(pathData.isDeleted);
+        openBtn.classList.toggle('opacity-45', Boolean(pathData.isDeleted));
+        openBtn.classList.toggle('cursor-not-allowed', Boolean(pathData.isDeleted));
+      }
+
+      menu.classList.remove('hidden');
+      menu.classList.add('active');
+      menu.style.pointerEvents = 'auto';
+      menu.style.opacity = '1';
+
+      if (window.innerWidth < 640) {
+        if (backdrop) backdrop.classList.remove('hidden');
+        menu.style.left = '0';
+        menu.style.top = '0';
+        menu.style.right = '0';
+        menu.style.bottom = '0';
+      } else {
+        if (backdrop) backdrop.classList.add('hidden');
+        const menuWidth = 290;
+        const menuHeight = panel.offsetHeight > 0 ? panel.offsetHeight : 220;
+        const padding = 12;
+
+        let posX = clientX;
+        let posY = clientY;
+
+        if (posX + menuWidth > window.innerWidth - padding) {
+          posX = window.innerWidth - menuWidth - padding;
+        }
+        if (posY + menuHeight > window.innerHeight - padding) {
+          posY = window.innerHeight - menuHeight - padding;
+        }
+
+        menu.style.left = Math.max(padding, posX) + 'px';
+        menu.style.top = Math.max(padding, posY) + 'px';
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
+      }
+
+      if (typeof soundEffects !== 'undefined' && soundEffects.playClick) {
+        soundEffects.playClick();
+      }
+    }
+
+    function closePathContextMenu() {
+      const menu = document.getElementById('pathContextMenu');
+      const backdrop = document.getElementById('pathContextMenuBackdrop');
+      if (!menu || menu.classList.contains('hidden')) return false;
+
+      menu.style.opacity = '0';
+      menu.style.pointerEvents = 'none';
+      menu.classList.remove('active');
+      if (backdrop) backdrop.classList.add('hidden');
+
+      setTimeout(() => {
+        menu.classList.add('hidden');
+        currentContextMenuPath = null;
+      }, 160);
+      return true;
+    }
+
+    function initPathContextMenu() {
+      const menu = document.getElementById('pathContextMenu');
+      const backdrop = document.getElementById('pathContextMenuBackdrop');
+      if (!menu) return;
+
+      // Capture-phase click guard to suppress accidental tap-through right after mobile long-press
+      document.addEventListener('click', (e) => {
+        if (suppressNextPathClick && !menu.contains(e.target)) {
+          suppressNextPathClick = false;
+          if (e.preventDefault) e.preventDefault();
+          if (e.stopPropagation) e.stopPropagation();
+          return;
+        }
+        if (!menu.classList.contains('hidden') && !menu.contains(e.target)) {
+          closePathContextMenu();
+        }
+      }, true);
+
+      if (backdrop) {
+        backdrop.addEventListener('click', closePathContextMenu);
+      }
+
+      document.addEventListener('scroll', (e) => {
+        if (!menu.classList.contains('hidden') && (!e.target || !menu.contains || !menu.contains(e.target))) {
+          closePathContextMenu();
+        }
+      }, { passive: true, capture: true });
+
+      document.getElementById('pathCtxBtnPreview')?.addEventListener('click', () => {
+        if (!currentContextMenuPath) return;
+        const { rawPath, isDir, cardMutKey } = currentContextMenuPath;
+        closePathContextMenu();
+        if (isDir) {
+          openLocalPath(rawPath);
+        } else {
+          previewLocalFile(rawPath, null, cardMutKey ? 'step-diff' : 'auto', cardMutKey || '');
+        }
+      });
+
+      document.getElementById('pathCtxBtnOpen')?.addEventListener('click', () => {
+        if (!currentContextMenuPath || currentContextMenuPath.isDeleted) return;
+        const { rawPath } = currentContextMenuPath;
+        closePathContextMenu();
+        openLocalPath(rawPath);
+      });
+
+      document.getElementById('pathCtxBtnCopy')?.addEventListener('click', () => {
+        if (!currentContextMenuPath) return;
+        const textToCopy = currentContextMenuPath.fullPath || currentContextMenuPath.rawPath;
+        closePathContextMenu();
+        if (window.writeTextToClipboard && textToCopy) {
+          window.writeTextToClipboard(textToCopy).then(() => {
+            showToast('📋 Đã sao chép đường dẫn: ' + textToCopy, 'success', 2200);
+          }).catch((err) => {
+            showToast('Không thể sao chép đường dẫn: ' + err.message, 'error');
+          });
+        }
+      });
+
+      document.getElementById('workspaceOrderActions')?.addEventListener('click', (e) => {
+        const button = e.target.closest('[data-workspace-order]');
+        if (button) changeWorkspaceOrder(button.getAttribute('data-workspace-order'));
+      });
+
+      // Desktop right-click anywhere on a path badge / row
+      document.addEventListener('contextmenu', (e) => {
+        const targetInfo = resolvePathContextTarget(e.target);
+        if (!targetInfo) return;
+        const pathData = buildPathContextMenuData(targetInfo);
+        if (!pathData) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openPathContextMenu(pathData, e.clientX, e.clientY);
+      });
+
+      // Mobile touch-hold (long-press 450ms) with >8px scroll cancellation
+      let pathTouchHoldTimer = null;
+      let pathTouchStartX = 0;
+      let pathTouchStartY = 0;
+      let pathTouchTargetInfo = null;
+      let isPathLongPressTriggered = false;
+
+      document.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length !== 1) return;
+        if (menu.contains(e.target)) return;
+        const targetInfo = resolvePathContextTarget(e.target);
+        if (!targetInfo) return;
+
+        pathTouchStartX = e.touches[0].clientX;
+        pathTouchStartY = e.touches[0].clientY;
+        pathTouchTargetInfo = targetInfo;
+        isPathLongPressTriggered = false;
+
+        clearTimeout(pathTouchHoldTimer);
+        pathTouchHoldTimer = setTimeout(() => {
+          const pathData = buildPathContextMenuData(pathTouchTargetInfo);
+          if (!pathData) return;
+          isPathLongPressTriggered = true;
+          suppressNextPathClick = true;
+          try { if (navigator.vibrate) navigator.vibrate(35); } catch (_) {}
+          openPathContextMenu(pathData, pathTouchStartX, pathTouchStartY);
+        }, 450);
+      }, { passive: true });
+
+      document.addEventListener('touchmove', (e) => {
+        if (!pathTouchHoldTimer || !e.touches || e.touches.length === 0) return;
+        const dx = Math.abs(e.touches[0].clientX - pathTouchStartX);
+        const dy = Math.abs(e.touches[0].clientY - pathTouchStartY);
+        if (dx > 8 || dy > 8) {
+          clearTimeout(pathTouchHoldTimer);
+          pathTouchHoldTimer = null;
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchend', () => {
+        if (pathTouchHoldTimer) {
+          clearTimeout(pathTouchHoldTimer);
+          pathTouchHoldTimer = null;
+        }
+        if (isPathLongPressTriggered) {
+          setTimeout(() => { suppressNextPathClick = false; }, 350);
+        }
+      });
+
+      document.addEventListener('touchcancel', () => {
+        if (pathTouchHoldTimer) {
+          clearTimeout(pathTouchHoldTimer);
+          pathTouchHoldTimer = null;
+        }
+        isPathLongPressTriggered = false;
+      });
+    }
+
     window.handlePathClick = function(rawPath, e) {
+      if (suppressNextPathClick) {
+        suppressNextPathClick = false;
+        if (e) {
+          if (e.preventDefault) e.preventDefault();
+          if (e.stopPropagation) e.stopPropagation();
+        }
+        return;
+      }
       if (e && e.currentTarget && e.currentTarget.getAttribute && e.currentTarget.getAttribute('data-unverified') === '1') {
         return;
       }
@@ -5385,6 +6142,10 @@
     };
 
     window.closeFilePreview = function() {
+      currentPreviewRequestVersion++;
+      setFilePreviewLoadingState(false);
+      const image = document.getElementById('filePreviewImage');
+      if (image) { image.onload = null; image.onerror = null; }
       const modal = document.getElementById('filePreviewModal');
       if (modal) modal.classList.add('hidden');
     };
@@ -6534,6 +7295,11 @@
       runningWorkspace = null;
       sendBtn.classList.remove('hidden');
       stopBtn.classList.add('hidden');
+      if (stopBtn.dataset.stopping === '1') {
+        delete stopBtn.dataset.stopping;
+        stopBtn.disabled = false;
+        stopBtn.innerHTML = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>';
+      }
       sessionStatus.innerText = 'Sẵn sàng';
       sessionStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow';
       stopLiveExecutionTimer(true);
@@ -6631,6 +7397,12 @@
 
       if (!newName || !newName.trim()) return;
 
+      const sessionRows = typeof document !== 'undefined'
+        ? Array.from(document.querySelectorAll('.session-item')).filter(el => el.getAttribute('data-session-id') === sessionId)
+        : [];
+      sessionRows.forEach(el => el.classList.add('hub-row-busy'));
+      if (typeof beginTopLoading === 'function') beginTopLoading();
+
       try {
         const res = await fetch('/api/rename-session', {
           method: 'POST',
@@ -6652,7 +7424,10 @@
           showToast('Lỗi khi đổi tên: ' + (data.error || 'Lỗi không xác định'), 'error');
         }
       } catch (err) {
-        showToast('Lỗi kết nối khi đổi tên: ' + err.message, 'error');
+        showToast(err.message, 'error');
+      } finally {
+        sessionRows.forEach(el => el.classList.remove('hub-row-busy'));
+        if (typeof endTopLoading === 'function') endTopLoading();
       }
     }
 
@@ -7098,7 +7873,7 @@
         e.preventDefault();
         cycleTheme();
       } else if (e.key === 'Escape') {
-        if (closeSessionContextMenu()) {
+        if (closePathContextMenu() || closeSessionContextMenu()) {
           // Handled closing session context menu
         } else if (!commandPaletteModal.classList.contains('hidden')) closeCommandPalette();
         else if (!keyboardShortcutsModal.classList.contains('hidden')) closeKeyboardShortcutsModal();
@@ -7238,6 +8013,13 @@
       return _workspaceTreePromise;
     }
     async function _loadWorkspaceTreeImpl() {
+      const refreshInd = typeof document !== 'undefined' ? document.getElementById('sidebarRefreshIndicator') : null;
+      if (refreshInd) refreshInd.classList.remove('hidden');
+      if (workspaceTree && (!allSessionsCache || allSessionsCache.length === 0) && (!allWorkspacesCache || allWorkspacesCache.length === 0)) {
+        if (typeof buildWorkspaceTreeSkeletonHtml === 'function') {
+          workspaceTree.innerHTML = buildWorkspaceTreeSkeletonHtml();
+        }
+      }
       try {
         const [infoRes, sessionsRes] = await Promise.all([
           fetch('/api/info').then(r => r.json()),
@@ -7373,7 +8155,7 @@
 
         workspaceTree.innerHTML = '';
 
-        for (const [k, groupData] of Object.entries(grouped)) {
+        for (const [k, groupData] of sortedWorkspaceEntries(grouped)) {
           const wsPath = groupData.wsPath;
           const sessions = groupData.sessions;
           const isOpen = expandedWorkspaces.has(k);
@@ -7395,7 +8177,8 @@
 
           groupEl.innerHTML = `
             <!-- Folder Row -->
-            <div class="px-2.5 py-1.5 flex items-center justify-between cursor-pointer rounded-lg ease-spring hover:bg-[var(--bg-hover)] select-none group"
+            <div data-ws-folder-row="1" data-path="${escapeHtml(wsPath)}"
+                 class="px-2.5 py-1.5 flex items-center justify-between cursor-pointer rounded-lg ease-spring hover:bg-[var(--bg-hover)] select-none group"
                  onclick="toggleWorkspaceAccordion('${escapeJs(wsPath)}')">
               <div class="flex items-center space-x-2 truncate mr-1.5 flex-1 min-w-0">
                 <svg class="w-3.5 h-3.5 ease-spring shrink-0 ${isOpen ? 'rotate-90' : ''}" 
@@ -7407,6 +8190,7 @@
                 </svg>
                 <span title="${escapeHtml(wsPath)}" class="text-xs font-semibold truncate ${isCurrentWs ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}">
                   ${escapeHtml(wsFolderBasename)}
+                  ${Array.isArray(readWorkspaceOrder().pins) && readWorkspaceOrder().pins.includes(k) ? '<span class="workspace-pin-indicator text-amber-500 ml-1" title="Workspace đã ghim" aria-label="Workspace đã ghim">📌</span>' : ''}
                 </span>
               </div>
               <div class="flex items-center space-x-1 shrink-0">
@@ -7430,9 +8214,11 @@
                 </button>
 
                 ${isWsRunning ? `
-                  <span class="text-[9.5px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30 flex items-center gap-1 animate-pulse" title="Đang chạy lệnh trong thư mục này">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                    <span>Đang chạy</span>
+                  <span class="inline-flex items-center text-amber-500" title="Đang chạy lệnh trong thư mục này" aria-label="Đang chạy lệnh trong thư mục này">
+                    <svg class="workspace-running-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" opacity="0.18"/>
+                      <path d="M12 4a8 8 0 018 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
                   </span>
                 ` : (isCurrentWs ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow" title="Đang chọn"></span>' : '')}
                 
@@ -7524,6 +8310,8 @@
             </div>
           `;
         }
+      } finally {
+        if (refreshInd) refreshInd.classList.add('hidden');
       }
     }
 
@@ -8424,13 +9212,11 @@
       currentSessionTitle.innerText = sessionTitle || sessionId;
       if (updateUrl) updateSessionUrl(sessionId);
 
-      chatFeed.innerHTML = `
-        <div class="flex items-center justify-center p-8 space-x-2 text-xs" style="color: var(--text-sub);">
-          <div class="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-          <span>Đang nạp chi tiết phiên làm việc...</span>
-        </div>
-      `;
+      chatFeed.innerHTML = typeof buildChatFeedSkeletonHtml === 'function'
+        ? buildChatFeedSkeletonHtml(sessionTitle || sessionId)
+        : '<div class="flex items-center justify-center p-8 space-x-2 text-xs"><span class="hub-inline-spinner"></span><span>Đang tải...</span></div>';
 
+      if (typeof beginTopLoading === 'function') beginTopLoading();
       loadWorkspaceTree();
 
       try {
@@ -8514,7 +9300,22 @@
         scrollToBottom(true);
         settleSessionAtBottom();
       } catch (err) {
-        showToast('Lỗi khi nạp chi tiết phiên: ' + err.message, 'error');
+        if (viewVersion === sessionViewVersion && chatFeed) {
+          const safeSid = escapeJs(sessionId);
+          const safeTitle = escapeJs(sessionTitle || sessionId);
+          const safeWs = escapeJs(wsPath || currentWorkspace || '');
+          chatFeed.innerHTML = `
+            <div class="max-w-md mx-auto my-12 p-5 rounded-2xl border text-center space-y-3" style="background: var(--bg-card); border-color: var(--border);">
+              ${buildInlineErrorHtml('Không tải được phiên — xem chi tiết', err.message || 'Lỗi kết nối máy chủ')}
+              <button type="button" onclick="selectSession('${safeSid}', '${safeTitle}', '${safeWs}')"
+                      class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors">
+                Thử tải lại
+              </button>
+            </div>
+          `;
+        }
+      } finally {
+        if (typeof endTopLoading === 'function') endTopLoading();
       }
     }
 
@@ -9171,6 +9972,49 @@
       };
     }
 
+    function getToolArgumentsClipboardText(toolName, args, workspace = '') {
+      let parsed = args;
+      if (typeof args === 'string') {
+        try { parsed = JSON.parse(args); } catch (_) {}
+      }
+      const isTerminal = /shell|bash|cmd/i.test(String(toolName || ''));
+      if (isTerminal) {
+        const command = parsed && typeof parsed.command === 'string'
+          ? parsed.command
+          : (typeof args === 'string' ? args : '');
+        if (command) {
+          const cwd = String(workspace || '').trim();
+          if (!cwd) return command;
+          const isWindows = typeof hubServerPlatform !== 'undefined'
+            ? hubServerPlatform === 'win32'
+            : /^[a-zA-Z]:[\\/]/.test(cwd);
+          if (isWindows) {
+            // PowerShell 5.1 cannot parse CMD's /d or &&; delegate the entire command to CMD.
+            const cmdLine = 'cd /d "' + cwd.replace(/"/g, '""') + '" && ' + command;
+            return "cmd.exe /d /s /c '" + cmdLine.replace(/'/g, "''") + "'";
+          }
+          const quotedCwd = "'" + cwd.replace(/'/g, "'\\''") + "'";
+          return 'cd -- ' + quotedCwd + ' && ' + command;
+        }
+      }
+      return typeof args === 'object' ? JSON.stringify(args, null, 2) : String(args ?? '');
+    }
+
+    function buildCompactFileStatusHtml(isRunning, isError) {
+      const label = isRunning ? 'Đang chạy' : isError ? 'Lỗi' : 'Hoàn thành';
+      const color = isRunning ? 'text-amber-500' : isError ? 'text-rose-500' : 'text-emerald-500';
+      const shape = isRunning
+        ? '<circle cx="12" cy="12" r="9" opacity=".2"/><path d="M12 3a9 9 0 019 9"/>'
+        : isError ? '<path d="M6 6l12 12M6 18L18 6"/>' : '<path d="M5 12l4 4L19 6"/>';
+      return `<span class="inline-flex items-center shrink-0 ${color}" role="img" aria-label="${label}" title="${label}"><svg class="w-3.5 h-3.5 ${isRunning ? 'workspace-running-spinner' : ''}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">${shape}</svg></span>`;
+    }
+
+    function buildCompactFileNameHtml(path, mutKey = '') {
+      if (!path) return '<span aria-hidden="true">&hellip;</span>';
+      const name = String(path).split(/[\\/]/).pop() || path;
+      return `<button type="button" class="block min-w-0 max-w-full truncate text-left font-semibold underline underline-offset-4" style="color: var(--text-main);" data-local-path-action="1" data-path="${escapeHtml(path)}" data-mut-key="${escapeHtml(mutKey)}" title="Mở file trên PC: ${escapeHtml(path)}" aria-label="Mở file trên PC: ${escapeHtml(path)}" onclick="event.stopPropagation(); openLocalPath(this.getAttribute('data-path'), event)">${escapeHtml(name)}</button>`;
+    }
+
     function appendToolCard(container, toolName, args, isRunning = false, output = null, isError = false) {
       closeActiveThoughtIfNeeded(container);
       flushAiTextRender(container);
@@ -9204,6 +10048,7 @@
       let iconSvg = '<svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
       let friendlyTool = toolName || 'Tool';
       const rawName = (toolName || '').toLowerCase();
+      let isFileEdit = false;
 
       if (rawName.includes('shell') || rawName.includes('bash') || rawName.includes('cmd')) {
         iconSvg = '<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
@@ -9211,7 +10056,8 @@
       } else if (rawName.includes('read') || rawName.includes('cat') || rawName.includes('view')) {
         iconSvg = '<svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
         friendlyTool = 'Đọc file';
-      } else if (rawName.includes('edit') || rawName.includes('write') || rawName.includes('patch')) {
+      } else if (rawName.includes('edit') || rawName.includes('write') || rawName.includes('patch') || rawName.includes('replace')) {
+        isFileEdit = true;
         iconSvg = '<svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>';
         friendlyTool = 'Chỉnh sửa file';
       } else if (rawName.includes('tree') || rawName.includes('dir') || rawName.includes('folder')) {
@@ -9231,26 +10077,35 @@
       const headerClass = usePlainHeader
         ? 'py-1 flex items-center justify-between cursor-pointer select-none opacity-90 hover:opacity-100 transition-opacity'
         : 'px-3.5 py-2.5 flex items-center justify-between cursor-pointer select-none transition-colors hover:bg-[var(--bg-hover)]';
+      let initialFilePath = '';
+      if (isFileEdit) {
+        let fileArgs = args;
+        if (typeof fileArgs === 'string') {
+          try { fileArgs = JSON.parse(fileArgs); } catch (_) { fileArgs = null; }
+        }
+        initialFilePath = fileArgs && (fileArgs.path || fileArgs.file_path || fileArgs.filename) || '';
+      }
       const headerStyle = usePlainHeader ? '' : 'background: var(--tool-header-bg);';
       const diffBarClass = usePlainHeader
-        ? 'hidden mt-1 rounded-xl border divide-y font-mono text-[11.5px] overflow-hidden'
-        : 'hidden border-t divide-y font-mono text-[11.5px]';
+        ? 'hidden mt-1 font-mono text-[11.5px] overflow-hidden'
+        : 'hidden font-mono text-[11.5px]';
       const bodyClass = usePlainHeader
         ? 'mt-1.5 p-3.5 rounded-xl border font-mono text-[11px] select-text hidden space-y-3'
         : 'p-3.5 border-t font-mono text-[11px] select-text hidden space-y-3';
 
       card.innerHTML = `
-        <div class="${headerClass}"
+        <div class="${headerClass} min-w-0 gap-1"
              style="${headerStyle}"
              onclick="toggleCard('${cardId}')" title="Bấm để đóng / mở chi tiết tác vụ">
-          <div class="flex items-center space-x-2 min-w-0 flex-1 mr-3">
+          <div class="flex items-center gap-1.5 min-w-0 flex-1 ${isFileEdit ? '' : 'mr-3'}">
             ${iconSvg}
-            <span class="font-semibold text-xs text-[var(--text-main)] shrink-0">${escapeHtml(friendlyTool)}</span>
-            <span class="font-mono text-[11px] truncate opacity-80" style="color: var(--text-sub);">${escapeHtml(displayParam)}</span>
+            ${isFileEdit ? '' : `<span class="font-semibold text-xs text-[var(--text-main)] shrink-0">${escapeHtml(friendlyTool)}</span>`}
+            <span id="toolFilePath_${cardId}" class="font-mono text-[11px] min-w-0 truncate opacity-80" style="color: var(--text-sub);">${isFileEdit ? buildCompactFileNameHtml(initialFilePath) : escapeHtml(displayParam)}</span>
           </div>
-          <div class="flex items-center space-x-2 shrink-0">
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span id="inlineFileDiff_${cardId}" class="hidden items-center gap-2"></span>
             <span id="badge_${cardId}">
-              ${isRunning ? `
+              ${isFileEdit ? buildCompactFileStatusHtml(isRunning, isError) : isRunning ? `
                 <span class="inline-flex items-center gap-1.5 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/20 animate-pulse">
                   <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                   Đang chạy...
@@ -9271,19 +10126,20 @@
           </div>
         </div>
 
-        <div id="fileDiffBar_${cardId}" class="${diffBarClass}" style="border-color: var(--tool-border); background: var(--bg-surface);"></div>
+        <div id="fileDiffBar_${cardId}" class="${diffBarClass}" style="border-color: var(--tool-border); background: transparent;"></div>
 
         <div id="body_${cardId}" class="${bodyClass}"
              style="border-color: var(--tool-border); color: var(--text-sub); background: var(--bg-surface);">
           
-          <!-- Section 1: Arguments / Command -->
-          <div class="space-y-1">
+          <!-- Read tools only show their result; other tools keep arguments. -->
+          <div class="space-y-1 ${/^(?:.*(?:__|:))?(?:read|read_file|cat|view)$/.test(rawName) ? 'hidden' : ''}">
             <div class="flex items-center justify-between text-[10px] uppercase font-bold tracking-wider text-zinc-500">
               <span>Tham số / Lệnh thực thi:</span>
               <button onclick="event.stopPropagation(); copyTextToClipboard(this.getAttribute('data-clip'), this)" 
-                      data-clip="${escapeHtml(argsFormatted)}"
+                      data-copy-icon="1" title="Sao chép lệnh / tham số" aria-label="Sao chép lệnh / tham số"
+                      data-clip="${escapeHtml(getToolArgumentsClipboardText(toolName, args, currentWorkspace))}"
                       class="px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] text-zinc-400 hover:text-white transition-colors">
-                Sao chép
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="12" rx="2" stroke-width="1.7"/><path d="M15 9V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h4" stroke-width="1.7"/></svg>
               </button>
             </div>
             <pre class="m-0 p-2.5 rounded-lg border overflow-x-auto whitespace-pre-wrap max-h-48 text-[11px]" 
@@ -9299,9 +10155,9 @@
                         class="px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] text-blue-400 hover:text-blue-300 transition-colors ${formattedOut.truncated ? '' : 'hidden'}">
                   Xem toàn bộ
                 </button>
-                <button id="copyOutBtn_${cardId}" onclick="event.stopPropagation(); copyOutputFromCard('${cardId}', this)" 
+                <button id="copyOutBtn_${cardId}" data-copy-icon="1" title="Sao chép kết quả" aria-label="Sao chép kết quả" onclick="event.stopPropagation(); copyOutputFromCard('${cardId}', this)" 
                         class="px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] text-zinc-400 hover:text-white transition-colors ${outputText ? '' : 'hidden'}">
-                  Sao chép kết quả
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="12" rx="2" stroke-width="1.7"/><path d="M15 9V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h4" stroke-width="1.7"/></svg>
                 </button>
               </div>
             </div>
@@ -9325,6 +10181,7 @@
       card._cardData = {
         cardId,
         toolName,
+        isFileEdit,
         args,
         output: outputText
       };
@@ -9361,13 +10218,13 @@
         const statusPill = buildToolFileStatusPillHtml(effectiveStatus);
         const statsHtml = buildToolFileStatsHtml(effectiveStatus, effectiveAdded, effectiveRemoved);
         return `
-          <div data-file-diff-row="1" data-is-full-write="${m.isFullWrite ? '1' : '0'}" data-path="${escapeHtml(m.path)}" onclick="event.stopPropagation(); previewLocalFile('${safePath}', event, 'diff', '${safeMutKey}')"
+          <div data-file-diff-row="1" data-is-full-write="${m.isFullWrite ? '1' : '0'}" data-mut-key="${escapeHtml(cardMutKey)}" data-path="${escapeHtml(m.path)}" onclick="event.stopPropagation(); previewLocalFile('${safePath}', event, 'step-diff', '${safeMutKey}')"
                class="px-3.5 py-2 flex items-center justify-between gap-2 cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
                style="border-color: var(--tool-border);"
                title="Nhấn để xem dòng xanh (thêm) / dòng đỏ (xóa) của ${escapeHtml(m.path)}">
             <div class="flex items-center gap-2 min-w-0">
               ${statusPill}
-              <span class="font-semibold truncate" style="color: var(--text-main);">${escapeHtml(fileName)}</span>
+              <span class="font-semibold truncate underline underline-offset-4 decoration-dotted" style="color: var(--text-main);">${escapeHtml(fileName)}</span>
               <span class="text-[10.5px] truncate opacity-65 hidden sm:inline" style="color: var(--text-sub);">${escapeHtml(m.path)}</span>
             </div>
             <div class="flex items-center gap-2.5 shrink-0">
@@ -9377,7 +10234,26 @@
           </div>
         `;
       }).join('');
-      bar.classList.remove('hidden');
+      const inlineDiff = card.querySelector ? card.querySelector('#inlineFileDiff_' + cardId) : null;
+      const isFileEdit = /edit|write|patch|replace/i.test(toolName || '');
+      if (inlineDiff && isFileEdit && mutations.length === 1) {
+        const m = mutations[0];
+        const synced = m.isFullWrite ? getRecordedFileChange(m.path) : null;
+        const effective = synced && synced.serverSynced ? synced : m;
+        const mutKey = cardId + ':0';
+        const pathLabel = card.querySelector('#toolFilePath_' + cardId);
+        if (pathLabel) {
+          pathLabel.innerHTML = buildCompactFileNameHtml(m.path, mutKey);
+        }
+        inlineDiff.innerHTML = `<button type="button" data-file-diff-row="1" data-is-full-write="${m.isFullWrite ? '1' : '0'}" data-mut-key="${escapeHtml(mutKey)}" data-path="${escapeHtml(m.path)}" class="inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap" title="Xem thay đổi của lần sửa này" aria-label="Xem thay đổi của lần sửa này" onclick="event.stopPropagation(); previewLocalFile('${escapeJs(m.path)}', event, 'step-diff', '${escapeJs(mutKey)}')">${buildToolFileStatsHtml(effective.status, effective.added, effective.removed)}</button>`;
+        inlineDiff.classList.remove('hidden');
+        inlineDiff.classList.add('inline-flex');
+        bar.innerHTML = '';
+        bar.classList.add('hidden');
+      } else {
+        if (inlineDiff) inlineDiff.classList.add('hidden');
+        bar.classList.remove('hidden');
+      }
     }
 
     function updateToolCardResult(card, outputText, isError = false) {
@@ -9388,7 +10264,7 @@
       const copyBtn = document.getElementById('copyOutBtn_' + cardId);
 
       if (badge) {
-        badge.innerHTML = isError ? `
+        badge.innerHTML = card._cardData?.isFileEdit ? buildCompactFileStatusHtml(false, isError) : isError ? `
           <span class="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 border border-rose-500/25">
             ✕ Lỗi
           </span>
@@ -9441,9 +10317,19 @@
     function copyTextToClipboard(text, btn) {
       window.writeTextToClipboard(text).then(() => {
         if (btn) {
-          const oldText = btn.innerText;
-          btn.innerText = 'Đã chép!';
-          setTimeout(() => { btn.innerText = oldText; }, 1500);
+          if (btn.getAttribute('data-copy-icon') === '1') {
+            if (btn._copyFeedbackTimer) clearTimeout(btn._copyFeedbackTimer);
+            if (!btn._copyOriginalHtml) btn._copyOriginalHtml = btn.innerHTML;
+            btn.innerHTML = '<svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            btn._copyFeedbackTimer = setTimeout(() => {
+              btn.innerHTML = btn._copyOriginalHtml;
+              btn._copyFeedbackTimer = null;
+            }, 1500);
+          } else {
+            const oldText = btn.innerText;
+            btn.innerText = 'Đã chép!';
+            setTimeout(() => { btn.innerText = oldText; }, 1500);
+          }
         }
         showToast('Đã sao chép vào bộ nhớ tạm', 'success', 1800);
       }).catch(err => {
@@ -10020,8 +10906,10 @@
 
     stopBtn.addEventListener('click', async () => {
       soundEffects.playClick();
+      stopBtn.dataset.stopping = '1';
+      stopBtn.disabled = true;
+      stopBtn.innerHTML = '<span class="hub-inline-spinner text-white"></span>';
       stopGeneration(true);
-      showToast('Đã gửi yêu cầu dừng tiến trình', 'info');
       appendTerminalLog('info', 'Người dùng đã gửi lệnh dừng tiến trình.');
     });
 
@@ -10087,20 +10975,20 @@
       }
     }
 
+    let explorerLoadVersion = 0;
     async function loadExplorerFolder(targetDir) {
+      const version = ++explorerLoadVersion;
       const container = document.getElementById('foldersListContainer');
-      container.innerHTML = `
-        <div class="py-8 text-center text-xs" style="color: var(--text-sub);">
-          <div class="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-          <span>Đang nạp danh sách thư mục...</span>
-        </div>
-      `;
+      container.innerHTML = typeof buildFolderExplorerSkeletonHtml === 'function'
+        ? buildFolderExplorerSkeletonHtml()
+        : '<div class="py-8 text-center text-xs"><span class="hub-inline-spinner"></span></div>';
 
       try {
         const queryDir = targetDir || currentWorkspace || '';
         const url = queryDir ? `/api/fs-folders?dir=${encodeURIComponent(queryDir)}` : '/api/fs-folders';
         const res = await fetch(url);
         const data = await res.json();
+        if (version !== explorerLoadVersion) return;
 
         if (data.error) throw new Error(data.error);
 
@@ -10117,9 +11005,10 @@
 
         renderExplorerUI(data);
       } catch (err) {
+        if (version !== explorerLoadVersion) return;
         container.innerHTML = `
           <div class="p-4 text-center text-xs text-rose-400">
-            Không thể nạp thư mục: ${escapeHtml(err.message)}
+            ${buildInlineErrorHtml('Không tải được thư mục — xem chi tiết', err.message)}
           </div>
         `;
       }
@@ -10271,6 +11160,13 @@
 
     async function applyWorkspace(wsPath) {
       soundEffects.playBop();
+      const confirmBtn = document.getElementById('btnConfirmExplorer');
+      const prevConfirmHtml = confirmBtn ? confirmBtn.innerHTML : '';
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="hub-inline-spinner"></span><span>Đang chuyển...</span></span>';
+      }
+      if (typeof beginTopLoading === 'function') beginTopLoading();
       try {
         const res = await fetch('/api/workspaces', {
           method: 'POST',
@@ -10297,7 +11193,13 @@
         newSession();
         loadWorkspaceTree();
       } catch (err) {
-        showToast('Lỗi khi áp dụng workspace: ' + err.message, 'error');
+        showToast(err.message, 'error');
+      } finally {
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          if (prevConfirmHtml) confirmBtn.innerHTML = prevConfirmHtml;
+        }
+        if (typeof endTopLoading === 'function') endTopLoading();
       }
     }
 
@@ -10437,6 +11339,12 @@
 
       if (!confirmed) return;
 
+      const sessionRows = typeof document !== 'undefined'
+        ? Array.from(document.querySelectorAll('.session-item')).filter(el => el.getAttribute('data-session-id') === sessionId)
+        : [];
+      sessionRows.forEach(el => el.classList.add('hub-row-busy'));
+      if (typeof beginTopLoading === 'function') beginTopLoading();
+
       try {
         const res = await fetch('/api/delete-session', {
           method: 'POST',
@@ -10462,7 +11370,10 @@
           showToast('Không thể xóa phiên: ' + (data.error || 'Lỗi không xác định'), 'error');
         }
       } catch (err) {
-        showToast('Lỗi kết nối khi xóa phiên: ' + err.message, 'error');
+        showToast(err.message, 'error');
+      } finally {
+        sessionRows.forEach(el => el.classList.remove('hub-row-busy'));
+        if (typeof endTopLoading === 'function') endTopLoading();
       }
     }
 
@@ -10479,6 +11390,12 @@
       });
 
       if (!confirmed) return;
+
+      const wsRows = typeof document !== 'undefined'
+        ? Array.from(document.querySelectorAll('.workspace-group-item')).filter(el => el.getAttribute('data-ws-path') === wsPath)
+        : [];
+      wsRows.forEach(el => el.classList.add('hub-row-busy'));
+      if (typeof beginTopLoading === 'function') beginTopLoading();
 
       try {
         const res = await fetch('/api/delete-workspace', {
@@ -10514,7 +11431,10 @@
           showToast('Không thể xóa workspace: ' + (data.error || 'Lỗi không xác định'), 'error');
         }
       } catch (err) {
-        showToast('Lỗi kết nối khi xóa workspace: ' + err.message, 'error');
+        showToast(err.message, 'error');
+      } finally {
+        wsRows.forEach(el => el.classList.remove('hub-row-busy'));
+        if (typeof endTopLoading === 'function') endTopLoading();
       }
     }
 
@@ -10663,6 +11583,7 @@
     });
 
     initSessionContextMenu();
+    initPathContextMenu();
     initHubEvents();
     loadWorkspaceTree().then(() => restoreSessionFromUrl());
   </script>

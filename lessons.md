@@ -48,3 +48,11 @@
 - [SSO account role] Preserve the server-loaded assigned role in filtered dropdowns; select admin roles deterministically instead of taking the first unordered department assignment.
 - **[Windows Search Anti-Loop & New-Session Draft]**: PowerShell 5.1 `Select-String -Path "...\\**\\*"` không hỗ trợ glob `**` (luôn trả rỗng gây lặp dò tìm hàng chục lượt trên Gemini Flash) và máy không cài `rg`; luôn ưu tiên `git grep -n -I` + đọc gộp trọn hàm/file <400 dòng. Với bản nháp phiên mới trên Web UI, chuẩn hóa mọi khóa `new-<randomId>` về `__new__` (kèm cờ `sessionDraftHydrated` chống ghi đè rỗng khi F5) để giữ nguyên tin nhắn chưa gửi khi chuyển phiên rồi bấm Tạo phiên mới.
 - **[Session-Scoped Diff & Failed Tool Filtering]**: Để hiển thị đúng thay đổi riêng của phiên (thay vì `git diff HEAD`), kết hợp snapshot baseline đầu lượt theo phiên (`session-file-diff.cjs` + `/api/session-file-diff`, khóa `finalizeTurnSnapshotSync` đồng bộ trong `child.on('close')`) với dựng lịch sử hội thoại phía client có lọc kết quả lỗi ẩn (`toolResult.value.isError` / `No match found for...`), gộp chuỗi sửa Python qua `shell` và hủy file nháp tạo-rồi-xóa trong cùng phiên.
+
+- [API period audit] Verify loai_ky/ky fields from live responses: source parsers may discard supported months or quarters. Distinguish source periods from storage aggregation; inspect export transfers without sending processed ACK.
+
+- [Quiet UI / Async loading] Keep operational errors in escaped, collapsed details; reference-count shared loading and invalidate stale preview callbacks when closing or switching files.
+
+- [Windows power scheduler] Separate WakeToRun from power-off tasks; cache task discovery, serialize updates, and restore AC wake settings on rollback. Import ScheduledTasks before defining test mocks to prevent module auto-loading from replacing mocks.
+
+- [Clipboard / PowerShell 5.1] CMD commands with cd /d and && must be wrapped as a single-quoted cmd.exe /d /s /c argument for PowerShell paste; double embedded apostrophes and validate by executing the clipboard text in powershell.exe.

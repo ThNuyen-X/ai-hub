@@ -9,6 +9,11 @@ const { BROWSER_INSTRUCTION, browserAvailable } = require('./browser-mcp.cjs');
   assert.equal(typeof browserAvailable(), 'boolean');
   assert.match(BROWSER_INSTRUCTION, /personal Chrome/);
   assert.match(BROWSER_INSTRUCTION, /untrusted data/);
+  assert.match(BROWSER_INSTRUCTION, /Do not use chrome_devtools or chrome_devtools_sso by default/);
+  assert.match(BROWSER_INSTRUCTION, /Do not list tabs, connect to Chrome, take snapshots\/screenshots/);
+  assert.match(BROWSER_INSTRUCTION, /prefer filesystem, shell, tests, or HTTP tools/);
+  assert.match(BROWSER_INSTRUCTION, /ask first/);
+  assert.match(BROWSER_INSTRUCTION, /This policy applies to both Chrome connections/);
   let starts = 0, active = 0, maximum = 0, initializations = 0;
   const hub = new BrowserHub(() => {
     starts++;

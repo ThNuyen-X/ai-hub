@@ -43,6 +43,13 @@
   <!-- Highlight.js for Code Highlighting -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-theme">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- SheetJS for Excel Preview (.xlsx, .xls) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- JSZip & docx-preview for Word Document (.docx) Paginated Preview -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.3/dist/docx-preview.min.js"></script>
+  <!-- Mammoth for fallback -->
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 
   <style>
     /* ========================================================
@@ -1287,6 +1294,122 @@
     .browser-activity[data-state="failed"] { border-color:#ef444460; }
     @keyframes browser-pointer { 50% { transform:translate(3px,-2px); } }
     @media(prefers-reduced-motion:reduce) { .browser-activity-pointer { animation:none !important; } }
+
+
+    #filePreviewDialog { min-height: 0; height: 88dvh; }
+    #filePreviewDialog > :not(#filePreviewBody) { flex-shrink: 0; }
+    #filePreviewBody { min-height: 0; }
+    #filePreviewDocxScrollWrapper { overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; }
+    #filePreviewModal.is-expanded { padding: 0; }
+    #filePreviewModal.is-expanded #filePreviewDialog { max-width: none; width: 100%; height: 100dvh; border-radius: 0; }
+    /* Office, PDF & Document Preview Stylings */
+    .docx-viewer-workbench {
+      background-color: #525659;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 16px 16px;
+      min-height: 100%;
+      padding: 24px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+    }
+    [data-theme="warm"] .docx-viewer-workbench,
+    [data-theme="light"] .docx-viewer-workbench {
+      background-color: #cbd5e1;
+      background-image: radial-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    }
+    /* White Document Paper Isolation from AI Hub Dark/Light Theme */
+    .docx-viewer-workbench .docx-wrapper,
+    .docx-viewer-workbench .docx-paper-wrapper {
+      background: transparent !important;
+      padding: 0 !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+    }
+    .docx-viewer-workbench section.docx,
+    .docx-viewer-workbench section.docx-paper,
+    .docx-viewer-workbench .docx,
+    .docx-viewer-workbench .docx-paper {
+      background-color: #ffffff !important;
+      color: #111827;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 2px !important;
+      margin-bottom: 20px !important;
+      transform-origin: top center;
+      transition: transform 0.15s ease-out;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+    .docx-viewer-workbench .docx *,
+    .docx-viewer-workbench .docx-paper * {
+      box-sizing: border-box;
+    }
+    .docx-viewer-workbench .docx table,
+    .docx-viewer-workbench .docx-paper table {
+      border-collapse: collapse;
+      margin: 1em 0;
+    }
+    .docx-viewer-workbench .docx td,
+    .docx-viewer-workbench .docx th,
+    .docx-viewer-workbench .docx-paper td,
+    .docx-viewer-workbench .docx-paper th {
+      border: 1px solid #cbd5e1;
+      padding: 4px 8px;
+    }
+
+    /* Fallback Mammoth Paper View */
+    #filePreviewDocxBody.mammoth-fallback-paper {
+      background-color: #ffffff !important;
+      color: #111827 !important;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 2px !important;
+      max-width: 820px;
+      width: 100%;
+      padding: 40px 48px;
+      margin: 0 auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.7;
+    }
+    @media (max-width: 640px) {
+      #filePreviewDocxBody.mammoth-fallback-paper { padding: 24px 16px; }
+      .docx-viewer-workbench { padding: 12px 6px; }
+    }
+    #filePreviewDocxBody.mammoth-fallback-paper h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; color: #0f172a; }
+    #filePreviewDocxBody.mammoth-fallback-paper h2 { font-size: 1.3rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #1e293b; }
+    #filePreviewDocxBody.mammoth-fallback-paper h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.4rem; color: #334155; }
+    #filePreviewDocxBody.mammoth-fallback-paper p { margin-bottom: 0.85rem; }
+    #filePreviewDocxBody.mammoth-fallback-paper ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.85rem; }
+    #filePreviewDocxBody.mammoth-fallback-paper ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.85rem; }
+    #filePreviewDocxBody.mammoth-fallback-paper table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 12px; }
+    #filePreviewDocxBody.mammoth-fallback-paper th, #filePreviewDocxBody.mammoth-fallback-paper td { border: 1px solid #cbd5e1; padding: 6px 10px; }
+    #filePreviewDocxBody.mammoth-fallback-paper th { background: #f1f5f9; font-weight: 600; }
+    #filePreviewDocxBody.mammoth-fallback-paper img { max-width: 100%; height: auto; border-radius: 4px; margin: 0.5rem 0; }
+
+    #filePreviewMarkdownBody h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.3rem; }
+    #filePreviewMarkdownBody h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+    #filePreviewMarkdownBody h3 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.4rem; }
+    #filePreviewMarkdownBody p { margin-bottom: 0.75rem; line-height: 1.65; }
+    #filePreviewMarkdownBody ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    #filePreviewMarkdownBody ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    #filePreviewMarkdownBody table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 12px; }
+    #filePreviewMarkdownBody th, #filePreviewMarkdownBody td { border: 1px solid var(--border-subtle); padding: 6px 10px; }
+    #filePreviewMarkdownBody th { background: var(--bg-hover); font-weight: 600; }
+    #filePreviewMarkdownBody pre { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; overflow-x: auto; margin-bottom: 0.75rem; }
+    #filePreviewMarkdownBody code { font-family: var(--font-mono, monospace); font-size: 0.9em; }
+
+    #filePreviewSheetBody table { border-collapse: collapse; width: 100%; font-size: 11.5px; font-family: var(--font-mono, monospace); }
+    #filePreviewSheetBody th, #filePreviewSheetBody td { border: 1px solid var(--border-subtle); padding: 5px 9px; white-space: nowrap; max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+    #filePreviewSheetBody th { background: var(--bg-hover); font-weight: 600; position: sticky; top: 0; z-index: 10; }
+    #filePreviewSheetBody tr:hover td { background: var(--bg-hover); }
   </style>
 </head>
 <body class="h-screen w-screen flex overflow-hidden">
@@ -2869,7 +2992,7 @@
 
   <!-- File Preview & Diff Modal (Quick view + Red/Green Diff for desktop & mobile) -->
   <div id="filePreviewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-md">
-    <div class="w-full max-w-5xl h-[88vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden modal-enter"
+    <div id="filePreviewDialog" class="w-full max-w-5xl h-[88vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden modal-enter"
          style="background: var(--bg-surface); border-color: var(--border-subtle);">
       
       <!-- Modal Header -->
@@ -2886,10 +3009,15 @@
         </div>
 
         <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          <a id="filePreviewNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium ease-spring flex items-center gap-1" title="Mở trong tab trình duyệt mới">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            <span class="hidden sm:inline">Tab mới</span>
+          </a>
           <button id="filePreviewOpenBtn" onclick="openCurrentPreviewOnPc()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium ease-spring flex items-center gap-1" title="Mở trên máy tính PC">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
             <span class="hidden sm:inline">Mở trên PC</span>
           </button>
+          <button id="filePreviewExpandBtn" type="button" onclick="toggleFilePreviewExpanded()" aria-label="Mo rong khung xem" aria-pressed="false" title="Mo rong / Thu gon" class="p-2 rounded hover:bg-slate-700 text-slate-300">&#x26F6;</button>
           <button id="filePreviewCopyBtn" onclick="copyFilePreviewContent()" class="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold ease-spring flex items-center gap-1" title="Sao chép nội dung đang xem">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             <span id="filePreviewCopyText">Sao chép</span>
@@ -2903,17 +3031,23 @@
       <!-- Diff / Content Mode Switcher Bar -->
       <div id="filePreviewTabsBar" class="px-4 py-1.5 border-b flex items-center justify-between gap-2 text-xs select-none"
            style="background: var(--bg-card); border-color: var(--border-subtle);">
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+          <button id="fileTabPreviewBtn" type="button" onclick="switchFilePreviewTab('preview')"
+                  class="px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border">
+            <span id="fileTabPreviewIcon">👁️</span>
+            <span id="fileTabPreviewLabel">Xem trước trực quan</span>
+          </button>
+          <button id="fileTabFullBtn" type="button" onclick="switchFilePreviewTab('full')"
+                  class="px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border">
+            <span id="fileTabFullIcon">📄</span>
+            <span id="fileTabFullLabel">Mã nguồn / Text</span>
+          </button>
           <button id="fileTabDiffBtn" type="button" onclick="switchFilePreviewTab('diff')"
                   class="px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border">
             <span>± Thay đổi trong phiên</span>
           </button>
-          <button id="fileTabFullBtn" type="button" onclick="switchFilePreviewTab('full')"
-                  class="px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border">
-            <span>📄 Toàn bộ file</span>
-          </button>
         </div>
-        <div class="hidden sm:flex items-center gap-3 text-[11px] font-mono" style="color: var(--text-sub);">
+        <div class="hidden sm:flex items-center gap-3 text-[11px] font-mono shrink-0" style="color: var(--text-sub);">
           <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500/40 border border-emerald-500 inline-block"></span> Dòng xanh (+): Thêm mới</span>
           <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-rose-500/40 border border-rose-500 inline-block"></span> Dòng đỏ (-): Đã xóa</span>
         </div>
@@ -2957,6 +3091,115 @@
             <span>Đang tải hình ảnh...</span>
           </div>
           <img id="filePreviewImage" class="max-w-full max-h-[70vh] rounded-lg shadow-lg object-contain" src="" alt="preview" />
+        </div>
+
+        <!-- Video Preview Container -->
+        <div id="filePreviewVideoContainer" class="hidden flex flex-col items-center justify-center p-4 min-h-[300px]">
+          <video id="filePreviewVideo" controls playsinline class="max-w-full max-h-[70vh] rounded-xl shadow-2xl bg-black" src=""></video>
+        </div>
+
+        <!-- Audio Preview Container -->
+        <div id="filePreviewAudioContainer" class="hidden flex flex-col items-center justify-center p-8 min-h-[220px]">
+          <div class="w-16 h-16 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center mb-4 shadow-sm">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+          </div>
+          <div id="filePreviewAudioTitle" class="font-semibold text-sm mb-3 text-center truncate max-w-md px-2" style="color: var(--text-main);"></div>
+          <audio id="filePreviewAudio" controls class="w-full max-w-md"></audio>
+        </div>
+
+        <!-- PDF Preview Container -->
+        <div id="filePreviewPdfContainer" class="hidden w-full h-full min-h-[500px] flex-1">
+          <iframe id="filePreviewPdfFrame" class="w-full h-full min-h-[500px] border-0 rounded-b-xl" src=""></iframe>
+        </div>
+
+        <!-- Word Document (.docx) Preview Container -->
+        <div id="filePreviewDocxContainer" class="hidden flex-col w-full h-full min-h-0 overflow-hidden">
+          <!-- DOCX Toolbar (Zoom and Fit-Width) -->
+          <div id="filePreviewDocxToolbar" class="flex items-center justify-between gap-2 px-3 py-1.5 border-b text-xs shrink-0 select-none" style="background: var(--bg-card); border-color: var(--border-subtle);">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="inline-flex items-center gap-1 font-medium text-blue-400">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1 7V3.5L18.5 8H15zM7 11.5h10v1H7v-1zm0 3h10v1H7v-1zm0 3h7v1H7v-1z"/></svg>
+                <span class="hidden sm:inline">Trang giấy Word</span>
+              </span>
+              <span class="h-3 w-px bg-zinc-600/50 mx-1"></span>
+              <!-- Zoom controls -->
+              <div class="inline-flex items-center gap-1 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-lg p-0.5">
+                <button type="button" onclick="zoomDocxPreview(-0.1)" class="p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-sub)] hover:text-[var(--text-main)] transition-colors" title="Thu nhỏ">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                </button>
+                <span id="filePreviewDocxZoomLabel" class="px-1.5 font-mono text-[11px] text-[var(--text-sub)] min-w-[42px] text-center">100%</span>
+                <button type="button" onclick="zoomDocxPreview(0.1)" class="p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-sub)] hover:text-[var(--text-main)] transition-colors" title="Phóng to">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
+              </div>
+              <!-- Fit to Width toggle -->
+              <button type="button" id="filePreviewDocxFitBtn" onclick="toggleDocxFitWidth()" class="px-2 py-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-sub)] hover:text-[var(--text-main)] transition-colors flex items-center gap-1 text-[11px]" title="Tự động co giãn vừa vặn khung hình">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                <span class="hidden md:inline">Vừa màn hình</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Scoped Loading Overlay -->
+          <div id="filePreviewDocxLoading" class="hidden flex-col items-center justify-center p-8 space-y-3 flex-1">
+            <span class="hub-inline-spinner text-blue-400 w-8 h-8"></span>
+            <div id="filePreviewDocxLoadingText" class="text-xs text-zinc-300 font-medium">Đang nạp tài liệu Word...</div>
+            <div class="text-[11px] text-zinc-500">Đang giữ nguyên bố cục trang giấy A4</div>
+          </div>
+
+          <!-- Scoped Error/Unsupported View -->
+          <div id="filePreviewDocxError" class="hidden flex-col items-center justify-center p-8 space-y-3 flex-1 text-center">
+            <div class="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mb-1">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div id="filePreviewDocxErrorMsg" class="text-xs text-rose-300 max-w-md"></div>
+            <div class="flex items-center gap-2 pt-2">
+              <button type="button" onclick="retryDocxPreview()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors">Thử lại</button>
+              <button type="button" onclick="openCurrentPreviewOnPc()" class="px-3 py-1.5 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-main)] rounded-lg text-xs font-medium transition-colors">Mở bằng Word trên PC</button>
+            </div>
+          </div>
+
+          <!-- Workbench Scrollable Wrapper with Document Paper -->
+          <div id="filePreviewDocxScrollWrapper" tabindex="0" class="flex-1 min-h-0 min-w-0 overflow-auto docx-viewer-workbench">
+            <div id="filePreviewDocxBody"></div>
+          </div>
+        </div>
+
+        <!-- Legacy .doc (Word 97-2003) Fallback Container -->
+        <div id="filePreviewDocLegacyContainer" class="hidden flex-col items-center justify-center p-8 space-y-4 flex-1 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20 shadow-lg">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1 7V3.5L18.5 8H15zM7 11.5h10v1H7v-1zm0 3h10v1H7v-1zm0 3h7v1H7v-1z"/></svg>
+          </div>
+          <div class="space-y-1.5 max-w-md">
+            <h4 class="text-sm font-semibold text-[var(--text-main)]">Tệp Word 97-2003 (.doc)</h4>
+            <p class="text-xs text-[var(--text-sub)] leading-relaxed">Định dạng Word nhị phân cũ (.doc) không phải là chuẩn OpenXML (.docx). Trình duyệt không hỗ trợ kết xuất trực tiếp định dạng OLE nhị phân này.</p>
+            <p class="text-xs text-amber-400/90 pt-1">💡 Khuyến nghị: Hãy lưu hoặc xuất tệp thành .docx để xem đầy đủ với bố cục trang giấy A4 trực tiếp trên AI Hub.</p>
+          </div>
+          <div class="pt-2">
+            <button type="button" onclick="openCurrentPreviewOnPc()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-md transition-all flex items-center gap-1.5 mx-auto">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              <span>Mở bằng Microsoft Word trên PC</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Excel Spreadsheet (.xlsx, .xls, .csv) Preview Container -->
+        <div id="filePreviewSheetContainer" class="hidden flex-col w-full h-full overflow-hidden">
+          <div id="filePreviewSheetTabs" class="flex items-center gap-1 px-3 py-1.5 border-b overflow-x-auto scrollbar-none shrink-0" style="background: var(--bg-card); border-color: var(--border-subtle);"></div>
+          <div id="filePreviewSheetTableWrapper" class="flex-1 overflow-auto p-2">
+            <div id="filePreviewSheetBody"></div>
+          </div>
+        </div>
+
+        <!-- Markdown Rendered Preview Container -->
+        <div id="filePreviewMarkdownContainer" class="hidden w-full overflow-y-auto p-4 sm:p-8">
+          <div id="filePreviewMarkdownBody" class="max-w-3xl mx-auto p-6 sm:p-8 rounded-xl leading-relaxed font-sans" style="color: var(--text-main);"></div>
+        </div>
+
+        <!-- HTML Sandbox Preview Container -->
+        <div id="filePreviewHtmlContainer" class="hidden w-full h-full min-h-[480px] flex-1">
+          <iframe id="filePreviewHtmlFrame" sandbox="allow-scripts allow-same-origin" class="w-full h-full min-h-[480px] border-0 bg-white rounded-b-xl" src=""></iframe>
         </div>
       </div>
 
@@ -4483,6 +4726,11 @@
               </div>
               <div class="flex items-center space-x-1.5 shrink-0">
                 <span class="text-[10px] font-mono text-[var(--text-sub)]">${sizeKb}</span>
+                <button type="button" onclick="event.stopPropagation(); previewLocalFile('${escapeJs(item.path)}', event)"
+                        class="p-1 rounded hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-colors"
+                        title="Xem trước tệp này">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
                 <span class="text-[10px] font-semibold text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 ease-spring">Chèn Path</span>
               </div>
             </div>
@@ -5399,7 +5647,7 @@
       if (getRecordedFileChange(s)) return true;
 
       const isRelativeExplicit = /^\.{1,2}[\/\\][\w.\-\/\\ ]+$/i.test(s);
-      const isKnownExtPath = /^[\w.\-]+(?:[\/\\][\w.\-\/\\ ]+)?\.(?:js|cjs|mjs|ts|jsx|tsx|json|html|css|scss|bat|ps1|cmd|sh|cs|py|cpp|c|h|java|go|rs|md|txt|log|svg|png|jpg|jpeg|ico|toml|yaml|yml|env|sql|xml|lock|vue|svelte|goosehints|gitignore)$/i.test(s);
+      const isKnownExtPath = /^[\p{L}\p{N}_.\- ]+(?:[\/\\][\p{L}\p{N}_.\-\/\\ ]+)?\.(?:js|cjs|mjs|ts|jsx|tsx|json|html|css|scss|bat|ps1|cmd|sh|cs|py|cpp|c|h|java|go|rs|md|txt|log|svg|png|jpg|jpeg|ico|toml|yaml|yml|env|sql|xml|lock|vue|svelte|goosehints|gitignore|docx|doc|xlsx|xls|csv|pdf|mp4|webm|mov|mp3|wav|ogg|flac|m4a|avif|gif|bmp)$/iu.test(s);
       if (isRelativeExplicit || isKnownExtPath) {
         if (/^[a-zA-Z0-9\-]+\.(?:com|org|net|io|dev|ai|app|gov|edu|vn)$/i.test(s)) return false;
         return true;
@@ -5569,7 +5817,9 @@
       if (/^https?:\/\//i.test(href)) {
         return renderWebLinkHtml(href, text, title);
       }
-      const clean = href.replace(/^file:\/\/\/?/i, '');
+      let clean = href.replace(/^file:\/\/\/?/i, '');
+      // Markdown links encode spaces and Unicode; decode once at the URL boundary only.
+      try { clean = decodeURIComponent(clean); } catch (_) {}
       if (isLocalFilePath(clean)) {
         return renderPathBadgeHtml(clean, text, false);
       }
@@ -5674,22 +5924,49 @@
     let currentPreviewFullRaw = '';
     let currentPreviewHasFull = false;
     let currentPreviewIsImage = false;
+    let currentPreviewData = null;
+    let currentWorkbook = null;
+
+    function hideAllPreviewContainers() {
+      const ids = [
+        'filePreviewDiffContainer',
+        'filePreviewPre',
+        'filePreviewImageContainer',
+        'filePreviewVideoContainer',
+        'filePreviewAudioContainer',
+        'filePreviewPdfContainer',
+        'filePreviewDocxContainer',
+        'filePreviewDocLegacyContainer',
+        'filePreviewSheetContainer',
+        'filePreviewMarkdownContainer',
+        'filePreviewHtmlContainer'
+      ];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
+      });
+    }
 
     window.switchFilePreviewTab = function(mode) {
-      currentPreviewActiveTab = mode === 'diff' ? 'diff' : 'full';
+      currentPreviewActiveTab = mode;
+      const previewBtn = document.getElementById('fileTabPreviewBtn');
       const diffBtn = document.getElementById('fileTabDiffBtn');
       const fullBtn = document.getElementById('fileTabFullBtn');
       const loadingEl = document.getElementById('filePreviewLoadingState');
       if (loadingEl && !loadingEl.classList.contains('hidden')) {
         return;
       }
-      const diffContainer = document.getElementById('filePreviewDiffContainer');
-      const preEl = document.getElementById('filePreviewPre');
-      const imgContainer = document.getElementById('filePreviewImageContainer');
 
       const activeClasses = 'bg-blue-600 text-white border-blue-500 shadow-2xs';
       const inactiveClasses = 'bg-transparent text-slate-400 border-transparent hover:text-slate-200';
 
+      if (previewBtn) {
+        previewBtn.className = 'px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border ' +
+          (currentPreviewActiveTab === 'preview' ? activeClasses : inactiveClasses);
+      }
       if (diffBtn) {
         diffBtn.className = 'px-3 py-1 rounded-lg font-semibold text-[11.5px] transition-all flex items-center gap-1.5 border ' +
           (currentPreviewActiveTab === 'diff' ? activeClasses : inactiveClasses);
@@ -5699,21 +5976,468 @@
           (currentPreviewActiveTab === 'full' ? activeClasses : inactiveClasses);
       }
 
+      hideAllPreviewContainers();
+
       if (currentPreviewActiveTab === 'diff') {
+        const diffContainer = document.getElementById('filePreviewDiffContainer');
         if (diffContainer) diffContainer.classList.remove('hidden');
-        if (preEl) preEl.classList.add('hidden');
-        if (imgContainer) imgContainer.classList.add('hidden');
-      } else {
-        if (diffContainer) diffContainer.classList.add('hidden');
-        if (currentPreviewIsImage) {
-          if (preEl) preEl.classList.add('hidden');
+      } else if (currentPreviewActiveTab === 'full') {
+        const preEl = document.getElementById('filePreviewPre');
+        if (preEl) preEl.classList.remove('hidden');
+      } else { // 'preview'
+        const type = (currentPreviewData && currentPreviewData.previewType) || (currentPreviewIsImage ? 'image' : 'code');
+        if (type === 'image') {
+          const imgContainer = document.getElementById('filePreviewImageContainer');
           if (imgContainer) imgContainer.classList.remove('hidden');
+        } else if (type === 'video') {
+          const vidContainer = document.getElementById('filePreviewVideoContainer');
+          if (vidContainer) vidContainer.classList.remove('hidden');
+        } else if (type === 'audio') {
+          const audContainer = document.getElementById('filePreviewAudioContainer');
+          if (audContainer) audContainer.classList.remove('hidden');
+        } else if (type === 'pdf') {
+          const pdfContainer = document.getElementById('filePreviewPdfContainer');
+          if (pdfContainer) pdfContainer.classList.remove('hidden');
+        } else if (type === 'docx') {
+          const docxContainer = document.getElementById('filePreviewDocxContainer');
+          if (docxContainer) { docxContainer.classList.remove('hidden'); docxContainer.classList.add('flex'); }
+        } else if (type === 'doc-legacy') {
+          const docLegacyContainer = document.getElementById('filePreviewDocLegacyContainer');
+          if (docLegacyContainer) {
+            docLegacyContainer.classList.remove('hidden');
+            docLegacyContainer.classList.add('flex');
+          }
+        } else if (type === 'excel' || type === 'csv') {
+          const sheetContainer = document.getElementById('filePreviewSheetContainer');
+          if (sheetContainer) {
+            sheetContainer.classList.remove('hidden');
+            sheetContainer.classList.add('flex');
+          }
+        } else if (type === 'markdown') {
+          const mdContainer = document.getElementById('filePreviewMarkdownContainer');
+          if (mdContainer) mdContainer.classList.remove('hidden');
+        } else if (type === 'html') {
+          const htmlContainer = document.getElementById('filePreviewHtmlContainer');
+          if (htmlContainer) htmlContainer.classList.remove('hidden');
         } else {
-          if (imgContainer) imgContainer.classList.add('hidden');
+          const preEl = document.getElementById('filePreviewPre');
           if (preEl) preEl.classList.remove('hidden');
         }
       }
     };
+
+    let currentDocxAbortController = null;
+    let currentDocxRenderToken = 0;
+    let currentDocxFitTimer = null;
+    let currentDocxResizeListener = null;
+    let currentDocxZoom = 1.0;
+    let currentDocxRawUrl = null;
+    let currentDocxPath = null;
+
+    const DOCX_SHADOW_BASE_CSS = `
+      :host {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+      .docx-wrapper, .docx-paper-wrapper {
+        background: transparent !important;
+        padding: 0 !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+        transform-origin: top center;
+      }
+      section.docx, section.docx-paper, .docx, .docx-paper {
+        background-color: #ffffff !important;
+        color: #111827;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 2px !important;
+        margin-bottom: 20px !important;
+        box-sizing: border-box;
+        flex-shrink: 0;
+      }
+      .docx-wrapper table, .docx-paper-wrapper table {
+        border-collapse: collapse;
+      }
+      .mammoth-fallback-paper {
+        background-color: #ffffff !important;
+        color: #111827;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 2px !important;
+        max-width: 820px;
+        width: 100%;
+        padding: 40px 48px;
+        margin: 0 auto;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        line-height: 1.7;
+        box-sizing: border-box;
+        transform-origin: top center;
+      }
+      @media (max-width: 640px) {
+        .mammoth-fallback-paper { padding: 24px 16px; }
+      }
+      .mammoth-fallback-paper h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; color: #0f172a; }
+      .mammoth-fallback-paper h2 { font-size: 1.3rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #1e293b; }
+      .mammoth-fallback-paper h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.4rem; color: #334155; }
+      .mammoth-fallback-paper p { margin-bottom: 0.85rem; }
+      .mammoth-fallback-paper table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 12px; }
+      .mammoth-fallback-paper th, .mammoth-fallback-paper td { border: 1px solid #cbd5e1; padding: 6px 10px; }
+      .mammoth-fallback-paper th { background: #f1f5f9; font-weight: 600; }
+      .mammoth-fallback-paper img { max-width: 100%; height: auto; border-radius: 4px; margin: 0.5rem 0; }
+    `;
+
+    function getOrCreateDocxShadowRoot() {
+      const host = document.getElementById('filePreviewDocxBody');
+      if (!host) return null;
+      if (host.shadowRoot) return host.shadowRoot;
+      try {
+        return host.attachShadow({ mode: 'open' });
+      } catch (_) {
+        return host;
+      }
+    }
+
+    function getDocxRoot() {
+      const host = document.getElementById('filePreviewDocxBody');
+      return (host && host.shadowRoot) ? host.shadowRoot : host;
+    }
+
+    function sanitizeDocumentHtml(dirtyHtml) {
+      if (!dirtyHtml || typeof dirtyHtml !== 'string') return '';
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(dirtyHtml, 'text/html');
+        const badTags = doc.querySelectorAll('script, iframe, object, embed, applet, form, link, meta, base');
+        badTags.forEach(el => el.remove());
+
+        const allElements = doc.querySelectorAll('*');
+        allElements.forEach(el => {
+          const attrs = Array.from(el.attributes);
+          for (const attr of attrs) {
+            const name = attr.name.toLowerCase();
+            const val = attr.value.trim().toLowerCase();
+            if (name.startsWith('on')) {
+              el.removeAttribute(attr.name);
+            } else if ((name === 'href' || name === 'src' || name === 'action') &&
+                       (val.startsWith('javascript:') || val.startsWith('vbscript:') || val.startsWith('data:text/html'))) {
+              el.removeAttribute(attr.name);
+            } else if (name === 'style') {
+              if (/expression\s*\(|javascript\s*:|behavior\s*:/i.test(attr.value)) {
+                el.removeAttribute(attr.name);
+              }
+            }
+          }
+        });
+        return doc.body.innerHTML;
+      } catch (_) {
+        return '';
+      }
+    }
+
+    function setDocxLoading(isLoading, statusText = 'Đang nạp tài liệu Word...') {
+      const loadingEl = document.getElementById('filePreviewDocxLoading');
+      const textEl = document.getElementById('filePreviewDocxLoadingText');
+      const wrapper = document.getElementById('filePreviewDocxScrollWrapper');
+      const errorEl = document.getElementById('filePreviewDocxError');
+      if (loadingEl) {
+        if (isLoading) {
+          loadingEl.classList.remove('hidden');
+          loadingEl.classList.add('flex');
+          if (textEl) textEl.textContent = statusText;
+          if (wrapper) wrapper.classList.add('hidden');
+          if (errorEl) errorEl.classList.add('hidden');
+        } else {
+          loadingEl.classList.add('hidden');
+          loadingEl.classList.remove('flex');
+        }
+      }
+    }
+
+    function setDocxError(msg) {
+      setDocxLoading(false);
+      const wrapper = document.getElementById('filePreviewDocxScrollWrapper');
+      const errorEl = document.getElementById('filePreviewDocxError');
+      const errorMsgEl = document.getElementById('filePreviewDocxErrorMsg');
+      if (wrapper) wrapper.classList.add('hidden');
+      if (errorEl) {
+        errorEl.classList.remove('hidden');
+        errorEl.classList.add('flex');
+        if (errorMsgEl) errorMsgEl.textContent = msg;
+      }
+    }
+
+    function applyDocxZoom() {
+      const root = getDocxRoot();
+      if (!root) return;
+      const docxWrapper = root.querySelector('.docx-wrapper, .docx-paper-wrapper');
+      const fallbackPaper = root.querySelector('.mammoth-fallback-paper');
+      const pages = root.querySelectorAll('section.docx-paper, .docx-paper, section.docx, .docx');
+
+      if (docxWrapper) {
+        if ('zoom' in docxWrapper.style) {
+          docxWrapper.style.zoom = currentDocxZoom;
+        } else {
+          docxWrapper.style.transform = 'scale(' + currentDocxZoom + ')';
+          docxWrapper.style.transformOrigin = 'top center';
+        }
+      } else if (fallbackPaper) {
+        if ('zoom' in fallbackPaper.style) {
+          fallbackPaper.style.zoom = currentDocxZoom;
+        } else {
+          fallbackPaper.style.transform = 'scale(' + currentDocxZoom + ')';
+          fallbackPaper.style.transformOrigin = 'top center';
+        }
+      } else if (pages.length > 0) {
+        pages.forEach(p => {
+          if ('zoom' in p.style) {
+            p.style.zoom = currentDocxZoom;
+          } else {
+            p.style.transform = 'scale(' + currentDocxZoom + ')';
+            p.style.transformOrigin = 'top center';
+            p.style.marginBottom = Math.max(20, 20 * currentDocxZoom) + 'px';
+          }
+        });
+      }
+      const label = document.getElementById('filePreviewDocxZoomLabel');
+      if (label) label.textContent = Math.round(currentDocxZoom * 100) + '%';
+    }
+
+    window.zoomDocxPreview = function(delta) {
+      currentDocxZoom = Math.max(0.3, Math.min(2.5, currentDocxZoom + delta));
+      applyDocxZoom();
+    };
+
+    window.toggleDocxFitWidth = function() {
+      const wrapper = document.getElementById('filePreviewDocxScrollWrapper');
+      const root = getDocxRoot();
+      const firstPage = root ? root.querySelector('section.docx-paper, .docx-paper, section.docx, .docx, .mammoth-fallback-paper') : null;
+      if (!wrapper || !firstPage) return;
+      const availableWidth = wrapper.clientWidth - 32;
+      const pageWidth = firstPage.offsetWidth || 816;
+      if (availableWidth > 0 && pageWidth > 0) {
+        currentDocxZoom = Math.min(1.2, Math.max(0.35, availableWidth / pageWidth));
+        applyDocxZoom();
+      }
+    };
+
+    window.retryDocxPreview = function() {
+      if (currentDocxRawUrl) {
+        renderDocxPreview(currentDocxRawUrl, currentDocxPath);
+      }
+    };
+
+    async function renderDocxPreview(rawUrl, targetPath = '') {
+      currentDocxRawUrl = rawUrl;
+      currentDocxPath = targetPath;
+      const reqVersion = currentPreviewRequestVersion;
+      const renderToken = ++currentDocxRenderToken;
+
+      if (currentDocxAbortController) {
+        try { currentDocxAbortController.abort(); } catch (_) {}
+      }
+      currentDocxAbortController = new AbortController();
+
+      if (currentDocxFitTimer) {
+        clearTimeout(currentDocxFitTimer);
+        currentDocxFitTimer = null;
+      }
+
+      setDocxLoading(true, 'Đang nạp tài liệu Word...');
+
+      try {
+        const res = await fetch(rawUrl, { signal: currentDocxAbortController.signal });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (reqVersion !== currentPreviewRequestVersion || renderToken !== currentDocxRenderToken) return;
+
+        setDocxLoading(true, 'Đang phân tích định dạng trang giấy A4...');
+        const arrayBuffer = await res.arrayBuffer();
+        if (reqVersion !== currentPreviewRequestVersion || renderToken !== currentDocxRenderToken) return;
+
+        // Render into detached containers to avoid mutating shared DOM before completion
+        const detachedContainer = document.createElement('div');
+        const detachedStyleContainer = document.createElement('div');
+
+        // 1. Try docx-preview in detached container
+        if (typeof docx !== 'undefined' && typeof docx.renderAsync === 'function') {
+          setDocxLoading(true, 'Đang kết xuất trang tài liệu...');
+          try {
+            await docx.renderAsync(arrayBuffer, detachedContainer, detachedStyleContainer, {
+              className: 'docx-paper',
+              inWrapper: true,
+              ignoreWidth: false,
+              ignoreHeight: false,
+              ignoreFonts: false,
+              breakPages: true,
+              experimental: true,
+              useBase64URL: true,
+              renderHeaders: true,
+              renderFooters: true,
+              renderFootnotes: true,
+              renderEndnotes: true
+            });
+
+            // Guard against stale render
+            if (reqVersion !== currentPreviewRequestVersion || renderToken !== currentDocxRenderToken) return;
+
+            const root = getOrCreateDocxShadowRoot();
+            const scrollWrapper = document.getElementById('filePreviewDocxScrollWrapper');
+            if (!root) return;
+
+            root.innerHTML = '';
+            const baseStyleEl = document.createElement('style');
+            baseStyleEl.textContent = DOCX_SHADOW_BASE_CSS;
+            root.appendChild(baseStyleEl);
+
+            if (detachedStyleContainer.childNodes.length > 0) {
+              root.appendChild(detachedStyleContainer);
+            }
+            root.appendChild(detachedContainer);
+
+            setDocxLoading(false);
+            if (scrollWrapper) scrollWrapper.classList.remove('hidden');
+
+            // Responsive fit & resize listener
+            if (!currentDocxResizeListener) {
+              currentDocxResizeListener = () => {
+                if (window.innerWidth < 768 && currentPreviewData && currentPreviewData.previewType === 'docx') {
+                  toggleDocxFitWidth();
+                }
+              };
+              window.addEventListener('resize', currentDocxResizeListener);
+            }
+
+            if (window.innerWidth < 768) {
+              currentDocxFitTimer = setTimeout(() => {
+                if (reqVersion === currentPreviewRequestVersion && renderToken === currentDocxRenderToken) {
+                  toggleDocxFitWidth();
+                }
+              }, 60);
+            } else {
+              currentDocxZoom = 1.0;
+              applyDocxZoom();
+            }
+            return;
+          } catch (docxErr) {
+            console.warn('[DocxPreview] docx-preview failed, falling back to mammoth:', docxErr);
+          }
+        }
+
+        // 2. Fallback to Mammoth with HTML sanitization inside shadow root
+        if (typeof mammoth !== 'undefined' && typeof mammoth.convertToHtml === 'function') {
+          setDocxLoading(true, 'Đang nạp bản xem nhẹ (Mammoth)...');
+          const result = await mammoth.convertToHtml({ arrayBuffer });
+          if (reqVersion !== currentPreviewRequestVersion || renderToken !== currentDocxRenderToken) return;
+
+          const root = getOrCreateDocxShadowRoot();
+          const scrollWrapper = document.getElementById('filePreviewDocxScrollWrapper');
+          if (!root) return;
+
+          root.innerHTML = '';
+          const baseStyleEl = document.createElement('style');
+          baseStyleEl.textContent = DOCX_SHADOW_BASE_CSS;
+          root.appendChild(baseStyleEl);
+
+          const paperEl = document.createElement('div');
+          paperEl.className = 'mammoth-fallback-paper';
+          const cleanHtml = sanitizeDocumentHtml(result.value || '');
+          paperEl.innerHTML = cleanHtml || '<div class="italic text-zinc-500 py-8 text-center text-xs">Tài liệu Word không có nội dung chữ hoặc rỗng.</div>';
+          root.appendChild(paperEl);
+
+          setDocxLoading(false);
+          if (scrollWrapper) scrollWrapper.classList.remove('hidden');
+          return;
+        }
+
+        throw new Error('Không có thư viện đọc Word nào khả dụng trên trình duyệt.');
+      } catch (err) {
+        if (err.name === 'AbortError' || reqVersion !== currentPreviewRequestVersion || renderToken !== currentDocxRenderToken) return;
+        setDocxLoading(false);
+        setDocxError('Không thể hiển thị bản xem trước Word: ' + err.message);
+      }
+    }
+
+    async function renderSheetPreview(rawUrl, ext, textContent = '') {
+      const sheetBody = document.getElementById('filePreviewSheetBody');
+      const tabsContainer = document.getElementById('filePreviewSheetTabs');
+      if (!sheetBody) return;
+      sheetBody.innerHTML = '<div class="flex items-center justify-center gap-2 text-xs py-8 text-zinc-400"><span class="hub-inline-spinner text-blue-400"></span> Đang phân tích bảng tính...</div>';
+      if (tabsContainer) tabsContainer.innerHTML = '';
+      try {
+        if (typeof XLSX === 'undefined') {
+          sheetBody.innerHTML = '<div class="p-4 text-xs text-amber-400 text-center">Đang nạp thư viện đọc bảng tính... Vui lòng thử lại sau giây lát.</div>';
+          return;
+        }
+        let wb;
+        if (ext === '.csv' || ext === '.tsv') {
+          wb = XLSX.read(textContent, { type: 'string' });
+        } else {
+          const res = await fetch(rawUrl);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const arrayBuffer = await res.arrayBuffer();
+          wb = XLSX.read(arrayBuffer, { type: 'array' });
+        }
+        currentWorkbook = wb;
+        if (!wb || !wb.SheetNames || wb.SheetNames.length === 0) {
+          sheetBody.innerHTML = '<div class="p-4 text-center text-zinc-500 italic text-xs">Không tìm thấy sheet dữ liệu nào.</div>';
+          return;
+        }
+        renderSheetTabs(wb.SheetNames, wb.SheetNames[0]);
+        displayExcelSheet(wb, wb.SheetNames[0]);
+      } catch (err) {
+        sheetBody.innerHTML = `<div class="p-6 text-center text-xs text-rose-400"><p>Không thể đọc bảng tính: ${escapeHtml(err.message)}</p><button type="button" onclick="openCurrentPreviewOnPc()" class="mt-3 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold">Mở bằng Excel trên PC</button></div>`;
+      }
+    }
+
+    function displayExcelSheet(wb, sheetName) {
+      const sheetBody = document.getElementById('filePreviewSheetBody');
+      if (!sheetBody || !wb) return;
+      const sheet = wb.Sheets[sheetName];
+      if (!sheet) {
+        sheetBody.innerHTML = '<div class="p-4 text-zinc-500 italic text-xs">Sheet này không có dữ liệu.</div>';
+        return;
+      }
+      const html = XLSX.utils.sheet_to_html(sheet, { id: 'excelPreviewTable' });
+      sheetBody.innerHTML = html;
+    }
+
+    function renderSheetTabs(sheetNames, activeSheet) {
+      const tabsContainer = document.getElementById('filePreviewSheetTabs');
+      if (!tabsContainer) return;
+      if (sheetNames.length <= 1) {
+        tabsContainer.classList.add('hidden');
+        return;
+      }
+      tabsContainer.classList.remove('hidden');
+      tabsContainer.innerHTML = sheetNames.map(name => {
+        const isActive = name === activeSheet;
+        return `<button type="button" onclick="selectExcelSheet('${escapeJs(name)}')" class="px-2.5 py-1 rounded text-[11px] font-medium transition-colors shrink-0 ${isActive ? 'bg-blue-600 text-white shadow-2xs' : 'text-zinc-400 hover:text-zinc-200 hover:bg-[var(--bg-hover)]'}">${escapeHtml(name)}</button>`;
+      }).join('');
+    }
+
+    window.selectExcelSheet = function(sheetName) {
+      if (!currentWorkbook) return;
+      renderSheetTabs(currentWorkbook.SheetNames, sheetName);
+      displayExcelSheet(currentWorkbook, sheetName);
+    };
+
+    function renderMarkdownPreview(markdownText) {
+      const mdBody = document.getElementById('filePreviewMarkdownBody');
+      if (!mdBody) return;
+      if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+        mdBody.innerHTML = marked.parse(markdownText || '');
+        if (window.hljs) {
+          mdBody.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+        }
+      } else {
+        mdBody.textContent = markdownText || '';
+      }
+    }
 
     function getPreviewSyntaxLanguage(filePath) {
       const ext = String(filePath || '').split('.').pop().toLowerCase();
@@ -5780,14 +6504,9 @@
 
     function setFilePreviewLoadingState(isLoading) {
       const loadingEl = document.getElementById('filePreviewLoadingState');
-      const diffContainer = document.getElementById('filePreviewDiffContainer');
-      const preEl = document.getElementById('filePreviewPre');
-      const imgContainer = document.getElementById('filePreviewImageContainer');
       if (loadingEl) loadingEl.classList.toggle('hidden', !isLoading);
       if (isLoading) {
-        if (diffContainer) diffContainer.classList.add('hidden');
-        if (preEl) preEl.classList.add('hidden');
-        if (imgContainer) imgContainer.classList.add('hidden');
+        hideAllPreviewContainers();
       }
     }
 
@@ -5858,12 +6577,29 @@
       const imgEl = document.getElementById('filePreviewImage');
       const openBtn = document.getElementById('filePreviewOpenBtn');
       const fullBtn = document.getElementById('fileTabFullBtn');
+      const previewBtn = document.getElementById('fileTabPreviewBtn');
+      const diffBtn = document.getElementById('fileTabDiffBtn');
+      const previewLabel = document.getElementById('fileTabPreviewLabel');
+      const fullLabel = document.getElementById('fileTabFullLabel');
+      const newTabBtn = document.getElementById('filePreviewNewTabBtn');
 
       currentPreviewDiffRaw = '';
       currentPreviewFullRaw = '';
       currentPreviewHasFull = false;
       currentPreviewedPath = rawPath;
+      currentPreviewData = null;
+      currentWorkbook = null;
+
       if (imgEl) { imgEl.onload = null; imgEl.onerror = null; }
+      const prevVid = document.getElementById('filePreviewVideo');
+      if (prevVid) { prevVid.pause(); prevVid.src = ''; }
+      const prevAud = document.getElementById('filePreviewAudio');
+      if (prevAud) { prevAud.pause(); prevAud.src = ''; }
+      const prevPdf = document.getElementById('filePreviewPdfFrame');
+      if (prevPdf) prevPdf.src = 'about:blank';
+      const prevHtml = document.getElementById('filePreviewHtmlFrame');
+      if (prevHtml) prevHtml.src = 'about:blank';
+
       const previousError = document.getElementById('filePreviewBody')?.querySelector('.hub-inline-error');
       if (previousError) previousError.remove();
       const quickName = String(rawPath || '').split(/[\\\/]/).pop() || rawPath;
@@ -5872,6 +6608,7 @@
       if (statusBadgeEl) statusBadgeEl.className = 'hidden';
       if (diffStatsEl) diffStatsEl.className = 'hidden';
       if (sizeEl) sizeEl.textContent = 'Đang tải...';
+      if (newTabBtn) newTabBtn.classList.add('hidden');
       setFilePreviewLoadingState(true);
       if (modal) modal.classList.remove('hidden');
       if (typeof beginTopLoading === 'function') beginTopLoading();
@@ -5907,6 +6644,7 @@
         const resolvedPath = (previewRes && previewRes.path) || (diffRes && diffRes.path) || (typeof resolveFullDisplayPath === 'function' ? resolveFullDisplayPath(rawPath, recorded) : rawPath);
         const fileName = (previewRes && previewRes.name) || (diffRes && diffRes.name) || quickName;
         currentPreviewedPath = resolvedPath;
+        currentPreviewData = previewRes || {};
 
         if (titleEl) titleEl.textContent = fileName;
         if (metaEl) metaEl.textContent = resolvedPath;
@@ -5945,23 +6683,96 @@
         }
 
         const isStepDiff = Boolean(cardMut && !cardMut.isFullWrite && cardMut.diff && preferredMode === 'step-diff');
-        const diffTabLabel = document.getElementById('fileTabDiffBtn')?.querySelector('span');
-        if (diffTabLabel) diffTabLabel.textContent = isStepDiff ? '± Thay đổi của lần sửa này' : '± Thay đổi trong phiên';
+        const diffTabLabel = document.getElementById('fileTabDiffBtn')?.querySelector('span:last-child') || document.getElementById('fileTabDiffBtn')?.querySelector('span');
+        if (diffTabLabel) diffTabLabel.textContent = isStepDiff ? 'Thay đổi của lần sửa này' : 'Thay đổi trong phiên';
         currentPreviewDiffRaw = effectiveDiff;
         const renderedDiff = renderDiffTableIntoModal(effectiveDiff);
         const effectiveAdded = renderedDiff.hasRows ? renderedDiff.added : ((hasServerDiff ? diffRes.added : 0) || (recorded && recorded.added) || 0);
         const effectiveRemoved = renderedDiff.hasRows ? renderedDiff.removed : ((hasServerDiff ? diffRes.removed : 0) || (recorded && recorded.removed) || 0);
 
-        currentPreviewIsImage = Boolean(hasServerPreview && previewRes.isImage);
+        const ext = (previewRes && previewRes.ext) || ('.' + String(resolvedPath).split('.').pop().toLowerCase());
+        const previewType = (previewRes && previewRes.previewType) || (previewRes && previewRes.isImage ? 'image' : (ext === '.md' ? 'markdown' : ext === '.html' ? 'html' : 'code'));
+        currentPreviewData.previewType = previewType;
+
+        currentPreviewIsImage = Boolean(hasServerPreview && previewType === 'image');
         currentPreviewHasFull = Boolean(hasServerPreview || (recorded && recorded.fullContent));
         currentPreviewFullRaw = hasServerPreview ? (previewRes.content || '') : ((recorded && recorded.fullContent) || '');
 
+        // Tab buttons configuration
+        const isBinaryOfficeOrMedia = ['video', 'audio', 'pdf', 'docx', 'doc-legacy', 'excel'].includes(previewType);
+        if (isBinaryOfficeOrMedia || previewType === 'image') {
+          if (previewBtn) {
+            previewBtn.classList.remove('hidden');
+            if (previewLabel) {
+              previewLabel.textContent = previewType === 'pdf' ? 'Tài liệu PDF'
+                : previewType === 'docx' ? 'Tài liệu Word'
+                : previewType === 'doc-legacy' ? 'Tệp Word (.doc)'
+                : previewType === 'excel' ? 'Bảng tính Excel'
+                : previewType === 'video' ? 'Video Player'
+                : previewType === 'audio' ? 'Trình phát Âm thanh'
+                : 'Xem hình ảnh';
+            }
+          }
+          if (fullBtn) fullBtn.classList.add('hidden');
+          if (diffBtn) diffBtn.classList.add('hidden');
+        } else if (previewType === 'markdown') {
+          if (previewBtn) {
+            previewBtn.classList.remove('hidden');
+            if (previewLabel) previewLabel.textContent = 'Văn bản (Markdown)';
+          }
+          if (fullBtn) {
+            fullBtn.classList.remove('hidden');
+            if (fullLabel) fullLabel.textContent = 'Mã nguồn .md';
+          }
+          if (diffBtn) diffBtn.classList.toggle('hidden', !renderedDiff.hasRows);
+        } else if (previewType === 'html') {
+          if (previewBtn) {
+            previewBtn.classList.remove('hidden');
+            if (previewLabel) previewLabel.textContent = 'Giao diện Web';
+          }
+          if (fullBtn) {
+            fullBtn.classList.remove('hidden');
+            if (fullLabel) fullLabel.textContent = 'Mã HTML';
+          }
+          if (diffBtn) diffBtn.classList.toggle('hidden', !renderedDiff.hasRows);
+        } else if (previewType === 'csv') {
+          if (previewBtn) {
+            previewBtn.classList.remove('hidden');
+            if (previewLabel) previewLabel.textContent = 'Bảng dữ liệu';
+          }
+          if (fullBtn) {
+            fullBtn.classList.remove('hidden');
+            if (fullLabel) fullLabel.textContent = 'Dữ liệu thô';
+          }
+          if (diffBtn) diffBtn.classList.toggle('hidden', !renderedDiff.hasRows);
+        } else { // Code / text
+          if (previewBtn) previewBtn.classList.add('hidden');
+          if (fullBtn) {
+            fullBtn.classList.remove('hidden');
+            if (fullLabel) fullLabel.textContent = 'Toàn bộ file';
+          }
+          if (diffBtn) diffBtn.classList.toggle('hidden', !renderedDiff.hasRows);
+        }
+
+        // New Tab button configuration
+        if (newTabBtn) {
+          if (previewRes && previewRes.rawUrl && ['pdf', 'video', 'audio', 'image', 'html'].includes(previewType)) {
+            newTabBtn.href = previewRes.rawUrl;
+            newTabBtn.classList.remove('hidden');
+          } else {
+            newTabBtn.classList.add('hidden');
+          }
+        }
+
         if (hasServerPreview) {
-          const sizeKb = ((previewRes.size || 0) / 1024).toFixed(1);
-          sizeEl.textContent = `${sizeKb} KB${previewRes.truncated ? ' (đã rút gọn)' : ''}`;
+          const totalBytes = previewRes.size || 0;
+          const sizeKb = (totalBytes / 1024).toFixed(1);
+          const sizeMb = (totalBytes / (1024 * 1024)).toFixed(2);
+          sizeEl.textContent = totalBytes > 1024 * 1024 ? `${sizeMb} MB` : `${sizeKb} KB${previewRes.truncated ? ' (đã rút gọn)' : ''}`;
           sizeEl.classList.remove('hidden');
           if (openBtn) openBtn.classList.remove('hidden');
-          if (previewRes.isImage) {
+
+          if (previewType === 'image') {
             if (imgLoadingEl) imgLoadingEl.classList.remove('hidden');
             imgEl.classList.add('hidden');
             imgEl.onload = () => {
@@ -5975,18 +6786,60 @@
               if (imgLoadingEl) imgLoadingEl.classList.add('hidden');
               imgEl.classList.remove('hidden');
             };
-            imgEl.src = previewRes.imageUrl;
+            imgEl.src = previewRes.imageUrl || previewRes.rawUrl;
+          } else if (previewType === 'video') {
+            const vid = document.getElementById('filePreviewVideo');
+            if (vid) { vid.src = previewRes.rawUrl; vid.load(); }
+          } else if (previewType === 'audio') {
+            const aud = document.getElementById('filePreviewAudio');
+            const audTitle = document.getElementById('filePreviewAudioTitle');
+            if (audTitle) audTitle.textContent = fileName;
+            if (aud) { aud.src = previewRes.rawUrl; aud.load(); }
+          } else if (previewType === 'pdf') {
+            const pdfFrame = document.getElementById('filePreviewPdfFrame');
+            if (pdfFrame) pdfFrame.src = previewRes.rawUrl;
+          } else if (previewType === 'docx') {
+            renderDocxPreview(previewRes.rawUrl, previewRes.path || rawPath);
+          } else if (previewType === 'doc-legacy') {
+            const docLegacyContainer = document.getElementById('filePreviewDocLegacyContainer');
+            if (docLegacyContainer) {
+              docLegacyContainer.classList.remove('hidden');
+              docLegacyContainer.classList.add('flex');
+            }
+          } else if (previewType === 'excel') {
+            renderSheetPreview(previewRes.rawUrl, ext, '');
+          } else if (previewType === 'csv') {
+            renderSheetPreview(previewRes.rawUrl, ext, previewRes.content || '');
+            if (codeEl) {
+              codeEl.textContent = previewRes.content || '';
+              if (window.hljs) { delete codeEl.dataset.highlighted; hljs.highlightElement(codeEl); }
+            }
+          } else if (previewType === 'markdown') {
+            renderMarkdownPreview(previewRes.content || '');
+            if (codeEl) {
+              codeEl.textContent = previewRes.content || '';
+              if (window.hljs) { delete codeEl.dataset.highlighted; hljs.highlightElement(codeEl); }
+            }
+          } else if (previewType === 'html') {
+            const htmlFrame = document.getElementById('filePreviewHtmlFrame');
+            if (htmlFrame) htmlFrame.src = previewRes.rawUrl;
+            if (codeEl) {
+              codeEl.textContent = previewRes.content || '';
+              if (window.hljs) { delete codeEl.dataset.highlighted; hljs.highlightElement(codeEl); }
+            }
           } else {
-            codeEl.textContent = previewRes.content || '';
-            if (window.hljs) {
-              delete codeEl.dataset.highlighted;
-              hljs.highlightElement(codeEl);
+            if (codeEl) {
+              codeEl.textContent = previewRes.content || '';
+              if (window.hljs) {
+                delete codeEl.dataset.highlighted;
+                hljs.highlightElement(codeEl);
+              }
             }
           }
         } else {
           sizeEl.textContent = effectiveStatus === 'deleted' ? 'Đã xóa khỏi đĩa' : '';
           if (openBtn) openBtn.classList.add('hidden');
-          codeEl.textContent = currentPreviewFullRaw || '(File đã bị xóa — xem tab Thay đổi trong phiên để kiểm tra các dòng đã xóa)';
+          if (codeEl) codeEl.textContent = currentPreviewFullRaw || '(File đã bị xóa — xem tab Thay đổi trong phiên để kiểm tra các dòng đã xóa)';
         }
 
         if (statusBadgeEl) {
@@ -5999,6 +6852,9 @@
           } else if (effectiveStatus === 'deleted') {
             statusBadgeEl.textContent = 'Đã xóa';
             statusBadgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 bg-rose-500/20 text-rose-400 border border-rose-500/30';
+          } else if (isBinaryOfficeOrMedia || previewType === 'image') {
+            statusBadgeEl.textContent = (previewType === 'doc-legacy' ? 'DOC' : previewType).toUpperCase();
+            statusBadgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 bg-blue-500/20 text-blue-400 border border-blue-500/30';
           } else {
             statusBadgeEl.className = 'hidden';
           }
@@ -6025,9 +6881,11 @@
         }
 
         const shouldShowDiff = preferredMode === 'diff' || preferredMode === 'step-diff' ||
-          (preferredMode === 'auto' && (renderedDiff.hasRows || effectiveStatus === 'deleted'));
+          (preferredMode === 'auto' && !isBinaryOfficeOrMedia && (renderedDiff.hasRows || effectiveStatus === 'deleted'));
 
-        switchFilePreviewTab(shouldShowDiff ? 'diff' : 'full');
+        const shouldShowPreview = !shouldShowDiff && (isBinaryOfficeOrMedia || ['image', 'markdown', 'html', 'csv', 'doc-legacy'].includes(previewType));
+
+        switchFilePreviewTab(shouldShowDiff ? 'diff' : (shouldShowPreview ? 'preview' : 'full'));
         if (modal) modal.classList.remove('hidden');
       } catch (err) {
         if (reqVersion !== currentPreviewRequestVersion) return;
@@ -6489,20 +7347,63 @@
       }
     };
 
+    window.toggleFilePreviewExpanded = function() {
+      const modal = document.getElementById('filePreviewModal');
+      if (!modal) return;
+      const expanded = modal.classList.toggle('is-expanded');
+      const button = document.getElementById('filePreviewExpandBtn');
+      if (button) button.setAttribute('aria-pressed', String(expanded));
+      if (currentPreviewData && currentPreviewData.previewType === 'docx') {
+        requestAnimationFrame(() => toggleDocxFitWidth());
+      }
+    };
+
     window.closeFilePreview = function() {
+      if (currentDocxAbortController) {
+        try { currentDocxAbortController.abort(); } catch (_) {}
+        currentDocxAbortController = null;
+      }
+
+      currentDocxRenderToken++;
+      if (currentDocxFitTimer) {
+        clearTimeout(currentDocxFitTimer);
+        currentDocxFitTimer = null;
+      }
+      if (currentDocxResizeListener) {
+        window.removeEventListener('resize', currentDocxResizeListener);
+        currentDocxResizeListener = null;
+      }
       currentPreviewRequestVersion++;
       setFilePreviewLoadingState(false);
+      const docxRoot = typeof getDocxRoot === 'function' ? getDocxRoot() : document.getElementById('filePreviewDocxBody');
+      if (docxRoot) docxRoot.innerHTML = '';
       const image = document.getElementById('filePreviewImage');
-      if (image) { image.onload = null; image.onerror = null; }
+      if (image) { image.onload = null; image.onerror = null; image.src = ''; }
+      const vid = document.getElementById('filePreviewVideo');
+      if (vid) { vid.pause(); vid.src = ''; }
+      const aud = document.getElementById('filePreviewAudio');
+      if (aud) { aud.pause(); aud.src = ''; }
+      const pdf = document.getElementById('filePreviewPdfFrame');
+      if (pdf) pdf.src = 'about:blank';
+      const html = document.getElementById('filePreviewHtmlFrame');
+      if (html) html.src = 'about:blank';
       const modal = document.getElementById('filePreviewModal');
       if (modal) modal.classList.add('hidden');
     };
 
     window.copyFilePreviewContent = function() {
+      const type = (currentPreviewData && currentPreviewData.previewType) || '';
+      if (['video', 'audio', 'pdf', 'docx', 'doc-legacy', 'excel'].includes(type) && currentPreviewActiveTab === 'preview') {
+        showToast('Tệp nhị phân không hỗ trợ sao chép văn bản, hãy bấm "Mở trên PC".', 'info', 2500);
+        return;
+      }
       const text = currentPreviewActiveTab === 'diff' && currentPreviewDiffRaw
         ? currentPreviewDiffRaw
         : (currentPreviewFullRaw || (document.getElementById('filePreviewContent')?.textContent || ''));
-      if (!text) return;
+      if (!text) {
+        showToast('Không có nội dung văn bản để sao chép', 'warning', 1800);
+        return;
+      }
       window.writeTextToClipboard(text).then(() => {
         const btnText = document.getElementById('filePreviewCopyText');
         if (btnText) {
@@ -7029,10 +7930,11 @@
         try { localStorage.removeItem('ai_hub_session_draft:' + rawKey); } catch (_) {}
       }
       if (!isNewDraft && Array.isArray(allSessionsCache)) {
-        const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
+        const matched = allSessionsCache.find(s => s && [s.id, s.tempName, s.name].includes(key));
         if (matched) {
-          if (matched.id && matched.id !== key) storeKey(matched.id);
-          if (matched.name && matched.name !== key) storeKey(matched.name);
+          for (const alias of [matched.id, matched.tempName, matched.name]) {
+            if (alias && alias !== key) storeKey(alias);
+          }
         }
       }
     }
@@ -7064,7 +7966,7 @@
         }
       } catch (_) {}
       if (!isNewDraft && Array.isArray(allSessionsCache)) {
-        const matched = allSessionsCache.find(s => s && (s.id === key || s.name === key));
+        const matched = allSessionsCache.find(s => s && [s.id, s.tempName, s.name].includes(key));
         if (matched) {
           if (matched.id && sessionDraftsMap.has(matched.id)) return sessionDraftsMap.get(matched.id) || '';
           if (matched.name && sessionDraftsMap.has(matched.name)) return sessionDraftsMap.get(matched.name) || '';
@@ -8684,6 +9586,59 @@
     }
     window.stopGeneration = stopGeneration;
 
+    function readUnreadCompletions() {
+      try {
+        const value = JSON.parse(localStorage.getItem('ai_hub_unread_completions') || '{}');
+        return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      } catch (_) { return {}; }
+    }
+
+    function isSessionUnread(session) {
+      if (!session || session.isRunning) return false;
+      const unread = readUnreadCompletions();
+      return [session.id, session.tempName].some(id => id && Object.prototype.hasOwnProperty.call(unread, id));
+    }
+
+    function markSessionRead(sessionId, tempName) {
+      if (document.visibilityState !== 'visible') return;
+      const unread = readUnreadCompletions();
+      const session = allSessionsCache.find(s => s.id === sessionId || s.tempName === sessionId);
+      const ids = [sessionId, tempName, session?.id, session?.tempName].filter(Boolean);
+      let changed = false;
+      for (const id of ids) {
+        if (Object.prototype.hasOwnProperty.call(unread, id)) { delete unread[id]; changed = true; }
+      }
+      if (changed) {
+        try { localStorage.setItem('ai_hub_unread_completions', JSON.stringify(unread)); } catch (_) {}
+        loadWorkspaceTree();
+      }
+      if (typeof fetch === 'function') {
+        try {
+          fetch('/api/sessions/mark-read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: session?.id || sessionId, tempName: session?.tempName || tempName })
+          }).catch(() => {});
+        } catch (_) {}
+      }
+    }
+
+    function recordUnreadCompletion(data) {
+      const id = data.sessionId || data.tempName;
+      if (!id) return;
+      const unread = readUnreadCompletions();
+      if (data.tempName) delete unread[data.tempName];
+      const isViewing = document.visibilityState === 'visible' &&
+        (currentSessionId === id || (data.tempName && currentSessionId === data.tempName));
+      if (isViewing) delete unread[id];
+      else unread[id] = Date.now();
+      try { localStorage.setItem('ai_hub_unread_completions', JSON.stringify(unread)); } catch (_) {}
+    }
+
+    window.addEventListener('storage', e => {
+      if (e.key === 'ai_hub_unread_completions') loadWorkspaceTree();
+    });
+
     function initHubEvents(force = false) {
       if (typeof EventSource === 'undefined') return;
       if (window._globalHubEventSource && !force && window._globalHubEventSource.readyState !== EventSource.CLOSED) {
@@ -8728,9 +9683,19 @@
         hubSource.addEventListener('session_turn_completed', (e) => {
           try {
             const data = JSON.parse(e.data || '{}');
+            recordUnreadCompletion(data);
+            // The selected chat already chimes when its stream finishes; background work has no chat stream.
+            const isSelectedCompletion = currentSessionId &&
+              (currentSessionId === data.sessionId || currentSessionId === data.tempName);
+            if (!isSelectedCompletion) soundEffects.playChime();
             if (data.tempName && currentSessionId === data.tempName && data.sessionId) {
               currentSessionId = data.sessionId;
               updateSessionUrl(currentSessionId, true);
+            }
+            // The global completion event also closes a stream that missed its finish event.
+            if (data.sessionId && currentSessionId === data.sessionId && isGenerating) {
+              const activeStream = window.activeChatEventSource;
+              if (typeof activeStream?._closeAndDone === 'function') activeStream._closeAndDone();
             }
             const justCompletedStreaming = (lastStreamedTurnSessionId === data.sessionId && (Date.now() - lastTurnCompletedAt) < 10000);
             if (data.sessionId && currentSessionId === data.sessionId && !isGenerating && !justCompletedStreaming) {
@@ -8748,6 +9713,53 @@
             }
             loadWorkspaceTree();
           } catch {}
+        });
+
+        hubSource.addEventListener('session_read', (e) => {
+          try {
+            const data = JSON.parse(e.data || '{}');
+            const unread = readUnreadCompletions();
+            const session = allSessionsCache.find(s => s.id === data.sessionId || s.tempName === data.sessionId || (data.tempName && (s.id === data.tempName || s.tempName === data.tempName)));
+            const ids = [data.sessionId, data.tempName, session?.id, session?.tempName].filter(Boolean);
+            let changed = false;
+            for (const id of ids) {
+              if (Object.prototype.hasOwnProperty.call(unread, id)) {
+                delete unread[id];
+                changed = true;
+              }
+            }
+            if (changed) {
+              try { localStorage.setItem('ai_hub_unread_completions', JSON.stringify(unread)); } catch (_) {}
+              loadWorkspaceTree();
+            }
+          } catch (_) {}
+        });
+
+        hubSource.addEventListener('unread_sync', (e) => {
+          try {
+            const data = JSON.parse(e.data || '{}');
+            if (Array.isArray(data.unread)) {
+              const currentUnread = readUnreadCompletions();
+              const serverSet = new Set(data.unread);
+              let changed = false;
+              for (const id of Object.keys(currentUnread)) {
+                if (!serverSet.has(id)) {
+                  delete currentUnread[id];
+                  changed = true;
+                }
+              }
+              for (const id of data.unread) {
+                if (!currentUnread[id] && !(document.visibilityState === 'visible' && (currentSessionId === id || allSessionsCache.some(s => (s.id === currentSessionId || s.tempName === currentSessionId) && (s.id === id || s.tempName === id))))) {
+                  currentUnread[id] = Date.now();
+                  changed = true;
+                }
+              }
+              if (changed) {
+                try { localStorage.setItem('ai_hub_unread_completions', JSON.stringify(currentUnread)); } catch (_) {}
+                loadWorkspaceTree();
+              }
+            }
+          } catch (_) {}
         });
 
         hubSource.addEventListener('sessions_updated', (e) => {
@@ -8945,6 +9957,7 @@
           const hasMore = sessions.length > 4;
 
           const isWsRunning = sessions.some(s => s.isRunning);
+          const unreadCount = sessions.filter(isSessionUnread).length;
 
           const groupEl = document.createElement('div');
           groupEl.className = 'workspace-group-item mb-1';
@@ -8971,7 +9984,7 @@
                 </span>
               </div>
               <div class="flex items-center space-x-1 shrink-0">
-                <span class="text-[10px] font-mono px-1 rounded" style="color: var(--text-sub); background: var(--badge-bg);">${sessions.length}</span>
+                ${unreadCount ? `<span class="workspace-unread-badge text-[10px] font-mono px-1.5 rounded-full bg-blue-500 text-white" title="${unreadCount} phiên vừa xong chưa đọc" aria-label="${unreadCount} phiên vừa xong chưa đọc">${unreadCount}</span>` : ''}
                 
                 <!-- Quick New Chat in this Workspace button -->
                 <button onclick="newSessionInWorkspace(event, '${escapeJs(wsPath)}')"
@@ -9040,6 +10053,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
                           </svg>
                         `}
+                        ${isSessionUnread(s) ? '<span class="session-unread-dot w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" title="Vừa xong chưa đọc"></span>' : ''}
                         <span class="truncate">${escapeHtml(s.name || s.id)}</span>
                         ${relTime ? `<span class="text-[9px] opacity-40 font-mono shrink-0 hidden sm:inline">${relTime}</span>` : ''}
                       </div>
@@ -10012,6 +11026,7 @@
         const data = await res.json();
         if (viewVersion !== sessionViewVersion) return;
         if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+        markSessionRead(sessionId, data.id);
 
         const resolvedSessionModel = (data?.isRunning && data?.activeSessionInfo?.model)
           || getSessionModel(sessionId, true)
@@ -10023,18 +11038,7 @@
           if (data?.name && data.name !== sessionId) setSessionModel(data.name, resolvedSessionModel);
           applySessionModelSelection(resolvedSessionModel);
         }
-        const resolvedSessionDraft = getSessionDraft(sessionId)
-          || (data?.id ? getSessionDraft(data.id) : '')
-          || (data?.name ? getSessionDraft(data.name) : '');
-        if (resolvedSessionDraft) {
-          setSessionDraft(sessionId, resolvedSessionDraft);
-          if (data?.id && data.id !== sessionId) setSessionDraft(data.id, resolvedSessionDraft);
-          if (data?.name && data.name !== sessionId) setSessionDraft(data.name, resolvedSessionDraft);
-          if (promptInput && !promptInput.value) {
-            promptInput.value = resolvedSessionDraft;
-            autoResizeTextarea(false);
-          }
-        }
+        // Drafts are restored before the request; do not revive stale aliases after an async load.
 
         chatFeed.innerHTML = '';
 
@@ -12499,8 +13503,10 @@
         loadWorkspaceTree().then(() => {
           if (currentSessionId && !isGenerating) {
             const activeMatch = allSessionsCache.find(s => (s.id === currentSessionId || s.name === currentSessionId) && s.isRunning);
-            if (activeMatch) {
-              selectSession(currentSessionId, activeMatch.name, activeMatch.cwd || currentWorkspace, false);
+            const unreadMatch = allSessionsCache.find(s => (s.id === currentSessionId || s.tempName === currentSessionId) && isSessionUnread(s));
+            if (activeMatch || unreadMatch) {
+              const match = activeMatch || unreadMatch;
+              selectSession(currentSessionId, match.name, match.cwd || currentWorkspace, false);
             }
           }
         });

@@ -473,6 +473,15 @@ assert.equal(draftSandbox.promptInput.value, 'Đoạn chat đang gõ dở ở ph
 draftSandbox.setSessionDraft('session_A', '');
 assert.equal(draftSandbox.getSessionDraft('session_A'), '');
 
+// Clearing a sent draft must clear temporary aliases too, even after a title changes.
+draftSandbox.allSessionsCache.push({ id: 'real_draft', tempName: 'session_temp', name: 'Original title' });
+draftSandbox.setSessionDraft('session_temp', 'Already sent');
+draftSandbox.allSessionsCache[2].name = 'Renamed title';
+draftSandbox.setSessionDraft('real_draft', '');
+assert.equal(draftSandbox.getSessionDraft('session_temp'), '', 'Temporary alias must not revive a sent draft');
+assert.equal(draftStore.has('ai_hub_session_draft:session_temp'), false);
+assert.ok(!html.includes('const resolvedSessionDraft = getSessionDraft(sessionId)'), 'Async history load must not restore stale draft aliases');
+
 // New-session unsent draft persistence across session switch & clicking "Tạo phiên mới" again
 const newSessionFnSrc = definition('newSession');
 assert.ok(newSessionFnSrc.includes('restoreSessionDraft(nextNewSessionKey)'), 'newSession() must restore pending new-session draft');

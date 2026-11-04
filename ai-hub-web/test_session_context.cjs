@@ -7,7 +7,8 @@ const { DatabaseSync } = require('node:sqlite');
 
 const db = new DatabaseSync(':memory:');
 db.exec(`CREATE TABLE sessions (id TEXT PRIMARY KEY, name TEXT, working_dir TEXT, created_at TEXT, updated_at TEXT, user_set_name BOOLEAN, archived_at TEXT, session_type TEXT, parent_session_id TEXT, provider_name TEXT, model_config_json TEXT);
-CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT, role TEXT, content_json TEXT);`);
+CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT, role TEXT, content_json TEXT);
+CREATE TABLE usage_ledger (session_id TEXT);`);
 const insert = db.prepare("INSERT INTO sessions (id, name, working_dir, created_at, updated_at, session_type) VALUES (?, ?, ?, ?, ?, 'user')");
 const insertMsg = db.prepare("INSERT INTO messages (session_id, role, content_json) VALUES (?, 'user', ?)");
 insert.run('20261031_1', 'Existing chat', __dirname, '2026-10-31', '2026-10-31');
@@ -24,7 +25,7 @@ const context = vm.createContext({
       writeFileSync() {}
     };
     if (name === 'node:sqlite') return { DatabaseSync: function () {
-      return { prepare: sql => db.prepare(sql), close() {} };
+      return { prepare: sql => db.prepare(sql), exec: sql => db.exec(sql), close() {} };
     } };
     if (name === 'node:child_process') return {
       execSync() { throw new Error('Unexpected subprocess'); },
@@ -42,7 +43,8 @@ const context = vm.createContext({
   },
   process: { env: { APPDATA: 'test', NINE_ROUTER_KEY: 'test' }, cwd: () => __dirname, kill() {}, platform: 'win32', on: () => {} },
   console: { log() {}, warn() {}, error() {} },
-  __dirname, URL, setTimeout, clearTimeout
+  __dirname, URL, setTimeout, clearTimeout, clearInterval,
+  setInterval: (...a) => { const t = setInterval(...a); if (t.unref) t.unref(); return t; }
 });
 const serverSource = fs.readFileSync('server.js', 'utf8');
 vm.runInContext(serverSource.slice(0, serverSource.indexOf('\nserver.listen(')), context);
@@ -141,5 +143,29 @@ assert.ok(html.includes('resume: !!currentSessionId'));
 assert.ok(html.includes('isMatchingSessionEntry'));
 const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
 for (const script of scripts) new vm.Script(script[1]);
+// Enforce the workspace cap before spawning, including sessions not yet saved by Goose.
+for (let i = 3; i <= 19; i++) insert.run('cap_' + i, 'Cap ' + i, __dirname, '', '');
+res = chat({ prompt: 'Twentieth session', streamMode: 'eventsource' });
+assert.equal(res.status, 200);
+const atLimitChildren = children.length;
+res = chat({ prompt: 'Over limit', streamMode: 'eventsource' });
+assert.equal(res.status, 200);
+assert.equal(children.length, atLimitChildren + 1, 'New session replaces the oldest idle session');
+assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 18);
+children[children.length - 1].emit('close', 0);
+res = chat({ sessionId: '20261031_1' });
+assert.equal(res.status, 200, 'Existing sessions can continue at the limit');
+children[children.length - 1].emit('close', 0);
+children[atLimitChildren - 1].emit('close', 0);
+insert.run('cap_20', 'Cap 20', __dirname, '', '');
+insert.run('cap_21', 'Cap 21', __dirname, '', '');
+res = chat({ prompt: 'Stored limit' });
+assert.equal(res.status, 200);
+assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 19);
+children[children.length - 1].emit('close', 0);
+db.prepare("DELETE FROM sessions WHERE id = 'cap_20'").run();
+res = chat({ prompt: 'Slot available again', streamMode: 'eventsource' });
+assert.equal(res.status, 200);
+children[children.length - 1].emit('close', 0);
 db.close();
 console.log('Session context: existing ID/name, missing session, two-turn continuity, running deduplication, stale process and UI syntax checks passed');

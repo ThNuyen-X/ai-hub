@@ -123,3 +123,24 @@
 
 - [MariaDB MDL] THREAD_ID=0 MDL_SHARED is not evidence that CAS owns the lock. On 2026-11-04, an authorized MariaDB pod restart cleared the DDL blockage; verify migration SUCCESS, zero unclassified rows, and Started SSOApplication before declaring recovery. Internal lock origin remains unproven.
 - [Multiple Chrome profiles] Keep distinct MCP names and broker pipes for personal autoConnect and an explicitly authorized SSO profile endpoint. DevToolsActivePort presence alone does not prove browser connectivity; verify a real tool call.
+
+- [SSE completion] Global session_turn_completed must close the matching active chat stream even while isGenerating is true; resolve temporary session IDs first and never close another session.
+
+- [2026-11-04] 9Router 0.5.112 synthetic response.failed omitted sequence_number, masking upstream stream_disconnected with a decoder error. Patch terminal and timeout paths, test exported module + node --check, retain backup; recheck after upgrades.
+
+- [2026-11-04] Completion sound must also handle global session_turn_completed for background workspaces; selected session keeps its stream chime to avoid duplicate sound, including temporary session aliases.
+- Local JDBC backup: serialize numeric SQL literals separately from binary/text; exclude generated columns, reject unsupported schema objects, and keep new schedulers opt-in to avoid executing legacy policies.
+- Native backup streaming: drain stderr without retaining secrets, use owner-only temporary defaults files, enforce timeout even while stdout is blocked, and publish compressed archives only after successful process exit.
+- **[Watchdog stream]**: server.js gi m s t im l?ng c?a goose.exe (c?nh b o 3 ph£t, t? kill sau 10 ph£t n?u kh“ng c¢ tool dang ch?y; ch?nh b?ng AI_HUB_STALL_WARN_MS / AI_HUB_STALL_KILL_MS). Timer ph?i unref() d? test vm kh“ng treo. 
+- **[Phien ket thuc nhung UI van "dang chay"]**: goose.exe co the khong thoat sau su kien `complete` (con giu pipe/treo shutdown) nen `close` khong ban; server.js nay finalize qua `exit` + watchdog 8s sau `complete` (finalizeTurn idempotent).
+- **[Gemini 3.8 latency 2026-11-04]**: Do qua 9Router cho ag/gemini-3.8-flash: prompt 24K token ~2.5-3s, 204K token ~7s (ch? +2.5s/100K), nhung request g?n nhu tr?ng v?n 4-9s d?n token d?u; m?i lu?t g?i t?n n?n ~5-10s do upstream. D•n b?y l… GI?M S? LU?T G?I (g?p tool call, d?c tr?n file), kh“ng ph?i gi?m context; gi? GOOSE_CONTEXT_LIMIT=400000. T…i kho?n antigravity b o 503 ph?i xu?ng cu?i uu tiˆn. 
+- Draft lifecycle: clear all session ID/tempName aliases on send; never restore draft aliases after an asynchronous history fetch, which can resurrect sent text or overwrite newer input.
+- MariaDB dump: validate native flags against the installed client (connect-timeout is not supported here); new clients may require TLS by default, so use explicit opt-in skip-ssl only for approved non-TLS/VPN environments, never automatic fallback.
+
+- [File preview multi-type] Tach rieng /api/file-raw (ho tro HTTP Range 206 cho video/audio/pdf) va /api/file-preview; client nhung SheetJS render Excel da sheet, Mammoth render Word .docx, native iframe cho PDF/HTML, player cho media, va Markdown typography.
+- [Restart worker process race] Windows Stop-Process cleans up handles asynchronously; restart-web.ps1 must not do zero-wait Get-Process check immediately after killing agent, but wait up to 3s with retry loop to avoid cancelling recovery.
+- [Restart worker handle & orchestration test] System.Diagnostics.Process::GetProcessById opens handle lazily; access .Handle eagerly during prevalidation to pin Win32 Process Object, compare StartTime with CIM CreationDate, and dispose in outer finally. Test orchestration directly via isolated dependency injection instead of separate rewritten snippets.
+
+- [DOCX preview & PDF conversion] Use docx-preview with JSZip for paginated A4 white paper rendering isolated from AI Hub dark/warm theme; Mammoth graceful fallback. Separate legacy binary .doc from OpenXML .docx. Non-blocking async server PDF converter with single-concurrency lock, sha256 mtime coalescing cache, 30s timeout, temp-dir cleanup, and honest unsupported explanation if local LibreOffice is absent.
+- DOCX preview scrolling requires display:flex on the document container and min-height:0 through the bounded modal flex chain; removing hidden alone does not activate flex layout.
+- [Multi-device unread sync] Dong bo so badge chua doc giua cac thiet bi qua endpoint /api/sessions/mark-read va SSE event session_read + unread_sync; thiet bi nay xem thi thiet bi kia tu dong bien mat badge tuc thi.

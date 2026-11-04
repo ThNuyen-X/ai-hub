@@ -58,6 +58,16 @@ function buildSystemInstruction(cwd, model = "") {
       "- Do not skip verification, security checks or user approvals to improve speed. No fixed cap on steps for complex tasks."
     );
   }
+  if (/^gemini-3\.8(?:[-_.]|$)/i.test(modelName)) {
+    parts.push(
+      "[GEMINI 3.8 ROUND-TRIP BUDGET]:\n" +
+      "- Each model round trip costs roughly 5-10 seconds regardless of context size, so minimize the NUMBER of round trips rather than tokens. Emit every independent tool call together in the same response instead of one per turn.\n" +
+      "- Read a whole target function or a whole file under 400 lines in one call; do not page through it in small chunks. Read several related files in one shell command.\n" +
+      "- Combine dependent shell steps that need no decision between them (for example syntax check plus related tests) into one command. After an edit, verify in the same turn when practical.\n" +
+      "- Do not run exploratory commands just in case. Start with the most targeted search, and move to the fix once the cause is established.\n" +
+      "- Never skip verification, security checks or user approvals to save a round trip."
+    );
+  }
   if (cwd) {
     const wsHints = readCachedTextFile(path.join(cwd, ".goosehints"), 1500);
     if (wsHints) {

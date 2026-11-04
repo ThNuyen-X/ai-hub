@@ -1,5 +1,17 @@
 # Shared personal Chrome connection
 
+## Browser use policy
+
+Browser tools are opt-in by task, not a default workflow step. Use either Chrome
+connection only for explicitly requested browser interaction or a task that genuinely
+requires a live browser, such as an authenticated page or explicit visual UI checks.
+Prefer filesystem, shell, tests, and HTTP for coding, debugging, builds, logs, and API
+checks; prefer web-search or HTTP for public research. Do not list tabs, connect,
+take snapshots/screenshots, or trigger the chat pointer for routine verification.
+If browser access is not clearly necessary and would touch existing tabs, ask first.
+Keep necessary browser actions minimal. This is an agent instruction policy, not a
+broker-level permission block; browser tools remain available for appropriate tasks.
+
 AI Hub uses the user's existing Chrome through one persistent Chrome DevTools MCP
 process. No cookies or profile files are copied. Enable remote debugging in Chrome
 at chrome://inspect/#remote-debugging and accept Chrome's connection dialog.

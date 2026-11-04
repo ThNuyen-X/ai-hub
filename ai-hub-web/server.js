@@ -8,11 +8,16 @@ const { spawn, execSync, execFile } = require("node:child_process");
 const { DatabaseSync } = require("node:sqlite");
 const { isTechnicalSessionName, sessionTitle, titleFromContent } = require("./session-title.cjs");
 const { cleanWorkspacePath, workspaceKey } = require("./workspace-path.cjs");
+const { MAX_WORKSPACE_SESSIONS, makeWorkspaceSessionRoom } = require("./workspace-session-limit.cjs");
 const { buildSystemInstruction } = require("./system-instruction.cjs");
 const { validateModel: validateAuxiliaryModel, coordinationInstruction } = require("./auxiliary-model.cjs");
 const auxiliarySettings = require("./auxiliary-settings.cjs").createSettings();
 const { hasSessionExtension } = require("./session-extensions.cjs");
 const { browserAvailable, BROWSER_INSTRUCTION } = require("./browser-mcp.cjs");
+const {
+  getPreviewMimeType,
+  getPreviewFileType
+} = require("./docx-pdf-service.cjs");
 const {
   getWorkspaceConfig,
   saveWorkspaceConfig,
@@ -80,6 +85,7 @@ const { retainReplayEvent, writeBoundedSse, replayToClient } = require("./sse-bu
 // GLOBAL HUB EVENT STREAM (MULTI-DEVICE REALTIME SYNC)
 // ========================================================
 const hubEventClients = new Set();
+const unreadSessionCompletions = new Set();
 
 function setupSseHeaders(res) {
   res.writeHead(200, {
@@ -1370,7 +1376,71 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API: Xem truoc noi dung file (ho tro ca mobile qua Tailscale)
+  // API: Lay file nhi phan / stream raw (phuc vu xem PDF, docx, excel, video, audio)
+  if (req.method === "GET" && pathname === "/api/file-raw") {
+    try {
+      const targetPath = (urlObj.searchParams.get("path") || "").trim();
+      const workspace = (urlObj.searchParams.get("workspace") || "").trim();
+
+      if (!targetPath) {
+        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: "Thiếu tham số path" }));
+        return;
+      }
+
+      const loc = resolveLocalTargetPath(targetPath, workspace);
+      if (!loc.valid || !loc.resolved || !fs.existsSync(loc.resolved)) {
+        res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: "File không tồn tại" }));
+        return;
+      }
+      const resolved = loc.resolved;
+      const stat = fs.statSync(resolved);
+      if (stat.isDirectory()) {
+        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ success: false, error: "Đường dẫn là thư mục" }));
+        return;
+      }
+
+      const mimeType = getPreviewMimeType(resolved);
+      const total = stat.size;
+      const range = req.headers.range;
+
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : total - 1;
+        if (isNaN(start) || start >= total || end >= total || start > end) {
+          res.writeHead(416, { "Content-Range": `bytes */${total}` });
+          res.end();
+          return;
+        }
+        const chunksize = (end - start) + 1;
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${total}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunksize,
+          "Content-Type": mimeType,
+          "Content-Disposition": `inline; filename="${encodeURIComponent(path.basename(resolved))}"`
+        });
+        fs.createReadStream(resolved, { start, end }).pipe(res);
+      } else {
+        res.writeHead(200, {
+          "Content-Length": total,
+          "Accept-Ranges": "bytes",
+          "Content-Type": mimeType,
+          "Content-Disposition": `inline; filename="${encodeURIComponent(path.basename(resolved))}"`
+        });
+        fs.createReadStream(resolved).pipe(res);
+      }
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ success: false, error: err.message }));
+    }
+    return;
+  }
+
+  // API: Xem truoc noi dung file (ho tro text, image, docx, excel, pdf, video, audio)
   if (req.method === "GET" && pathname === "/api/file-preview") {
     try {
       let targetPath = (urlObj.searchParams.get("path") || "").trim();
@@ -1404,11 +1474,16 @@ const server = http.createServer((req, res) => {
       }
 
       const ext = path.extname(resolved).toLowerCase();
-      const imageExts = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico"];
-      if (imageExts.includes(ext)) {
-        const imgBuffer = fs.readFileSync(resolved);
-        const mimeType = ext === ".svg" ? "image/svg+xml" : ext === ".ico" ? "image/x-icon" : `image/${ext.replace(".", "")}`;
-        const base64 = `data:${mimeType};base64,${imgBuffer.toString("base64")}`;
+      const previewType = getPreviewFileType(ext);
+      const rawUrl = `/api/file-raw?path=${encodeURIComponent(resolved)}`;
+
+      if (previewType === "image") {
+        let base64 = "";
+        if (stat.size <= 5 * 1024 * 1024) {
+          const imgBuffer = fs.readFileSync(resolved);
+          const mimeType = ext === ".svg" ? "image/svg+xml" : ext === ".ico" ? "image/x-icon" : `image/${ext.replace(".", "")}`;
+          base64 = `data:${mimeType};base64,${imgBuffer.toString("base64")}`;
+        }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify({
           success: true,
@@ -1416,7 +1491,40 @@ const server = http.createServer((req, res) => {
           path: resolved,
           size: stat.size,
           isImage: true,
-          imageUrl: base64,
+          previewType,
+          imageUrl: base64 || rawUrl,
+          rawUrl,
+          ext
+        }));
+        return;
+      }
+
+      if (previewType === "doc-legacy") {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({
+          success: true,
+          name: path.basename(resolved),
+          path: resolved,
+          size: stat.size,
+          isBinary: true,
+          previewType: "doc-legacy",
+          rawUrl,
+          ext,
+          error: "Định dạng Word 97-2003 (.doc) nhị phân cũ không phải là tệp OpenXML (.docx). Trình duyệt không hỗ trợ xem trực tiếp định dạng nhị phân này. Vui lòng chuyển sang định dạng .docx hoặc mở bằng Microsoft Word trên máy tính."
+        }));
+        return;
+      }
+
+      if (["video", "audio", "pdf", "docx", "excel"].includes(previewType)) {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({
+          success: true,
+          name: path.basename(resolved),
+          path: resolved,
+          size: stat.size,
+          isBinary: true,
+          previewType,
+          rawUrl,
           ext
         }));
         return;
@@ -1438,6 +1546,8 @@ const server = http.createServer((req, res) => {
         path: resolved,
         size: stat.size,
         truncated: stat.size > MAX_SIZE,
+        previewType,
+        rawUrl,
         ext,
         content
       }));
@@ -1764,6 +1874,7 @@ const server = http.createServer((req, res) => {
         const result = deleteSession(id);
         if (result && result.ok) {
           deleteSessionDiffStore(id);
+          unreadSessionCompletions.delete(id);
           broadcastHubEvent("sessions_updated", { type: "session_deleted", sessionId: id });
         }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
@@ -1873,6 +1984,9 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && pathname === "/api/hub/events") {
     setupSseHeaders(res);
     res.write(`: connected\n\n`);
+    if (unreadSessionCompletions.size > 0) {
+      writeBoundedSse(res, `event: unread_sync\ndata: ${JSON.stringify({ unread: Array.from(unreadSessionCompletions) })}\n\n`);
+    }
     if (typeof res.flush === "function") res.flush();
 
     hubEventClients.add(res);
@@ -1880,6 +1994,23 @@ const server = http.createServer((req, res) => {
     req.on("close", () => {
       hubEventClients.delete(res);
       console.log(`[HUB SSE] Client disconnected. Total clients: ${hubEventClients.size}`);
+    });
+    return;
+  }
+
+  // API: Dong bo trang thai da xem session giua cac thiet bi
+  if (req.method === "POST" && pathname === "/api/sessions/mark-read") {
+    let body = "";
+    req.on("data", chunk => { body += chunk; if (body.length > 4096) req.destroy(); });
+    req.on("end", () => {
+      try {
+        const { sessionId, tempName } = JSON.parse(body || "{}");
+        if (sessionId) unreadSessionCompletions.delete(sessionId);
+        if (tempName) unreadSessionCompletions.delete(tempName);
+        broadcastHubEvent("session_read", { sessionId, tempName: tempName || null });
+      } catch {}
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ ok: true }));
     });
     return;
   }
@@ -1988,6 +2119,25 @@ const server = http.createServer((req, res) => {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Vui lòng nhập nội dung tin nhắn" }));
         return;
+      }
+
+      if (!resume) {
+        try {
+          makeWorkspaceSessionRoom(cwd, getSessionsList(), activeSessions.values(),
+            s => !!(getRunningSession(s.id, true) || (s.tempName && getRunningSession(s.tempName, true)) || getRunningSession(s.name, true)),
+            s => {
+              const result = deleteSession(s.id);
+              if (!result?.ok) throw new Error(result?.error || 'Cannot delete oldest session.');
+              deleteSessionDiffStore(s.id);
+              recentlyCompletedSessions.delete(s.id);
+              sessionModels.delete(s.id);
+              broadcastHubEvent("sessions_updated", { type: "session_deleted", sessionId: s.id });
+            });
+        } catch (error) {
+          res.writeHead(409, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ error: error.message, code: "WORKSPACE_SESSION_LIMIT", limit: MAX_WORKSPACE_SESSIONS }));
+          return;
+        }
       }
 
       console.log(`[CHAT] Prompt: "${prompt.substring(0, 50)}" | Model: ${model} | CWD: ${cwd} | Session: ${sessionId} | Resume: ${resume} | Active sessions: ${activeSessions.size}`);
@@ -2123,9 +2273,35 @@ const server = http.createServer((req, res) => {
 
       let buffer = "";
 
+      // Watchdog: phát hiện model/stream treo (không có output và không có tool nào đang chạy)
+      const STALL_WARN_MS = parseInt(process.env.AI_HUB_STALL_WARN_MS || "180000", 10);
+      const STALL_KILL_MS = parseInt(process.env.AI_HUB_STALL_KILL_MS || "600000", 10);
+      let lastActivityAt = Date.now();
+      let pendingTools = 0;
+      let stallWarned = false;
+      const stallTimer = setInterval(() => {
+        if (sessionCtx.process !== child || sessionCtx.isFinished) { clearInterval(stallTimer); return; }
+        if (pendingTools > 0) return;
+        const idle = Date.now() - lastActivityAt;
+        if (idle >= STALL_KILL_MS) {
+          clearInterval(stallTimer);
+          console.error(`[STALL KILL] session ${sessionId} idle ${Math.round(idle / 1000)}s, killing PID ${child.pid}`);
+          broadcastToSession(sessionCtx, "error", { error: `Model/stream không phản hồi sau ${Math.round(idle / 60000)} phút nên phiên đã bị dừng tự động. Hãy gửi "tiếp tục" để chạy lại từ ngữ cảnh đã lưu.` });
+          try { spawn("taskkill", ["/pid", String(child.pid), "/f", "/t"], { windowsHide: true, stdio: "ignore" }); } catch { try { child.kill(); } catch {} }
+        } else if (idle >= STALL_WARN_MS && !stallWarned) {
+          stallWarned = true;
+          broadcastToSession(sessionCtx, "stderr", { text: `[WATCHDOG] Chưa có phản hồi từ model ${Math.round(idle / 1000)}s (có thể API chậm/stream treo). Sẽ tự dừng sau ${Math.round(STALL_KILL_MS / 60000)} phút nếu vẫn im lặng.` });
+        }
+      }, 15000);
+      if (stallTimer && typeof stallTimer.unref === "function") stallTimer.unref();
+      child.on("close", () => clearInterval(stallTimer));
+      child.on("error", () => clearInterval(stallTimer));
+
       child.stdout.on("data", (chunk) => {
         if (sessionCtx.process !== child) return;
         const str = chunk.toString("utf8");
+        lastActivityAt = Date.now(); stallWarned = false;
+        pendingTools = Math.max(0, pendingTools + (str.match(/"type":"toolRequest"/g) || []).length - (str.match(/"type":"toolResponse"/g) || []).length);
         buffer += str;
         const lines = buffer.split("\n");
         buffer = lines.pop();
@@ -2233,6 +2409,13 @@ const server = http.createServer((req, res) => {
                 broadcastToSession(sessionCtx, "error", { error: parsed.error || "Lỗi tiến trình" });
               } else if (parsed.type === "complete") {
                 broadcastToSession(sessionCtx, "complete", parsed);
+                // goose may hang on shutdown after finishing; never leave the session stuck as running
+                setTimeout(() => {
+                  if (turnFinalized || sessionCtx.process !== child) return;
+                  console.warn(`[GOOSE HANG] session ${sessionId} completed but PID ${child.pid} still alive, forcing finalize`);
+                  try { child.kill(); } catch {}
+                  finalizeTurn(0);
+                }, 8000);
               }
             } catch {
               if (trimmed.toLowerCase().startsWith("error:")) {
@@ -2253,6 +2436,7 @@ const server = http.createServer((req, res) => {
 
       let auxiliaryStderr = "";
       child.stderr.on("data", (chunk) => {
+        lastActivityAt = Date.now(); stallWarned = false;
         auxiliaryStderr = (auxiliaryStderr + chunk.toString("utf8")).slice(-16000);
         const progressLines = auxiliaryStderr.split("\n");
         auxiliaryStderr = progressLines.pop();
@@ -2268,8 +2452,10 @@ const server = http.createServer((req, res) => {
         if (text) broadcastToSession(sessionCtx, "stderr", { text });
       });
 
-      child.on("close", (code) => {
-        if (sessionCtx.process !== child) return;
+      let turnFinalized = false;
+      const finalizeTurn = (code) => {
+        if (sessionCtx.process !== child || turnFinalized) return;
+        turnFinalized = true;
         try { restartRecovery.complete(sessionCtx.info?.sessionId || sessionId); }
         catch (error) { console.error("[RESTART CHECKPOINT] " + error.message); }
         console.log(`[GOOSE CLOSE] Exit code: ${code} for session ${sessionId}`);
@@ -2325,8 +2511,13 @@ const server = http.createServer((req, res) => {
           activeSessionInfo = null;
           activeSessionEvents = [];
         }
+        if (sessionId) unreadSessionCompletions.add(sessionId);
+        if (sessionCtx.tempName) unreadSessionCompletions.add(sessionCtx.tempName);
         broadcastHubEvent("session_turn_completed", { sessionId, tempName: sessionCtx.tempName || null, exitCode: code });
-      });
+      };
+      child.on("close", finalizeTurn);
+      // "exit" fires even when a grandchild keeps stdio pipes open (then "close" never fires)
+      child.on("exit", (code) => { setTimeout(() => finalizeTurn(code), 2000); });
 
       child.on("error", (err) => {
         if (sessionCtx.process !== child) return;
@@ -2355,6 +2546,8 @@ const server = http.createServer((req, res) => {
           activeSessionInfo = null;
           activeSessionEvents = [];
         }
+        if (sessionId) unreadSessionCompletions.add(sessionId);
+        if (sessionCtx.tempName) unreadSessionCompletions.add(sessionCtx.tempName);
         broadcastHubEvent("session_turn_completed", { sessionId, tempName: sessionCtx.tempName || null, error: err.message });
       });
     });

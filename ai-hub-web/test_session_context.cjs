@@ -15,6 +15,7 @@ const children = [];
 let handler;
 const context = vm.createContext({
   require(name) {
+    if (name === './browser-mcp.cjs') return { browserAvailable: () => false, BROWSER_INSTRUCTION: '' };
     if (name === 'node:http') return { createServer(callback) { handler = callback; return {}; } };
     if (name === 'node:fs') return {
       ...fs,

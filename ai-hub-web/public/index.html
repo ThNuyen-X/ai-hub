@@ -1278,6 +1278,15 @@
       outline-offset: 2px;
     }
     #modelDropdownMenu { max-width:calc(100vw - 24px);max-height:calc(100dvh - 90px);overflow-y:auto; }
+    .browser-activity { display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(110deg,#0ea5e910,var(--bg-card));color:var(--text-main); }
+    .browser-activity-pointer { display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:10px;background:#0ea5e918;color:#0284c7; }
+    .browser-activity-copy { display:grid;gap:4px;min-width:0; }
+    .browser-activity strong { font-size:12px;font-weight:600; }
+    .browser-activity small { font-size:11px;color:var(--text-sub);overflow-wrap:anywhere; }
+    .browser-activity[data-state="working"] .browser-activity-pointer { animation:browser-pointer 1.4s ease-in-out infinite; }
+    .browser-activity[data-state="failed"] { border-color:#ef444460; }
+    @keyframes browser-pointer { 50% { transform:translate(3px,-2px); } }
+    @media(prefers-reduced-motion:reduce) { .browser-activity-pointer { animation:none !important; } }
   </style>
 </head>
 <body class="h-screen w-screen flex overflow-hidden">
@@ -8274,6 +8283,7 @@
         colorClass = 'text-blue-400';
         prefix = '⚙';
       } else if (type === 'error') {
+        updateBrowserActivity(aiContainer, '', {}, 'failed');
         colorClass = 'text-rose-400';
         prefix = '✖';
       } else if (type === 'info') {
@@ -10439,6 +10449,11 @@
       }
 
       function finishProgress(customMsg) {
+        const browserCard = row.querySelector('.browser-activity');
+        if (browserCard?.dataset.state === 'working') {
+          browserCard.dataset.state = 'ended';
+          browserCard.querySelector('strong').textContent = 'Đã kết thúc lượt dùng trình duyệt';
+        }
         // Remove all streaming blinking cursors
         row.querySelectorAll('.streaming-cursor').forEach(el => el.remove());
         if (!progressEl || progressEl._finished) return;
@@ -11191,6 +11206,39 @@
       if (active) container.updateProgress(label + '...');
     }
 
+    function updateBrowserActivity(container, tool, args = {}, state = 'working', callId = '') {
+      if (!container?.row) return;
+      let card = container.row.querySelector('.browser-activity');
+      if (!card && state !== 'working') return;
+      if (!card) {
+        card = document.createElement('div');
+        card.className = 'browser-activity';
+        card.setAttribute('role', 'status');
+        card.setAttribute('aria-live', 'polite');
+        const pointer = document.createElement('span');
+        pointer.className = 'browser-activity-pointer';
+        pointer.setAttribute('aria-hidden', 'true');
+        pointer.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M5 3v17l4-5 4 7 3-2-4-6 7-1z"/></svg>';
+        const copy = document.createElement('span');
+        copy.className = 'browser-activity-copy';
+        copy.append(document.createElement('strong'), document.createElement('small'));
+        card.append(pointer, copy);
+        const body = container.row.querySelector('.ai-content-body');
+        if (!body) return;
+        body.appendChild(card);
+      }
+      const labels = { list_pages: 'Liệt kê tab', select_page: 'Chọn tab', take_snapshot: 'Đọc nội dung trang', take_screenshot: 'Chụp màn hình', click: 'Bấm trên trang', fill: 'Nhập nội dung', fill_form: 'Điền biểu mẫu', navigate_page: 'Điều hướng trang', new_page: 'Mở tab', hover: 'Di con trỏ trên trang', evaluate_script: 'Kiểm tra trang bằng JavaScript', press_key: 'Nhấn phím', wait_for: 'Chờ nội dung trang' };
+      if (state === 'working') {
+        card.dataset.callId = callId;
+        card.dataset.action = Object.entries(labels).find(([name]) => String(tool).endsWith(name))?.[1] || String(tool).replace(/^.*?chrome_devtools[_:]+/, '');
+        card.dataset.target = args.url ? String(args.url).slice(0, 180) : (args.pageId != null ? 'Tab #' + args.pageId : 'Chrome hiện tại');
+      }
+      card.dataset.state = state;
+      const titles = { working: 'AI đang thao tác trình duyệt', completed: 'Thao tác trình duyệt đã xong', failed: 'Thao tác trình duyệt gặp lỗi', ended: 'Đã kết thúc lượt dùng trình duyệt' };
+      card.querySelector('strong').textContent = titles[state] || titles.ended;
+      card.querySelector('small').textContent = (card.dataset.action || '') + ' · ' + (card.dataset.target || 'Chrome') + ' · Con trỏ minh họa';
+    }
+
     // EVENT PROCESSING LOGIC (CENTRALIZED FOR SSE & EVENTSOURCE)
     function handleSessionStreamEvent(data, aiContainer) {
       if (!data || !aiContainer) return;
@@ -11234,10 +11282,13 @@
       } else if (type === 'auxiliary_progress') {
         updateAuxiliaryWorkStatus(aiContainer, data);
       } else if (type === 'tool_call') {
+        if (/chrome_devtools/.test(data.tool || data.name || '')) updateBrowserActivity(aiContainer, data.tool || data.name, data.args || {}, 'working', data.id || '');
         if (/auxiliary_model/.test(data.tool || data.name || '')) updateAuxiliaryWorkStatus(aiContainer, { phase: 'waiting', model: getAuxiliaryModel(), task: data.args?.task, mode: data.args?.mode || 'analyze' });
         lastRunningToolCard = appendToolCard(aiContainer, data.tool || data.name, data.args, true);
         aiContainer.updateProgress('Đang thực thi: ' + (data.tool || data.name));
       } else if (type === 'tool_result') {
+        const browserCard = aiContainer.row?.querySelector('.browser-activity');
+        if (browserCard?.dataset.state === 'working' && (!data.id || !browserCard.dataset.callId || data.id === browserCard.dataset.callId)) updateBrowserActivity(aiContainer, '', {}, data.isError ? 'failed' : 'completed');
         updateToolCardResult(lastRunningToolCard, data.output, data.isError);
         if (aiContainer.auxiliaryWorkActive) updateAuxiliaryWorkStatus(aiContainer, { phase: data.isError ? 'failed' : 'completed' });
         aiContainer.updateProgress('Đang xử lý kết quả & tiếp tục...');

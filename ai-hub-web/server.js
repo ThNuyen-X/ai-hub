@@ -12,6 +12,7 @@ const { buildSystemInstruction } = require("./system-instruction.cjs");
 const { validateModel: validateAuxiliaryModel, coordinationInstruction } = require("./auxiliary-model.cjs");
 const auxiliarySettings = require("./auxiliary-settings.cjs").createSettings();
 const { hasSessionExtension } = require("./session-extensions.cjs");
+const { browserAvailable, BROWSER_INSTRUCTION } = require("./browser-mcp.cjs");
 const {
   getWorkspaceConfig,
   saveWorkspaceConfig,
@@ -2058,7 +2059,9 @@ const server = http.createServer((req, res) => {
         env.AI_HUB_AUX_MODEL = auxiliaryModel;
         env.AI_HUB_AUX_CWD = cwd;
       }
-      const systemInstruction = buildSystemInstruction(cwd, model) + coordinationInstruction(auxiliaryModel);
+      const browserEnabled = browserAvailable();
+      const systemInstruction = buildSystemInstruction(cwd, model) + coordinationInstruction(auxiliaryModel)
+        + (browserEnabled ? BROWSER_INSTRUCTION : "");
 
       const args = [
         "run",
@@ -2076,6 +2079,23 @@ const server = http.createServer((req, res) => {
       );
       if (auxiliaryModel && !savedAuxiliary) {
         args.push("--with-extension", `auxiliary_model:"${process.execPath}" "${path.join(__dirname, "auxiliary-model.cjs")}"`);
+      }
+
+      const savedBrowser = browserEnabled && resume && hasSessionExtension(
+        path.join(process.env.APPDATA, "Block", "goose", "data", "sessions", "sessions.db"),
+        sessionId, "chrome_devtools"
+      );
+      if (browserEnabled && !savedBrowser) {
+        args.push("--with-extension", `chrome_devtools:"${process.execPath}" "${path.join(__dirname, "browser-mcp.cjs")}"`);
+      }
+
+      const ssoBrowserEnabled = browserEnabled && require('./browser-sso.cjs').ssoAvailable();
+      const savedSsoBrowser = ssoBrowserEnabled && resume && hasSessionExtension(
+        path.join(process.env.APPDATA, 'Block', 'goose', 'data', 'sessions', 'sessions.db'),
+        sessionId, 'chrome_devtools_sso'
+      );
+      if (ssoBrowserEnabled && !savedSsoBrowser) {
+        args.push('--with-extension', `chrome_devtools_sso:"${process.execPath}" "${path.join(__dirname, 'browser-sso.cjs')}"`);
       }
 
       if (resume) {

@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const { buildWorkspaceEnvInstruction } = require("./workspace-config.cjs");
 
 const LESSONS_FILE = path.resolve(__dirname, "..", "lessons.md");
 const _textFileCache = new Map();
@@ -21,7 +22,7 @@ function readCachedTextFile(filePath, maxChars = 2500) {
   }
 }
 
-function buildSystemInstruction(cwd) {
+function buildSystemInstruction(cwd, model = "") {
   const baseRules =
     "QUY TẮC BẮT BUỘC:\n" +
     "- Trước khi gọi lệnh shell quan trọng (build, deploy, sửa file lớn, tác động hệ thống), BẮT BUỘC viết 1 câu siêu ngắn (dưới 15 từ) thông báo mục đích cho người dùng trước khi gọi tool.\n" +
@@ -39,10 +40,32 @@ function buildSystemInstruction(cwd) {
     "  + CHỈ gọi subagent khi thật sự cần thiết: Dò quét phạm vi rộng (hàng trăm file) có nguy cơ tràn context, hoặc chạy song song các nhánh nghiên cứu độc lập.";
 
   const parts = [baseRules];
+  if (cwd && (path.resolve(cwd).toLowerCase() === path.resolve(__dirname, '..').toLowerCase()
+      || path.resolve(cwd).toLowerCase().startsWith(path.resolve(__dirname).toLowerCase() + path.sep)
+      || path.resolve(cwd).toLowerCase() === path.resolve(__dirname).toLowerCase())) {
+    parts.push('[AI HUB SELF-RESTART]: When a server restart is necessary and authorized, use node "' +
+      path.join(__dirname, 'restart.cjs') + '". This checkpoints active sessions and schedules a detached restart with continuation. Do not use taskkill, restart-web.ps1 directly, or kill the parent server from a chat tool. After scheduling, stop issuing tools and let restart recovery continue the unfinished task.');
+  }
+  const modelName = String(model || "").trim().split("/").pop();
+  if (/^gemini(?:[-_.]|$)/i.test(modelName)) {
+    parts.push(
+      "[GEMINI EXECUTION EFFICIENCY]:\n" +
+      "- Batch independent searches and read the related source files together in one tool call when practical. Avoid a separate model round trip for every small read.\n" +
+      "- Reuse facts and tool results already available in this conversation. Do not repeat searches or reread unchanged code unless new evidence requires it.\n" +
+      "- Once the cause and edit locations are established, proceed to the focused fix and relevant tests. Continue investigating when evidence is insufficient; never guess merely to save a turn.\n" +
+      "- Keep tool output bounded: relevant source context, concise errors and test summaries, not entire build logs or large JSON payloads. Preserve details needed for correctness.\n" +
+      "- Keep routine explanations concise. Do not narrate every trivial read. Preserve required notices before important commands.\n" +
+      "- Do not skip verification, security checks or user approvals to improve speed. No fixed cap on steps for complex tasks."
+    );
+  }
   if (cwd) {
     const wsHints = readCachedTextFile(path.join(cwd, ".goosehints"), 1500);
     if (wsHints) {
       parts.push("[WORKSPACE HINTS (.goosehints)]:\n" + wsHints);
+    }
+    const wsEnvInstruction = buildWorkspaceEnvInstruction(cwd);
+    if (wsEnvInstruction) {
+      parts.push(wsEnvInstruction);
     }
   }
   const lessons = readCachedTextFile(LESSONS_FILE, 2200);

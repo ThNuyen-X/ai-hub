@@ -21,6 +21,7 @@ for (const id of [
   'pathContextMenuStatus',
   'pathCtxBtnPreview',
   'pathCtxBtnOpen',
+  'pathCtxBtnWorkspaceConfig',
   'pathCtxBtnCopy'
 ]) {
   assert.ok(html.includes(`id="${id}"`), `Missing #${id} in index.html`);
@@ -96,6 +97,7 @@ for (const id of [
   'pathCtxPreviewLabel',
   'pathCtxBtnOpen',
   'pathCtxOpenLabel',
+  'pathCtxBtnWorkspaceConfig',
   'pathCtxBtnCopy',
   'pathCtxCopyLabel'
 ]) {
@@ -107,6 +109,7 @@ let pendingTimers = [];
 let nextTimerId = 1;
 let lastPreviewCall = null;
 let lastOpenCall = null;
+let lastWorkspaceConfigCall = null;
 let copiedText = null;
 let sessionMenuClosedCount = 0;
 
@@ -132,6 +135,7 @@ const sandbox = {
   hideHubTooltip: () => {},
   previewLocalFile: (rawPath, e, mode, mutKey) => { lastPreviewCall = { rawPath, mode, mutKey }; },
   openLocalPath: (rawPath) => { lastOpenCall = rawPath; },
+  openWorkspaceConfigModal: (wsPath) => { lastWorkspaceConfigCall = wsPath; },
   showToast: () => {},
   soundEffects: { playClick: () => {} },
   navigator: { vibrate: () => true },
@@ -269,5 +273,22 @@ assert.equal(lastPreviewCall, null, 'Release click immediately after long-press 
 // Subsequent normal tap works normally
 sandbox.window.handlePathClick('src/ManagerUserController.java', { preventDefault() {}, stopPropagation() {} });
 assert.equal(lastPreviewCall.rawPath, 'src/ManagerUserController.java', 'Subsequent normal tap must open preview normally');
+
+// 6. Test Workspace context menu and Workspace Config action
+const wsRowEl = createMockEl('', { 'data-ws-folder-row': '1', 'data-path': 'E:\\SSO\\code\\sso' });
+for (const fn of (docListeners.contextmenu || [])) {
+  fn({ target: wsRowEl, clientX: 250, clientY: 180, preventDefault() {}, stopPropagation() {} });
+}
+const wsConfigBtn = mockElements.get('pathCtxBtnWorkspaceConfig');
+assert.equal(wsConfigBtn.classList.contains('hidden'), false, 'Workspace Config button must be visible for workspace rows');
+
+wsConfigBtn.click();
+assert.equal(lastWorkspaceConfigCall, 'E:\\SSO\\code\\sso', 'Clicking Workspace Config button must call openWorkspaceConfigModal with workspace path');
+
+// File badge must keep wsConfigBtn hidden
+for (const fn of (docListeners.contextmenu || [])) {
+  fn({ target: validBadge, clientX: 300, clientY: 240, preventDefault() {}, stopPropagation() {} });
+}
+assert.equal(wsConfigBtn.classList.contains('hidden'), true, 'Workspace Config button must be hidden for normal file badges');
 
 console.log('All Path Context Menu & Mobile Long-Press tests passed!');

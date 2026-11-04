@@ -411,6 +411,15 @@ const draftSandbox = {
   String,
   Array,
   Math,
+  normPath: (p) => {
+    if (!p) return '';
+    let value = p.trim().replace(/\\/g, '/');
+    if (/^\/\/\?\/UNC\//i.test(value)) value = '//' + value.slice(8);
+    else if (/^\/\/\?\/[a-z]:\//i.test(value)) value = value.slice(4);
+    return value.replace(/\/+$/, '').toLowerCase();
+  },
+  currentWorkspace: '',
+  currentDraftWorkspace: '',
   sessionDraftsMap: new Map(),
   currentDraftSessionKey: '__new__',
   currentSessionId: 'session_A',
@@ -430,6 +439,7 @@ vm.createContext(draftSandbox);
 vm.runInContext(
   [
     definition('autoResizeTextarea'),
+    definition('resolveDraftStorageKey'),
     definition('setSessionDraft'),
     definition('getSessionDraft'),
     definition('saveCurrentSessionDraft'),
@@ -505,6 +515,38 @@ draftSandbox.setSessionDraft('new-333', '');
 draftSandbox.currentDraftSessionKey = 'new-444';
 draftSandbox.restoreSessionDraft('new-444');
 assert.equal(draftSandbox.promptInput.value, '');
+
+// 6) Cross-workspace new session draft isolation:
+// User types unsent draft in Workspace A new session -> creates new session in Workspace B -> Workspace B must be clean!
+assert.ok(source.includes('function newSessionInWorkspace(e, wsPath) {\n      if (e) e.stopPropagation();\n      saveCurrentSessionDraft();'));
+draftSandbox.currentWorkspace = 'D:\\projects\\workspace-A';
+draftSandbox.currentSessionId = null;
+draftSandbox.currentDraftSessionKey = 'new-ws-a';
+draftSandbox.restoreSessionDraft('new-ws-a', 'D:\\projects\\workspace-A');
+draftSandbox.promptInput.value = 'Đang gõ câu hỏi cho workspace A nhưng chưa gửi';
+draftSandbox.autoResizeTextarea();
+assert.equal(draftSandbox.getSessionDraft('new-ws-a', 'D:\\projects\\workspace-A'), 'Đang gõ câu hỏi cho workspace A nhưng chưa gửi');
+
+// Switch to create a new session in Workspace B
+draftSandbox.saveCurrentSessionDraft();
+draftSandbox.currentWorkspace = 'D:\\projects\\workspace-B';
+draftSandbox.currentSessionId = null;
+draftSandbox.currentDraftSessionKey = 'new-ws-b';
+draftSandbox.restoreSessionDraft('new-ws-b', 'D:\\projects\\workspace-B');
+assert.equal(draftSandbox.promptInput.value, '', 'New session in Workspace B must NOT carry over unsent draft from Workspace A');
+
+// User types in Workspace B
+draftSandbox.promptInput.value = 'Đoạn chat ở workspace B';
+draftSandbox.autoResizeTextarea();
+assert.equal(draftSandbox.getSessionDraft('new-ws-b', 'D:\\projects\\workspace-B'), 'Đoạn chat ở workspace B');
+
+// Switch back to create a new session in Workspace A -> Workspace A draft must be restored!
+draftSandbox.saveCurrentSessionDraft();
+draftSandbox.currentWorkspace = 'D:\\projects\\workspace-A';
+draftSandbox.currentSessionId = null;
+draftSandbox.currentDraftSessionKey = 'new-ws-a-2';
+draftSandbox.restoreSessionDraft('new-ws-a-2', 'D:\\projects\\workspace-A');
+assert.equal(draftSandbox.promptInput.value, 'Đang gõ câu hỏi cho workspace A nhưng chưa gửi', 'Switching back to Workspace A new session must restore Workspace A draft');
 
 // (10) Collapsible thinking & execution process group (default collapsed above final answer)
 const processGroupSandbox = {

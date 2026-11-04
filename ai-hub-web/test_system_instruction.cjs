@@ -13,7 +13,7 @@ assert.ok(promptForAiHub.includes("AI Hub Workspace Architecture"));
 
 const serverSrc = fs.readFileSync(path.join(__dirname, "server.js"), "utf8");
 assert.ok(serverSrc.includes('require("./system-instruction.cjs")'));
-assert.ok(serverSrc.includes("buildSystemInstruction(cwd)"));
+assert.ok(serverSrc.includes("buildSystemInstruction(cwd, model)"));
 
 const batSrc = fs.readFileSync(path.resolve(__dirname, "..", "run-ai.bat"), "utf8");
 assert.ok(batSrc.includes("lessons.md"));

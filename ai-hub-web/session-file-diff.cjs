@@ -9,7 +9,8 @@ const MAX_PERSISTED_DIFF_CHARS = 350000;
 const SKIP_DIRS = new Set([
   ".git", "node_modules", "target", "dist", "build", ".next", ".nuxt",
   ".cache", ".idea", ".vscode", "bin", "obj", "out", "coverage", "logs",
-  "__pycache__", ".gradle", ".mvn", "vendor", ".turbo", ".parcel-cache"
+  "__pycache__", ".gradle", ".mvn", "vendor", ".turbo", ".parcel-cache",
+  ".angular", ".nx", ".svelte-kit", ".vite"
 ]);
 
 const BINARY_EXTS = new Set([
@@ -55,6 +56,7 @@ function isProbablyBinaryBuffer(buf) {
 
 function isTrackableFilePath(filePath) {
   if (!filePath) return false;
+  if (String(filePath).split(/[\\/]/).some(part => SKIP_DIRS.has(part.toLowerCase()))) return false;
   const ext = path.extname(filePath).toLowerCase();
   if (BINARY_EXTS.has(ext)) return false;
   return true;
@@ -338,17 +340,21 @@ function readTextFileSyncSafe(filePath) {
 async function scanWorkspacePreTurnAsync(cwd, preFiles, tracker) {
   if (!cwd || !fs.existsSync(cwd)) return false;
   let totalBytes = 0;
+  let complete = true;
 
   async function walk(dir, depth) {
-    if ((tracker && tracker.finalized) || depth > 12 || totalBytes >= MAX_SNAPSHOT_TOTAL_BYTES) return;
+    if (tracker && tracker.finalized) return;
+    if (depth > 12 || totalBytes >= MAX_SNAPSHOT_TOTAL_BYTES) { complete = false; return; }
     let entries;
     try {
       entries = await fsp.readdir(dir, { withFileTypes: true });
     } catch {
+      complete = false;
       return;
     }
     for (const entry of entries) {
-      if ((tracker && tracker.finalized) || totalBytes >= MAX_SNAPSHOT_TOTAL_BYTES) break;
+      if (tracker && tracker.finalized) break;
+      if (totalBytes >= MAX_SNAPSHOT_TOTAL_BYTES) { complete = false; break; }
       if (entry.isDirectory()) {
         if (!SKIP_DIRS.has(entry.name)) {
           await walk(path.join(dir, entry.name), depth + 1);
@@ -361,7 +367,7 @@ async function scanWorkspacePreTurnAsync(cwd, preFiles, tracker) {
         try {
           const st = await fsp.stat(fullPath);
           if (st.size > MAX_SNAPSHOT_FILE_BYTES) continue;
-          if (totalBytes + st.size > MAX_SNAPSHOT_TOTAL_BYTES) continue;
+          if (totalBytes + st.size > MAX_SNAPSHOT_TOTAL_BYTES) { complete = false; continue; }
           const buf = await fsp.readFile(fullPath);
           if (isProbablyBinaryBuffer(buf)) continue;
           totalBytes += buf.length;
@@ -374,13 +380,13 @@ async function scanWorkspacePreTurnAsync(cwd, preFiles, tracker) {
             size: st.size,
             content: buf.toString("utf8")
           });
-        } catch {}
+        } catch { complete = false; }
       }
     }
   }
 
   await walk(cwd, 0);
-  return !(tracker && tracker.finalized);
+  return complete && !(tracker && tracker.finalized);
 }
 
 function startTurnSnapshot(cwd) {
@@ -525,6 +531,7 @@ function captureExplicitToolPaths(tracker, sessionId, toolName, args, cwd) {
 
   const store = sessionId ? loadSessionDiffStore(sessionId) : null;
   for (const absPath of candidates) {
+    if (!isTrackableFilePath(absPath)) continue;
     tracker.explicitPaths.add(absPath);
     const key = normalizePathKey(absPath);
     if (!key || tracker.preFiles.has(key)) continue;
@@ -647,8 +654,13 @@ function syncTurnChanges(tracker, sessionId, options = {}) {
   const checkedKeys = new Set();
   const checkAbsPath = (absPath, fallbackRel = "") => {
     const key = normalizePathKey(absPath);
-    if (!key || checkedKeys.has(key)) return;
+    if (!key || checkedKeys.has(key) || !isTrackableFilePath(absPath)) return;
     checkedKeys.add(key);
+    if (!tracker.checkedStats) tracker.checkedStats = new Map();
+    let fingerprint = "missing";
+    try { const st = fs.statSync(absPath); fingerprint = `${st.size}:${st.mtimeMs}:${st.ctimeMs}`; } catch {}
+    if (tracker.checkedStats.get(key) === fingerprint) return;
+    tracker.checkedStats.set(key, fingerprint);
     const preEntry = tracker.preFiles.get(key) || null;
     const relLabel = (preEntry && preEntry.relPath) ||
       fallbackRel ||
@@ -665,12 +677,12 @@ function syncTurnChanges(tracker, sessionId, options = {}) {
   }
 
   for (const [key, entry] of Object.entries(store.files)) {
-    if (entry && entry.path && !checkedKeys.has(key)) {
+    if (!explicitOnly && entry && entry.path && !checkedKeys.has(key)) {
       checkAbsPath(entry.path, entry.relPath || "");
     }
   }
 
-  if (!explicitOnly && allowWorkspaceScan && tracker.cwd) {
+  if (!explicitOnly && allowWorkspaceScan && tracker.isPreScanComplete && tracker.cwd) {
     const curStats = new Map();
     collectCurrentWorkspaceStatsSync(tracker.cwd, curStats);
 
@@ -717,7 +729,7 @@ function syncTurnChanges(tracker, sessionId, options = {}) {
 function formatStoreEntries(store) {
   if (!store || !store.files) return [];
   return Object.values(store.files)
-    .filter(e => e && e.path && e.status && e.status !== "unchanged")
+    .filter(e => e && e.path && isTrackableFilePath(e.path) && e.status && e.status !== "unchanged")
     .map(e => ({
       success: true,
       inSession: true,
@@ -729,7 +741,6 @@ function formatStoreEntries(store) {
       status: e.status,
       added: Number(e.added) || 0,
       removed: Number(e.removed) || 0,
-      diff: e.diff || "",
       updatedAt: e.updatedAt || store.updatedAt || 0
     }));
 }
@@ -762,10 +773,22 @@ async function finalizeTurnSnapshot(tracker, sessionId, finalSessionId, options 
   return finalizeTurnSnapshotSync(tracker, sessionId, finalSessionId, options);
 }
 
+const summaryCache = new Map();
 function getSessionFileChangesSummary(sessionId) {
   if (!sessionId) return [];
-  const store = loadSessionDiffStore(sessionId);
-  return formatStoreEntries(store);
+  const file = getSessionDiffFilePath(sessionId);
+  let stamp;
+  try { const st = fs.statSync(file); stamp = st.mtimeMs + ':' + st.size; } catch { return []; }
+  const cached = summaryCache.get(sessionId);
+  if (cached && cached.stamp === stamp && Date.now() - cached.at < 5000) return cached.files;
+  const files = formatStoreEntries(loadSessionDiffStore(sessionId));
+  const bytes = Buffer.byteLength(JSON.stringify(files));
+  if (bytes <= 1024 * 1024) {
+    summaryCache.delete(sessionId);
+    summaryCache.set(sessionId, { stamp, files, at: Date.now() });
+    while (summaryCache.size > 4) summaryCache.delete(summaryCache.keys().next().value);
+  }
+  return files;
 }
 
 function getSessionSingleFileDiff(sessionId, targetPath, workspace) {

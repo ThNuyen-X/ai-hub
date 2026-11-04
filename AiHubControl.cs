@@ -144,76 +144,37 @@ internal static class Program
 
     internal static int[] ServerIds()
     {
-        if (cachedServerPid > 0)
+        int port;
+        if (!int.TryParse(LoadConfig()["PORT"], out port)) port = 20130;
+        int portPid = GetPidOnPort(port);
+        if (portPid <= 0)
         {
-            try
-            {
-                var p = Process.GetProcessById(cachedServerPid);
-                if (!p.HasExited && p.ProcessName.IndexOf("node", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return new int[] { cachedServerPid };
-            }
-            catch { cachedServerPid = 0; }
+            cachedServerPid = 0;
+            return new int[0];
         }
-
-        int portPid = GetPidOnPort(20130);
-        if (portPid > 0)
-        {
-            try
-            {
-                var p = Process.GetProcessById(portPid);
-                if (!p.HasExited && p.ProcessName.IndexOf("node", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    cachedServerPid = portPid;
-                    return new int[] { portPid };
-                }
-            }
-            catch { }
-        }
-
-        string pidFile = Path.Combine(Logs, "server.pid");
-        if (File.Exists(pidFile))
-        {
-            int filePid;
-            if (int.TryParse(File.ReadAllText(pidFile).Trim(), out filePid) && filePid > 0)
-            {
-                try
-                {
-                    var p = Process.GetProcessById(filePid);
-                    if (!p.HasExited && p.ProcessName.IndexOf("node", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        cachedServerPid = filePid;
-                        return new int[] { filePid };
-                    }
-                }
-                catch { }
-            }
-        }
-
-        var ids = new List<int>();
+        // Neither a cached PID nor a PID file proves that the server is listening.
         try
         {
-            using (var query = new ManagementObjectSearcher("SELECT ProcessId, CommandLine FROM Win32_Process WHERE Name='node.exe'"))
+            using (var query = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId=" + portPid))
             using (var results = query.Get())
             {
                 foreach (ManagementObject item in results)
+                using (item)
                 {
-                    using (item)
+                    string command = Convert.ToString(item["CommandLine"]);
+                    if (!string.IsNullOrEmpty(command) &&
+                        (command.IndexOf("\"" + Server + "\"", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         command.EndsWith(" " + Server, StringComparison.OrdinalIgnoreCase)))
                     {
-                        string command = Convert.ToString(item["CommandLine"]);
-                        if (!string.IsNullOrEmpty(command) &&
-                            (command.IndexOf("\"" + Server + "\"", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                             command.EndsWith(" " + Server, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            int pid = Convert.ToInt32(item["ProcessId"]);
-                            ids.Add(pid);
-                            cachedServerPid = pid;
-                        }
+                        cachedServerPid = portPid;
+                        return new int[] { portPid };
                     }
                 }
             }
         }
         catch { }
-        return ids.ToArray();
+        cachedServerPid = 0;
+        return new int[0];
     }
 
     [STAThread]
@@ -1173,7 +1134,7 @@ internal sealed class ControlPanel : Form
     private readonly System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
     private readonly EventWaitHandle showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, "Local\\AIHubControlShow");
 
-    private bool busy, quitting, logExpanded;
+    private bool busy, quitting, logExpanded, refreshing;
     private int ticks;
     private string url = "http://127.0.0.1:20130";
     private string portNumber = "20130";
@@ -1348,11 +1309,8 @@ internal sealed class ControlPanel : Form
         btnHero.Radius = 6;
         btnHero.IsGradient = true;
         btnHero.Font = DrawingHelper.ModernFont("Segoe UI", 10f, FontStyle.Bold);
-        btnHero.Click += async delegate {
-            int[] ids = Program.ServerIds();
-            if (ids.Length > 0) OpenWeb();
-            else await StartServer();
-        };
+        if (initialServerRunning) btnHero.Click += OnOpenWebClick;
+        else btnHero.Click += OnStartServerClick;
         actionCard.Controls.Add(btnHero);
 
         // 3 SECONDARY BUTTONS (Width: 115, Gap: 8)
@@ -1551,7 +1509,7 @@ internal sealed class ControlPanel : Form
             }
             else if (e.Control && e.KeyCode == Keys.R)
             {
-                Task.Run(async () => await RestartServer());
+                awaitRestartFromKeyboard();
                 e.Handled = true;
             }
             else if (e.Control && e.KeyCode == Keys.L)
@@ -1809,7 +1767,9 @@ internal sealed class ControlPanel : Form
         DwmHelper.ApplyTheme(Handle, currentTheme, colors.BgBase, colors.TextMain);
     }
 
-    private void OpenWeb()
+    private async void awaitRestartFromKeyboard() { await RestartServer(); }
+
+    private async void OpenWeb()
     {
         try
         {
@@ -1823,12 +1783,9 @@ internal sealed class ControlPanel : Form
                     MessageBoxIcon.Question);
                 if (ask == DialogResult.Yes)
                 {
-                    Task.Run(async () =>
-                    {
-                        await StartServer();
-                        if (Program.ServerIds().Length > 0)
-                            Process.Start(url);
-                    });
+                    await StartServer();
+                    if (Program.ServerIds().Length > 0)
+                        Process.Start(url);
                 }
                 return;
             }
@@ -1874,6 +1831,8 @@ internal sealed class ControlPanel : Form
 
     private async Task RefreshStatus()
     {
+        if (refreshing) return;
+        refreshing = true;
         try
         {
             int[] ids = await Task.Run(() => Program.ServerIds());
@@ -1916,6 +1875,7 @@ internal sealed class ControlPanel : Form
                 catch { }
             }
 
+            isRunning = isRunning && httpOk;
             if (!busy)
             {
                 statusPill.Mode = isRunning ? StatusPill.StateMode.Online : StatusPill.StateMode.Offline;
@@ -2005,6 +1965,7 @@ internal sealed class ControlPanel : Form
         {
             lblStatusHeadline.Text = "Lỗi trạng thái: " + ex.Message;
         }
+        finally { refreshing = false; }
     }
 
     private void OnOpenWebClick(object sender, EventArgs e) { OpenWeb(); }
@@ -2013,9 +1974,34 @@ internal sealed class ControlPanel : Form
     private async void OnRestartServerClick(object sender, EventArgs e) { await RestartServer(); }
     private async void OnTestPingClick(object sender, EventArgs e) { await PingServer(); }
 
+    private async Task WaitForServerReady()
+    {
+        for (int i = 0; i < 60; i++)
+        {
+            bool ready = await Task.Run(() =>
+            {
+                if (Program.ServerIds().Length == 0) return false;
+                try
+                {
+                    var req = (HttpWebRequest)WebRequest.Create(url);
+                    req.Proxy = null;
+                    req.Timeout = 800;
+                    req.ReadWriteTimeout = 800;
+                    using (var resp = (HttpWebResponse)req.GetResponse())
+                        return (int)resp.StatusCode == 200;
+                }
+                catch { return false; }
+            });
+            if (ready) return;
+            await Task.Delay(250);
+        }
+        throw new InvalidOperationException("AI Hub failed HTTP readiness. Check server logs in " + Program.Logs);
+    }
+
     private async Task StartServer()
     {
         if (busy) return;
+        if (Program.ServerIds().Length > 0) { await RefreshStatus(); return; }
         SetBusy(true, "Đang khởi động máy chủ...");
         try
         {
@@ -2048,12 +2034,7 @@ internal sealed class ControlPanel : Form
                 }
             });
 
-            for (int i = 0; i < 30; i++)
-            {
-                await Task.Delay(50);
-                if (Program.GetPidOnPort(20130) > 0)
-                    break;
-            }
+            await WaitForServerReady();
         }
         catch (Exception ex)
         {
@@ -2089,7 +2070,8 @@ internal sealed class ControlPanel : Form
                         using (var p = Process.GetProcessById(id))
                         {
                             p.Kill();
-                            p.WaitForExit(3000);
+                            if (!p.WaitForExit(5000))
+                                throw new InvalidOperationException("Old AI Hub server did not stop.");
                         }
                     }
                     catch (ArgumentException) { }
@@ -2129,7 +2111,8 @@ internal sealed class ControlPanel : Form
                         using (var p = Process.GetProcessById(id))
                         {
                             p.Kill();
-                            p.WaitForExit(3000);
+                            if (!p.WaitForExit(5000))
+                                throw new InvalidOperationException("Old AI Hub server did not stop.");
                         }
                     }
                     catch (ArgumentException) { }
@@ -2168,12 +2151,7 @@ internal sealed class ControlPanel : Form
                 }
             });
 
-            for (int i = 0; i < 30; i++)
-            {
-                await Task.Delay(50);
-                if (Program.GetPidOnPort(20130) > 0)
-                    break;
-            }
+            await WaitForServerReady();
         }
         catch (Exception ex)
         {

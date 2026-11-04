@@ -1,0 +1,18 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const helper = fs.readFileSync(path.join(__dirname, 'restart.cjs'), 'utf8');
+const worker = fs.readFileSync(path.join(__dirname, 'restart-web.ps1'), 'utf8');
+const control = fs.readFileSync(path.join(__dirname, '..', 'AiHubControl.cs'), 'utf8');
+const identity = control.slice(control.indexOf('internal static int[] ServerIds()'), control.indexOf('[STAThread]'));
+assert.ok(identity.includes('GetPidOnPort(port)'));
+assert.ok(!identity.includes('server.pid'), 'PID file must not imply server readiness');
+assert.ok(!identity.includes('GetProcessById(cachedServerPid)'), 'Stale cached PID must not imply readiness');
+assert.ok(control.includes('isRunning = isRunning && httpOk;'));
+assert.ok(control.includes('finally { refreshing = false; }'));
+assert.equal((control.match(/await WaitForServerReady\(\);/g) || []).length, 2);
+assert.ok(!control.includes('Task.Run(async () => await RestartServer())'));
+assert.ok(helper.includes("stdio: ['ignore', 'inherit', 'inherit']"));
+assert.ok(helper.includes("child.once('exit'"));
+assert.ok(worker.includes('Replacement server confirmed HTTP 200.'));
+console.log('Restart worker/control source guards passed (not a production restart smoke test).');

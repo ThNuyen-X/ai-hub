@@ -9,6 +9,10 @@
 /ai-hub.lnk
 /AI Hub.lnk
 /ai-hub.exe
+/ai-hub.fixed.exe
+**/workspace-configs.json
+*.local.cjs
+*.local.py
 
 # Local workspace state, conversations, logs and backups.
 **/workspaces.json

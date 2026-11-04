@@ -2,7 +2,7 @@
 <html lang="vi" data-theme="warm">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>AI Agent Studio Pro</title>
   <meta name="application-name" content="AI Hub">
   <meta name="apple-mobile-web-app-title" content="AI Hub">
@@ -240,6 +240,45 @@
       border-radius: 2px;
       vertical-align: middle;
       animation: blinkCursor 0.8s infinite;
+    }
+
+    .live-progress-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 32px;
+      margin: 8px 0 4px;
+      color: var(--text-sub);
+    }
+    .agent-loading-tiles {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 28px;
+      color: var(--text-sub);
+    }
+    .agent-loading-tiles i {
+      display: block;
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      background: currentColor;
+      animation: agentTileFlip 1.2s ease-in-out infinite;
+    }
+    .agent-loading-tiles i:nth-child(2) { animation-delay: -0.8s; }
+    .agent-loading-tiles i:nth-child(3) { animation-delay: -0.4s; }
+    @keyframes agentTileFlip {
+      0%, 100% { transform: perspective(40px) rotateY(0deg); opacity: 0.35; }
+      50% { transform: perspective(40px) rotateY(180deg); opacity: 1; }
+    }
+    @keyframes agentTileFade {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .agent-loading-tiles i { animation-name: agentTileFade; animation-duration: 2.4s; }
     }
 
     @keyframes blinkCursor {
@@ -838,9 +877,9 @@
     body { width: 100% !important; height: 100dvh !important; margin: 0; }
     main, #chatFeed, #terminalDrawer, #terminalLogsFeed { min-height: 0; min-width: 0; }
     #terminalDrawer { overflow: hidden; }
-    .ai-content-body, .markdown-body, .user-bubble { min-width: 0; overflow-wrap: anywhere; }
-    .markdown-body pre { max-width: 100%; overflow-x: auto; }
-    .markdown-body table { display: block; max-width: 100%; overflow-x: auto; }
+    .ai-content-body, .markdown-body, .user-bubble { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+    .markdown-body pre { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .markdown-body table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     @media (max-width: 639px) {
       body { height: var(--mobile-app-height, 100dvh) !important; }
       main { overflow: hidden; width: 100%; max-width: 100vw; }
@@ -850,7 +889,14 @@
       #heroWorkspaceLabel { min-width: 0; max-width: 100%; }
       #welcomeBanner .bento-card { padding: 12px; }
       #welcomeBanner .grid { margin-top: 16px; gap: 8px; }
-      main > header { height: 56px; padding: 6px 8px; gap: 6px; }
+      main > header {
+        height: calc(56px + max(0px, env(safe-area-inset-top)));
+        padding-top: max(6px, env(safe-area-inset-top));
+        padding-left: max(8px, env(safe-area-inset-left));
+        padding-right: max(8px, env(safe-area-inset-right));
+        padding-bottom: 6px;
+        gap: 6px;
+      }
       main > header > div { min-width: 0; }
       #sidebarToggleBtn { min-width: 38px; width: 38px; height: 38px; padding: 0; justify-content: center; display: inline-flex; align-items: center; }
       #mobileHeaderComboboxBtn { min-height: 38px; height: 38px; }
@@ -861,35 +907,65 @@
       #headerLiveTimerBadge { display: none !important; }
       #mobileHeaderComboboxMenu {
         position: fixed;
-        top: 60px;
-        left: 10px;
-        right: 10px;
+        top: max(60px, calc(env(safe-area-inset-top) + 52px));
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
         margin: 0 auto;
         width: calc(100vw - 20px);
         max-width: 380px;
         max-height: min(76dvh, 520px);
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
-      #modelDropdownMenu { position: fixed; top: 60px; right: 8px; width: min(320px, calc(100vw - 16px)); max-height: min(68dvh, 460px); }
-      #slashCommandsMenu { left: 8px !important; right: 8px !important; bottom: 168px !important; width: auto !important; max-width: none !important; max-height: 48dvh; overflow-y: auto; }
-      #sidebar { width: min(320px, calc(100vw - 44px)); }
+      #modelDropdownMenu {
+        position: fixed;
+        top: max(60px, calc(env(safe-area-inset-top) + 52px));
+        right: max(8px, env(safe-area-inset-right));
+        width: min(320px, calc(100vw - 16px));
+        max-height: min(68dvh, 460px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      #slashCommandsMenu { left: 8px !important; right: 8px !important; bottom: 168px !important; width: auto !important; max-width: none !important; max-height: 48dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+      #sidebar {
+        width: min(320px, calc(100vw - 44px));
+        padding-top: max(0px, env(safe-area-inset-top));
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+      }
       #sidebar .session-item { min-height: 44px; }
-      #chatFeed { padding: 14px 10px; }
+      #chatFeed {
+        padding: 14px 10px;
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+      }
       #chatFeed > .group { padding-left: 0; padding-right: 0; }
       #chatFeed > .group > div { min-width: 0; max-width: 100%; }
       #chatFeed > .justify-end > div { max-width: 92%; }
       #chatFeed .ai-msg-avatar { width: 28px !important; height: 28px !important; border-radius: 8px !important; }
       #chatFeed .ai-msg-header { margin-bottom: 6px !important; gap: 6px !important; }
-      .markdown-body, .user-bubble { font-size: 14px; line-height: 1.72; }
-      .markdown-body pre { font-size: 12px; }
+      .markdown-body, .user-bubble { font-size: 14px; line-height: 1.72; word-break: break-word; }
+      .markdown-body pre { font-size: 12px; -webkit-overflow-scrolling: touch; }
       .question-context { padding: 10px 12px; }
       .question-context-text { font-size: 12px; }
       .question-context-action { font-size: 0; }
       .question-context-action::after { content: '\2191'; font-size: 18px; }
-      .composer-outer { padding: 0 8px max(8px, env(safe-area-inset-bottom)); }
+      .composer-outer {
+        padding: 0 max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+      }
+      #btnToggleComposerCollapse {
+        min-height: 36px;
+        min-width: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
       #composerDockHeader { gap: 6px; padding-bottom: 4px; }
       .composer-suggestions-header { min-height: 30px; padding-bottom: 2px; }
-      #quickPromptChipsBar { max-height: 42px; overflow-x: auto; flex-wrap: nowrap; }
+      #quickPromptChipsBar { max-height: 42px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
       #quickPromptChipsBar button { flex-shrink: 0; min-height: 34px; }
       #agentModeSelector { width: 100%; display: flex; }
       #agentModeSelector button { flex: 1; justify-content: center; min-height: 36px; font-size: 11px; padding: 6px 6px; white-space: nowrap; }
@@ -897,9 +973,29 @@
       #sessionSearchInput, #modelSearchInput, #fullConvSearchInput, #wsPathInput, #workspaceListFilterInput, #gitCommitMessageInput, .inline-user-edit-textarea { font-size: 16px !important; }
       #stopBtn { width: 40px; height: 40px; padding: 0; border-radius: 10px; }
       #sendBtn { height: 40px; padding: 0 16px; font-size: 13px; border-radius: 10px; }
+      #workspaceModal { padding: 0 !important; }
+      #workspaceModal > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
       #workspaceModal > div > div:last-child { flex-wrap: wrap; gap: 8px; }
       #workspaceModal > div > div:last-child > span { width: 100%; }
       #workspaceModal > div > div:last-child > div { width: 100%; justify-content: flex-end; }
+      #fullscreenCodeModal { padding: 0 !important; }
+      #fullscreenCodeModal > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
       #confirmActionModal > div { padding: 18px; border-radius: 18px; }
       #terminalDrawer { position: absolute; inset: auto 0 0; max-height: 65%; border-radius: 16px 16px 0 0; box-shadow: 0 -12px 40px rgba(0,0,0,.2); }
       #terminalDrawer > div:first-child { height: auto; min-height: 90px; padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
@@ -910,7 +1006,7 @@
       #terminalDrawer button { flex-shrink: 0; min-width: 32px; min-height: 36px; }
       #terminalDrawer button[onclick="toggleTerminalDrawer(false)"] { position: absolute; right: 8px; top: 4px; background: var(--bg-surface); }
       #terminalLineCountBadge { margin-right: 32px; }
-      #terminalLogsFeed { font-size: 12px; overflow: auto; overscroll-behavior: contain; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+      #terminalLogsFeed { font-size: 12px; overflow: auto; overscroll-behavior: contain; padding-bottom: max(12px, env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
       #toastContainer {
         top: max(12px, env(safe-area-inset-top));
         left: 12px !important;
@@ -965,18 +1061,38 @@
       #slashCommandsMenu { left: 16px !important; width: min(360px, calc(100vw - 32px)) !important; }
     }
     @media (orientation: landscape) and (max-height: 520px) {
-      main > header { height: 48px !important; padding: 4px 8px !important; }
+      main > header {
+        height: 48px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        padding-left: max(8px, env(safe-area-inset-left)) !important;
+        padding-right: max(8px, env(safe-area-inset-right)) !important;
+      }
       #sidebarToggleBtn { min-width: 34px !important; width: 34px !important; height: 34px !important; }
       #mobileHeaderComboboxBtn { min-height: 34px !important; height: 34px !important; max-width: 380px !important; }
       #modelDropdownBtn { min-width: 34px !important; height: 34px !important; padding: 4px 8px !important; }
       #mobileHeaderComboboxMenu {
-        top: 52px !important;
+        top: max(52px, calc(env(safe-area-inset-top) + 42px)) !important;
         max-height: min(86dvh, 360px) !important;
         max-width: 440px !important;
       }
       #modelDropdownMenu {
-        top: 52px !important;
+        top: max(52px, calc(env(safe-area-inset-top) + 42px)) !important;
         max-height: min(86dvh, 360px) !important;
+      }
+      #promptInput {
+        min-height: 44px !important;
+        max-height: 100px !important;
+        padding: 6px 10px !important;
+      }
+      .composer-outer {
+        padding-left: max(8px, env(safe-area-inset-left)) !important;
+        padding-right: max(8px, env(safe-area-inset-right)) !important;
+        padding-bottom: max(4px, env(safe-area-inset-bottom)) !important;
+      }
+      #chatFeed {
+        padding-left: max(12px, env(safe-area-inset-left)) !important;
+        padding-right: max(12px, env(safe-area-inset-right)) !important;
       }
     }
     @media (max-width: 359px) {
@@ -1135,6 +1251,33 @@
     .user-message-row:not([data-latest-user-question="true"]) .user-edit-sep {
       display: none !important;
     }
+
+
+    /* Auxiliary Model Dialog & Trigger styling */
+    .auxiliary-dialog {
+      margin: auto;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: var(--spotlight-bg);
+      box-shadow: var(--shadow-popover);
+      color: var(--text-main);
+    }
+    .auxiliary-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .auxiliary-dialog-close {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    .auxiliary-dialog:focus-visible, .auxiliary-dialog *:focus-visible {
+      outline: 2px solid #10b981;
+      outline-offset: 2px;
+    }
+    #modelDropdownMenu { max-width:calc(100vw - 24px);max-height:calc(100dvh - 90px);overflow-y:auto; }
   </style>
 </head>
 <body class="h-screen w-screen flex overflow-hidden">
@@ -1184,14 +1327,14 @@
       <!-- New Chat Button (+) & Mobile Close Button -->
       <div class="flex items-center space-x-0.5">
         <button onclick="newSession()" title="Tạo phiên mới (Ctrl+N)"
-                class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-blue-400 hover:bg-[var(--bg-hover)] active:scale-95 ease-spring shrink-0 transition-colors"
+                class="w-9 h-9 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-blue-400 hover:bg-[var(--bg-hover)] active:scale-95 ease-spring shrink-0 transition-colors"
                 style="background: transparent; border: none;">
           <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/>
           </svg>
         </button>
         <button onclick="toggleSidebar(false)" title="Đóng thanh bên"
-                class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-95 ease-spring shrink-0 transition-colors"
+                class="lg:hidden w-9 h-9 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-95 ease-spring shrink-0 transition-colors"
                 style="background: transparent; border: none;">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -1597,6 +1740,7 @@
                   style="background: var(--bg-card); border-color: var(--border); color: var(--text-main);">
             <span id="currentModelIcon" class="w-4 h-4 flex items-center justify-center shrink-0"></span>
             <span id="currentModelName" class="font-semibold text-xs truncate max-w-[60px] xs:max-w-[90px] sm:max-w-[130px]">Codex</span>
+            <span id="auxiliaryModelBadge" class="hidden text-[9.5px] font-medium px-1.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shrink-0 flex items-center gap-1 shadow-2xs" aria-label="Model phụ đã bật">+ AI</span>
             <span class="text-[9px] opacity-60 shrink-0">▼</span>
           </button>
 
@@ -1604,14 +1748,43 @@
           <div id="modelDropdownMenu" 
                class="hidden-popover absolute right-0 mt-1.5 w-72 rounded-2xl border p-1.5 shadow-2xl z-50 ease-spring"
                style="background: var(--spotlight-bg); border-color: var(--border); box-shadow: var(--shadow-popover);">
-            <div class="px-2.5 py-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-[var(--text-sub)] border-b mb-1"
+            <div class="px-2.5 py-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-[var(--text-sub)] border-b mb-1.5 flex items-center justify-between"
                  style="border-color: var(--border-subtle);">
-              Chọn Model AI qua 9Router
+              <span>Chọn Nhà Cung Cấp AI</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-mono">9Router</span>
             </div>
             <div id="modelListOptions" class="space-y-1"></div>
+            <section class="mt-2 pt-2 border-t" style="border-color: var(--border-subtle);" aria-labelledby="auxiliaryPickerLabel">
+              <div class="px-2 pb-1.5 flex items-center justify-between">
+                <span id="auxiliaryPickerLabel" class="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-sub)] flex items-center gap-1.5">
+                  <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <span>Model Phụ Hỗ Trợ</span>
+                </span>
+                <span id="auxiliaryStatusPill" class="text-[9px] px-1.5 py-0.2 rounded-full font-medium transition-colors bg-[var(--bg-hover)] text-[var(--text-sub)]">Tắt</span>
+              </div>
+              <select id="auxiliaryModelSelect" onchange="selectAuxiliaryModel(this.value)" hidden aria-hidden="true" tabindex="-1"></select>
+              <button id="auxiliaryPickerTrigger" type="button" 
+                      class="w-full p-2 rounded-xl flex items-center justify-between cursor-pointer border ease-spring transition-all hover:bg-[var(--bg-hover)] group"
+                      style="background: var(--bg-card); border-color: var(--border);"
+                      onclick="openAuxiliaryPicker()" aria-haspopup="dialog">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                  <div id="auxiliaryTriggerIcon" class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs transition-transform group-hover:scale-105"
+                       style="background: var(--bg-hover); border-color: var(--border);">
+                    <svg class="w-3.5 h-3.5 text-[var(--text-sub)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                  </div>
+                  <div class="min-w-0 text-left">
+                    <div id="auxiliaryPickerSummary" class="text-xs font-semibold truncate text-[var(--text-main)]">Không dùng model phụ</div>
+                    <div id="auxiliaryPickerDetail" class="text-[10px] text-[var(--text-sub)] truncate">Hỗ trợ đọc code & phân tích nền</div>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-1 shrink-0 ml-2 text-[var(--text-sub)] group-hover:text-[var(--text-main)] transition-colors">
+                  <span class="text-xs opacity-60">›</span>
+                </div>
+              </button>
+            </section>
             <div class="mt-1 pt-1.5 border-t px-2 text-[10px] flex items-center justify-between" 
                  style="border-color: var(--border-subtle); color: var(--text-sub);">
-              <span>⚡ Tự động áp dụng cho phiên hiện tại</span>
+              <span>⚡ Bấm vào hãng để chọn model chi tiết</span>
             </div>
           </div>
         </div>
@@ -1801,8 +1974,8 @@
         <!-- Bên phải: Nút mở rộng khung chat (chỉ hiện khi thu gọn khung chat) -->
         <div id="composerCollapsedBar" class="hidden pointer-events-auto ml-auto">
           <button id="btnFloatingExpandComposer" type="button" onclick="toggleComposerCollapse(event, false)"
-                  class="h-9 px-3.5 sm:px-4 rounded-full border text-xs font-semibold flex items-center gap-1.5 shadow-md ease-spring hover:opacity-90 active:scale-95 transition-all text-white"
-                  style="background: var(--send-btn-bg); border-color: transparent;"
+                  class="h-9 px-3.5 sm:px-4 rounded-full border text-xs font-semibold flex items-center gap-1.5 shadow-md ease-spring hover:opacity-90 active:scale-95 transition-all"
+                  style="background: var(--send-btn-bg); border-color: transparent; color: var(--send-btn-text);"
                   title="Mở rộng khung nhập chat (Ctrl+J)" aria-label="Mở rộng khung chat">
             <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -2196,7 +2369,7 @@
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             <span>Sao chép</span>
           </button>
-          <button onclick="closeFullscreenCode()" class="p-1 rounded text-slate-400 hover:text-white ease-spring text-base leading-none">
+          <button onclick="closeFullscreenCode()" class="w-9 h-9 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white ease-spring text-base leading-none">
             ✕
           </button>
         </div>
@@ -2235,7 +2408,7 @@
             <p class="text-[10px] text-[var(--text-sub)]">Chỉ chèn đường dẫn (path) tệp vào khung chat, không mở hay đọc nội dung</p>
           </div>
         </div>
-        <button onclick="closeAttachFileModal()" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-[var(--bg-hover)]">✕</button>
+        <button onclick="closeAttachFileModal()" class="w-9 h-9 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[var(--bg-hover)] ease-spring text-base">✕</button>
       </div>
 
       <!-- Action & Filter Bar -->
@@ -2342,6 +2515,86 @@
   </div>
 
   <!-- ========================================================
+       MODAL: WORKSPACE CONFIG (NAME + VALUE VARIABLES & TOOLS)
+       ======================================================== -->
+  <div id="workspaceConfigModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-md">
+    <div class="w-full max-w-xl rounded-2xl border shadow-2xl flex flex-col max-h-[90vh] overflow-hidden modal-enter"
+         style="background: var(--spotlight-bg); border-color: var(--border); box-shadow: var(--shadow-popover);">
+      
+      <!-- Modal Header -->
+      <div class="px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between shrink-0" style="border-color: var(--border-subtle);">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center shrink-0 text-cyan-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h2 class="text-sm font-bold text-[var(--text-main)] truncate">Cấu hình biến & Công cụ Workspace</h2>
+            <p id="workspaceConfigPathLabel" class="text-[11px] font-mono text-[var(--text-sub)] truncate max-w-[320px] sm:max-w-md" title="Đường dẫn workspace">D:\workspace</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeWorkspaceConfigModal()" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-hover)] text-zinc-400 hover:text-white ease-spring text-base">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        <!-- Hướng dẫn thân thiện -->
+        <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs text-[var(--text-main)] leading-relaxed">
+          <div class="font-semibold text-cyan-400 mb-1 flex items-center gap-1.5">
+            <span>💡</span> <span>AI tự động nhận biết & quyết định sử dụng</span>
+          </div>
+          <div class="text-[11.5px] text-[var(--text-sub)]">
+            Thêm tên và giá trị (đường dẫn công cụ hoặc biến môi trường). Khi AI chạy trong workspace này (như build, chạy test, biên dịch), AI sẽ nhận biết các công cụ này (như JDK ở ổ D, Maven, Python...) và tự quyết định có dùng hay không.
+          </div>
+        </div>
+
+        <!-- Quick chips gợi ý -->
+        <div class="flex items-center gap-1.5 flex-wrap text-xs">
+          <span class="text-[11px] text-[var(--text-sub)] font-medium">Gợi ý nhanh:</span>
+          <button type="button" onclick="addWorkspaceConfigRow('JDK', 'D:\\')" class="px-2 py-0.5 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-sub)] hover:text-cyan-400 text-[11px] transition-colors">+ JDK</button>
+          <button type="button" onclick="addWorkspaceConfigRow('JAVA_HOME', 'D:\\')" class="px-2 py-0.5 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-sub)] hover:text-cyan-400 text-[11px] transition-colors">+ JAVA_HOME</button>
+          <button type="button" onclick="addWorkspaceConfigRow('MAVEN_HOME', 'D:\\')" class="px-2 py-0.5 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-sub)] hover:text-cyan-400 text-[11px] transition-colors">+ MAVEN_HOME</button>
+          <button type="button" onclick="addWorkspaceConfigRow('PYTHON', 'D:\\')" class="px-2 py-0.5 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-sub)] hover:text-cyan-400 text-[11px] transition-colors">+ PYTHON</button>
+        </div>
+
+        <!-- Danh sách Rows -->
+        <div class="space-y-2">
+          <div class="grid grid-cols-12 gap-2 text-[11px] font-semibold text-[var(--text-sub)] px-1">
+            <div class="col-span-5 sm:col-span-4">Tên (Name)</div>
+            <div class="col-span-6 sm:col-span-7">Giá trị / Đường dẫn (Value)</div>
+            <div class="col-span-1 text-center"></div>
+          </div>
+          <div id="workspaceConfigRowsContainer" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+            <!-- Dynamic rows rendered here -->
+          </div>
+          <button type="button" onclick="addWorkspaceConfigRow('', '')"
+                  class="w-full py-2 px-3 border border-dashed border-[var(--border)] rounded-xl text-xs font-medium text-[var(--text-sub)] hover:text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 flex items-center justify-center gap-2 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Thêm biến mới</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-4 sm:px-5 py-3 border-t flex items-center justify-between shrink-0 bg-[var(--bg-surface)]" style="border-color: var(--border-subtle);">
+        <span id="workspaceConfigStatus" class="text-xs text-[var(--text-sub)]"></span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeWorkspaceConfigModal()"
+                  class="px-3.5 py-1.5 rounded-xl border border-[var(--border)] text-xs font-medium hover:bg-[var(--bg-hover)] text-[var(--text-sub)] transition-colors">
+            Hủy
+          </button>
+          <button type="button" id="workspaceConfigSaveBtn" onclick="saveCurrentWorkspaceConfig()"
+                  class="px-4 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md hover:shadow-cyan-500/20 transition-all flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Lưu cấu hình</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
        MODAL: WORKSPACE SWITCHER
        ======================================================== -->
   <div id="workspaceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-md">
@@ -2359,7 +2612,7 @@
             <p class="text-[11px]" style="color: var(--text-sub);">Chọn thư mục mã nguồn để AI Agent đọc/ghi file và thực thi lệnh</p>
           </div>
         </div>
-        <button onclick="closeWorkspaceModal()" class="p-1 rounded-lg hover:bg-[var(--bg-hover)] text-zinc-400 hover:text-white ease-spring">✕</button>
+        <button onclick="closeWorkspaceModal()" class="w-9 h-9 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center hover:bg-[var(--bg-hover)] text-zinc-400 hover:text-white ease-spring text-base">✕</button>
       </div>
 
       <!-- Navigation Tabs -->
@@ -2569,6 +2822,38 @@
         <button id="appConfirmOkBtn" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white ease-spring shadow-sm">
           Đồng ý
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: CHI TIET MODEL THEO NHA CUNG CAP (ChatGPT, Claude, Gemini)
+       ======================================================== -->
+  <div id="modelProviderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-md" onclick="if(event.target===this) closeModelProviderModal()">
+    <div class="w-full max-w-md rounded-2xl border shadow-2xl flex flex-col overflow-hidden modal-enter"
+         style="background: var(--spotlight-bg); border-color: var(--border); box-shadow: var(--shadow-popover);">
+      <!-- Header -->
+      <div class="px-4 py-3 border-b flex items-center justify-between shrink-0" style="border-color: var(--border-subtle);">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div id="modelProviderModalIcon" class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border" style="border-color: var(--border);"></div>
+          <div class="min-w-0">
+            <h3 id="modelProviderModalTitle" class="text-xs font-bold truncate" style="color: var(--text-main);">Mô hình</h3>
+            <p id="modelProviderModalSubtitle" class="text-[10.5px] truncate" style="color: var(--text-sub);"></p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1.5 shrink-0 ml-2">
+          <button onclick="closeModelProviderModal()" type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95 text-sm" title="Đóng (Esc)">✕</button>
+        </div>
+      </div>
+      <!-- Models List -->
+      <div id="modelProviderModalList" class="p-3 space-y-2 overflow-y-auto max-h-[60vh]"></div>
+      <!-- Footer -->
+      <div class="px-4 py-2 border-t text-[11px] flex items-center justify-between shrink-0" style="border-color: var(--border-subtle); color: var(--text-sub); background: var(--bg-card);">
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>9Router AI Hub</span>
+        </span>
+        <span class="text-[10px] opacity-80">Tự động áp dụng cho phiên hiện tại</span>
       </div>
     </div>
   </div>
@@ -2801,6 +3086,12 @@
           <button type="button" data-workspace-order="down" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)]">↓ Đưa xuống</button>
           <button type="button" data-workspace-order="pin" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)]">Ghim lên đầu</button>
         </div>
+                <button id="pathCtxBtnWorkspaceConfig" type="button" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
+          <svg class="w-4 h-4 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+          <span class="flex-1 font-medium text-[13px]">Cấu hình & Biến môi trường</span>
+        </button>
         <button id="pathCtxBtnCopy" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
           <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
@@ -2853,10 +3144,46 @@
 
     // MODELS DEFINITIONS
     const MODELS = [
-      { id: "cx/gpt-6.1-sol", name: "Codex", full: "cx/gpt-6.1-sol", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
-      { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
-      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" }
+      // ChatGPT (OpenAI & Antigravity)
+      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", full: "ag/gpt-oss-120b-medium", group: "chatgpt", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      // Claude (Anthropic)
+      { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "claude", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
+      { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "claude", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
+      // Gemini (Google & DeepMind)
+      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-3.1-pro-high", name: "Gemini 3.1 Pro", full: "ag/gemini-3.1-pro-high", group: "gemini", provider: "Google", tag: "Xử lý ngữ cảnh lớn 1M tokens", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" }
+    ];
+
+    const MODEL_PROVIDERS = [
+      {
+        id: "chatgpt",
+        name: "ChatGPT",
+        subtitle: "GPT-6.1 Sol · GPT OSS 120B",
+        provider: "OpenAI & Antigravity",
+        iconType: "openai",
+        iconBg: "rgba(16, 185, 129, 0.12)",
+        badgeColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+      },
+      {
+        id: "claude",
+        name: "Claude",
+        subtitle: "Sonnet 5.5 · Opus 5.5 · Sonnet 4.6",
+        provider: "Anthropic",
+        iconType: "claude",
+        iconBg: "rgba(217, 119, 6, 0.12)",
+        badgeColor: "text-amber-400 bg-amber-500/10 border-amber-500/20"
+      },
+      {
+        id: "gemini",
+        name: "Gemini",
+        subtitle: "3.8 Flash · 4 Argon · 3.1 Pro",
+        provider: "Google & DeepMind",
+        iconType: "gemini",
+        iconBg: "rgba(66, 133, 244, 0.12)",
+        badgeColor: "text-blue-400 bg-blue-500/10 border-blue-500/20"
+      }
     ];
 
     // Brand artwork: Lobe Icons (MIT). Sources are recorded in public/model-icons-sources.md.
@@ -3557,7 +3884,12 @@
     function formatRelativeTime(dateStr) {
       if (!dateStr) return '';
       try {
-        const d = new Date(dateStr);
+        // SQLite timestamps without an offset are UTC, not browser-local time.
+        const timestamp = typeof dateStr === 'string' ? dateStr.trim() : dateStr;
+        const normalized = typeof timestamp === 'string' && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(timestamp)
+          ? timestamp.replace(' ', 'T') + 'Z'
+          : timestamp;
+        const d = new Date(normalized);
         if (isNaN(d.getTime())) return '';
         const now = new Date();
         const diffMs = now.getTime() - d.getTime();
@@ -3680,19 +4012,20 @@
     };
 
     // REGENERATE RESPONSE
-    window.regenerateLastUserPrompt = function() {
+    window.regenerateLastUserPrompt = function(button) {
       if (isGenerating) {
         showToast('Agent đang bận thực thi tác vụ khác', 'warning');
         return;
       }
-      if (promptHistory.length === 0) {
+      // Resolve the clicked response inside this view, never the global input history.
+      const row = button?.closest('[data-turn-question]');
+      if (!row || !chatFeed.contains(row)) return;
+      const prompt = (row.dataset.turnQuestion || '').trim();
+      if (!prompt) {
         showToast('Chưa có câu hỏi nào trước đó để tạo lại', 'warning');
         return;
       }
-      const lastPrompt = promptHistory[promptHistory.length - 1];
-      promptInput.value = lastPrompt;
-      autoResizeTextarea();
-      sendMessage();
+      sendMessage({ promptOverride: prompt });
     };
 
     // FEEDBACK
@@ -4248,13 +4581,13 @@
       return `
         <div class="code-block-container my-3 rounded-xl border overflow-hidden select-text shadow-sm" style="border-color: #2e3440; background: #0f141c;">
           <div class="flex items-center justify-between px-3.5 py-1.5 border-b text-[11px] font-mono select-none" style="border-color: #2e3440; background: #0a0e14; color: #94a3b8;">
-            <div class="flex items-center space-x-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
-              <span class="ml-2 font-semibold text-zinc-300">${escapeHtml(lang)}</span>
+            <div class="flex items-center space-x-1.5 min-w-0 flex-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block shrink-0"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block shrink-0"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block shrink-0"></span>
+              <span class="ml-2 font-semibold text-zinc-300 truncate max-w-[100px] xs:max-w-none">${escapeHtml(lang)}</span>
             </div>
-            <div class="flex items-center space-x-1">
+            <div class="flex items-center space-x-1 shrink-0">
               <button onclick="openFullscreenCode('${codeId}', '${escapeJs(lang)}')" class="p-1 rounded hover:bg-slate-800 ease-spring text-slate-400 hover:text-white" title="Xem toàn màn hình (Phóng to)">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
               </button>
@@ -5868,6 +6201,10 @@
       if (typeof hideHubTooltip === 'function') hideHubTooltip();
 
       currentContextMenuPath = pathData;
+      const wsConfigMenuBtn = document.getElementById('pathCtxBtnWorkspaceConfig');
+      if (wsConfigMenuBtn) {
+        wsConfigMenuBtn.classList.toggle('hidden', !pathData.isWorkspace);
+      }
       const orderActions = document.getElementById('workspaceOrderActions');
       if (orderActions) {
         orderActions.classList.toggle('hidden', !pathData.isWorkspace);
@@ -6035,6 +6372,14 @@
           }).catch((err) => {
             showToast('Không thể sao chép đường dẫn: ' + err.message, 'error');
           });
+        }
+      });
+
+      document.getElementById('pathCtxBtnWorkspaceConfig')?.addEventListener('click', () => {
+        const pathData = currentContextMenuPath;
+        closePathContextMenu();
+        if (pathData && (pathData.fullPath || pathData.rawPath)) {
+          openWorkspaceConfigModal(pathData.fullPath || pathData.rawPath);
         }
       });
 
@@ -6556,11 +6901,12 @@
       const exact = MODELS.find(m => m.id === normalized || m.full === normalized);
       if (exact) return exact;
       const lower = String(normalized).toLowerCase();
-      if (lower.includes('claude')) return MODELS.find(m => m.iconType === 'claude') || MODELS[0];
-      if (lower.includes('flash')) return MODELS.find(m => m.id.includes('flash')) || MODELS[1] || MODELS[0];
-      if (lower.includes('argon') || lower.includes('gemini')) return MODELS.find(m => m.id.includes('argon')) || MODELS[3] || MODELS[0];
-      if (lower.includes('gpt') || lower.includes('codex')) return MODELS[0];
-      return { id: normalized, name: normalized, full: normalized, provider: 'AI', tag: 'Mô hình phiên hiện tại', iconType: 'openai', iconBg: 'rgba(16, 185, 129, 0.1)' };
+      if (lower.includes('claude')) return MODELS.find(m => m.group === 'claude' || m.iconType === 'claude') || MODELS[2] || MODELS[0];
+      if (lower.includes('flash')) return MODELS.find(m => m.id.includes('flash')) || MODELS[5] || MODELS[0];
+      if (lower.includes('argon')) return MODELS.find(m => m.id.includes('argon')) || MODELS[6] || MODELS[0];
+      if (lower.includes('gemini')) return MODELS.find(m => m.group === 'gemini') || MODELS[5] || MODELS[0];
+      if (lower.includes('gpt') || lower.includes('codex') || lower.includes('oss')) return MODELS[0];
+      return { id: normalized, name: normalized, full: normalized, group: 'chatgpt', provider: 'AI', tag: 'Mô hình phiên hiện tại', iconType: 'openai', iconBg: 'rgba(16, 185, 129, 0.1)' };
     }
 
     function setSessionModel(sessionId, modelId) {
@@ -6631,17 +6977,32 @@
       renderModelSelector();
     }
 
-    // PER-SESSION DRAFT INPUT MEMORY
+    // PER-SESSION & PER-WORKSPACE DRAFT INPUT MEMORY
     const sessionDraftsMap = new Map();
     let currentDraftSessionKey = '__new__';
+    let currentDraftWorkspace = '';
     let sessionDraftHydrated = false;
 
-    function setSessionDraft(sessionId, draftText) {
+    function resolveDraftStorageKey(rawSessionId, ws) {
+      const raw = String(rawSessionId || '').trim();
+      const isNew = !raw || raw === '__new__' || raw.startsWith('new-');
+      if (isNew) {
+        const activeWs = (typeof currentDraftWorkspace !== 'undefined' ? currentDraftWorkspace : '') || (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '');
+        const targetWs = (ws !== undefined && ws !== null) ? ws : activeWs;
+        const normWs = typeof normPath === 'function' ? normPath(targetWs) : String(targetWs || '').trim().replace(/\\/g, '/').toLowerCase();
+        return normWs ? ('__new__:' + normWs) : '__new__';
+      }
+      return raw;
+    }
+
+    function setSessionDraft(sessionId, draftText, ws) {
       if (typeof sessionDraftHydrated !== 'undefined') sessionDraftHydrated = true;
+      const activeWs = (typeof currentDraftWorkspace !== 'undefined' ? currentDraftWorkspace : '') || (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '');
+      const targetWs = (ws !== undefined && ws !== null) ? ws : activeWs;
       const rawKey = String(sessionId || currentDraftSessionKey || '__new__').trim();
-      if (!rawKey) return;
-      const isNewDraft = rawKey === '__new__' || rawKey.startsWith('new-');
-      const key = isNewDraft ? '__new__' : rawKey;
+      const key = resolveDraftStorageKey(rawKey, targetWs);
+      if (!key) return;
+      const isNewDraft = !rawKey || rawKey === '__new__' || rawKey.startsWith('new-');
       const val = String(draftText ?? '');
       const storeKey = (k) => {
         if (!k) return;
@@ -6654,7 +7015,7 @@
         }
       };
       storeKey(key);
-      if (isNewDraft && rawKey !== '__new__') {
+      if (isNewDraft && rawKey !== key) {
         sessionDraftsMap.delete(rawKey);
         try { localStorage.removeItem('ai_hub_session_draft:' + rawKey); } catch (_) {}
       }
@@ -6667,11 +7028,13 @@
       }
     }
 
-    function getSessionDraft(sessionId) {
+    function getSessionDraft(sessionId, ws) {
+      const activeWs = (typeof currentDraftWorkspace !== 'undefined' ? currentDraftWorkspace : '') || (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '');
+      const targetWs = (ws !== undefined && ws !== null) ? ws : activeWs;
       const rawKey = String(sessionId || currentDraftSessionKey || '__new__').trim();
       if (!rawKey) return '';
-      const isNewDraft = rawKey === '__new__' || rawKey.startsWith('new-');
-      const key = isNewDraft ? '__new__' : rawKey;
+      const key = resolveDraftStorageKey(rawKey, targetWs);
+      const isNewDraft = !rawKey || rawKey === '__new__' || rawKey.startsWith('new-');
       if (sessionDraftsMap.has(key)) return sessionDraftsMap.get(key) || '';
       try {
         const saved = localStorage.getItem('ai_hub_session_draft:' + key);
@@ -6679,12 +7042,12 @@
           sessionDraftsMap.set(key, saved);
           return saved;
         }
-        if (isNewDraft && rawKey !== '__new__') {
+        if (isNewDraft && rawKey !== key) {
           const legacySaved = localStorage.getItem('ai_hub_session_draft:' + rawKey);
           if (legacySaved !== null) {
-            sessionDraftsMap.set('__new__', legacySaved);
+            sessionDraftsMap.set(key, legacySaved);
             try {
-              localStorage.setItem('ai_hub_session_draft:__new__', legacySaved);
+              localStorage.setItem('ai_hub_session_draft:' + key, legacySaved);
               localStorage.removeItem('ai_hub_session_draft:' + rawKey);
             } catch (_) {}
             return legacySaved;
@@ -6713,19 +7076,25 @@
       return '';
     }
 
-    function saveCurrentSessionDraft() {
+    function saveCurrentSessionDraft(ws) {
       if (!promptInput) return;
       if (typeof sessionDraftHydrated !== 'undefined' && !sessionDraftHydrated && !promptInput.value) return;
+      const activeWs = (typeof currentDraftWorkspace !== 'undefined' ? currentDraftWorkspace : '') || (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '');
+      const targetWs = (ws !== undefined && ws !== null) ? ws : activeWs;
       const activeKey = currentSessionId || currentDraftSessionKey || '__new__';
-      setSessionDraft(activeKey, promptInput.value);
+      setSessionDraft(activeKey, promptInput.value, targetWs);
     }
 
-    function restoreSessionDraft(sessionId) {
+    function restoreSessionDraft(sessionId, ws) {
       if (!promptInput) return;
       if (typeof sessionDraftHydrated !== 'undefined') sessionDraftHydrated = true;
+      const activeWs = (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '');
+      const targetWs = (ws !== undefined && ws !== null) ? ws : activeWs;
       const targetKey = sessionId || currentDraftSessionKey || '__new__';
-      const draft = getSessionDraft(targetKey);
+      const draft = getSessionDraft(targetKey, targetWs);
       promptInput.value = draft;
+      currentDraftSessionKey = targetKey;
+      if (typeof currentDraftWorkspace !== 'undefined') currentDraftWorkspace = targetWs;
       autoResizeTextarea(false);
     }
 
@@ -6743,8 +7112,225 @@
       }, 60);
     }
 
-    // MODEL SELECTOR
+    const auxiliaryPreferenceSaves = new Map();
+    const auxiliarySettingsLoads = new Map();
+    function loadAuxiliaryPreference(sessionId) {
+      if (!sessionId || auxiliarySettingsLoads.has(sessionId)) return;
+      const promise = fetch('/api/auxiliary-settings?sessionId=' + encodeURIComponent(sessionId))
+        .then(response => { if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('Preference unavailable'); return response.json(); })
+        .then(data => {
+          const value = MODELS.some(model => model.id === data.auxiliaryModel) ? data.auxiliaryModel : '';
+          try {
+            const key = 'ai_hub_auxiliary:' + sessionId;
+            if (localStorage.getItem(key) === null) rememberAuxiliaryModel(sessionId, value);
+          } catch (_) {}
+          if (currentSessionId === sessionId) renderAuxiliaryModelSelector();
+        }).catch(() => { auxiliarySettingsLoads.delete(sessionId); });
+      auxiliarySettingsLoads.set(sessionId, promise);
+      if (auxiliarySettingsLoads.size > 200) auxiliarySettingsLoads.delete(auxiliarySettingsLoads.keys().next().value);
+    }
+
+    function getAuxiliaryModel(sessionId = currentSessionId) {
+      try {
+        const key = sessionId ? 'ai_hub_auxiliary:' + sessionId : 'ai_hub_auxiliary:draft';
+        const saved = localStorage.getItem(key);
+        if (sessionId && saved === null) loadAuxiliaryPreference(sessionId);
+        const value = normalizeModelId(saved || '');
+        return MODELS.some(m => m.id === value) ? value : '';
+      } catch (_) { return ''; }
+    }
+
+    function rememberAuxiliaryModel(sessionId, value) {
+      if (!sessionId) return;
+      try { localStorage.setItem('ai_hub_auxiliary:' + sessionId, value || ''); } catch (_) {}
+    }
+
+    function selectAuxiliaryModel(value) {
+      if (value && !MODELS.some(m => m.id === value)) return;
+      try { localStorage.setItem(currentSessionId ? 'ai_hub_auxiliary:' + currentSessionId : 'ai_hub_auxiliary:draft', value); } catch (_) {}
+      renderAuxiliaryModelSelector();
+      if (currentSessionId) {
+        const sessionId = currentSessionId;
+        const previous = auxiliaryPreferenceSaves.get(sessionId) || Promise.resolve();
+        const save = previous.catch(() => {}).then(async () => {
+          const response = await fetch('/api/auxiliary-settings', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId, auxiliaryModel: value })
+          });
+          if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('Preference not saved');
+        }).catch(() => { if (currentSessionId === sessionId) showToast('Chưa lưu được model phụ lên server; lựa chọn vẫn dùng cho lượt gửi tiếp theo.', 'warning', 4000); });
+        auxiliaryPreferenceSaves.set(sessionId, save);
+        save.finally(() => { if (auxiliaryPreferenceSaves.get(sessionId) === save) auxiliaryPreferenceSaves.delete(sessionId); });
+      }
+    }
+
+    function openAuxiliaryPicker() {
+      closeModelDropdown();
+      renderAuxiliaryModelSelector();
+      const dialog = document.getElementById('auxiliaryPickerDialog');
+      if (dialog && !dialog.open) dialog.showModal();
+    }
+
+    function closeAuxiliaryPicker() {
+      const dialog = document.getElementById('auxiliaryPickerDialog');
+      if (dialog?.open) dialog.close();
+    }
+
+    function renderAuxiliaryModelSelector() {
+      const select = document.getElementById('auxiliaryModelSelect');
+      if (!select) return;
+      const value = getAuxiliaryModel();
+      select.replaceChildren();
+      select.add(new Option('Không dùng model phụ', ''));
+      for (const model of MODELS) select.add(new Option(model.name, model.id));
+      select.value = value;
+
+      const meta = value ? resolveModelMeta(value) : null;
+      const summary = document.getElementById('auxiliaryPickerSummary');
+      if (summary) summary.textContent = meta ? meta.name : 'Không dùng model phụ';
+
+      const detail = document.getElementById('auxiliaryPickerDetail');
+      if (detail) detail.textContent = meta ? `${meta.provider} · Tự động chia task` : 'Hỗ trợ đọc code & phân tích nền';
+
+      const pill = document.getElementById('auxiliaryStatusPill');
+      if (pill) {
+        if (value) {
+          pill.className = 'text-[9px] px-1.5 py-0.2 rounded-full font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25';
+          pill.textContent = 'Đang bật';
+        } else {
+          pill.className = 'text-[9px] px-1.5 py-0.2 rounded-full font-medium bg-[var(--bg-hover)] text-[var(--text-sub)]';
+          pill.textContent = 'Tắt';
+        }
+      }
+
+      const trigIcon = document.getElementById('auxiliaryTriggerIcon');
+      if (trigIcon) {
+        if (meta) {
+          trigIcon.style.background = meta.iconBg || 'rgba(16, 185, 129, 0.12)';
+          trigIcon.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+          trigIcon.innerHTML = MODEL_ICONS[meta.iconType] || MODEL_ICONS.openai;
+        } else {
+          trigIcon.style.background = 'var(--bg-hover)';
+          trigIcon.style.borderColor = 'var(--border)';
+          trigIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-[var(--text-sub)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>';
+        }
+      }
+
+      const cards = document.getElementById('auxiliaryModelCards');
+      if (cards) {
+        const signature = MODELS.map(model => model.id).join('|');
+        if (cards.dataset.signature !== signature) {
+          const fragment = document.createDocumentFragment();
+          const items = [
+            { id: '', name: 'Không dùng model phụ', provider: 'Tắt (Độc lập)', tag: 'Model chính tự xử lý toàn bộ tác vụ', iconType: 'off', iconBg: 'var(--bg-hover)' },
+            ...MODELS
+          ];
+          for (const model of items) {
+            const option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'auxiliary-model-option w-full p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer border ease-spring transition-all text-left group active:scale-[0.99]';
+            option.dataset.model = model.id;
+
+            const left = document.createElement('div');
+            left.className = 'flex items-center space-x-3 min-w-0';
+
+            const icon = document.createElement('div');
+            icon.className = 'auxiliary-option-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs';
+            icon.style.background = model.iconBg || 'var(--bg-hover)';
+            icon.style.borderColor = 'var(--border)';
+            if (model.id) {
+              icon.innerHTML = MODEL_ICONS[model.iconType] || MODEL_ICONS.openai;
+            } else {
+              icon.innerHTML = '<svg class="w-4 h-4 text-[var(--text-sub)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>';
+            }
+
+            const copy = document.createElement('div');
+            copy.className = 'auxiliary-option-copy min-w-0';
+
+            const headerRow = document.createElement('div');
+            headerRow.className = 'flex items-center gap-1.5';
+
+            const title = document.createElement('span');
+            title.className = 'auxiliary-option-title text-xs font-bold truncate';
+            title.textContent = model.name;
+
+            const badge = document.createElement('span');
+            badge.className = 'auxiliary-option-badge text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)] shrink-0';
+            badge.textContent = model.provider || 'AI';
+
+            headerRow.append(title, badge);
+
+            const subtitle = document.createElement('div');
+            subtitle.className = 'auxiliary-option-subtitle text-[11px] text-[var(--text-sub)] mt-0.5 truncate';
+            subtitle.textContent = model.tag || model.provider || '';
+
+            copy.append(headerRow, subtitle);
+            left.append(icon, copy);
+
+            const right = document.createElement('div');
+            right.className = 'auxiliary-option-action flex items-center space-x-1 shrink-0 ml-2';
+
+            const check = document.createElement('span');
+            check.className = 'auxiliary-option-check';
+            check.setAttribute('aria-hidden', 'true');
+            right.appendChild(check);
+
+            option.append(left, right);
+            option.addEventListener('click', () => {
+              selectAuxiliaryModel(model.id);
+              closeAuxiliaryPicker();
+            });
+            fragment.appendChild(option);
+          }
+          cards.replaceChildren(fragment);
+          cards.dataset.signature = signature;
+        }
+
+        for (const option of cards.children) {
+          const active = option.dataset.model === value;
+          option.setAttribute('aria-pressed', String(active));
+          const title = option.querySelector('.auxiliary-option-title');
+          const check = option.querySelector('.auxiliary-option-check');
+          if (active) {
+            option.className = 'auxiliary-model-option w-full p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer border ease-spring transition-all text-left group bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30 shadow-2xs';
+            if (title) { title.classList.remove('text-[var(--text-main)]'); title.classList.add('text-emerald-400'); }
+            if (check) {
+              check.className = 'auxiliary-option-check text-emerald-400 font-bold text-xs bg-emerald-500/20 border border-emerald-500/30 w-6 h-6 rounded-full flex items-center justify-center';
+              check.textContent = '✓';
+            }
+          } else {
+            option.className = 'auxiliary-model-option w-full p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer border ease-spring transition-all text-left group hover:bg-[var(--bg-hover)] border-[var(--border-subtle)]';
+            if (title) { title.classList.remove('text-emerald-400'); title.classList.add('text-[var(--text-main)]'); }
+            if (check) {
+              check.className = 'auxiliary-option-check text-xs text-[var(--text-sub)] opacity-50 px-2 py-0.5 rounded bg-[var(--bg-hover)] group-hover:opacity-100 transition-opacity';
+              check.textContent = 'Chọn';
+            }
+          }
+        }
+      }
+
+      const badge = document.getElementById('auxiliaryModelBadge');
+      if (badge) {
+        badge.classList.toggle('hidden', !value);
+        if (value && meta) {
+          const shortName = meta.name.replace(/Gemini |Claude |GPT-/i, '');
+          badge.className = 'text-[9.5px] font-medium px-1.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shrink-0 flex items-center gap-1 shadow-2xs';
+          badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>+ ${shortName}</span>`;
+          badge.title = 'Model phụ: ' + meta.name + ' (' + meta.provider + ') · Tự động chia task';
+        } else {
+          badge.innerHTML = '+ AI';
+        }
+      }
+
+      const button = document.getElementById('modelDropdownBtn');
+      if (button) button.title = value ? 'Model phụ: ' + (meta ? meta.name : value) + ' · Tự động giao việc' : 'Chọn model chính và model phụ';
+    }
+
+    // MODEL SELECTOR & PROVIDER POPUP
+    let currentModelProviderGroup = null;
+
     function renderModelSelector() {
+      renderAuxiliaryModelSelector();
       const cur = resolveModelMeta(currentSelectedModel);
       const iconEl = document.getElementById('currentModelIcon');
       const nameEl = document.getElementById('currentModelName');
@@ -6754,31 +7340,107 @@
 
       const listEl = document.getElementById('modelListOptions');
       if (listEl) {
-        listEl.innerHTML = MODELS.map(m => {
-          const isSelected = m.id === currentSelectedModel;
+        listEl.innerHTML = MODEL_PROVIDERS.map(p => {
+          const groupModels = MODELS.filter(m => m.group === p.id);
+          const isGroupActive = groupModels.some(m => m.id === currentSelectedModel || m.full === currentSelectedModel);
+          const activeModelInGroup = groupModels.find(m => m.id === currentSelectedModel || m.full === currentSelectedModel);
           return `
-            <div onclick="selectModel('${m.id}')"
-                 class="px-2.5 py-2 rounded-xl flex items-center justify-between cursor-pointer ease-spring ${
-                   isSelected ? 'bg-blue-500/15 border border-blue-500/30' : 'hover:bg-[var(--bg-hover)]'
+            <div onclick="openModelProviderPopup('${p.id}')"
+                 class="px-2.5 py-2.5 rounded-xl flex items-center justify-between cursor-pointer ease-spring border transition-all ${
+                   isGroupActive ? 'bg-blue-500/10 border-blue-500/35 shadow-2xs' : 'hover:bg-[var(--bg-hover)] border-transparent'
                  }">
               <div class="flex items-center space-x-2.5 min-w-0">
-                <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border"
-                     style="background: ${m.iconBg}; border-color: var(--border);">
-                  ${MODEL_ICONS[m.iconType] || MODEL_ICONS.openai}
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs"
+                     style="background: ${p.iconBg}; border-color: var(--border);">
+                  ${MODEL_ICONS[p.iconType] || MODEL_ICONS.openai}
                 </div>
                 <div class="min-w-0">
-                  <div class="text-xs font-semibold truncate ${isSelected ? 'text-blue-400' : 'text-[var(--text-main)]'}">${m.name}</div>
-                  <div class="text-[10px] text-[var(--text-sub)] truncate">${m.tag}</div>
+                  <div class="text-xs font-bold flex items-center gap-1.5 ${isGroupActive ? 'text-blue-400' : 'text-[var(--text-main)]'}">
+                    <span>${p.name}</span>
+                    ${isGroupActive ? `<span class="text-[9px] font-medium px-1.5 py-0.2 rounded-full border ${p.badgeColor}">Đang dùng: ${activeModelInGroup?.name || cur.name}</span>` : ''}
+                  </div>
+                  <div class="text-[10px] text-[var(--text-sub)] truncate">${p.subtitle}</div>
                 </div>
               </div>
-              <div class="flex items-center space-x-1 shrink-0 ml-2">
-                <span class="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)]">${m.provider}</span>
-                ${isSelected ? '<span class="text-blue-400 font-bold text-xs ml-1">✓</span>' : ''}
+              <div class="flex items-center space-x-1 shrink-0 ml-2 text-[var(--text-sub)]">
+                <span class="text-xs font-bold opacity-60">›</span>
               </div>
             </div>
           `;
         }).join('');
       }
+    }
+
+    function openModelProviderPopup(groupId) {
+      if (!groupId) {
+        const curMeta = resolveModelMeta(currentSelectedModel);
+        groupId = curMeta?.group || 'chatgpt';
+      }
+      currentModelProviderGroup = groupId;
+      closeModelDropdown();
+      const provider = MODEL_PROVIDERS.find(p => p.id === groupId) || MODEL_PROVIDERS[0];
+      const groupModels = MODELS.filter(m => m.group === provider.id);
+      
+      const modal = document.getElementById('modelProviderModal');
+      const titleEl = document.getElementById('modelProviderModalTitle');
+      const subEl = document.getElementById('modelProviderModalSubtitle');
+      const iconEl = document.getElementById('modelProviderModalIcon');
+      const listEl = document.getElementById('modelProviderModalList');
+      
+      if (titleEl) titleEl.innerText = `Mô hình ${provider.name} (${provider.provider})`;
+      if (subEl) subEl.innerText = `${groupModels.length} mô hình tối ưu sẵn sàng qua 9Router`;
+      if (iconEl) {
+        iconEl.style.background = provider.iconBg;
+        iconEl.innerHTML = MODEL_ICONS[provider.iconType] || MODEL_ICONS.openai;
+      }
+      
+      if (listEl) {
+        listEl.innerHTML = groupModels.map(m => {
+          const isSelected = m.id === currentSelectedModel;
+          return `
+            <div onclick="selectModelFromPopup('${m.id}')"
+                 class="p-3 rounded-xl flex items-center justify-between cursor-pointer border ease-spring transition-all active:scale-[0.98] ${
+                   isSelected ? 'bg-blue-500/15 border-blue-500/40 ring-1 ring-blue-500/30' : 'hover:bg-[var(--bg-hover)] border-[var(--border-subtle)]'
+                 }">
+              <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs"
+                     style="background: ${m.iconBg}; border-color: var(--border);">
+                  ${MODEL_ICONS[m.iconType] || MODEL_ICONS.openai}
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold flex items-center gap-1.5 ${isSelected ? 'text-blue-400' : 'text-[var(--text-main)]'}">
+                    <span>${m.name}</span>
+                    <span class="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)]">${m.provider}</span>
+                  </div>
+                  <div class="text-[11px] text-[var(--text-sub)] mt-0.5 truncate">${m.tag}</div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-1 shrink-0 ml-2">
+                ${isSelected ? '<span class="text-blue-400 font-bold text-xs bg-blue-500/20 w-6 h-6 rounded-full flex items-center justify-center">✓</span>' : '<span class="text-xs text-[var(--text-sub)] opacity-50 px-2 py-1 rounded bg-[var(--bg-hover)]">Chọn</span>'}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function selectModelFromPopup(modelId) {
+      selectModel(modelId);
+      closeModelProviderModal();
+    }
+
+    function closeModelProviderModal() {
+      const modal = document.getElementById('modelProviderModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function backToModelMenu() {
+      closeModelProviderModal();
+      toggleModelDropdown();
     }
 
     function selectModel(modelId) {
@@ -6790,11 +7452,13 @@
       }
       renderModelSelector();
       closeModelDropdown();
+      closeModelProviderModal();
       showToast(`Đã kích hoạt model: ${resolveModelMeta(modelId)?.name || modelId}`, 'info', 2000);
       soundEffects.playBop();
     }
 
     function toggleModelDropdown() {
+      renderAuxiliaryModelSelector();
       const menu = document.getElementById('modelDropdownMenu');
       if (menu) {
         if (menu.classList.contains('hidden-popover')) {
@@ -7209,6 +7873,9 @@
       }
       allowAutoReconnect = false;
       if (workspace) {
+        if (currentWorkspace && currentWorkspace !== workspace) {
+          saveCurrentSessionDraft();
+        }
         currentWorkspace = workspace;
         const base = workspace.split(/[\\/]/).pop() || workspace;
         currentSessionFolder.innerText = base;
@@ -7219,7 +7886,7 @@
         newSession(false);
         const restoredNewKey = sessionId || ('new-' + safeRandomId());
         currentDraftSessionKey = restoredNewKey;
-        restoreSessionDraft(restoredNewKey);
+        restoreSessionDraft(restoredNewKey, currentWorkspace);
         updateSessionUrl(restoredNewKey, true);
         return;
       }
@@ -7286,6 +7953,7 @@
       currentSessionId = null;
       const nextNewSessionKey = 'new-' + safeRandomId();
       currentDraftSessionKey = nextNewSessionKey;
+      currentDraftWorkspace = currentWorkspace;
       isChatUserScrolledUp = false;
       resetSessionFileChangeTracking();
       if (updateUrl && currentWorkspace) updateSessionUrl(nextNewSessionKey);
@@ -7312,6 +7980,7 @@
 
     function newSessionInWorkspace(e, wsPath) {
       if (e) e.stopPropagation();
+      saveCurrentSessionDraft();
       currentWorkspace = wsPath;
       try { localStorage.setItem('ai_hub_last_workspace', wsPath); } catch (_) {}
 
@@ -7829,6 +8498,7 @@
         else if (document.getElementById('filePreviewModal') && !document.getElementById('filePreviewModal').classList.contains('hidden')) closeFilePreview();
         else if (!attachFileModal.classList.contains('hidden')) closeAttachFileModal();
         else if (document.getElementById('fullConversationModal') && !document.getElementById('fullConversationModal').classList.contains('hidden')) closeFullConversationModal();
+        else if (document.getElementById('workspaceConfigModal') && !document.getElementById('workspaceConfigModal').classList.contains('hidden')) closeWorkspaceConfigModal();
         else if (!workspaceModal.classList.contains('hidden')) closeWorkspaceModal();
         else if (!slashMenu.classList.contains('hidden')) slashMenu.classList.add('hidden');
         else if (isGenerating) {
@@ -7840,7 +8510,156 @@
     });
 
     
+        // ========================================================
+    // WORKSPACE CONFIG MODAL (NAME + VALUE VARIABLES & TOOLS)
     // ========================================================
+    let currentConfigWorkspacePath = '';
+
+    window.openWorkspaceConfigModalFromClick = function(event, wsPath) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      openWorkspaceConfigModal(wsPath);
+    };
+
+    window.openWorkspaceConfigModal = async function(wsPath) {
+      if (!wsPath) return;
+      currentConfigWorkspacePath = wsPath;
+
+      const modal = document.getElementById('workspaceConfigModal');
+      const pathLabel = document.getElementById('workspaceConfigPathLabel');
+      const container = document.getElementById('workspaceConfigRowsContainer');
+      const statusEl = document.getElementById('workspaceConfigStatus');
+
+      if (!modal || !container) return;
+
+      if (pathLabel) {
+        pathLabel.textContent = wsPath;
+        pathLabel.title = wsPath;
+      }
+      if (statusEl) statusEl.textContent = 'Đang tải cấu hình...';
+
+      modal.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`/api/workspace-config?workspace=${encodeURIComponent(wsPath)}`);
+        const text = await res.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch (_) { throw new Error('Máy chủ chưa nhận API cấu hình hoặc cần tải lại: ' + text.slice(0, 50)); }
+        container.innerHTML = '';
+        if (data.ok && Array.isArray(data.envs) && data.envs.length > 0) {
+          data.envs.forEach(item => {
+            addWorkspaceConfigRow(item.name || '', item.value || '');
+          });
+          if (statusEl) statusEl.textContent = `${data.envs.length} biến đã thiết lập`;
+        } else {
+          addWorkspaceConfigRow('', '');
+          if (statusEl) statusEl.textContent = 'Chưa có biến nào. Nhập name và value bên dưới.';
+        }
+      } catch (err) {
+        container.innerHTML = '';
+        addWorkspaceConfigRow('', '');
+        if (statusEl) statusEl.textContent = 'Không thể tải cấu hình từ server: ' + err.message;
+      }
+    };
+
+    window.closeWorkspaceConfigModal = function() {
+      const modal = document.getElementById('workspaceConfigModal');
+      if (modal) modal.classList.add('hidden');
+      currentConfigWorkspacePath = '';
+    };
+
+    window.addWorkspaceConfigRow = function(name = '', value = '') {
+      const container = document.getElementById('workspaceConfigRowsContainer');
+      if (!container) return;
+
+      const row = document.createElement('div');
+      row.className = 'workspace-config-row grid grid-cols-12 gap-2 items-center';
+      row.innerHTML = `
+        <div class="col-span-5 sm:col-span-4">
+          <input type="text" value="${escapeHtml(name)}" placeholder="Tên (VD: JDK, JAVA_HOME)"
+                 class="ws-config-name w-full px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] text-xs text-[var(--text-main)] font-mono focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500" />
+        </div>
+        <div class="col-span-6 sm:col-span-7">
+          <input type="text" value="${escapeHtml(value)}" placeholder="Giá trị / Đường dẫn (VD: D:\\jdk-17)"
+                 class="ws-config-value w-full px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] text-xs text-[var(--text-main)] font-mono focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500" />
+        </div>
+        <div class="col-span-1 flex justify-center">
+          <button type="button" onclick="removeWorkspaceConfigRow(this)" title="Xóa dòng này"
+                  class="p-1.5 rounded-lg hover:bg-rose-500/15 text-zinc-400 hover:text-rose-400 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      `;
+      container.appendChild(row);
+      const firstInput = row.querySelector('.ws-config-name');
+      if (firstInput && !name) firstInput.focus();
+    };
+
+    window.removeWorkspaceConfigRow = function(btn) {
+      const row = btn?.closest('.workspace-config-row');
+      if (row) {
+        row.remove();
+        const container = document.getElementById('workspaceConfigRowsContainer');
+        if (container && container.children.length === 0) {
+          addWorkspaceConfigRow('', '');
+        }
+      }
+    };
+
+    window.saveCurrentWorkspaceConfig = async function() {
+      if (!currentConfigWorkspacePath) return;
+      const saveBtn = document.getElementById('workspaceConfigSaveBtn');
+      const statusEl = document.getElementById('workspaceConfigStatus');
+      const rows = document.querySelectorAll('#workspaceConfigRowsContainer .workspace-config-row');
+
+      const envs = [];
+      rows.forEach(r => {
+        const name = (r.querySelector('.ws-config-name')?.value || '').trim();
+        const val = (r.querySelector('.ws-config-value')?.value || '').trim();
+        if (name || val) {
+          envs.push({ name, value: val });
+        }
+      });
+
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Đang lưu...';
+      }
+      if (statusEl) statusEl.textContent = 'Đang lưu cấu hình...';
+
+      try {
+        const res = await fetch('/api/workspace-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workspace: currentConfigWorkspacePath,
+            envs
+          })
+        });
+        const text = await res.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch (_) { throw new Error('Máy chủ chưa nhận API cấu hình hoặc cần tải lại: ' + text.slice(0, 50)); }
+        if (data.ok) {
+          if (typeof showToast === 'function') {
+            showToast('Đã lưu cấu hình biến & công cụ workspace!', 'success');
+          }
+          closeWorkspaceConfigModal();
+        } else {
+          if (statusEl) statusEl.textContent = 'Lỗi: ' + (data.error || 'Không thể lưu');
+        }
+      } catch (err) {
+        if (statusEl) statusEl.textContent = 'Lỗi kết nối: ' + err.message;
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Lưu cấu hình</span>`;
+        }
+      }
+    };
+
+// ========================================================
     // GLOBAL HUB EVENT STREAM (MULTI-DEVICE REALTIME SYNC)
     // ========================================================
     function stopGeneration(notifyServer = true) {
@@ -8150,6 +8969,15 @@
                         class="p-1.5 sm:p-1 rounded opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring hover:bg-[var(--bg-hover)] text-[var(--text-sub)] hover:text-blue-400 min-w-[24px] min-h-[24px] flex items-center justify-center">
                   <svg class="w-3.5 h-3.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                </button>
+
+                <!-- Quick Workspace Config button -->
+                <button onclick="openWorkspaceConfigModalFromClick(event, '${escapeJs(wsPath)}')"
+                        title="Cấu hình biến & công cụ workspace (JDK, SDK...)"
+                        class="p-1.5 sm:p-1 rounded opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring hover:bg-[var(--bg-hover)] text-[var(--text-sub)] hover:text-cyan-400 min-w-[24px] min-h-[24px] flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                   </svg>
                 </button>
 
@@ -8885,6 +9713,7 @@
       const items = Array.isArray(historyItems) ? historyItems : [];
       const promptText = normalizePromptForCompare(activeSessionInfo?.prompt || '');
       const taskStartTime = Number(activeSessionInfo?.startTime) || 0;
+      let runningItem = null;
 
       if (items.length >= 1) {
         const lastItem = items[items.length - 1];
@@ -8903,7 +9732,7 @@
             lastItem.startedAt >= taskStartTime - 10000
           );
           if (prevUserMatchesPrompt || startedDuringActiveTurn) {
-            items.pop();
+            runningItem = items.pop();
           }
         }
       }
@@ -8916,7 +9745,7 @@
         (!taskStartTime || !trailingItem.startedAt || trailingItem.startedAt >= taskStartTime - 10000)
       );
 
-      return { items, hasPrompt, promptText };
+      return { items, hasPrompt, promptText, runningItem };
     }
 
     function messageTime(msg) {
@@ -9143,19 +9972,20 @@
       saveCurrentSessionDraft();
       currentSessionId = sessionId;
       currentDraftSessionKey = String(sessionId || '__new__').trim();
-      restoreSessionDraft(sessionId);
-      const earlySessionModel = getSessionModel(sessionId);
-      if (earlySessionModel) {
-        applySessionModelSelection(earlySessionModel);
-      }
       if (wsPath) {
         currentWorkspace = wsPath;
-      try { localStorage.setItem('ai_hub_last_workspace', wsPath); } catch (_) {}
+        try { localStorage.setItem('ai_hub_last_workspace', wsPath); } catch (_) {}
 
         const base = wsPath.split(/[\\/]/).pop() || wsPath;
         currentSessionFolder.innerText = base;
         currentSessionFolderTag.innerText = base;
         if (heroWorkspaceLabel) heroWorkspaceLabel.innerText = wsPath;
+      }
+      currentDraftWorkspace = currentWorkspace;
+      restoreSessionDraft(sessionId, currentWorkspace);
+      const earlySessionModel = getSessionModel(sessionId);
+      if (earlySessionModel) {
+        applySessionModelSelection(earlySessionModel);
       }
       currentSessionTitle.innerText = sessionTitle || sessionId;
       if (updateUrl) updateSessionUrl(sessionId);
@@ -9241,7 +10071,7 @@
           if (!hasPrompt && promptText) {
             appendUserMessage(promptText);
           }
-          reconnectRunningSession(sessionId, data.activeSessionInfo, sessionTitle);
+          reconnectRunningSession(sessionId, data.activeSessionInfo, sessionTitle, runningTurnState?.runningItem);
         }
 
         syncComposerOverlaySpace();
@@ -9553,7 +10383,7 @@
                 </button>
 
                 <!-- Regenerate Response Button -->
-                <button onclick="regenerateLastUserPrompt()" 
+                <button onclick="regenerateLastUserPrompt(this)" 
                         class="opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] hover:bg-[var(--bg-hover)]"
                         style="color: var(--text-sub);"
                         title="Thực thi lại prompt này với model hiện tại">
@@ -9585,10 +10415,9 @@
             <div class="ai-content-body space-y-2.5"></div>
 
             ${showProgress ? `
-              <div id="${progId}" class="live-progress-container flex items-center space-x-2 text-xs py-1 px-2.5 rounded-lg border mt-2 mb-1 text-[var(--text-sub)] animate-pulse"
-                   style="border-color: var(--border-subtle); background: var(--bg-surface);">
-                <div class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div>
-                <span class="progress-label font-mono text-[11px]">Đang kết nối agent...</span>
+              <div id="${progId}" class="live-progress-container" role="status" aria-live="polite">
+                <span class="agent-loading-tiles" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="progress-label sr-only">Đang kết nối agent...</span>
               </div>
             ` : ''}
           </div>
@@ -9614,15 +10443,7 @@
         row.querySelectorAll('.streaming-cursor').forEach(el => el.remove());
         if (!progressEl || progressEl._finished) return;
         progressEl._finished = true;
-        progressEl.classList.remove('animate-pulse');
-        progressEl.innerHTML = `
-          <span class="text-emerald-400 font-bold text-xs">✓</span>
-          <span class="text-[11px] font-mono text-[var(--text-sub)]">${escapeHtml(customMsg || 'Hoàn tất')}</span>
-        `;
-        setTimeout(() => {
-          progressEl.style.opacity = '0';
-          setTimeout(() => progressEl.remove(), 300);
-        }, 1800);
+        progressEl.remove();
       }
 
       function addResponseText(t) {
@@ -10313,6 +11134,63 @@
       return escapeHtml(String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r/g, '\\r').replace(/\n/g, '\\n'));
     }
 
+    function updateAuxiliaryWorkStatus(container, data) {
+      const labels = { waiting: 'Đang gửi việc sang model phụ', receiving: 'Đang nhận kết quả từ model phụ', validating: 'Đang kiểm tra cú pháp bản sửa', completed: 'Model phụ đã hoàn tất', failed: 'Model phụ gặp lỗi', cancelled: 'Đã hủy tác vụ model phụ', ended: 'Tác vụ phụ kết thúc' };
+      const active = data.phase === 'waiting' || data.phase === 'receiving' || data.phase === 'validating';
+      container.auxiliaryWorkActive = active;
+      if (!container.auxiliaryWorkStatus) {
+        const status = document.createElement('div');
+        status.className = 'auxiliary-work-status my-2.5 p-2.5 sm:p-3 rounded-xl border text-xs ease-spring transition-all';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        const body = container.row?.querySelector('.ai-content-body');
+        if (body) body.appendChild(status);
+        container.auxiliaryWorkStatus = status;
+      }
+      const status = container.auxiliaryWorkStatus;
+      if (data.task) status.dataset.task = String(data.task).slice(0, 220);
+      if (data.model) status.dataset.model = resolveModelMeta(data.model)?.name || data.model;
+      const label = labels[data.phase] || data.phase;
+
+      if (active) {
+        status.style.cssText = 'border-color: rgba(16, 185, 129, 0.35); background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), var(--bg-card)); color: var(--text-main); overflow-wrap: anywhere; box-shadow: 0 2px 10px rgba(0,0,0,0.06);';
+      } else if (data.phase === 'failed') {
+        status.style.cssText = 'border-color: rgba(239, 68, 68, 0.35); background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), var(--bg-card)); color: var(--text-main); overflow-wrap: anywhere;';
+      } else {
+        status.style.cssText = 'border-color: var(--border-subtle); background: var(--bg-card); color: var(--text-sub); overflow-wrap: anywhere;';
+      }
+
+      status.replaceChildren();
+      const topRow = document.createElement('div');
+      topRow.className = 'flex items-center justify-between gap-2';
+
+      const heading = document.createElement('div');
+      heading.className = 'flex items-center gap-1.5 min-w-0';
+      const dot = document.createElement('span');
+      dot.className = active ? 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0' : (data.phase === 'failed' ? 'w-2 h-2 rounded-full bg-red-400 shrink-0' : 'w-2 h-2 rounded-full bg-emerald-500 shrink-0');
+      const title = document.createElement('strong');
+      title.className = active ? 'text-xs font-semibold text-emerald-400 truncate' : 'text-xs font-semibold text-[var(--text-main)] truncate';
+      title.textContent = (status.dataset.model || 'Model phụ') + ' · ' + label;
+      heading.append(dot, title);
+      topRow.appendChild(heading);
+
+      if (data.elapsedMs != null) {
+        const elapsed = document.createElement('span');
+        elapsed.className = 'text-[10px] text-[var(--text-sub)] shrink-0 font-mono';
+        elapsed.textContent = Math.round(data.elapsedMs / 1000) + 's';
+        topRow.appendChild(elapsed);
+      }
+      status.appendChild(topRow);
+
+      if (status.dataset.task) {
+        const task = document.createElement('div');
+        task.className = 'mt-1 text-[11px] text-[var(--text-sub)] line-clamp-2 pl-3.5';
+        task.textContent = status.dataset.task;
+        status.appendChild(task);
+      }
+      if (active) container.updateProgress(label + '...');
+    }
+
     // EVENT PROCESSING LOGIC (CENTRALIZED FOR SSE & EVENTSOURCE)
     function handleSessionStreamEvent(data, aiContainer) {
       if (!data || !aiContainer) return;
@@ -10327,8 +11205,10 @@
           currentSessionTitle.innerText = data.title;
         }
         const streamSessionId = data.session_id || data.sessionId;
+        if (streamSessionId && typeof data.auxiliaryModel === 'string') rememberAuxiliaryModel(streamSessionId, data.auxiliaryModel);
         if (streamSessionId) setSessionModel(streamSessionId, data.model || currentSelectedModel);
         if (streamSessionId && streamSessionId !== currentSessionId) {
+          rememberAuxiliaryModel(streamSessionId, getAuxiliaryModel(currentSessionId));
           currentSessionId = streamSessionId;
           updateSessionUrl(currentSessionId, true);
           loadWorkspaceTree();
@@ -10351,11 +11231,15 @@
           aiContainer.updateProgress(data.text);
           appendTerminalLog('info', data.text);
         }
+      } else if (type === 'auxiliary_progress') {
+        updateAuxiliaryWorkStatus(aiContainer, data);
       } else if (type === 'tool_call') {
+        if (/auxiliary_model/.test(data.tool || data.name || '')) updateAuxiliaryWorkStatus(aiContainer, { phase: 'waiting', model: getAuxiliaryModel(), task: data.args?.task, mode: data.args?.mode || 'analyze' });
         lastRunningToolCard = appendToolCard(aiContainer, data.tool || data.name, data.args, true);
         aiContainer.updateProgress('Đang thực thi: ' + (data.tool || data.name));
       } else if (type === 'tool_result') {
         updateToolCardResult(lastRunningToolCard, data.output, data.isError);
+        if (aiContainer.auxiliaryWorkActive) updateAuxiliaryWorkStatus(aiContainer, { phase: data.isError ? 'failed' : 'completed' });
         aiContainer.updateProgress('Đang xử lý kết quả & tiếp tục...');
       } else if (type === 'session_file_diffs') {
         if (Array.isArray(data.files)) {
@@ -10369,6 +11253,7 @@
         appendAiText(aiContainer, '\n\n> **Lỗi thực thi:** ' + data.error + '\n');
         appendTerminalLog('error', data.error);
       } else if (type === 'done' || type === 'finish' || type === 'complete') {
+        if (aiContainer.auxiliaryWorkActive) updateAuxiliaryWorkStatus(aiContainer, { phase: 'ended' });
         closeActiveThoughtIfNeeded(aiContainer);
         flushAiTextRender(aiContainer);
         if (aiContainer.activeTextContainer && !aiContainer.activeTextContainer.innerHTML.trim()) {
@@ -10409,7 +11294,9 @@
           }
         }
 
-        const url = '/api/chat/stream?sessionId=' + encodeURIComponent(sessionId) + '&_t=' + Date.now();
+        const replayCursor = Number(aiContainer.replayEventId) || 0;
+        const url = '/api/chat/stream?sessionId=' + encodeURIComponent(sessionId)
+          + (replayCursor > 0 ? '&lastEventId=' + replayCursor : '') + '&_t=' + Date.now();
         const es = new EventSource(url);
 
         let isCompleted = false;
@@ -10461,7 +11348,7 @@
         }
 
         const eventNames = [
-          'message', 'text', 'thinking', 'stdout', 'status', 'tool_call', 'tool_result',
+          'message', 'text', 'thinking', 'stdout', 'status', 'tool_call', 'tool_result', 'auxiliary_progress',
           'stderr', 'raw_log', 'session_info', 'session_title', 'session_file_diffs', 'complete', 'finish', 'done', 'error'
         ];
         eventNames.forEach(evt => es.addEventListener(evt, onEventData));
@@ -10531,7 +11418,35 @@
     }
 
     // RECONNECT RUNNING SESSION (USES NATIVE EVENTSOURCE FOR MOBILE REALTIME)
-    async function reconnectRunningSession(sessionId, sessionInfo, friendlyTitle) {
+    function restoreRunningResponse(aiContainer, sessionInfo, runningItem) {
+      const events = Array.isArray(sessionInfo?.replayEvents) ? sessionInfo.replayEvents : [];
+      if (events.length) {
+        for (const event of events) {
+          handleSessionStreamEvent({ ...event.payload, type: event.event }, aiContainer);
+        }
+        aiContainer.replayEventId = Number(sessionInfo.replayEventId) || 0;
+      } else if (runningItem?.rawContent?.length) {
+        // SQLite is the fallback when the in-memory replay has no response yet.
+        for (const item of runningItem.rawContent) {
+          if (item.type === 'text') {
+            const text = typeof item.text === 'string' ? item.text : item.text?.value || '';
+            if (text) appendAiText(aiContainer, text);
+          } else if (item.type === 'thinking') {
+            const text = typeof item.thinking === 'string' ? item.thinking : item.thinking?.value || '';
+            if (text) appendAiThinking(aiContainer, text);
+          } else if (item.type === 'toolRequest') {
+            const result = item.id && runningItem.toolResponsesMap?.get(item.id);
+            appendToolCard(aiContainer, item.toolCall?.value?.name || item.name || 'tool',
+              item.toolCall?.value?.arguments || item.arguments || {}, !result,
+              result?.output || null, result?.isError || false);
+          }
+        }
+        if (aiContainer.historyItem) aiContainer.historyItem.rawContent = [...runningItem.rawContent];
+      }
+      flushAiTextRender(aiContainer);
+    }
+
+    async function reconnectRunningSession(sessionId, sessionInfo, friendlyTitle, runningItem = null) {
       if (isGenerating) return;
       isGenerating = true;
       if (currentSessionId !== sessionId) {
@@ -10539,7 +11454,6 @@
       }
       currentSessionId = sessionId;
       currentDraftSessionKey = String(sessionId || '__new__').trim();
-      restoreSessionDraft(sessionId);
       runningWorkspace = sessionInfo?.cwd || currentWorkspace;
 
       if (sessionInfo?.cwd) {
@@ -10548,6 +11462,8 @@
         currentSessionFolder.innerText = base;
         currentSessionFolderTag.innerText = base;
       }
+      currentDraftWorkspace = currentWorkspace;
+      restoreSessionDraft(sessionId, currentWorkspace);
       if (sessionInfo?.model) {
         setSessionModel(sessionId, sessionInfo.model);
         applySessionModelSelection(sessionInfo.model);
@@ -10585,6 +11501,7 @@
       }, 1000);
 
       try {
+        restoreRunningResponse(aiContainer, sessionInfo, runningItem);
         await consumeEventSourceStream(sessionId, aiContainer);
       } catch (err) {
         console.error('Lỗi khi reconnect SSE:', err);
@@ -10648,8 +11565,9 @@
       scrollToBottom(true);
       if (!hasOverride) {
         const draftKeyToClear = currentSessionId || currentDraftSessionKey;
+        const draftWsToClear = currentDraftWorkspace || currentWorkspace;
         promptInput.value = '';
-        setSessionDraft(draftKeyToClear, '');
+        setSessionDraft(draftKeyToClear, '', draftWsToClear);
         autoResizeTextarea(false);
         if (isMobileChatInput() && typeof promptInput.blur === 'function') {
           promptInput.blur();
@@ -10685,6 +11603,10 @@
         }
       }, 1000);
 
+      getAuxiliaryModel();
+      const pendingAuxiliaryPreference = auxiliarySettingsLoads.get(currentSessionId);
+      if (pendingAuxiliaryPreference) await pendingAuxiliaryPreference;
+      const turnAuxiliaryModel = getAuxiliaryModel();
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
@@ -10702,6 +11624,7 @@
             resume: !!currentSessionId,
             rewindLastTurn: !!opts.rewindLastTurn,
             model: currentSelectedModel,
+            auxiliaryModel: turnAuxiliaryModel,
             streamMode: 'eventsource'
           })
         });
@@ -10717,17 +11640,23 @@
           return;
         }
         const activeSId = chatMeta.sessionId || currentSessionId;
-        if (activeSId) setSessionModel(activeSId, currentSelectedModel);
+        if (activeSId) {
+          setSessionModel(activeSId, currentSelectedModel);
+          rememberAuxiliaryModel(activeSId, turnAuxiliaryModel);
+        }
+        if (chatMeta.tempName) rememberAuxiliaryModel(chatMeta.tempName, turnAuxiliaryModel);
         if (chatMeta.tempName) setSessionModel(chatMeta.tempName, currentSelectedModel);
         if (chatMeta.sessionId && chatMeta.sessionId !== currentSessionId) {
           const prevDraftKey = currentDraftSessionKey;
+          const prevDraftWs = currentDraftWorkspace || currentWorkspace;
           currentSessionId = chatMeta.sessionId;
           currentDraftSessionKey = String(chatMeta.sessionId).trim();
+          currentDraftWorkspace = currentWorkspace;
           if (prevDraftKey && prevDraftKey !== currentDraftSessionKey) {
             const pendingTypedWhileStarting = promptInput ? promptInput.value : '';
-            setSessionDraft(prevDraftKey, '');
+            setSessionDraft(prevDraftKey, '', prevDraftWs);
             if (pendingTypedWhileStarting) {
-              setSessionDraft(currentDraftSessionKey, pendingTypedWhileStarting);
+              setSessionDraft(currentDraftSessionKey, pendingTypedWhileStarting, currentWorkspace);
             }
           }
           updateSessionUrl(currentSessionId, true);
@@ -11123,6 +12052,7 @@
           return;
         }
 
+        saveCurrentSessionDraft();
         currentWorkspace = wsPath;
       try { localStorage.setItem('ai_hub_last_workspace', wsPath); } catch (_) {}
 
@@ -11531,5 +12461,48 @@
     initHubEvents();
     loadWorkspaceTree().then(() => restoreSessionFromUrl());
   </script>
+  <dialog id="auxiliaryPickerDialog" class="auxiliary-dialog fixed inset-0 m-auto p-0 z-50 rounded-2xl border shadow-2xl overflow-hidden modal-enter"
+          style="background: var(--spotlight-bg); border-color: var(--border); box-shadow: var(--shadow-popover); width: min(480px, calc(100vw - 24px)); max-height: calc(100dvh - 40px);"
+          aria-labelledby="auxiliaryDialogTitle"
+          onclick="if(event.target===this) closeAuxiliaryPicker()">
+    <div class="w-full flex flex-col overflow-hidden">
+      <!-- Header -->
+      <div class="px-4 py-3 border-b flex items-center justify-between shrink-0" style="border-color: var(--border-subtle);">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div id="auxiliaryDialogIcon" class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs"
+               style="background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.25); color: #10b981;">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h3 id="auxiliaryDialogTitle" class="text-xs font-bold truncate flex items-center gap-1.5" style="color: var(--text-main);">
+              <span>Model Phụ Đồng Hành</span>
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Auxiliary</span>
+            </h3>
+            <p id="auxiliaryModelHelp" class="text-[10.5px] truncate" style="color: var(--text-sub);">
+              Tự động hỗ trợ đọc code &amp; phân tích nền cho model chính
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1.5 shrink-0 ml-2">
+          <button type="button" onclick="closeAuxiliaryPicker()" 
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95 text-sm" 
+                  title="Đóng (Esc)" aria-label="Đóng">✕</button>
+        </div>
+      </div>
+      <!-- Models List -->
+      <div id="auxiliaryModelCards" class="p-3 space-y-2 overflow-y-auto max-h-[60vh]" role="group" aria-label="Chọn model phụ"></div>
+      <!-- Footer -->
+      <div class="px-4 py-2 border-t text-[11px] flex items-center justify-between shrink-0" 
+           style="border-color: var(--border-subtle); color: var(--text-sub); background: var(--bg-card);">
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>Tự động lưu theo từng phiên</span>
+        </span>
+        <span class="text-[10px] opacity-80">Áp dụng từ lượt gửi kế tiếp</span>
+      </div>
+    </div>
+  </dialog>
 </body>
 </html>

@@ -9,6 +9,15 @@ const { DatabaseSync } = require("node:sqlite");
 const { isTechnicalSessionName, sessionTitle, titleFromContent } = require("./session-title.cjs");
 const { cleanWorkspacePath, workspaceKey } = require("./workspace-path.cjs");
 const { buildSystemInstruction } = require("./system-instruction.cjs");
+const { validateModel: validateAuxiliaryModel, coordinationInstruction } = require("./auxiliary-model.cjs");
+const auxiliarySettings = require("./auxiliary-settings.cjs").createSettings();
+const { hasSessionExtension } = require("./session-extensions.cjs");
+const {
+  getWorkspaceConfig,
+  saveWorkspaceConfig,
+  removeWorkspaceConfig,
+  applyWorkspaceEnvToProcessEnv
+} = require("./workspace-config.cjs");
 const {
   startTurnSnapshot,
   captureExplicitToolPaths,
@@ -21,10 +30,13 @@ const {
 
 // Tu dong ghi log vao server.log va ghi server.pid
 const LOG_DIR = path.join(process.env.LOCALAPPDATA || process.env.USERPROFILE || ".", "ai-hub", "logs");
+const { installRuntimeDiagnostics } = require("./runtime-diagnostics.cjs");
+const runtimeDiagnostics = installRuntimeDiagnostics(LOG_DIR);
 try {
   fs.mkdirSync(LOG_DIR, { recursive: true });
   fs.writeFileSync(path.join(LOG_DIR, "server.pid"), String(process.pid));
   const logStream = fs.createWriteStream(path.join(LOG_DIR, "server.log"), { flags: "a" });
+  logStream.on("error", err => runtimeDiagnostics.record("log_stream_error", { error: err.message, code: err.code }));
   const origOut = process.stdout.write.bind(process.stdout);
   const origErr = process.stderr.write.bind(process.stderr);
   process.stdout.write = function (chunk, ...args) {
@@ -59,6 +71,10 @@ if (!NINE_ROUTER_KEY) {
 
 // Multi-session State Manager
 const activeSessions = new Map();
+const { createRecovery } = require("./restart-recovery.cjs");
+const restartRecovery = createRecovery();
+let restartScheduledUntil = 0;
+const { retainReplayEvent, writeBoundedSse, replayToClient } = require("./sse-buffer.cjs");
 // ========================================================
 // GLOBAL HUB EVENT STREAM (MULTI-DEVICE REALTIME SYNC)
 // ========================================================
@@ -87,7 +103,7 @@ function broadcastHubEvent(event, data) {
   const chunk = `event: ${event}\ndata: ${JSON.stringify(p)}\n\n`;
   for (const client of hubEventClients) {
     try {
-      client.write(chunk);
+      writeBoundedSse(client, chunk);
       if (typeof client.flush === "function") client.flush();
     } catch {
       hubEventClients.delete(client);
@@ -99,7 +115,7 @@ if (typeof setInterval === "function") {
   setInterval(() => {
     for (const client of hubEventClients) {
       try {
-        client.write(": heartbeat\n\n");
+        writeBoundedSse(client, ": heartbeat\n\n");
         if (typeof client.flush === "function") client.flush();
       } catch {
         hubEventClients.delete(client);
@@ -109,7 +125,7 @@ if (typeof setInterval === "function") {
       if (!sessionCtx || !sessionCtx.clients) continue;
       for (const client of sessionCtx.clients) {
         try {
-          client.write(": heartbeat\n\n");
+          writeBoundedSse(client, ": heartbeat\n\n");
           if (typeof client.flush === "function") client.flush();
         } catch {
           sessionCtx.clients.delete(client);
@@ -185,20 +201,11 @@ function broadcastToSession(sessionCtx, event, payload) {
   if (event === "tool_call" && p.name && !p.tool) p.tool = p.name;
   sessionCtx.nextEventId = (sessionCtx.nextEventId || 0) + 1;
   const eventId = sessionCtx.nextEventId;
-  sessionCtx.events.push({ id: eventId, event, payload: p });
-  if (sessionCtx.events.length > 1200) {
-    const splitIdx = Math.floor(sessionCtx.events.length / 2);
-    sessionCtx.events = coalesceSessionEventsForReplay(sessionCtx.events.slice(0, splitIdx)).concat(sessionCtx.events.slice(splitIdx));
-    while (sessionCtx.events.length > 1200) {
-      const rawIdx = sessionCtx.events.findIndex(e => e.event === "raw_log");
-      if (rawIdx !== -1) sessionCtx.events.splice(rawIdx, 1);
-      else sessionCtx.events.shift();
-    }
-  }
+  retainReplayEvent(sessionCtx, { id: eventId, event, payload: p });
   const chunk = `id: ${eventId}\nevent: ${event}\ndata: ${JSON.stringify(p)}\n\n`;
   for (const client of sessionCtx.clients) {
     try {
-      client.write(chunk);
+      writeBoundedSse(client, chunk);
       if (typeof client.flush === "function") client.flush();
     } catch {
       sessionCtx.clients.delete(client);
@@ -231,19 +238,19 @@ function attachClientToSession(res, sessionCtx, req) {
   }
 
   const pendingEvents = lastEventId > 0 ? sessionCtx.events.filter(item => (item.id || 0) > lastEventId) : sessionCtx.events;
-  const replayedEvents = coalesceSessionEventsForReplay(pendingEvents);
-  for (const item of replayedEvents) {
-    const idPrefix = item.id ? `id: ${item.id}\n` : "";
-    res.write(`${idPrefix}event: ${item.event}\ndata: ${JSON.stringify(item.payload)}\n\n`);
-  }
-  if (typeof res.flush === "function") res.flush(); // Flush replayed events on attach
-
-  if (sessionCtx.isFinished) {
-    try { res.end(); } catch {}
-    return;
-  }
-
-  sessionCtx.clients.add(res);
+  // Attach only after replay; catch up events produced while waiting for drain.
+  (async () => {
+    let cursor = lastEventId;
+    let batch = pendingEvents.slice();
+    while (batch.length && !res.destroyed) {
+      await replayToClient(res, batch);
+      cursor = batch[batch.length - 1].id;
+      batch = sessionCtx.events.filter(item => item.id > cursor);
+    }
+    if (res.destroyed) return;
+    if (sessionCtx.isFinished) { res.end(); return; }
+    sessionCtx.clients.add(res);
+  })().catch(() => res.destroy());
 
   res.on("close", () => {
     sessionCtx.clients.delete(res);
@@ -271,10 +278,16 @@ function normalizeModelId(modelId) {
 
 // Cac model co san tren 9Router
 const AVAILABLE_MODELS = [
-  { id: "cx/gpt-6.1-sol", name: "Codex", full: "cx/gpt-6.1-sol", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", iconType: "openai" },
-  { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini" },
-  { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude" },
-  { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" }
+  // ChatGPT (OpenAI & Antigravity)
+  { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", iconType: "openai" },
+  { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", full: "ag/gpt-oss-120b-medium", group: "chatgpt", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", iconType: "openai" },
+  // Claude (Anthropic)
+  { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "claude", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude" },
+  { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "claude", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", iconType: "claude" },
+  // Gemini (Google & DeepMind)
+  { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini" },
+  { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" },
+  { id: "ag/gemini-3.1-pro-high", name: "Gemini 3.1 Pro", full: "ag/gemini-3.1-pro-high", group: "gemini", provider: "Google", tag: "Xử lý ngữ cảnh lớn 1M tokens", iconType: "gemini" }
 ];
 
 // Quan ly danh sach Workspaces
@@ -544,6 +557,7 @@ function deleteWorkspaceAndSessions(wsPath) {
       db.exec("COMMIT;");
     }
     const workspaces = removeWorkspace(wsPath);
+    removeWorkspaceConfig(wsPath);
     return { ok: true, workspaces, deletedSessionIds };
   } catch (err) {
     if (db) { try { db.exec("ROLLBACK;"); } catch {} }
@@ -1052,6 +1066,37 @@ function buildSyntheticUnifiedDiff(content, mode, relLabel) {
 }
 
 const server = http.createServer((req, res) => {
+  if (req.method === "POST" && req.url === "/api/auxiliary-settings") {
+    let body = "", oversized = false;
+    req.on("data", chunk => { if (oversized) return; body += chunk; if (body.length > 4096) { oversized = true; body = ""; } });
+    req.on("end", () => {
+      try {
+        if (oversized) throw new Error("Preference request too large");
+        const data = JSON.parse(body);
+        if (typeof data.sessionId !== "string" || !data.sessionId.trim() || data.sessionId.length > 200) throw new Error("Invalid session ID");
+        const auxiliaryModel = validateAuxiliaryModel(data.auxiliaryModel, AVAILABLE_MODELS);
+        const stored = findStoredSession(data.sessionId);
+        if (!stored && !getRunningSession(data.sessionId)) {
+          res.writeHead(404, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Session not found" })); return;
+        }
+        auxiliarySettings.set(stored?.id || data.sessionId, auxiliaryModel);
+        if (stored?.name) auxiliarySettings.set(stored.name, auxiliaryModel);
+        res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+        res.end(JSON.stringify({ ok: true, auxiliaryModel }));
+      } catch (error) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: error.message }));
+      }
+    });
+    return;
+  }
+  if (req.method === "GET" && req.url.startsWith("/api/auxiliary-settings?")) {
+    const id = new URL(req.url, "http://localhost").searchParams.get("sessionId");
+    res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+    res.end(JSON.stringify({ auxiliaryModel: auxiliarySettings.get(id) }));
+    return;
+  }
   const urlObj = new URL(req.url, `http://${req.headers.host}`);
   const pathname = urlObj.pathname;
 
@@ -1063,6 +1108,27 @@ const server = http.createServer((req, res) => {
   if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/restart-checkpoint") {
+    const remote = req.socket.remoteAddress;
+    const origin = req.headers.origin;
+    if (!["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(remote) || origin) {
+      res.writeHead(403, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Restart checkpoint requires a local CLI request." }));
+      return;
+    }
+    try {
+      if (Date.now() < restartScheduledUntil) throw new Error("A restart is already scheduled.");
+      const sessions = restartRecovery.checkpoint(activeSessions.values(), findStoredSession);
+      restartScheduledUntil = Date.now() + 120000;
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, sessions }));
+    } catch (error) {
+      res.writeHead(409, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: error.message }));
+    }
     return;
   }
 
@@ -1144,7 +1210,10 @@ const server = http.createServer((req, res) => {
       delete detail.error;
       if (!Array.isArray(detail.conversation)) detail.conversation = [];
       if (runningCtx.info) {
-        detail.activeSessionInfo = runningCtx.info;
+        detail.activeSessionInfo = { ...runningCtx.info,
+          replayEvents: coalesceSessionEventsForReplay(runningCtx.events || []),
+          replayEventId: runningCtx.nextEventId || 0
+        };
         if (runningCtx.info.model) detail.model = runningCtx.info.model;
       }
     }
@@ -1639,6 +1708,45 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Lay cau hinh bien moi truong cua Workspace
+  if (req.method === "GET" && pathname === "/api/workspace-config") {
+    const ws = (urlObj.searchParams.get("workspace") || urlObj.searchParams.get("path") || "").trim();
+    if (!ws) {
+      res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ ok: false, error: "Thiếu đường dẫn workspace" }));
+      return;
+    }
+    const envs = getWorkspaceConfig(ws);
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ ok: true, workspace: ws, envs }));
+    return;
+  }
+
+  // API: Luu cau hinh bien moi truong cua Workspace
+  if (req.method === "POST" && pathname === "/api/workspace-config") {
+    let body = "";
+    req.on("data", chunk => { body += chunk; });
+    req.on("end", () => {
+      try {
+        const payload = JSON.parse(body);
+        const ws = (payload.workspace || payload.dir || payload.path || "").trim();
+        if (!ws) {
+          res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ ok: false, error: "Thiếu đường dẫn workspace" }));
+          return;
+        }
+        const envs = payload.envs || [];
+        const saved = saveWorkspaceConfig(ws, envs);
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: true, workspace: ws, envs: saved }));
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   // API: Xoa phien lam viec
   if (req.method === "POST" && pathname === "/api/delete-session") {
     let body = "";
@@ -1803,6 +1911,11 @@ const server = http.createServer((req, res) => {
 
   // API: Gui prompt va nhan stream SSE
   if (req.method === "POST" && pathname === "/api/chat") {
+    if (Date.now() < restartScheduledUntil) {
+      res.writeHead(503, { "Content-Type": "application/json", "Retry-After": "5" });
+      res.end(JSON.stringify({ error: "Server restart scheduled; retry after reconnection." }));
+      return;
+    }
     let body = "";
     req.on("data", (chunk) => { body += chunk; });
     req.on("end", () => {
@@ -1811,6 +1924,18 @@ const server = http.createServer((req, res) => {
 
       const prompt = data.prompt || "";
       const model = normalizeModelId(data.model) || "cx/gpt-6.1-sol";
+      if (model === "ag/claude-sonnet-4-6") {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Claude Sonnet 4.6 is no longer available. Please select Claude Sonnet 5.5." }));
+        return;
+      }
+      let auxiliaryModel;
+      try { auxiliaryModel = validateAuxiliaryModel(data.auxiliaryModel === undefined ? auxiliarySettings.get(data.sessionId) : data.auxiliaryModel, AVAILABLE_MODELS); }
+      catch (error) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: error.message }));
+        return;
+      }
       const rawCwd = data.cwd || data.workspace;
       const cwd = (rawCwd && fs.existsSync(rawCwd)) ? rawCwd : ((process.env.AI_HUB_DEFAULT_WORKSPACE && fs.existsSync(process.env.AI_HUB_DEFAULT_WORKSPACE)) ? process.env.AI_HUB_DEFAULT_WORKSPACE : process.cwd());
       let sessionId = data.sessionId || `session_${Date.now()}`;
@@ -1867,6 +1992,7 @@ const server = http.createServer((req, res) => {
       console.log(`[CHAT] Prompt: "${prompt.substring(0, 50)}" | Model: ${model} | CWD: ${cwd} | Session: ${sessionId} | Resume: ${resume} | Active sessions: ${activeSessions.size}`);
       saveWorkspace(cwd);
       if (model && sessionId) {
+        try { auxiliarySettings.set(sessionId, auxiliaryModel); } catch (error) { console.warn('[AUX SETTINGS] ' + error.message); }
         sessionModels.set(sessionId, model);
         if (storedSession?.id) sessionModels.set(storedSession.id, model);
         if (storedSession?.name) sessionModels.set(storedSession.name, model);
@@ -1883,7 +2009,7 @@ const server = http.createServer((req, res) => {
         process: null,
         sessionId,
         tempName: (!resume && sessionId.startsWith('session_')) ? sessionId : null,
-        info: { model, cwd, sessionId, prompt: rawPrompt, title, startTime: Date.now() },
+        info: { model, auxiliaryModel, cwd, sessionId, prompt: rawPrompt, title, startTime: Date.now() },
         turnDiffTracker: startTurnSnapshot(cwd),
         events: [],
         clients: new Set((data.streamMode === "eventsource") ? [] : [res])
@@ -1923,7 +2049,16 @@ const server = http.createServer((req, res) => {
         GOOSE_SHOW_FULL_OUTPUT: "false"
       };
 
-      const systemInstruction = buildSystemInstruction(cwd);
+      applyWorkspaceEnvToProcessEnv(env, cwd);
+
+      // Explicitly clear inherited auxiliary settings when disabled for this turn.
+      delete env.AI_HUB_AUX_MODEL;
+      delete env.AI_HUB_AUX_CWD;
+      if (auxiliaryModel) {
+        env.AI_HUB_AUX_MODEL = auxiliaryModel;
+        env.AI_HUB_AUX_CWD = cwd;
+      }
+      const systemInstruction = buildSystemInstruction(cwd, model) + coordinationInstruction(auxiliaryModel);
 
       const args = [
         "run",
@@ -1934,13 +2069,22 @@ const server = http.createServer((req, res) => {
         "--text", prompt
       ];
 
+      // Resumed sessions already restore saved extensions; do not add the same name twice.
+      const savedAuxiliary = auxiliaryModel && resume && hasSessionExtension(
+        path.join(process.env.APPDATA, "Block", "goose", "data", "sessions", "sessions.db"),
+        sessionId, "auxiliary_model"
+      );
+      if (auxiliaryModel && !savedAuxiliary) {
+        args.push("--with-extension", `auxiliary_model:"${process.execPath}" "${path.join(__dirname, "auxiliary-model.cjs")}"`);
+      }
+
       if (resume) {
         args.push("--resume", "--session-id", sessionId);
       } else {
         args.push("--name", sessionId);
       }
 
-      console.log(`[SPAWN] goose ${args.join(" ")}`);
+      console.log(`[SPAWN] goose model=${model} session=${sessionId} resume=${resume}`);
       const child = spawn(GOOSE_PATH, args, { cwd, env, windowsHide: true });
       sessionCtx.process = child;
       sessionCtx.info.pid = child.pid;
@@ -1990,6 +2134,7 @@ const server = http.createServer((req, res) => {
                     } catch {}
                     broadcastToSession(sessionCtx, "tool_call", {
                       name: reqToolName,
+                      id: item.id || "",
                       args: reqToolArgs
                     });
                   } else if (item.type === "toolResponse") {
@@ -2086,7 +2231,17 @@ const server = http.createServer((req, res) => {
         }
       });
 
+      let auxiliaryStderr = "";
       child.stderr.on("data", (chunk) => {
+        auxiliaryStderr = (auxiliaryStderr + chunk.toString("utf8")).slice(-16000);
+        const progressLines = auxiliaryStderr.split("\n");
+        auxiliaryStderr = progressLines.pop();
+        for (const line of progressLines) {
+          const marker = line.indexOf("[AUX_PROGRESS] ");
+          if (marker >= 0) {
+            try { broadcastToSession(sessionCtx, "auxiliary_progress", JSON.parse(line.slice(marker + 15))); } catch {}
+          }
+        }
         if (sessionCtx.process !== child) return;
         const text = chunk.toString("utf8").trim();
         console.error(`[GOOSE STDERR] ${text}`);
@@ -2095,12 +2250,15 @@ const server = http.createServer((req, res) => {
 
       child.on("close", (code) => {
         if (sessionCtx.process !== child) return;
+        try { restartRecovery.complete(sessionCtx.info?.sessionId || sessionId); }
+        catch (error) { console.error("[RESTART CHECKPOINT] " + error.message); }
         console.log(`[GOOSE CLOSE] Exit code: ${code} for session ${sessionId}`);
         try {
           const stored = findStoredSession(sessionId);
           if (stored) {
             sessionId = stored.id;
             sessionCtx.info.sessionId = stored.id;
+            try { auxiliarySettings.set(stored.id, sessionCtx.info.auxiliaryModel || ""); } catch (error) { console.warn('[AUX SETTINGS] ' + error.message); }
             if (!resume && isTechnicalSessionName(stored.name)) {
               const renamed = renameSession(sessionId, title);
               if (!renamed.ok) console.error("[SESSION TITLE] " + renamed.error);
@@ -2237,6 +2395,16 @@ server.listen(PORT, process.env.AI_HUB_HOST || "127.0.0.1", () => {
   console.log("========================================================");
   console.log("       AI AGENT HUB - PRO SERVER DANG CHAY");
   console.log("========================================================");
+  restartRecovery.recover(async payload => {
+    const response = await fetch(`http://127.0.0.1:${PORT}/api/chat`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload), signal: AbortSignal.timeout(30000)
+    });
+    if (!response.ok) throw new Error(`Recovery request failed: HTTP ${response.status}`);
+    await response.json();
+  }, pid => {
+    try { process.kill(pid, 0); return true; } catch (error) { return error.code !== "ESRCH"; }
+  }).catch(error => console.error("[RESTART RECOVERY] " + error.message));
   console.log(`Local Access     : http://localhost:${PORT}`);
   console.log(`Tailscale Access : http://${sys.tailscaleIp}:${PORT}`);
   console.log(`Router VPS       : http://${sys.vpsHost}/v1`);

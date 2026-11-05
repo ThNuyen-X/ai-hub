@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // AI HUB REMOTE CONTROLLER DAEMON
 // Lightweight & Resilient Remote Control Service for Windows & Tailscale
 // ==============================================================================
@@ -380,7 +380,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (req.method === "POST" && pathname === "/api/system/abort-shutdown") {
-    return sendJson(abortShutdown());
+    return sendJson(abortSystemShutdown());
   }
 
   // 5. Hủy Prompt đang chạy
@@ -431,7 +431,7 @@ const server = http.createServer((req, res) => {
       const gooseExe = env.GOOSE_PATH || "goose.exe";
 
       if (model === "claude-code") {
-        execCmd = "claude";
+        execCmd = (process.platform === "win32" ? "claude.cmd" : "claude");
         execArgs = ["-p", prompt];
       } else {
         // Goose model
@@ -443,7 +443,7 @@ const server = http.createServer((req, res) => {
 
         env.GOOSE_PROVIDER = "openai";
         env.GOOSE_MODEL = gooseModel;
-        execArgs = ["run", prompt, "--system", systemInstruction];
+        execArgs = ["run", "-t", prompt, "--provider", "openai", "--model", gooseModel, "--no-session", "--system", systemInstruction];
       }
 
       sendEvent("log", { text: `[START] Đang khởi chạy Agent: ${model} tại: ${targetDir}...\n` });
@@ -451,7 +451,7 @@ const server = http.createServer((req, res) => {
       const child = spawn(execCmd, execArgs, {
         cwd: targetDir,
         env: env,
-        shell: true
+        shell: (model === "claude-code"),
       });
 
       activePromptJob = {

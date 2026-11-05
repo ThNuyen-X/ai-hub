@@ -10,9 +10,9 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   
-  <link rel="manifest" href="/manifest.json?v=9">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=9">
-  <link rel="apple-touch-icon" href="/icon.svg?v=9">
+  <link rel="manifest" href="/manifest.json?v=11">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=11">
+  <link rel="apple-touch-icon" href="/icon.svg?v=11">
   <title>Bò Tót Remote</title>
 
   <!-- BE VIETNAM PRO -->
@@ -295,7 +295,7 @@
     .status-tag.online { background: var(--emerald-bg); color: var(--emerald); border: 1px solid rgba(16,185,129,0.3); }
     .status-tag.offline { background: var(--rose-bg); color: var(--rose); border: 1px solid rgba(239,68,68,0.3); }
 
-    /* NÚT BẤM TO BỰ (DỄ CHẠM NGÓN TÁY) */
+    /* NÚT BẤM TO BỰ (DỄ CHẠM NGÓN TAY) */
     .grid-3-col {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -322,17 +322,35 @@
       font-size: 14px;
       font-weight: 800;
       cursor: pointer;
-      transition: transform 0.1s ease;
+      transition: all 0.15s ease;
       text-decoration: none;
       min-height: 72px;
     }
-    .big-btn:active {
+    .big-btn:active:not(:disabled) {
       transform: scale(0.95);
       border-color: var(--border-accent);
     }
     .big-btn svg {
       width: 28px;
       height: 28px;
+    }
+
+    /* TRẠNG THÁI KHÓA (DISABLED) CHUẨN XỊN CHỐNG THAO TÁC THỪA */
+    .big-btn:disabled, button:disabled {
+      opacity: 0.35 !important;
+      cursor: not-allowed !important;
+      filter: grayscale(0.85) !important;
+      transform: none !important;
+      pointer-events: none !important;
+      border-style: dashed !important;
+    }
+
+    .open-web-button.disabled {
+      opacity: 0.35 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      filter: grayscale(0.85) !important;
+      border-style: dashed !important;
     }
 
     .big-btn.btn-start { color: var(--emerald); background: var(--emerald-bg); border-color: rgba(16, 185, 129, 0.35); }
@@ -354,8 +372,9 @@
       border-radius: 18px;
       text-decoration: none;
       box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+      transition: all 0.15s ease;
     }
-    .open-web-button:active { transform: scale(0.97); }
+    .open-web-button:active:not(.disabled) { transform: scale(0.97); }
     .open-web-button div { display: flex; align-items: center; gap: 8px; }
     .open-web-button svg { width: 20px; height: 20px; }
 
@@ -373,10 +392,17 @@
       color: var(--text-main);
       font-family: var(--font);
       min-height: 84px;
+      transition: all 0.15s ease;
     }
-    .hw-btn:active {
+    .hw-btn:active:not(.disabled) {
       transform: scale(0.95);
       border-color: var(--border-accent);
+    }
+    .hw-btn.disabled {
+      opacity: 0.35 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      filter: grayscale(0.85) !important;
     }
     .hw-icon-box {
       width: 40px;
@@ -398,6 +424,93 @@
       font-size: 11px;
       font-weight: 600;
       color: var(--text-sub);
+    }
+
+    /* MODEL SELECTOR */
+    .model-select-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .model-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .model-select {
+      flex: 1;
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-radius: 14px;
+      outline: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 16px;
+      padding-right: 38px;
+      transition: border-color 0.15s ease;
+    }
+    .model-select:focus {
+      border-color: var(--accent);
+    }
+    .btn-abort-prompt {
+      background: var(--rose-bg);
+      color: var(--rose);
+      border: 2px solid rgba(239, 68, 68, 0.45);
+      border-radius: 16px;
+      padding: 0 16px;
+      font-size: 13px;
+      font-weight: 800;
+      font-family: var(--font);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .btn-abort-prompt:active { transform: scale(0.95); }
+    .btn-abort-prompt.visible { display: flex; }
+    .console-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+    .console-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-clear-console {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: 8px;
+      transition: color 0.15s ease;
+    }
+    .btn-clear-console:hover {
+      color: var(--text-main);
     }
 
     /* RESCUE PROMPT BAR */
@@ -434,7 +547,11 @@
       align-items: center;
       gap: 6px;
     }
-    .btn-submit-prompt:active { transform: scale(0.95); }
+    .btn-submit-prompt:active:not(:disabled) { transform: scale(0.95); }
+    .btn-submit-prompt:disabled {
+      opacity: 0.4 !important;
+      cursor: not-allowed !important;
+    }
 
     /* CONSOLE */
     .console-display {
@@ -482,7 +599,7 @@
   <!-- TOP BAR -->
   <header class="top-bar">
     <div class="brand-title-box">
-      <img src="/icon.svg?v=9" alt="Bò Tót" class="brand-logo">
+      <img src="/icon.svg?v=11" alt="Bò Tót" class="brand-logo">
       <div class="brand-texts">
         <h1>BÒ TÓT REMOTE</h1>
         <p>Điều Khiển Máy Tính Từ Xa</p>
@@ -508,8 +625,8 @@
       </div>
     </div>
     <div class="status-right">
-      <div class="stat-pill batt" id="batt-box">85% ⚡</div>
-      <div class="stat-pill ram" id="ram-box">RAM 80%</div>
+      <div class="stat-pill batt" id="batt-box">--%</div>
+      <div class="stat-pill ram" id="ram-box">RAM --%</div>
     </div>
   </section>
 
@@ -527,29 +644,29 @@
       <span class="status-tag online" id="hub-status-tag">ĐANG CHẠY</span>
     </div>
 
-    <!-- 3 NÚT BẬT / RESTART / TẮT (TO & RÕ RÀNG) -->
+    <!-- 3 NÚT BẬT / RESTART / TẮT (TỰ ĐỘNG DISABLE THÔNG MINH) -->
     <div class="grid-3-col">
-      <button class="big-btn btn-start" onclick="hubAction('start')">
+      <button class="big-btn btn-start" id="btn-hub-start" onclick="hubAction('start')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Bật Server
+        <span id="text-hub-start">Bật Server</span>
       </button>
-      <button class="big-btn btn-restart" onclick="hubAction('restart')">
+      <button class="big-btn btn-restart" id="btn-hub-restart" onclick="hubAction('restart')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        Restart
+        <span id="text-hub-restart">Restart</span>
       </button>
-      <button class="big-btn btn-stop" onclick="hubAction('stop')">
+      <button class="big-btn btn-stop" id="btn-hub-stop" onclick="hubAction('stop')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Tắt Server
+        <span id="text-hub-stop">Tắt Server</span>
       </button>
     </div>
 
-    <!-- NÚT MỞ GIAO DIỆN WEB (TO ĐÙNG RỰC RỠ) -->
+    <!-- NÚT MỞ GIAO DIỆN WEB (TỰ ĐỘNG DISABLE KHI SERVER TẮT) -->
     <a href="#" target="_blank" class="open-web-button" id="web-portal-link">
       <div>
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-        <span>Mở Giao Diện Web AI Hub (Cổng 20130)</span>
+        <span id="web-portal-text">Mở Giao Diện Web AI Hub (Cổng 20130)</span>
       </div>
-      <span style="font-size: 18px;">➔</span>
+      <span style="font-size: 18px;" id="web-portal-arrow">➔</span>
     </a>
   </section>
 
@@ -562,7 +679,7 @@
 
     <!-- 4 NÚT VUÔNG TO RÕ -->
     <div class="grid-2-col">
-      <div class="hw-btn" onclick="systemAction('screen-off')">
+      <div class="hw-btn" id="btn-sys-screen" onclick="systemAction('screen-off')">
         <div class="hw-icon-box" style="color: var(--accent);">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
         </div>
@@ -572,7 +689,7 @@
         </div>
       </div>
 
-      <div class="hw-btn" onclick="systemAction('lock')">
+      <div class="hw-btn" id="btn-sys-lock" onclick="systemAction('lock')">
         <div class="hw-icon-box" style="color: var(--indigo);">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
         </div>
@@ -582,7 +699,7 @@
         </div>
       </div>
 
-      <div class="hw-btn" onclick="confirmSystemAction('restart')">
+      <div class="hw-btn" id="btn-sys-restart" onclick="confirmSystemAction('restart')">
         <div class="hw-icon-box" style="color: var(--amber);">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         </div>
@@ -592,7 +709,7 @@
         </div>
       </div>
 
-      <div class="hw-btn" onclick="confirmSystemAction('shutdown')">
+      <div class="hw-btn" id="btn-sys-shutdown" onclick="confirmSystemAction('shutdown')">
         <div class="hw-icon-box" style="color: var(--rose);">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a9 9 0 01-12.728 0m12.728 0l-2.829-2.829M8.464 15.536a5 5 0 01-7.072 0m7.072 0l-2.829-2.829"/></svg>
         </div>
@@ -611,12 +728,34 @@
       <span style="font-size: 12px; font-weight: 800; color: var(--amber);">D:\ai-hub</span>
     </div>
 
+    <!-- BỘ CHỌN MODEL AI (ĐẦY ĐỦ 4 MODEL CHUẨN) -->
+    <div class="model-select-row">
+      <span class="model-label">Model AI</span>
+      <select class="model-select" id="model-select" onchange="onModelChange()">
+        <option value="goose-gemini-flash">⚡ Gemini 3.8 Flash (Mặc định - Nhanh)</option>
+        <option value="goose-claude-sonnet">🧠 Claude 3.5 Sonnet (Code chuẩn)</option>
+        <option value="goose-codex">💡 Codex / GPT-6.1 (Logic cao)</option>
+        <option value="claude-code">🤖 Claude Code (Agent độc lập)</option>
+        <option value="goose-gemini-argon">🔥 Gemini 4 Argon High</option>
+      </select>
+    </div>
+
     <div class="prompt-box-row">
-      <input type="text" class="prompt-input-field" id="prompt-field" placeholder="Nhập lệnh cứu hộ hoặc prompt cho AI...">
-      <button class="btn-submit-prompt" onclick="submitPromptCmd()">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-        Gửi
+      <input type="text" class="prompt-input-field" id="prompt-field" placeholder="Nhập lệnh cứu hộ hoặc prompt..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitPromptCmd();}">
+      <button class="btn-abort-prompt" id="btn-abort-prompt" onclick="abortPromptCmd()" title="Dừng prompt khẩn cấp">
+        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        <span>Dừng</span>
       </button>
+      <button class="btn-submit-prompt" id="btn-submit-prompt" onclick="submitPromptCmd()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        <span id="text-btn-prompt">Gửi</span>
+      </button>
+    </div>
+
+    <!-- THANH TIÊU ĐỀ TERMINAL & NÚT XÓA LOG -->
+    <div class="console-header-row">
+      <span class="console-title" id="console-status-text">Terminal Output (Realtime)</span>
+      <button class="btn-clear-console" onclick="clearConsoleLog()">Xóa màn hình</button>
     </div>
 
     <!-- MÀN HÌNH TERMINAL (CHỮ TO RÕ RÀNG) -->
@@ -627,12 +766,12 @@
     // THEME MANAGEMENT
     function setAppTheme(t) {
       document.documentElement.setAttribute("data-theme", t);
-      localStorage.setItem("bo-tot-theme-v9", t);
+      localStorage.setItem("bo-tot-theme-v10", t);
       document.querySelectorAll(".theme-btn").forEach(b => b.classList.remove("active"));
       const el = document.getElementById(`btn-${t}`);
       if (el) el.classList.add("active");
     }
-    setAppTheme(localStorage.getItem("bo-tot-theme-v9") || "dark");
+    setAppTheme(localStorage.getItem("bo-tot-theme-v10") || "dark");
 
     // TOAST NOTIFICATION
     let toastTimer = null;
@@ -652,6 +791,9 @@
       }
     }
 
+    // BIẾN TRẠNG THÁI ĐANG THỰC THI (PENDING STATE)
+    let isHubActionPending = false;
+
     // STATUS POLLING
     let loopId = null;
     async function pullStatus() {
@@ -662,7 +804,6 @@
         
         document.getElementById("host-name").innerText = d.hostname || "Admin-PC";
         document.getElementById("ip-val").innerText = d.tailscaleIp || "100.94.115.99";
-        document.getElementById("web-portal-link").href = `http://${d.tailscaleIp || "100.94.115.99"}:20130`;
 
         if (d.battery) {
           document.getElementById("batt-box").innerText = `${d.battery.percent}% ${d.battery.isCharging ? "⚡" : ""}`;
@@ -671,36 +812,110 @@
           document.getElementById("ram-box").innerText = `RAM ${d.memory.percent}%`;
         }
 
+        // =======================================================
+        // LOGIC DISABLE THÔNG MINH CHO CÁC NÚT BẤM (SMART DISABLE)
+        // =======================================================
+        const isRunning = Boolean(d.aiHub && d.aiHub.running);
         const tag = document.getElementById("hub-status-tag");
-        if (d.aiHub && d.aiHub.running) {
-          tag.className = "status-tag online";
-          tag.innerText = `ĐANG CHẠY (${d.aiHub.pid || "?"})`;
-        } else {
-          tag.className = "status-tag offline";
-          tag.innerText = "ĐÃ DỪNG";
+        const btnStart = document.getElementById("btn-hub-start");
+        const btnRestart = document.getElementById("btn-hub-restart");
+        const btnStop = document.getElementById("btn-hub-stop");
+        const webPortal = document.getElementById("web-portal-link");
+        const webText = document.getElementById("web-portal-text");
+        const webArrow = document.getElementById("web-portal-arrow");
+
+        if (!isHubActionPending) {
+          if (isRunning) {
+            tag.className = "status-tag online";
+            tag.innerText = `ĐANG CHẠY (${d.aiHub.pid || "?"})`;
+            
+            // Server đang chạy -> Disable nút Bật, Cho phép Restart & Tắt
+            btnStart.disabled = true;
+            btnRestart.disabled = false;
+            btnStop.disabled = false;
+
+            // Cho phép mở Web Portal
+            webPortal.classList.remove("disabled");
+            webPortal.href = `http://${d.tailscaleIp || "100.94.115.99"}:20130`;
+            webText.innerText = "Mở Giao Diện Web AI Hub (Cổng 20130)";
+            webArrow.style.display = "inline";
+          } else {
+            tag.className = "status-tag offline";
+            tag.innerText = "ĐÃ DỪNG";
+            
+            // Server đã tắt -> Cho phép Bật, Disable Restart & Tắt
+            btnStart.disabled = false;
+            btnRestart.disabled = true;
+            btnStop.disabled = true;
+
+            // Khóa nút mở Web Portal vì server đã tắt
+            webPortal.classList.add("disabled");
+            webPortal.removeAttribute("href");
+            webText.innerText = "Web AI Hub (Máy chủ đang tắt - Hãy bấm Bật Server)";
+            webArrow.style.display = "none";
+          }
         }
 
+        // Đồng bộ trạng thái Prompt đang chạy từ server
+        const promptStatusTitle = document.getElementById("console-status-text");
+        const btnAbortEl = document.getElementById("btn-abort-prompt");
+        if (d.activePrompt && !isPromptActive) {
+          if (btnAbortEl) btnAbortEl.classList.add("visible");
+          if (promptStatusTitle) promptStatusTitle.innerText = "Đang chạy Agent (" + (d.activePrompt.model || "AI") + ")...";
+        } else if (!d.activePrompt && !isPromptActive) {
+          if (btnAbortEl) btnAbortEl.classList.remove("visible");
+          if (promptStatusTitle) promptStatusTitle.innerText = "Terminal Output (Realtime)";
+        }
+
+        // Đếm ngược tắt máy / restart
         const hud = document.getElementById("emergency-hud");
+        const btnSysRestart = document.getElementById("btn-sys-restart");
+        const btnSysShutdown = document.getElementById("btn-sys-shutdown");
+
         if (d.shutdownState && d.shutdownState.active) {
           hud.style.display = "block";
           document.getElementById("emergency-label").innerText = 
             d.shutdownState.type === "restart" ? "ĐANG CHỜ RESTART MÁY" : "ĐANG CHỜ TẮT MÁY";
           document.getElementById("emergency-countdown").innerText = `${d.shutdownState.secondsLeft}s`;
+          
+          // Disable 2 nút hệ thống khi đang đếm ngược tránh spam lệnh
+          btnSysRestart.classList.add("disabled");
+          btnSysShutdown.classList.add("disabled");
         } else {
           hud.style.display = "none";
+          btnSysRestart.classList.remove("disabled");
+          btnSysShutdown.classList.remove("disabled");
         }
       } catch {}
     }
 
-    // ACTIONS
+    // ACTIONS VỚI TRẠNG THÁI KHÓA CHỐNG DOUBLE-CLICK
     async function hubAction(a) {
-      showToast(`Đang gửi lệnh: ${a}`);
+      if (isHubActionPending) return;
+      isHubActionPending = true;
+
+      const btnStart = document.getElementById("btn-hub-start");
+      const btnRestart = document.getElementById("btn-hub-restart");
+      const btnStop = document.getElementById("btn-hub-stop");
+
+      // Tạm thời disable cả 3 nút trong khi gửi lệnh
+      btnStart.disabled = true;
+      btnRestart.disabled = true;
+      btnStop.disabled = true;
+
+      const actText = a === 'start' ? 'Đang bật server...' : (a === 'stop' ? 'Đang tắt server...' : 'Đang khởi động lại...');
+      showToast(actText);
+
       try {
         const res = await fetch(`/api/hub/${a}`, { method: "POST" });
         const d = await res.json();
         showToast(d.message || "Xong!");
+      } catch (e) {
+        showToast(`Lỗi: ${e.message}`);
+      } finally {
+        isHubActionPending = false;
         pullStatus();
-      } catch (e) { showToast(`Lỗi: ${e.message}`); }
+      }
     }
 
     async function systemAction(a) {
@@ -731,47 +946,150 @@
       } catch (e) { showToast(`Lỗi: ${e.message}`); }
     }
 
-    // PROMPT RUNNER
-    async function submitPromptCmd() {
-      const box = document.getElementById("prompt-field");
-      const p = box.value.trim();
-      if (!p) return showToast("Vui lòng nhập nội dung!");
-      box.value = "";
-      
+    // MODEL SELECTION & PERSISTENCE
+    const modelSelect = document.getElementById("model-select");
+    const savedModel = localStorage.getItem("bo-tot-model-v11") || "goose-gemini-flash";
+    if (modelSelect) {
+      modelSelect.value = savedModel;
+    }
+    function onModelChange() {
+      if (modelSelect) {
+        localStorage.setItem("bo-tot-model-v11", modelSelect.value);
+        showToast("Đã chọn: " + modelSelect.options[modelSelect.selectedIndex].text.split(" ")[1]);
+      }
+    }
+
+    function clearConsoleLog() {
       const con = document.getElementById("console-output");
-      con.innerText += `\n>>> [D:\\ai-hub] ${p}\n`;
+      if (con) {
+        con.innerText = "Đã dọn sạch màn hình console.";
+      }
+    }
+
+    // ABORT PROMPT
+    async function abortPromptCmd() {
+      try {
+        const res = await fetch("/api/prompt/abort", { method: "POST" });
+        const d = await res.json();
+        showToast(d.message || "Đã hủy prompt!");
+        const con = document.getElementById("console-output");
+        if (con) {
+          con.innerText += "\n[DỪNG LỆNH]: " + (d.message || "Đã gửi tín hiệu dừng.") + "\n";
+          con.scrollTop = con.scrollHeight;
+        }
+      } catch (e) {
+        showToast("Lỗi: " + e.message);
+      }
+    }
+
+    // PROMPT RUNNER (CHUẨN SSE STREAM & ERROR HANDLING)
+    let isPromptActive = false;
+    async function submitPromptCmd() {
+      if (isPromptActive) return;
+      const box = document.getElementById("prompt-field");
+      const btn = document.getElementById("btn-submit-prompt");
+      const txt = document.getElementById("text-btn-prompt");
+      const btnAbort = document.getElementById("btn-abort-prompt");
+      const statusTitle = document.getElementById("console-status-text");
+      const p = box.value.trim();
+      if (!p) return showToast("Vui lòng nhập nội dung prompt!");
+
+      const selectedModel = (modelSelect && modelSelect.value) ? modelSelect.value : "goose-gemini-flash";
+      const modelLabel = modelSelect ? modelSelect.options[modelSelect.selectedIndex].text.split(" ")[1] : "AI";
+      
+      box.value = "";
+      box.disabled = true;
+      btn.disabled = true;
+      txt.innerText = "Chạy...";
+      if (btnAbort) btnAbort.classList.add("visible");
+      if (statusTitle) statusTitle.innerText = "Đang chạy (" + modelLabel + ")...";
+      isPromptActive = true;
+
+      const con = document.getElementById("console-output");
+      con.innerText += "\n>>> [" + modelLabel + " @ D:\\ai-hub] " + p + "\n";
       con.scrollTop = con.scrollHeight;
 
       try {
         const res = await fetch("/api/prompt/run", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ workspace: "D:\\ai-hub", model: "goose-gemini-flash", prompt: p })
+          body: JSON.stringify({ workspace: "D:\\ai-hub", model: selectedModel, prompt: p })
         });
+
+        if (!res.ok) {
+          let errMsg = res.statusText;
+          try {
+            const errJson = await res.json();
+            if (errJson && errJson.error) errMsg = errJson.error;
+          } catch {}
+          con.innerText += "\n[LỖI " + res.status + "]: " + errMsg + "\n";
+          con.scrollTop = con.scrollHeight;
+          showToast("Lỗi: " + errMsg);
+          return;
+        }
+
         const reader = res.body.getReader();
-        const dec = new TextDecoder();
-        let buf = "";
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          buf += dec.decode(value, { stream: true });
-          const parts = buf.split("\n\n");
-          buf = parts.pop();
-          for (const item of parts) {
-            const m = item.match(/^data:\s*(.+)$/m);
-            if (m) {
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Tách khối event chuẩn theo đôi dòng trống (CRLF hoặc LF)
+          const blocks = buffer.split(/(?:\r?\n){2}/);
+          buffer = blocks.pop() || "";
+
+          for (const block of blocks) {
+            if (!block.trim()) continue;
+            const lines = block.split(/\r?\n/);
+            let eventType = "log";
+            let dataStr = "";
+
+            for (const line of lines) {
+              if (line.startsWith("event:")) {
+                eventType = line.slice(6).trim();
+              } else if (line.startsWith("data:")) {
+                dataStr = line.slice(5).trim();
+              }
+            }
+
+            if (dataStr) {
               try {
-                const parsed = JSON.parse(m[1]);
-                if (parsed.text) {
-                  con.innerText += parsed.text;
+                const payload = JSON.parse(dataStr);
+                if (eventType === "log" && payload.text) {
+                  con.innerText += payload.text;
+                  con.scrollTop = con.scrollHeight;
+                } else if (eventType === "start") {
+                  con.innerText += "[BẮT ĐẦU AGENT: " + payload.model + "]\n";
+                  con.scrollTop = con.scrollHeight;
+                } else if (eventType === "done") {
+                  con.innerText += "\n[HOÀN TẤT - Exit code: " + payload.code + "]\n";
+                  con.scrollTop = con.scrollHeight;
+                } else if (eventType === "error") {
+                  con.innerText += "\n[LỖI]: " + payload.message + "\n";
                   con.scrollTop = con.scrollHeight;
                 }
-              } catch {}
+              } catch (parseErr) {
+                // Nếu raw text không phải JSON
+                con.innerText += dataStr + "\n";
+                con.scrollTop = con.scrollHeight;
+              }
             }
           }
         }
       } catch (e) {
-        con.innerText += `\n[LỖI] ${e.message}\n`;
+        con.innerText += "\n[LỖI KẾT NỐI]: " + e.message + "\n";
+        con.scrollTop = con.scrollHeight;
+      } finally {
+        isPromptActive = false;
+        box.disabled = false;
+        btn.disabled = false;
+        txt.innerText = "Gửi";
+        if (btnAbort) btnAbort.classList.remove("visible");
+        if (statusTitle) statusTitle.innerText = "Terminal Output (Realtime)";
+        box.focus();
       }
     }
 

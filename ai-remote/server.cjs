@@ -1,5 +1,5 @@
-﻿// ==============================================================================
-// AI HUB REMOTE CONTROLLER DAEMON
+// ==============================================================================
+// AI HUB REMOTE CONTROLLER DAEMON (ANDROID PWA + UPTIME ALERT + POWER SCHEDULER)
 // Lightweight & Resilient Remote Control Service for Windows & Tailscale
 // ==============================================================================
 const http = require("node:http");
@@ -17,6 +17,66 @@ const START_WEB_BAT = path.join(AI_HUB_DIR, "start-web.bat");
 const WORKSPACES_JSON = path.join(AI_HUB_WEB_DIR, "workspaces.json");
 const SCREEN_OFF_EXE = path.join(__dirname, "screen-off.exe");
 const PUBLIC_DIR = path.join(__dirname, "public");
+const CONFIG_FILE = path.join(__dirname, "remote-config.json");
+
+// ==============================================================================
+// CONFIGURATION & PERSISTENT STATE
+// ==============================================================================
+const DEFAULT_CONFIG = {
+  uptimeAlert: {
+    enabled: true,
+    thresholdMinutes: 180,     // Cảnh báo khi máy hoạt động liên tục >= 3 giờ (180 phút)
+    autoShutdownMinutes: 0,    // 0 = chỉ thông báo, >0 = tự tắt máy khi đạt ngưỡng này
+    snoozeUntil: 0,
+    lastAutoShutdownBootId: 0
+  },
+  schedule: {
+    countdownActive: false,
+    countdownTargetAt: 0,
+    countdownDurationMin: 0,
+    countdownAction: "shutdown", // "shutdown" | "restart" | "screen-off" | "lock"
+    dailyEnabled: false,
+    dailyTime: "23:30",          // HH:MM
+    dailyRepeat: "daily",        // "daily" | "once"
+    dailyAction: "shutdown",     // "shutdown" | "restart"
+    lastTriggeredDate: "",
+    waitAiIdle: true             // Đợi phiên AI chạy xong mới tắt máy
+  },
+
+};
+
+function loadConfig() {
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+      const merged = {
+        uptimeAlert: Object.assign({}, DEFAULT_CONFIG.uptimeAlert, raw.uptimeAlert || {}),
+        schedule: Object.assign({}, DEFAULT_CONFIG.schedule, raw.schedule || {})
+      };
+      // Nếu hẹn giờ đếm ngược cũ đã quá hạn khi máy tắt trước đó thì dọn sạch
+      if (merged.schedule.countdownActive && merged.schedule.countdownTargetAt < Date.now() - 60000) {
+        merged.schedule.countdownActive = false;
+        merged.schedule.countdownTargetAt = 0;
+      }
+      return merged;
+    }
+  } catch (err) {
+    console.warn("[CONFIG LOAD WARN]", err.message);
+  }
+  const initial = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  saveConfig(initial);
+  return initial;
+}
+
+function saveConfig(cfg = remoteConfig) {
+  try {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), "utf8");
+  } catch (err) {
+    console.error("[CONFIG SAVE ERROR]", err.message);
+  }
+}
+
+let remoteConfig = loadConfig();
 
 // State management
 let shutdownState = {
@@ -26,18 +86,42 @@ let shutdownState = {
   timerId: null
 };
 
+let waitingForAiIdleReason = null;
 let cachedTailscaleIp = { value: null, lastChecked: 0 };
 let cachedBattery = { value: null, lastChecked: 0 };
+let cachedAiHubStatus = { value: null, lastChecked: 0 };
 let cachedAiHubEnv = null;
 let activePromptJob = null;
 
-// Lấy Tailscale IP từ network interfaces (không tốn tiến trình con)
+function formatDurationVi(totalSeconds) {
+  const sec = Math.max(0, Math.floor(totalSeconds));
+  const days = Math.floor(sec / 86400);
+  const hours = Math.floor((sec % 86400) / 3600);
+  const mins = Math.floor((sec % 3600) / 60);
+  const parts = [];
+  if (days > 0) parts.push(`${days} ngày`);
+  if (hours > 0) parts.push(`${hours} giờ`);
+  if (mins > 0 || parts.length === 0) parts.push(`${mins} phút`);
+  return parts.join(" ");
+}
+
+function getTodayDateString(now = new Date()) {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// ==============================================================================
+// SYSTEM & AI HUB HELPERS
+// ==============================================================================
 function getTailscaleIp() {
   const now = Date.now();
   if (cachedTailscaleIp.value && now - cachedTailscaleIp.lastChecked < 60000) {
     return cachedTailscaleIp.value;
   }
   const nets = os.networkInterfaces();
+  let lanFallback = null;
   for (const name of Object.keys(nets)) {
     for (const netInfo of nets[name]) {
       if (netInfo.family === "IPv4" && !netInfo.internal) {
@@ -45,14 +129,14 @@ function getTailscaleIp() {
           cachedTailscaleIp = { value: netInfo.address, lastChecked: now };
           return netInfo.address;
         }
+        if (!lanFallback) lanFallback = netInfo.address;
       }
     }
   }
-  cachedTailscaleIp = { value: "127.0.0.1", lastChecked: now };
+  cachedTailscaleIp = { value: lanFallback || "127.0.0.1", lastChecked: now };
   return cachedTailscaleIp.value;
 }
 
-// Lấy thông tin pin (cache 30s)
 function getBatteryInfo(callback) {
   const now = Date.now();
   if (cachedBattery.value !== null && now - cachedBattery.lastChecked < 30000) {
@@ -75,32 +159,57 @@ function getBatteryInfo(callback) {
   });
 }
 
-// Kiểm tra xem port 20130 của AI Hub có đang mở không
-function checkAiHubServerStatus() {
+function checkAiHubServerStatus(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && cachedAiHubStatus.value && now - cachedAiHubStatus.lastChecked < 8000) {
+    return Promise.resolve(cachedAiHubStatus.value);
+  }
   return new Promise((resolve) => {
     const socket = new net.Socket();
     socket.setTimeout(800);
     socket.on("connect", () => {
       socket.destroy();
-      // Tìm PID qua netstat
-      exec(`powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 20130 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess"`, { timeout: 1500 }, (err, stdout) => {
+      exec(`powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 20130 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess"`, { timeout: 1500 }, (err, stdout) => {
         const pid = stdout ? parseInt(stdout.trim(), 10) : null;
-        resolve({ running: true, port: 20130, pid: Number.isInteger(pid) ? pid : null });
+        const val = { running: true, port: 20130, pid: Number.isInteger(pid) ? pid : null };
+        cachedAiHubStatus = { value: val, lastChecked: Date.now() };
+        resolve(val);
       });
     });
     socket.on("error", () => {
       socket.destroy();
-      resolve({ running: false, port: 20130, pid: null });
+      const val = { running: false, port: 20130, pid: null };
+      cachedAiHubStatus = { value: val, lastChecked: Date.now() };
+      resolve(val);
     });
     socket.on("timeout", () => {
       socket.destroy();
-      resolve({ running: false, port: 20130, pid: null });
+      const val = { running: false, port: 20130, pid: null };
+      cachedAiHubStatus = { value: val, lastChecked: Date.now() };
+      resolve(val);
     });
     socket.connect(20130, "127.0.0.1");
   });
 }
 
-// Đọc biến môi trường từ start-web.bat
+// Kiểm tra xem có phiên AI nào đang chạy trên AI Remote hoặc AI Hub Web không
+async function isAnyAiSessionRunning() {
+  if (activePromptJob) return true;
+  try {
+    const res = await fetch("http://127.0.0.1:20130/api/sessions", {
+      signal: AbortSignal.timeout(1500)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (Array.isArray(data.sessions) ? data.sessions : []);
+      if (list.some(s => s && (s.isRunning || s.running || s.status === "running"))) {
+        return true;
+      }
+    }
+  } catch {}
+  return false;
+}
+
 function getAiHubEnvironment() {
   if (cachedAiHubEnv) return cachedAiHubEnv;
   try {
@@ -121,9 +230,8 @@ function getAiHubEnvironment() {
   }
 }
 
-// Khởi động server AI Hub
 async function startAiHubServer() {
-  const currentStatus = await checkAiHubServerStatus();
+  const currentStatus = await checkAiHubServerStatus(true);
   if (currentStatus.running) {
     return { ok: true, message: "AI Hub Server đã đang chạy.", pid: currentStatus.pid };
   }
@@ -138,9 +246,8 @@ async function startAiHubServer() {
   });
   child.unref();
 
-  // Đợi 1 giây để socket mở
   await new Promise(r => setTimeout(r, 1000));
-  const newStatus = await checkAiHubServerStatus();
+  const newStatus = await checkAiHubServerStatus(true);
   return {
     ok: newStatus.running,
     message: newStatus.running ? "Khởi động AI Hub Server thành công!" : "Đã kích hoạt khởi động server.",
@@ -148,9 +255,8 @@ async function startAiHubServer() {
   };
 }
 
-// Dừng server AI Hub
 async function stopAiHubServer() {
-  const currentStatus = await checkAiHubServerStatus();
+  const currentStatus = await checkAiHubServerStatus(true);
   if (!currentStatus.running) {
     return { ok: true, message: "AI Hub Server hiện không chạy." };
   }
@@ -162,53 +268,55 @@ async function stopAiHubServer() {
     }
   }
   await new Promise(r => setTimeout(r, 800));
-  const afterStatus = await checkAiHubServerStatus();
+  const afterStatus = await checkAiHubServerStatus(true);
   return {
     ok: !afterStatus.running,
     message: !afterStatus.running ? "Đã tắt AI Hub Server thành công!" : "Đang chờ tắt server..."
   };
 }
 
-// Restart server AI Hub
 async function restartAiHubServer() {
   await stopAiHubServer();
   await new Promise(r => setTimeout(r, 1000));
   return await startAiHubServer();
 }
 
-// Tắt màn hình ngay lập tức (bằng C# exe siêu nhẹ)
 function turnOffScreen() {
   if (fs.existsSync(SCREEN_OFF_EXE)) {
     const child = spawn(SCREEN_OFF_EXE, [], { detached: true, stdio: "ignore" });
     child.unref();
     return { ok: true, message: "Đã tắt màn hình laptop." };
   } else {
-    // Fallback PowerShell
     const cmd = `powershell -NoProfile -Command "(Add-Type '[DllImport(\\"user32.dll\\")]public static extern int SendMessage(int hWnd,int hMsg,int wParam,int lParam);' -Name a -Pas)::SendMessage(-1,0x0112,0xF170,2)"`;
     exec(cmd);
     return { ok: true, message: "Đã tắt màn hình laptop (PowerShell)." };
   }
 }
 
-// Khóa máy
 function lockWindows() {
   exec("rundll32.exe user32.dll,LockWorkStation");
   return { ok: true, message: "Đã khóa màn hình laptop." };
 }
 
-// Bắt đầu đếm ngược tắt máy / restart máy (an toàn 2 lớp)
-function triggerSystemShutdown(type = "shutdown", seconds = 30) {
+function triggerSystemShutdown(type = "shutdown", seconds = 30, reasonText = "") {
+  if (type === "screen-off") {
+    return turnOffScreen();
+  }
+  if (type === "lock") {
+    return lockWindows();
+  }
   if (shutdownState.active) {
     abortSystemShutdown();
   }
+  const safeSeconds = Math.max(5, Math.min(3600, Math.floor(Number(seconds) || 30)));
   const flag = type === "restart" ? "/r" : "/s";
-  const comment = type === "restart" ? "Yeu cau Restart tu AI Remote" : "Yeu cau Tat May tu AI Remote";
-  exec(`shutdown.exe ${flag} /t ${seconds} /c "${comment}"`);
+  const comment = reasonText || (type === "restart" ? "Yeu cau Restart tu Bo Tot Remote" : "Yeu cau Tat May tu Bo Tot Remote");
+  exec(`shutdown.exe ${flag} /t ${safeSeconds} /c "${comment}"`);
 
   shutdownState = {
     active: true,
     type: type,
-    secondsLeft: seconds,
+    secondsLeft: safeSeconds,
     timerId: setInterval(() => {
       shutdownState.secondsLeft -= 1;
       if (shutdownState.secondsLeft <= 0) {
@@ -218,15 +326,17 @@ function triggerSystemShutdown(type = "shutdown", seconds = 30) {
     }, 1000)
   };
 
+  const actionVi = type === "restart" ? "khởi động lại" : "tắt máy";
+
+
   return {
     ok: true,
     type: type,
-    secondsLeft: seconds,
-    message: `Đang chuẩn bị ${type === "restart" ? "khởi động lại" : "tắt"} máy sau ${seconds} giây. Bạn có thể bấm HỦY trên điện thoại.`
+    secondsLeft: safeSeconds,
+    message: `Đang chuẩn bị ${actionVi} sau ${safeSeconds} giây. Bạn có thể bấm HỦY trên điện thoại.`
   };
 }
 
-// Hủy đếm ngược tắt máy
 function abortSystemShutdown() {
   exec("shutdown.exe /a");
   if (shutdownState.timerId) {
@@ -238,11 +348,96 @@ function abortSystemShutdown() {
     secondsLeft: 0,
     timerId: null
   };
+  waitingForAiIdleReason = null;
   return { ok: true, message: "Đã hủy tắt máy thành công!" };
 }
 
-// Đọc danh sách workspaces
-// Cac model co san tren 9Router (chuan theo AI Hub)
+// ==============================================================================
+// BACKGROUND MONITOR: UPTIME ALERT & POWER SCHEDULER (CHẠY MỖI 10 GIÂY)
+// ==============================================================================
+async function evaluateUptimeAndSchedules() {
+  const now = Date.now();
+  const uptimeSec = Math.floor(os.uptime());
+  const uptimeMin = Math.floor(uptimeSec / 60);
+  const upCfg = remoteConfig.uptimeAlert;
+  const schCfg = remoteConfig.schedule;
+
+  // 1. KIỂM TRA CẢNH BÁO MÁY HOẠT ĐỘNG LÂU (UPTIME ALERT)
+  if (upCfg.enabled && upCfg.thresholdMinutes > 0 && uptimeMin >= upCfg.thresholdMinutes) {
+    const isSnoozed = upCfg.snoozeUntil && now < upCfg.snoozeUntil;
+    // Tự động tắt máy nếu vượt ngưỡng autoShutdownMinutes
+    if (upCfg.autoShutdownMinutes > 0 && uptimeMin >= upCfg.autoShutdownMinutes && !shutdownState.active && ! isSnoozed) {
+      const bootId = Math.floor((now - uptimeSec * 1000) / 60000);
+      if (upCfg.lastAutoShutdownBootId !== bootId) {
+        if (schCfg.waitAiIdle && await isAnyAiSessionRunning()) {
+          waitingForAiIdleReason = `Đang đợi phiên AI hoàn tất để tự tắt máy (đã chạy ${formatDurationVi(uptimeSec)})`;
+        } else {
+          waitingForAiIdleReason = null;
+          upCfg.lastAutoShutdownBootId = bootId;
+          saveConfig();
+          triggerSystemShutdown("shutdown", 60, `Tu dong tat may do hoat dong qua ${upCfg.autoShutdownMinutes} phut`);
+        }
+      }
+    }
+  }
+
+  // 2. KIỂM TRA HẸN GIỜ ĐẾM NGƯỢC (COUNTDOWN SCHEDULE)
+  if (schCfg.countdownActive && schCfg.countdownTargetAt > 0) {
+    const msLeft = schCfg.countdownTargetAt - now;
+
+    // Đến giờ thực thi
+    if (msLeft <= 0) {
+      if (schCfg.waitAiIdle && (schCfg.countdownAction === "shutdown" || schCfg.countdownAction === "restart") && await isAnyAiSessionRunning()) {
+        waitingForAiIdleReason = "Đã đến giờ hẹn tắt máy — đang đợi phiên AI chạy xong...";
+      } else {
+        waitingForAiIdleReason = null;
+        const actionToRun = schCfg.countdownAction || "shutdown";
+        schCfg.countdownActive = false;
+        schCfg.countdownTargetAt = 0;
+        saveConfig();
+        triggerSystemShutdown(actionToRun, 45, "Thuc thi hen gio tu Bo Tot Remote");
+      }
+    }
+  }
+
+  // 3. KIỂM TRA LỊCH TẮT CỐ ĐỊNH HÀNG NGÀY (DAILY SCHEDULE)
+  if (schCfg.dailyEnabled && schCfg.dailyTime) {
+    const d = new Date(now);
+    const todayStr = getTodayDateString(d);
+    const [targetH, targetM] = String(schCfg.dailyTime).split(":").map(Number);
+
+    if (Number.isInteger(targetH) && Number.isInteger(targetM)) {
+      const targetToday = new Date(d.getFullYear(), d.getMonth(), d.getDate(), targetH, targetM, 0, 0).getTime();
+      const diffMs = targetToday - now;
+
+      // Đến giờ hẹn (trong cửa sổ 15 phút kể từ giờ hẹn và chưa chạy hôm nay)
+      if (diffMs <= 0 && diffMs >= -900000 && schCfg.lastTriggeredDate !== todayStr && !shutdownState.active) {
+        if (schCfg.waitAiIdle && await isAnyAiSessionRunning()) {
+          waitingForAiIdleReason = `Đến lịch ${schCfg.dailyTime} — đang đợi phiên AI chạy xong...`;
+        } else {
+          waitingForAiIdleReason = null;
+          schCfg.lastTriggeredDate = todayStr;
+          if (schCfg.dailyRepeat === "once") {
+            schCfg.dailyEnabled = false;
+          }
+          saveConfig();
+          triggerSystemShutdown(schCfg.dailyAction || "shutdown", 45, `Lich tat may dinh ky luc ${schCfg.dailyTime}`);
+        }
+      }
+    }
+  }
+}
+
+setInterval(() => {
+  evaluateUptimeAndSchedules().catch(err => console.warn("[SCHEDULER WARN]", err.message));
+}, 10000);
+
+// ==============================================================================
+// BRIDGE: LẮNG NGHE SỰ KIỆN HOÀN TẤT PHIÊN TỪ AI HUB WEB (PORT 20130)
+// ==============================================================================
+// ==============================================================================
+// MODELS & WORKSPACES
+// ==============================================================================
 const AVAILABLE_MODELS = [
   { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", badge: "Mặc định", icon: "gemini", default: true },
   { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", badge: "Khuyên dùng", icon: "claude" },
@@ -263,6 +458,48 @@ function getWorkspaces() {
   return [AI_HUB_DIR, "C:\\Users\\Admin\\OneDrive\\Desktop"];
 }
 
+function buildStatusScheduleSummary() {
+  const now = Date.now();
+  const uptimeSeconds = Math.floor(os.uptime());
+  const uptimeMinutes = Math.floor(uptimeSeconds / 60);
+  const upCfg = remoteConfig.uptimeAlert;
+  const schCfg = remoteConfig.schedule;
+  const countdownRemainingSec = (schCfg.countdownActive && schCfg.countdownTargetAt > now)
+    ? Math.max(0, Math.ceil((schCfg.countdownTargetAt - now) / 1000))
+    : 0;
+  const snoozeRemainingSec = (upCfg.snoozeUntil && upCfg.snoozeUntil > now)
+    ? Math.max(0, Math.ceil((upCfg.snoozeUntil - now) / 1000))
+    : 0;
+
+  return {
+    uptimeSeconds,
+    uptimeMinutes,
+    uptimeFormatted: formatDurationVi(uptimeSeconds),
+    bootTime: now - uptimeSeconds * 1000,
+    uptimeAlert: {
+      enabled: upCfg.enabled,
+      thresholdMinutes: upCfg.thresholdMinutes,
+      autoShutdownMinutes: upCfg.autoShutdownMinutes,
+      isOverThreshold: Boolean(upCfg.enabled && upCfg.thresholdMinutes > 0 && uptimeMinutes >= upCfg.thresholdMinutes),
+      snoozeRemainingSec,
+    },
+    schedule: {
+      countdownActive: schCfg.countdownActive && countdownRemainingSec > 0,
+      countdownTargetAt: schCfg.countdownTargetAt,
+      countdownRemainingSec,
+      countdownDurationMin: schCfg.countdownDurationMin,
+      countdownAction: schCfg.countdownAction,
+      dailyEnabled: schCfg.dailyEnabled,
+      dailyTime: schCfg.dailyTime,
+      dailyRepeat: schCfg.dailyRepeat,
+      dailyAction: schCfg.dailyAction,
+      waitAiIdle: schCfg.waitAiIdle,
+      waitingForAiIdleReason
+    },
+
+  };
+}
+
 // MIME types cho file tĩnh PWA
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -279,7 +516,6 @@ const MIME_TYPES = {
 // HTTP SERVER & ROUTING
 // ==============================================================================
 const server = http.createServer((req, res) => {
-  // CORS header cho phép mọi origin nội bộ trong mạng Tailscale
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -292,12 +528,11 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   const pathname = url.pathname;
 
-  // JSON Body Parser helper
   const readJson = () => new Promise((resolve, reject) => {
     let body = "";
     req.on("data", chunk => { body += chunk; if (body.length > 1e6) req.destroy(); });
     req.on("end", () => {
-      try { resolve(body ? JSON.parse(body) : {}); } catch (e) { resolve({}); }
+      try { resolve(body ? JSON.parse(body) : {}); } catch { resolve({}); }
     });
     req.on("error", reject);
   });
@@ -307,9 +542,7 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify(data));
   };
 
-  // --- API ROUTES ---
-
-  // 1. Trạng thái tổng quan hệ thống & AI Hub
+  // --- 1. TRẠNG THÁI TỔNG QUAN HỆ THỐNG, UPTIME, LỊCH TẮT & AI HUB ---
   if (req.method === "GET" && pathname === "/api/status") {
     getBatteryInfo(async (battery) => {
       const hubStatus = await checkAiHubServerStatus();
@@ -317,11 +550,10 @@ const server = http.createServer((req, res) => {
       const freeMem = os.freemem();
       const usedMem = totalMem - freeMem;
       const memPercent = Math.round((usedMem / totalMem) * 100);
-
-      // CPU load (ước tính từ cpus)
       const cpus = os.cpus();
       const cpuCount = cpus.length;
       const cpuModel = cpus[0] ? cpus[0].model.trim() : "Unknown CPU";
+      const summary = buildStatusScheduleSummary();
 
       sendJson({
         tailscaleIp: getTailscaleIp(),
@@ -344,14 +576,114 @@ const server = http.createServer((req, res) => {
           workspace: activePromptJob.workspace,
           model: activePromptJob.model,
           startedAt: activePromptJob.startedAt
-        } : null
+        } : null,
+        ...summary
       });
     });
     return;
   }
 
-  // 2. Danh sách workspaces
-    // Danh sach model AI chuan he thong
+  // --- 2. CẤU HÌNH CẢNH BÁO UPTIME, LỊCH TẮT MÁY & THÔNG BÁO ANDROID ---
+  if (req.method === "GET" && pathname === "/api/config") {
+    return sendJson({
+      ok: true,
+      config: remoteConfig
+    });
+  }
+
+  if (req.method === "POST" && pathname === "/api/config") {
+    readJson().then((body) => {
+      if (body.uptimeAlert && typeof body.uptimeAlert === "object") {
+        const u = body.uptimeAlert;
+        if (typeof u.enabled === "boolean") remoteConfig.uptimeAlert.enabled = u.enabled;
+        if (typeof u.thresholdMinutes === "number") remoteConfig.uptimeAlert.thresholdMinutes = Math.max(10, Math.min(2880, Math.round(u.thresholdMinutes)));
+        if (typeof u.autoShutdownMinutes === "number") remoteConfig.uptimeAlert.autoShutdownMinutes = Math.max(0, Math.min(2880, Math.round(u.autoShutdownMinutes)));
+      }
+      if (body.schedule && typeof body.schedule === "object") {
+        const s = body.schedule;
+        if (typeof s.dailyEnabled === "boolean") remoteConfig.schedule.dailyEnabled = s.dailyEnabled;
+        if (typeof s.dailyTime === "string" && /^\d{2}:\d{2}$/.test(s.dailyTime.trim())) {
+          remoteConfig.schedule.dailyTime = s.dailyTime.trim();
+          remoteConfig.schedule.lastTriggeredDate = "";
+        }
+        if (s.dailyRepeat === "daily" || s.dailyRepeat === "once") remoteConfig.schedule.dailyRepeat = s.dailyRepeat;
+        if (s.dailyAction === "shutdown" || s.dailyAction === "restart") remoteConfig.schedule.dailyAction = s.dailyAction;
+        if (typeof s.waitAiIdle === "boolean") remoteConfig.schedule.waitAiIdle = s.waitAiIdle;
+      }
+      saveConfig();
+      evaluateUptimeAndSchedules().catch(() => {});
+      sendJson({
+        ok: true,
+        message: "Đã lưu cấu hình thành công!",
+        ...buildStatusScheduleSummary()
+      });
+    });
+    return;
+  }
+
+  // Đặt / Hủy hẹn giờ đếm ngược tắt máy
+  if (req.method === "POST" && pathname === "/api/schedule/countdown") {
+    readJson().then((body) => {
+      const minutes = Number(body.minutes) || 0;
+      const action = ["shutdown", "restart", "screen-off", "lock"].includes(body.action) ? body.action : "shutdown";
+      if (body.cancel || minutes <= 0) {
+        remoteConfig.schedule.countdownActive = false;
+        remoteConfig.schedule.countdownTargetAt = 0;
+        remoteConfig.schedule.countdownDurationMin = 0;
+        waitingForAiIdleReason = null;
+        saveConfig();
+        return sendJson({
+          ok: true,
+          message: "Đã hủy hẹn giờ đếm ngược.",
+          ...buildStatusScheduleSummary()
+        });
+      }
+
+      const safeMin = Math.max(1, Math.min(1440, Math.round(minutes)));
+      const targetAt = Date.now() + safeMin * 60000;
+      remoteConfig.schedule.countdownActive = true;
+      remoteConfig.schedule.countdownTargetAt = targetAt;
+      remoteConfig.schedule.countdownDurationMin = safeMin;
+      remoteConfig.schedule.countdownAction = action;
+      if (typeof body.waitAiIdle === "boolean") {
+        remoteConfig.schedule.waitAiIdle = body.waitAiIdle;
+      }
+      saveConfig();
+
+      const actionLabel = action === "restart" ? "khởi động lại" : (action === "screen-off" ? "tắt màn hình" : (action === "lock" ? "khóa máy" : "tắt máy"));
+      const timeStr = new Date(targetAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+      sendJson({
+        ok: true,
+        message: `Đã hẹn giờ ${actionLabel} sau ${safeMin} phút (${timeStr}).`,
+        ...buildStatusScheduleSummary()
+      });
+    });
+    return;
+  }
+
+  // Tạm hoãn cảnh báo máy hoạt động lâu hoặc lùi hẹn giờ tắt máy
+  if (req.method === "POST" && pathname === "/api/schedule/snooze") {
+    readJson().then((body) => {
+      const minutes = Math.max(5, Math.min(720, Number(body.minutes) || 60));
+      const now = Date.now();
+      remoteConfig.uptimeAlert.snoozeUntil = now + minutes * 60000;
+      if (remoteConfig.schedule.countdownActive && remoteConfig.schedule.countdownTargetAt > now) {
+        remoteConfig.schedule.countdownTargetAt += minutes * 60000;
+      }
+      if (shutdownState.active) {
+        abortSystemShutdown();
+      }
+      saveConfig();
+      sendJson({
+        ok: true,
+        message: `Đã tạm hoãn cảnh báo trong ${minutes} phút.`,
+        ...buildStatusScheduleSummary()
+      });
+    });
+    return;
+  }
+
+  // 2. Danh sách workspaces & models
   if (req.method === "GET" && pathname === "/api/models") {
     return sendJson({ models: AVAILABLE_MODELS });
   }
@@ -424,9 +756,8 @@ const server = http.createServer((req, res) => {
       }
 
       const targetDir = (workspace && fs.existsSync(workspace)) ? workspace : AI_HUB_DIR;
-      const env = getAiHubEnvironment();
+      const env = Object.assign({}, getAiHubEnvironment());
 
-      // Setup Server-Sent Events (SSE)
       res.writeHead(200, {
         "Content-Type": "text/event-stream; charset=utf-8",
         "Cache-Control": "no-cache",
@@ -439,7 +770,6 @@ const server = http.createServer((req, res) => {
 
       sendEvent("start", { workspace: targetDir, model, prompt });
 
-      // Xác định câu lệnh chạy theo Model
       let execCmd = "";
       let execArgs = [];
 
@@ -450,10 +780,8 @@ const server = http.createServer((req, res) => {
         execCmd = (process.platform === "win32" ? "claude.cmd" : "claude");
         execArgs = ["-p", prompt];
       } else {
-        // Goose model
         execCmd = gooseExe;
         let gooseModel = model || "ag/gemini-3.8-flash";
-        // Fallback cho cac alias cu neu co
         if (model === "goose-gemini-flash") gooseModel = "ag/gemini-3.8-flash";
         else if (model === "goose-claude-sonnet") gooseModel = "ag/claude-sonnet-5-5-high";
         else if (model === "goose-codex") gooseModel = "cx/gpt-6.1-sol";
@@ -491,6 +819,7 @@ const server = http.createServer((req, res) => {
         activePromptJob = null;
         sendEvent("done", { code: code });
         res.end();
+
       });
 
       child.on("error", err => {
@@ -499,9 +828,7 @@ const server = http.createServer((req, res) => {
         res.end();
       });
 
-      req.on("close", () => {
-        // Client disconnect nhưng không kill ngay nếu user muốn chạy ngầm
-      });
+      req.on("close", () => {});
     });
     return;
   }
@@ -515,12 +842,11 @@ const server = http.createServer((req, res) => {
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
-      // Fallback về index.html cho SPA nếu không tìm thấy
       filePath = path.join(PUBLIC_DIR, "index.html");
     }
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
-    const isDynamic = (ext === ".html" || ext === ".js" || ext === ".json" || ext === ".svg");
+    const isDynamic = (ext === ".html" || ext === ".js" || ext === ".json" || ext === ".webmanifest" || ext === ".svg");
     res.writeHead(200, {
       "Content-Type": contentType,
       "Cache-Control": isDynamic ? "no-cache, no-store, must-revalidate, max-age=0" : "public, max-age=86400",

@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Bò Tót">
+  <meta name="theme-color" content="#090a10">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  
-  <link rel="manifest" href="/manifest.json?v=15">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=15">
-  <link rel="apple-touch-icon" href="/icon.svg?v=15">
+
+  <link rel="manifest" href="/manifest.json?v=16">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=16">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=16">
+  <link rel="apple-touch-icon" href="/icon-192.png?v=16">
   <title>Bò Tót Remote Controller</title>
 
   <!-- FONT BE VIETNAM PRO & JETBRAINS MONO -->
@@ -33,11 +36,11 @@
       --card-inner: #1c2030;
       --border: rgba(255, 255, 255, 0.14);
       --border-accent: rgba(56, 189, 248, 0.45);
-      
+
       --text-main: #ffffff;
       --text-sub: #cbd5e1;
       --text-dim: #94a3b8;
-      
+
       --accent: #38bdf8;
       --accent-btn: #0284c7;
       --emerald: #10b981;
@@ -63,11 +66,11 @@
       --card-inner: #f0e6d6;
       --border: #dfd0bb;
       --border-accent: #c26100;
-      
+
       --text-main: #2a1406;
       --text-sub: #543015;
       --text-dim: #7c4d28;
-      
+
       --accent: #c26100;
       --accent-btn: #d97706;
       --emerald: #059669;
@@ -93,11 +96,11 @@
       --card-inner: #f8fafc;
       --border: #cbd5e1;
       --border-accent: #0284c7;
-      
+
       --text-main: #0f172a;
       --text-sub: #334155;
       --text-dim: #64748b;
-      
+
       --accent: #0284c7;
       --accent-btn: #0284c7;
       --emerald: #059669;
@@ -125,7 +128,7 @@
       font-family: var(--font);
       background: var(--bg);
       color: var(--text-main);
-      padding: 12px 14px 40px;
+      padding: 12px 14px 44px;
       max-width: 480px;
       margin: 0 auto;
       min-height: 100vh;
@@ -144,6 +147,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      cursor: pointer;
     }
     .brand-logo {
       width: 42px;
@@ -189,6 +193,56 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
+    /* INSTALL PWA BANNER */
+    .install-app-banner {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.22), rgba(16, 185, 129, 0.18));
+      border: 2px solid var(--border-accent);
+      border-radius: 18px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: var(--card-shadow);
+    }
+    .install-app-banner.visible {
+      display: flex;
+    }
+    .install-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+    .install-banner-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .install-banner-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--text-main);
+    }
+    .install-banner-desc {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+    .btn-install-pwa {
+      background: var(--accent-btn);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     /* STATUS BANNER */
     .status-card {
       background: var(--card-bg);
@@ -197,9 +251,15 @@
       padding: 12px 14px;
       margin-bottom: 14px;
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--card-shadow);
+    }
+    .status-top-row {
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: var(--card-shadow);
+      gap: 8px;
     }
     .status-left {
       display: flex;
@@ -213,6 +273,7 @@
       border-radius: 50%;
       box-shadow: 0 0 10px var(--emerald);
       animation: pulse 2s infinite;
+      flex-shrink: 0;
     }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     .host-name {
@@ -230,6 +291,8 @@
     }
     .status-right {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
       gap: 6px;
     }
     .stat-pill {
@@ -240,9 +303,55 @@
       border-radius: 10px;
       background: var(--card-inner);
       border: 1px solid var(--border);
+      white-space: nowrap;
     }
     .stat-pill.batt { color: var(--emerald); }
     .stat-pill.ram { color: var(--amber); }
+    .stat-pill.uptime {
+      color: var(--accent);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .stat-pill.uptime.warn {
+      color: var(--rose);
+      background: var(--rose-bg);
+      border-color: var(--rose);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* STATUS SCHEDULE SUB-BAR */
+    .status-sub-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
+    .status-sub-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-sub-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: var(--card-inner);
+      color: var(--accent);
+    }
+    .status-sub-badge.active-timer {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
 
     /* EMERGENCY COUNTDOWN HUD */
     .emergency-hud {
@@ -269,6 +378,63 @@
       border-radius: 14px;
       cursor: pointer;
       width: 100%;
+    }
+
+    /* IN-APP UPTIME / SCHEDULE ALERT BANNER */
+    .uptime-alert-banner {
+      background: var(--amber-bg);
+      border: 2px solid var(--amber);
+      border-radius: 18px;
+      padding: 13px 14px;
+      margin-bottom: 14px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--card-shadow);
+    }
+    .uptime-alert-banner.visible {
+      display: flex;
+    }
+    .uptime-alert-title {
+      font-size: 13.5px;
+      font-weight: 900;
+      color: var(--amber);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .uptime-alert-desc {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.35;
+    }
+    .uptime-alert-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-alert-shutdown {
+      background: var(--rose);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 10px;
+      font-family: var(--font);
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-alert-snooze {
+      background: var(--card-inner);
+      color: var(--text-main);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      font-family: var(--font);
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
     }
 
     /* =============================================================
@@ -319,7 +485,7 @@
     }
 
     /* =============================================================
-       TRANG CHỦ (VIEW 1): 3 NÚT LỚN CHỐNG BẤM NHẦM
+       TRANG CHỦ (VIEW 1): 4 NÚT LỚN CHỐNG BẤM NHẦM
        ============================================================= */
     .home-grid {
       display: flex;
@@ -330,7 +496,7 @@
       background: var(--card-bg);
       border: 2.5px solid var(--border);
       border-radius: 22px;
-      padding: 18px 16px;
+      padding: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -339,7 +505,7 @@
       transition: all 0.18s ease;
       text-decoration: none;
       color: var(--text-main);
-      min-height: 100px;
+      min-height: 94px;
     }
     .hub-nav-tile:active {
       transform: scale(0.97);
@@ -353,8 +519,8 @@
       overflow: hidden;
     }
     .hub-tile-icon-box {
-      width: 52px;
-      height: 52px;
+      width: 50px;
+      height: 50px;
       border-radius: 16px;
       display: flex;
       align-items: center;
@@ -362,8 +528,8 @@
       flex-shrink: 0;
       border: 1.5px solid transparent;
     }
-    .hub-tile-icon-box svg { width: 28px; height: 28px; }
-    
+    .hub-tile-icon-box svg { width: 26px; height: 26px; }
+
     .hub-tile-texts {
       display: flex;
       flex-direction: column;
@@ -374,9 +540,10 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
     .hub-tile-title {
-      font-size: 16px;
+      font-size: 15.5px;
       font-weight: 900;
       color: var(--text-main);
       line-height: 1.2;
@@ -402,10 +569,13 @@
       margin-left: 8px;
     }
 
-    /* THEME MAU CHO 3 TILE */
+    /* THEME MÀU CHO 4 TILE */
+    .tile-schedule .hub-tile-icon-box { background: var(--indigo-bg); color: var(--indigo); border-color: rgba(129, 140, 248, 0.35); }
+    .tile-schedule .hub-tile-badge { background: var(--indigo-bg); color: var(--indigo); }
+
     .tile-hub .hub-tile-icon-box { background: var(--emerald-bg); color: var(--emerald); border-color: rgba(16, 185, 129, 0.3); }
     .tile-hub .hub-tile-badge { background: var(--emerald-bg); color: var(--emerald); }
-    
+
     .tile-system .hub-tile-icon-box { background: rgba(56, 189, 248, 0.16); color: var(--accent); border-color: rgba(56, 189, 248, 0.3); }
     .tile-system .hub-tile-badge { background: rgba(56, 189, 248, 0.16); color: var(--accent); }
 
@@ -428,6 +598,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 14px;
+      gap: 8px;
     }
     .section-title {
       font-size: 15px;
@@ -442,9 +613,11 @@
       padding: 3px 10px;
       border-radius: 12px;
       text-transform: uppercase;
+      white-space: nowrap;
     }
     .status-tag.online { background: var(--emerald-bg); color: var(--emerald); border: 1px solid var(--emerald); }
     .status-tag.offline { background: var(--rose-bg); color: var(--rose); border: 1px solid var(--rose); }
+    .status-tag.warn { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber); }
 
     /* GRIDS */
     .grid-3-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
@@ -542,6 +715,259 @@
     .hw-btn .hw-text-desc { font-size: 11px; font-weight: 600; color: var(--text-sub); }
 
     /* =============================================================
+       UPTIME & POWER SCHEDULER UI STYLES
+       ============================================================= */
+    .uptime-hero-box {
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .uptime-hero-box.over-threshold {
+      border-color: var(--amber);
+      background: var(--amber-bg);
+    }
+    .uptime-hero-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-dim);
+      margin-bottom: 2px;
+    }
+    .uptime-hero-value {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1.15;
+    }
+    .uptime-hero-box.over-threshold .uptime-hero-value {
+      color: var(--amber);
+    }
+    .uptime-hero-sub {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-top: 3px;
+    }
+
+    /* CHIP PRESET SELECTOR */
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .chip-btn {
+      background: var(--card-inner);
+      border: 1.5px solid var(--border);
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 12.5px;
+      font-weight: 800;
+      padding: 10px 6px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .chip-btn:active { transform: scale(0.96); }
+    .chip-btn.selected {
+      background: var(--emerald-bg);
+      border-color: var(--emerald);
+      color: var(--emerald);
+    }
+    .chip-btn.accent-selected {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ACTIVE COUNTDOWN DISPLAY */
+    .countdown-active-box {
+      background: var(--amber-bg);
+      border: 2px solid var(--amber);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .countdown-active-box.visible {
+      display: flex;
+    }
+    .countdown-time-big {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--amber);
+      text-align: center;
+    }
+    .countdown-sub-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-align: center;
+    }
+    .countdown-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 8px;
+    }
+
+    /* FORM CONTROLS */
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .form-label-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+    .form-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .form-desc {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+    .form-input, .form-select {
+      background: var(--card-inner);
+      border: 1.5px solid var(--border);
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 10px;
+      border-radius: 12px;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+    }
+    .form-input.mono {
+      font-family: var(--mono);
+    }
+
+    /* TOGGLE SWITCH */
+    .switch-toggle {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .switch-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--card-inner);
+      border: 1.5px solid var(--border);
+      transition: 0.2s;
+      border-radius: 26px;
+    }
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 2.5px;
+      background-color: var(--text-dim);
+      transition: 0.2s;
+      border-radius: 50%;
+    }
+    .switch-toggle input:checked + .switch-slider {
+      background-color: var(--emerald-bg);
+      border-color: var(--emerald);
+    }
+    .switch-toggle input:checked + .switch-slider:before {
+      transform: translateX(21px);
+      background-color: var(--emerald);
+    }
+
+    .btn-primary-full {
+      width: 100%;
+      background: var(--accent-btn);
+      color: #ffffff;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-family: var(--font);
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .btn-primary-full:active { transform: scale(0.97); }
+    .btn-secondary-full {
+      width: 100%;
+      background: var(--card-inner);
+      color: var(--text-main);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 11px 16px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .topic-copy-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .topic-copy-row input {
+      flex: 1;
+    }
+    .btn-small-action {
+      background: var(--card-inner);
+      border: 1.5px solid var(--border);
+      color: var(--accent);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 0 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* =============================================================
        MODEL SELECTOR TRIGGER BOX (MỞ POPUP)
        ============================================================= */
     .model-trigger-card {
@@ -586,7 +1012,7 @@
     .model-trigger-name { font-size: 14px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .model-trigger-badge { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); color: var(--text-sub); }
     .model-trigger-tag { font-size: 11px; font-weight: 600; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
+
     .model-trigger-action {
       display: flex;
       align-items: center;
@@ -689,7 +1115,7 @@
     }
 
     /* =============================================================
-       MODAL POPUP DIALOG (CĂN GIỮA 100% - CUSTOM SCROLLBAR CAO CẤP)
+       MODAL POPUP DIALOG
        ============================================================= */
     .modal-overlay {
       position: fixed;
@@ -702,8 +1128,8 @@
       -webkit-backdrop-filter: blur(14px);
       z-index: 2500;
       display: none;
-      align-items: center;     /* CĂN CHÍNH GIỮA THEO CHIỀU DỌC */
-      justify-content: center; /* CĂN CHÍNH GIỮA THEO CHIỀU NGANG */
+      align-items: center;
+      justify-content: center;
       padding: 18px 14px;
       opacity: 0;
       transition: opacity 0.22s ease;
@@ -713,7 +1139,6 @@
       opacity: 1;
     }
 
-    /* Modal Dialog Căn Giữa Hoàn Chỉnh */
     .modal-dialog {
       width: 100%;
       max-width: 440px;
@@ -776,7 +1201,6 @@
     }
     .modal-close-btn:active { transform: scale(0.92); border-color: var(--accent); }
 
-    /* DANH SÁCH VỚI THANH CUỘN ĐƯỢC TÙY BIẾN HOÀN TOÀN (CUSTOM SCROLLBAR) */
     .modal-list {
       overflow-y: auto;
       overscroll-behavior: contain;
@@ -790,29 +1214,13 @@
       max-height: calc(82vh - 90px);
     }
 
-    /* THANH CUỘN TINH TẾ THAY THẾ THANH CUỘN MẶC ĐỊNH */
-    .modal-list::-webkit-scrollbar {
-      width: 5px;
-    }
-    .modal-list::-webkit-scrollbar-track {
-      background: transparent;
-    }
+    .modal-list::-webkit-scrollbar { width: 5px; }
+    .modal-list::-webkit-scrollbar-track { background: transparent; }
     .modal-list::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.16);
       border-radius: 10px;
-      transition: background 0.2s ease;
-    }
-    .modal-list::-webkit-scrollbar-thumb:hover {
-      background: var(--accent);
-    }
-    [data-theme="warm"] .modal-list::-webkit-scrollbar-thumb {
-      background: rgba(180, 83, 9, 0.25);
-    }
-    [data-theme="light"] .modal-list::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.16);
     }
 
-    /* CÁC ITEM CARD MODEL */
     .modal-item {
       display: flex;
       align-items: center;
@@ -866,7 +1274,6 @@
     .modal-item-badge { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: var(--text-sub); }
     .modal-item-desc { font-size: 11px; font-weight: 600; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* NÚT RADIO / CHECKMARK XANH NGỌC SẮC NÉT */
     .modal-radio-circle {
       width: 22px;
       height: 22px;
@@ -898,34 +1305,37 @@
       position: fixed;
       top: max(16px, env(safe-area-inset-top));
       left: 50%;
-      transform: translateX(-50%) translateY(-100px);
+      transform: translateX(-50%) translateY(-120px);
       background: var(--card-bg);
       color: var(--text-main);
       border: 2px solid var(--accent);
-      padding: 10px 20px;
+      padding: 10px 18px;
       border-radius: 24px;
       font-size: 13px;
       font-weight: 800;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       z-index: 3000;
       pointer-events: none;
       transition: transform 0.25s ease;
+      max-width: 92vw;
+      text-align: center;
     }
     .toast-popup.visible { transform: translateX(-50%) translateY(0); }
   </style>
+  <link rel="stylesheet" href="/mobile.css?v=17">
 </head>
 <body>
 
   <!-- TOAST -->
   <div class="toast-popup" id="toast">Thông báo</div>
 
-  <!-- TOP BAR (LUÔN CỐ ĐỊNH Ở TRÊN ĐẦU) -->
+  <!-- TOP BAR -->
   <header class="top-bar">
-    <div class="brand-title-box">
-      <img src="/icon.svg?v=15" alt="Bò Tót" class="brand-logo" onclick="switchView('home')">
+    <div class="brand-title-box" onclick="switchView('home')">
+      <img src="/icon.svg?v=16" alt="Bò Tót" class="brand-logo">
       <div class="brand-texts">
         <h1>BÒ TÓT REMOTE</h1>
-        <p>Điều Khiển Laptop Từ Xa</p>
+        <p>Điều Khiển &amp; Hẹn Giờ Laptop</p>
       </div>
     </div>
     <!-- 3 THEME PILLS -->
@@ -936,20 +1346,43 @@
     </div>
   </header>
 
-  <!-- STATUS BANNER (REALTIME TẤT CẢ CÁC TRANG) -->
-  <section class="status-card">
-    <div class="status-left">
-      <div class="live-dot" title="Laptop Online"></div>
+  <!-- BANNER CÀI APP ANDROID (HIỆN KHI CHƯA CÀI PWA) -->
+  <div class="install-app-banner" id="install-app-banner">
+    <div class="install-banner-left">
+      <span class="install-banner-icon">📲</span>
       <div>
-        <div class="host-name" id="host-name">Admin-PC</div>
-        <div class="ip-badge" onclick="copyIp()" title="Chạm để copy IP">
-          <span id="ip-val">100.94.115.99</span> 📋
-        </div>
+        <div class="install-banner-title">Cài App Bò Tót lên Android</div>
+        <div class="install-banner-desc">Điều khiển laptop &amp; hẹn giờ tắt máy</div>
       </div>
     </div>
-    <div class="status-right">
-      <div class="stat-pill batt" id="batt-box">--%</div>
-      <div class="stat-pill ram" id="ram-box">RAM --%</div>
+    <button class="btn-install-pwa" onclick="triggerInstallPwa()">Cài App</button>
+  </div>
+
+  <!-- STATUS BANNER (REALTIME TẤT CẢ CÁC TRANG) -->
+  <section class="status-card">
+    <div class="status-top-row">
+      <div class="status-left">
+        <div class="live-dot" title="Laptop Online"></div>
+        <div>
+          <div class="host-name" id="host-name">Admin-PC</div>
+          <div class="ip-badge" onclick="copyIp()" title="Chạm để copy IP">
+            <span id="ip-val">100.94.115.99</span> 📋
+          </div>
+        </div>
+      </div>
+      <div class="status-right">
+        <div class="stat-pill uptime" id="uptime-pill" onclick="switchView('schedule')" title="Thời gian máy đã hoạt động">
+          ⏱ <span id="uptime-box">--p</span>
+        </div>
+        <div class="stat-pill batt" id="batt-box">--%</div>
+        <div class="stat-pill ram" id="ram-box">RAM --%</div>
+      </div>
+    </div>
+    <div class="status-sub-row" onclick="switchView('schedule')">
+      <div class="status-sub-left">
+        <span>🔔 Cảnh báo &amp; Lịch tắt máy:</span>
+      </div>
+      <span class="status-sub-badge" id="status-schedule-summary">Đang tải...</span>
     </div>
   </section>
 
@@ -960,24 +1393,39 @@
     <button onclick="abortShutdownCmd()">🛑 HỦY TẮT MÁY NGAY</button>
   </div>
 
+  <!-- BANNER CẢNH BÁO KHI MÁY HOẠT ĐỘNG QUÁ LÂU -->
+  <div class="uptime-alert-banner" id="uptime-alert-banner">
+    <div class="uptime-alert-title">
+      <span>⚠️ Laptop đã hoạt động liên tục:</span>
+      <span id="alert-banner-uptime">--</span>
+    </div>
+    <div class="uptime-alert-desc" id="alert-banner-desc">
+      Máy tính đã chạy vượt ngưỡng cảnh báo. Bạn có muốn tắt máy để nghỉ ngơi hoặc hoãn cảnh báo không?
+    </div>
+    <div class="uptime-alert-actions">
+      <button class="btn-alert-shutdown" onclick="confirmSystemAction('shutdown')">🛑 Tắt Máy (30s)</button>
+      <button class="btn-alert-snooze" onclick="snoozeUptimeAlert(60)">⏸️ Hoãn 60 phút</button>
+    </div>
+  </div>
+
   <!-- =============================================================
-       VIEW 1: TRANG CHỦ (3 NÚT LỚN CHUYỂN TRANG CHỐNG BẤM NHẦM)
+       VIEW 1: TRANG CHỦ (4 NÚT LỚN CHUYỂN TRANG CHỐNG BẤM NHẦM)
        ============================================================= -->
   <div class="app-view active" id="view-home">
     <div class="home-grid">
-      
-      <!-- NÚT 1: MÁY CHỦ AI HUB -->
-      <div class="hub-nav-tile tile-hub" onclick="switchView('hub')">
+
+      <!-- NÚT 1: HẸN GIỜ TẮT MÁY & CẢNH BÁO HOẠT ĐỘNG LÂU -->
+      <div class="hub-nav-tile tile-schedule" onclick="switchView('schedule')">
         <div class="hub-tile-left">
           <div class="hub-tile-icon-box">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
           <div class="hub-tile-texts">
             <div class="hub-tile-title-row">
-              <span class="hub-tile-title">Máy Chủ AI Hub</span>
-              <span class="hub-tile-badge" id="home-hub-badge">Đang tải...</span>
+              <span class="hub-tile-title">Lịch Tắt &amp; Cảnh Báo</span>
+              <span class="hub-tile-badge" id="home-schedule-badge">Uptime --</span>
             </div>
-            <div class="hub-tile-desc">Bật, tắt, khởi động lại server & mở giao diện Web cổng 20130</div>
+            <div class="hub-tile-desc">Báo về Android khi máy bật lâu, hẹn giờ đếm ngược &amp; lịch tắt hàng ngày</div>
           </div>
         </div>
         <svg class="hub-tile-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
@@ -994,13 +1442,30 @@
               <span class="hub-tile-title">Điều Khiển Laptop</span>
               <span class="hub-tile-badge">Win32 &lt;10ms</span>
             </div>
-            <div class="hub-tile-desc">Tắt màn hình tức thì, khóa Windows, khởi động & tắt máy an toàn</div>
+            <div class="hub-tile-desc">Tắt màn hình tức thì, khóa Windows, khởi động &amp; tắt máy an toàn</div>
           </div>
         </div>
         <svg class="hub-tile-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
       </div>
 
-      <!-- NÚT 3: CỨU HỘ & PROMPT AI -->
+      <!-- NÚT 3: MÁY CHỦ AI HUB -->
+      <div class="hub-nav-tile tile-hub" onclick="switchView('hub')">
+        <div class="hub-tile-left">
+          <div class="hub-tile-icon-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+          </div>
+          <div class="hub-tile-texts">
+            <div class="hub-tile-title-row">
+              <span class="hub-tile-title">Máy Chủ AI Hub</span>
+              <span class="hub-tile-badge" id="home-hub-badge">Đang tải...</span>
+            </div>
+            <div class="hub-tile-desc">Bật, tắt, khởi động lại server &amp; mở giao diện Web cổng 20130</div>
+          </div>
+        </div>
+        <svg class="hub-tile-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- NÚT 4: CỨU HỘ & PROMPT AI -->
       <div class="hub-nav-tile tile-prompt" onclick="switchView('prompt')">
         <div class="hub-tile-left">
           <div class="hub-tile-icon-box">
@@ -1011,7 +1476,7 @@
               <span class="hub-tile-title">Cứu Hộ &amp; Prompt AI</span>
               <span class="hub-tile-badge" id="home-prompt-badge">Gemini Flash</span>
             </div>
-            <div class="hub-tile-desc">Gửi lệnh chạy AI cho D:ai-hub, chọn Model, xem Terminal realtime</div>
+            <div class="hub-tile-desc">Gửi lệnh chạy AI cho D:\ai-hub, chọn Model, xem Terminal realtime</div>
           </div>
         </div>
         <svg class="hub-tile-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
@@ -1021,7 +1486,162 @@
   </div>
 
   <!-- =============================================================
-       VIEW 2: TRANG MÁY CHỦ AI HUB (PORT 20130)
+       VIEW 2: LỊCH TẮT MÁY & CẢNH BÁO HOẠT ĐỘNG LÂU (MỚI)
+       ============================================================= -->
+  <div class="app-view" id="view-schedule">
+    <div class="view-nav-bar">
+      <button class="btn-back-menu" onclick="switchView('home')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <span>Menu Chính</span>
+      </button>
+      <span class="view-header-title">Hẹn Giờ &amp; Cảnh Báo</span>
+    </div>
+
+    <!-- CARD 1: HẸN GIỜ ĐẾM NGƯỢC TẮT MÁY NHANH -->
+    <section class="section-card">
+      <div class="section-header">
+        <span class="section-title">⏳ Hẹn Giờ Tắt Máy Nhanh</span>
+        <span class="status-tag online" id="countdown-status-tag">Sẵn sàng</span>
+      </div>
+
+      <!-- HIỂN THỊ KHI ĐANG ĐẾM NGƯỢC -->
+      <div class="countdown-active-box" id="countdown-active-box">
+        <div class="countdown-time-big" id="countdown-remain-display">00:00</div>
+        <div class="countdown-sub-text" id="countdown-target-desc">Sẽ tắt máy lúc --:--</div>
+        <div class="countdown-btn-row">
+          <button class="btn-alert-snooze" onclick="snoozeUptimeAlert(15)">+15 phút</button>
+          <button class="btn-alert-snooze" onclick="snoozeUptimeAlert(30)">+30 phút</button>
+          <button class="btn-alert-shutdown" onclick="setCountdownTimer(0)">❌ Hủy Hẹn</button>
+        </div>
+      </div>
+
+      <div style="font-size: 12px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px;">
+        Chạm để hẹn giờ tắt máy tự động sau:
+      </div>
+      <div class="chip-grid">
+        <button class="chip-btn" onclick="setCountdownTimer(15)">15 phút</button>
+        <button class="chip-btn" onclick="setCountdownTimer(30)">30 phút</button>
+        <button class="chip-btn" onclick="setCountdownTimer(60)">1 giờ</button>
+        <button class="chip-btn" onclick="setCountdownTimer(90)">1.5 giờ</button>
+        <button class="chip-btn" onclick="setCountdownTimer(120)">2 giờ</button>
+        <button class="chip-btn" onclick="setCountdownTimer(180)">3 giờ</button>
+      </div>
+
+      <div class="topic-copy-row">
+        <input type="number" id="custom-countdown-min" class="form-input mono" placeholder="Số phút tùy chỉnh (VD: 45)" min="1" max="1440">
+        <select id="custom-countdown-action" class="form-select">
+          <option value="shutdown">Tắt máy</option>
+          <option value="restart">Restart</option>
+          <option value="screen-off">Tắt màn hình</option>
+          <option value="lock">Khóa máy</option>
+        </select>
+        <button class="btn-small-action" onclick="startCustomCountdown()">Bắt đầu</button>
+      </div>
+    </section>
+
+    <!-- CARD 2: THEO DÕI THỜI GIAN BẬT MÁY & CẢNH BÁO MÁY CHẠY LÂU -->
+    <section class="section-card">
+      <div class="section-header">
+        <span class="section-title">⏰ Cảnh Báo Khi Máy Chạy Lâu</span>
+        <label class="switch-toggle" title="Bật/Tắt cảnh báo máy hoạt động lâu">
+          <input type="checkbox" id="cfg-uptime-enabled" checked onchange="saveAllScheduleConfig()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="uptime-hero-box" id="uptime-hero-box">
+        <div>
+          <div class="uptime-hero-label">THỜI GIAN LAPTOP ĐÃ HOẠT ĐỘNG</div>
+          <div class="uptime-hero-value" id="uptime-hero-val">0 giờ 0 phút</div>
+          <div class="uptime-hero-sub" id="uptime-boot-since">Bật máy lúc: --:--</div>
+        </div>
+        <button class="btn-small-action" style="padding: 10px 12px;" onclick="confirmSystemAction('shutdown')">🛑 Tắt Ngay</button>
+      </div>
+
+      <div style="font-size: 12px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px;">
+        Báo về điện thoại khi máy bật liên tục quá:
+      </div>
+      <div class="chip-grid" id="uptime-threshold-chips">
+        <button class="chip-btn" data-min="60" onclick="selectUptimeThreshold(60)">1 giờ</button>
+        <button class="chip-btn" data-min="120" onclick="selectUptimeThreshold(120)">2 giờ</button>
+        <button class="chip-btn selected" data-min="180" onclick="selectUptimeThreshold(180)">3 giờ</button>
+        <button class="chip-btn" data-min="240" onclick="selectUptimeThreshold(240)">4 giờ</button>
+        <button class="chip-btn" data-min="360" onclick="selectUptimeThreshold(360)">6 giờ</button>
+        <button class="chip-btn" data-min="480" onclick="selectUptimeThreshold(480)">8 giờ</button>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Tự động tắt máy nếu quên</span>
+          <span class="form-desc">Tự đếm ngược tắt máy khi chạy quá lâu</span>
+        </div>
+        <select id="cfg-uptime-autoshutdown" class="form-select" onchange="saveAllScheduleConfig()">
+          <option value="0" selected>Không tự tắt (Chỉ báo)</option>
+          <option value="180">Quá 3 giờ</option>
+          <option value="240">Quá 4 giờ</option>
+          <option value="360">Quá 6 giờ</option>
+          <option value="480">Quá 8 giờ</option>
+          <option value="600">Quá 10 giờ</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- CARD 3: LỊCH TẮT MÁY CỐ ĐỊNH THEO GIỜ TRONG NGÀY -->
+    <section class="section-card">
+      <div class="section-header">
+        <span class="section-title">📅 Lịch Tắt Máy Theo Giờ</span>
+        <label class="switch-toggle" title="Bật/Tắt lịch tắt cố định">
+          <input type="checkbox" id="cfg-daily-enabled" onchange="saveAllScheduleConfig()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Giờ tắt máy</span>
+          <span class="form-desc">Tự động báo trước 5 phút &amp; tắt đúng giờ</span>
+        </div>
+        <input type="time" id="cfg-daily-time" class="form-input mono" value="23:30" onchange="saveAllScheduleConfig()">
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Chế độ lặp lại</span>
+          <span class="form-desc">Hàng ngày hoặc chỉ 1 lần hôm nay</span>
+        </div>
+        <select id="cfg-daily-repeat" class="form-select" onchange="saveAllScheduleConfig()">
+          <option value="daily">Mỗi ngày</option>
+          <option value="once">Chỉ 1 lần</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Hành động khi đến giờ</span>
+          <span class="form-desc">Đếm ngược 45 giây an toàn trước khi tắt</span>
+        </div>
+        <select id="cfg-daily-action" class="form-select" onchange="saveAllScheduleConfig()">
+          <option value="shutdown">Tắt máy (Shutdown)</option>
+          <option value="restart">Khởi động lại (Restart)</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">🛡️ Bảo vệ phiên AI đang chạy</span>
+          <span class="form-desc">Đợi AI Hub chạy xong tác vụ rồi mới tắt máy</span>
+        </div>
+        <label class="switch-toggle">
+          <input type="checkbox" id="cfg-wait-ai" checked onchange="saveAllScheduleConfig()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- =============================================================
+       VIEW 3: TRANG MÁY CHỦ AI HUB (PORT 20130)
        ============================================================= -->
   <div class="app-view" id="view-hub">
     <div class="view-nav-bar">
@@ -1066,7 +1686,7 @@
   </div>
 
   <!-- =============================================================
-       VIEW 3: TRANG ĐIỀU KHIỂN LAPTOP WINDOWS
+       VIEW 4: TRANG ĐIỀU KHIỂN LAPTOP WINDOWS
        ============================================================= -->
   <div class="app-view" id="view-system">
     <div class="view-nav-bar">
@@ -1128,11 +1748,15 @@
           </div>
         </div>
       </div>
+
+      <button class="btn-secondary-full" style="margin-top: 12px;" onclick="switchView('schedule')">
+        ⏰ Mở Bảng Hẹn Giờ Tắt Máy &amp; Cảnh Báo Hoạt Động Lâu →
+      </button>
     </section>
   </div>
 
   <!-- =============================================================
-       VIEW 4: TRANG CỨU HỘ & PROMPT AI (D:ai-hub)
+       VIEW 5: TRANG CỨU HỘ & PROMPT AI (D:\ai-hub)
        ============================================================= -->
   <div class="app-view" id="view-prompt">
     <div class="view-nav-bar">
@@ -1140,13 +1764,13 @@
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
         <span>Menu Chính</span>
       </button>
-      <span class="view-header-title">Cứu Hộ D:ai-hub</span>
+      <span class="view-header-title">Cứu Hộ D:\ai-hub</span>
     </div>
 
     <section class="section-card">
       <div class="section-header">
         <span class="section-title">Prompt AI Agent</span>
-        <span style="font-size: 12px; font-weight: 800; color: var(--amber);">D:ai-hub</span>
+        <span style="font-size: 12px; font-weight: 800; color: var(--amber);">D:\ai-hub</span>
       </div>
 
       <!-- NÚT TRIGGER MỞ POPUP CHỌN MODEL AI -->
@@ -1186,13 +1810,13 @@
         <button class="btn-clear-console" onclick="clearConsoleLog()">Xóa màn hình</button>
       </div>
 
-      <!-- MÀN HÌNH TERMINAL (RỘNG RÃI HƠN) -->
+      <!-- MÀN HÌNH TERMINAL -->
       <div class="console-display" id="console-output">Sẵn sàng nhận lệnh từ điện thoại...</div>
     </section>
   </div>
 
   <!-- =============================================================
-       MODAL POPUP BOTTOM SHEET: CHỌN MODEL AI (7 MODEL HỆ THỐNG)
+       MODAL POPUP CHỌN MODEL AI (7 MODEL HỆ THỐNG)
        ============================================================= -->
   <div class="modal-overlay" id="model-modal" onclick="closeModelModal(event)">
     <div class="modal-dialog" onclick="event.stopPropagation()">
@@ -1206,9 +1830,7 @@
         </div>
         <button class="modal-close-btn" onclick="closeModelModal()" title="Đóng">✕</button>
       </div>
-      <div class="modal-list" id="modal-model-list">
-        <!-- Render động từ danh sách model hệ thống -->
-      </div>
+      <div class="modal-list" id="modal-model-list"></div>
     </div>
   </div>
 
@@ -1226,15 +1848,16 @@
     setAppTheme(localStorage.getItem("bo-tot-theme-v14") || "dark");
 
     // =============================================================
-    // 2. TOAST POPUP
+    // 2. TOAST POPUP & WEB AUDIO ALARM SYNTHESIZER
     // =============================================================
     let toastTimer = null;
-    function showToast(msg) {
+    function showToast(msg, duration = 2600) {
       const el = document.getElementById("toast");
+      if (!el) return;
       el.innerText = msg;
       el.classList.add("visible");
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove("visible"), 2200);
+      toastTimer = setTimeout(() => el.classList.remove("visible"), duration);
     }
 
     function copyIp() {
@@ -1246,11 +1869,46 @@
     }
 
     // =============================================================
-    // 3. SPA VIEW SWITCHER (CHUYỂN TRANG 3 NÚT CHỐNG BẤM NHẦM)
+    // 3. SERVICE WORKER & ANDROID PWA INSTALL
     // =============================================================
+    let deferredInstallPrompt = null;
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js?v=18").catch(() => {});
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      const banner = document.getElementById("install-app-banner");
+      if (banner) banner.classList.add("visible");
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      const banner = document.getElementById("install-app-banner");
+      if (banner) banner.classList.remove("visible");
+      showToast("🎉 Đã cài App Bò Tót lên màn hình chính Android!");
+    });
+
+    async function triggerInstallPwa() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice.outcome === "accepted") {
+          document.getElementById("install-app-banner")?.classList.remove("visible");
+        }
+        deferredInstallPrompt = null;
+      } else {
+        showToast("Trên Chrome Android: Bấm dấu ⋮ (góc phải trên) -> Chọn 'Thêm vào Màn hình chính' hoặc 'Cài đặt ứng dụng'", 4500);
+      }
+    }
+
+    // =============================================================
+    // 4. SPA VIEW SWITCHER
+    // =============================================================
+    const VALID_VIEWS = ["home", "schedule", "hub", "system", "prompt"];
     let currentView = "home";
 
     function switchView(viewName) {
+      if (!VALID_VIEWS.includes(viewName)) viewName = "home";
       currentView = viewName;
       document.querySelectorAll(".app-view").forEach(v => v.classList.remove("active"));
       const target = document.getElementById("view-" + viewName);
@@ -1258,7 +1916,6 @@
         target.classList.add("active");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-      // Dong bo URL Hash de ho tro nut Back vat ly cua dien thoai
       if (location.hash !== "#" + viewName) {
         history.pushState(null, "", "#" + viewName);
       }
@@ -1266,7 +1923,7 @@
 
     window.addEventListener("popstate", () => {
       const hash = location.hash.replace("#", "") || "home";
-      if (["home", "hub", "system", "prompt"].includes(hash)) {
+      if (VALID_VIEWS.includes(hash)) {
         currentView = hash;
         document.querySelectorAll(".app-view").forEach(v => v.classList.remove("active"));
         const target = document.getElementById("view-" + hash);
@@ -1274,30 +1931,23 @@
       }
     });
 
-    // Khoi tao theo URL hash neu co
     if (location.hash) {
       const initHash = location.hash.replace("#", "");
-      if (["hub", "system", "prompt"].includes(initHash)) {
+      if (VALID_VIEWS.includes(initHash)) {
         switchView(initHash);
       }
     }
 
     // =============================================================
-    // 4. VECTOR SVG CHÍNH HÃNG CỦA CÁC MODEL PROVIDER
+    // 5. VECTOR SVG & DANH SÁCH 7 MODEL CHÍNH THỨC TRÊN AI HUB
     // =============================================================
     const MODEL_SVGS = {
       gemini: '<svg viewBox="0 0 24 24" fill="none"><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="#3186FF"/><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#botot-g1)"/><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#botot-g2)"/><defs><linearGradient id="botot-g1" x1="7" y1="15.5" x2="11" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#08B962"/><stop offset="1" stop-color="#08B962" stop-opacity="0"/></linearGradient><linearGradient id="botot-g2" x1="8" y1="5.5" x2="11.5" y2="11" gradientUnits="userSpaceOnUse"><stop stop-color="#F94543"/><stop offset="1" stop-color="#F94543" stop-opacity="0"/></linearGradient></defs></svg>',
-      
       claude: '<svg viewBox="0 0 24 24" fill="none"><path d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z" fill="#D97757"/></svg>',
-      
       openai: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.205 8.658v-2.26c0-.19.072-.333.238-.428l4.543-2.616c.619-.357 1.356-.523 2.117-.523 2.854 0 4.662 2.212 4.662 4.566 0 .167 0 .357-.024.547l-4.71-2.759a.797.797 0 00-.856 0l-5.97 3.473zm10.609 8.8V12.06c0-.333-.143-.57-.429-.737l-5.97-3.473 1.95-1.118a.433.433 0 01.476 0l4.543 2.617c1.309.76 2.189 2.378 2.189 3.948 0 1.808-1.07 3.473-2.76 4.163zM7.802 12.703l-1.95-1.142c-.167-.095-.239-.238-.239-.428V5.899c0-2.545 1.95-4.472 4.591-4.472 1 0 1.927.333 2.712.928L8.23 5.067c-.285.166-.428.404-.428.737v6.898zM12 15.128l-2.795-1.57v-3.33L12 8.658l2.795 1.57v3.33L12 15.128zm1.796 7.23c-1 0-1.927-.332-2.712-.927l4.686-2.712c.285-.166.428-.404.428-.737v-6.898l1.974 1.142c.167.095.238.238.238.428v5.233c0 2.545-1.974 4.472-4.614 4.472zm-5.637-5.303l-4.544-2.617c-1.308-.761-2.188-2.378-2.188-3.948A4.482 4.482 0 014.21 6.327v5.423c0 .333.143.571.428.738l5.947 3.449-1.95 1.118a.432.432 0 01-.476 0zm-.262 3.9c-2.688 0-4.662-2.021-4.662-4.519 0-.19.024-.38.047-.57l4.686 2.71c.286.167.571.167.856 0l5.97-3.448v2.26c0 .19-.07.333-.237.428l-4.543 2.616c-.619.357-1.356.523-2.117.523zm5.899 2.83a5.947 5.947 0 005.827-4.756C22.287 18.339 24 15.84 24 13.296c0-1.665-.713-3.282-1.998-4.448.119-.5.19-.999.19-1.498 0-3.401-2.759-5.947-5.946-5.947-.642 0-1.26.095-1.88.31A5.962 5.962 0 0010.205 0a5.947 5.947 0 00-5.827 4.757C1.713 5.447 0 7.945 0 10.49c0 1.666.713 3.283 1.998 4.448-.119.5-.19 1-.19 1.499 0 3.401 2.759 5.946 5.946 5.946.642 0 1.26-.095 1.88-.309a5.96 5.96 0 004.162 1.713z"/></svg>',
-      
       "claude-cli": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="4" stroke-width="2"/><path d="M7 10l3 2.5-3 2.5M13 15h4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     };
 
-    // =============================================================
-    // 5. DANH SÁCH 7 MODEL CHÍNH THỨC TRÊN AI HUB
-    // =============================================================
     const SYSTEM_MODELS = [
       { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", badge: "Mặc định", icon: "gemini" },
       { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", badge: "Khuyên dùng", icon: "claude" },
@@ -1310,7 +1960,6 @@
 
     let currentSelectedModelId = localStorage.getItem("bo-tot-model-v14") || "ag/gemini-3.8-flash";
 
-    // RENDER POPUP LIST MODEL
     function renderModelModalList() {
       const listEl = document.getElementById("modal-model-list");
       if (!listEl) return;
@@ -1336,7 +1985,6 @@
           </div>
         `;
       }).join("");
-
       updateModelTriggerDisplay();
     }
 
@@ -1381,7 +2029,239 @@
     renderModelModalList();
 
     // =============================================================
-    // 6. TRẠNG THÁI SERVER & POLLING (STATUS PULL)
+    // 6. QUẢN LÝ CẤU HÌNH UPTIME ALERT & LỊCH TẮT MÁY
+    // =============================================================
+    let currentUptimeThresholdMin = 180;
+
+    function formatShortUptime(seconds) {
+      const s = Math.max(0, Math.floor(seconds || 0));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      if (h > 0) return `${h}h ${m}p`;
+      return `${m}p`;
+    }
+
+    function formatCountdownClock(seconds) {
+      const s = Math.max(0, Math.floor(seconds || 0));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      const pad = (n) => String(n).padStart(2, "0");
+      if (h > 0) return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+      return `${pad(m)}:${pad(sec)}`;
+    }
+
+    function highlightThresholdChips(minVal) {
+      currentUptimeThresholdMin = Number(minVal) || 180;
+      document.querySelectorAll("#uptime-threshold-chips .chip-btn").forEach(btn => {
+        const bMin = Number(btn.getAttribute("data-min"));
+        btn.classList.toggle("selected", bMin === currentUptimeThresholdMin);
+      });
+    }
+
+    async function loadRemoteConfig() {
+      try {
+        const res = await fetch("/api/config?t=" + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        const cfg = data.config;
+        if (!cfg) return;
+
+        if (cfg.uptimeAlert) {
+          document.getElementById("cfg-uptime-enabled").checked = Boolean(cfg.uptimeAlert.enabled);
+          highlightThresholdChips(cfg.uptimeAlert.thresholdMinutes || 180);
+          document.getElementById("cfg-uptime-autoshutdown").value = String(cfg.uptimeAlert.autoShutdownMinutes || 0);
+        }
+        if (cfg.schedule) {
+          document.getElementById("cfg-daily-enabled").checked = Boolean(cfg.schedule.dailyEnabled);
+          if (cfg.schedule.dailyTime) document.getElementById("cfg-daily-time").value = cfg.schedule.dailyTime;
+          if (cfg.schedule.dailyRepeat) document.getElementById("cfg-daily-repeat").value = cfg.schedule.dailyRepeat;
+          if (cfg.schedule.dailyAction) document.getElementById("cfg-daily-action").value = cfg.schedule.dailyAction;
+          document.getElementById("cfg-wait-ai").checked = cfg.schedule.waitAiIdle !== false;
+        }
+      } catch (_) {}
+    }
+
+    function selectUptimeThreshold(minutes) {
+      highlightThresholdChips(minutes);
+      saveAllScheduleConfig();
+    }
+
+    async function saveAllScheduleConfig() {
+      const payload = {
+        uptimeAlert: {
+          enabled: document.getElementById("cfg-uptime-enabled").checked,
+          thresholdMinutes: currentUptimeThresholdMin,
+          autoShutdownMinutes: Number(document.getElementById("cfg-uptime-autoshutdown").value) || 0
+        },
+        schedule: {
+          dailyEnabled: document.getElementById("cfg-daily-enabled").checked,
+          dailyTime: document.getElementById("cfg-daily-time").value || "23:30",
+          dailyRepeat: document.getElementById("cfg-daily-repeat").value || "daily",
+          dailyAction: document.getElementById("cfg-daily-action").value || "shutdown",
+          waitAiIdle: document.getElementById("cfg-wait-ai").checked
+        },
+
+      };
+
+      try {
+        const res = await fetch("/api/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const d = await res.json();
+        if (d.ok) {
+          showToast("✅ Đã lưu cài đặt cảnh báo & lịch tắt máy!");
+          applyScheduleStatusToUi(d);
+        }
+      } catch (e) {
+        showToast("Lỗi lưu cấu hình: " + e.message);
+      }
+    }
+
+    async function setCountdownTimer(minutes, actionOverride) {
+      const action = actionOverride || document.getElementById("custom-countdown-action")?.value || "shutdown";
+      try {
+        const res = await fetch("/api/schedule/countdown", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            minutes: Number(minutes) || 0,
+            cancel: Number(minutes) <= 0,
+            action
+          })
+        });
+        const d = await res.json();
+        showToast(d.message || "Đã cập nhật hẹn giờ!");
+        applyScheduleStatusToUi(d);
+      } catch (e) {
+        showToast("Lỗi: " + e.message);
+      }
+    }
+
+    function startCustomCountdown() {
+      const inp = document.getElementById("custom-countdown-min");
+      const min = Number(inp?.value);
+      if (!min || min <= 0) {
+        return showToast("Vui lòng nhập số phút hẹn giờ hợp lệ!");
+      }
+      setCountdownTimer(min);
+      inp.value = "";
+    }
+
+    async function snoozeUptimeAlert(minutes = 60) {
+      try {
+        const res = await fetch("/api/schedule/snooze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ minutes })
+        });
+        const d = await res.json();
+        showToast(d.message || `Đã hoãn ${minutes} phút!`);
+        applyScheduleStatusToUi(d);
+      } catch (e) {
+        showToast("Lỗi: " + e.message);
+      }
+    }
+
+    function applyScheduleStatusToUi(d) {
+      if (!d) return;
+
+      // 1. Uptime Pill & Hero
+      const uptimeSec = d.uptimeSeconds || 0;
+      const shortUp = formatShortUptime(uptimeSec);
+      const uptimeBox = document.getElementById("uptime-box");
+      const uptimePill = document.getElementById("uptime-pill");
+      const heroVal = document.getElementById("uptime-hero-val");
+      const heroBox = document.getElementById("uptime-hero-box");
+      const bootSince = document.getElementById("uptime-boot-since");
+      const homeScheduleBadge = document.getElementById("home-schedule-badge");
+
+      if (uptimeBox) uptimeBox.innerText = shortUp;
+      if (heroVal) heroVal.innerText = d.uptimeFormatted || shortUp;
+      if (bootSince && d.bootTime) {
+        const bt = new Date(d.bootTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+        bootSince.innerText = `Bật máy từ lúc ${bt}`;
+      }
+
+      const isOver = Boolean(d.uptimeAlert && d.uptimeAlert.isOverThreshold);
+      const isSnoozed = Boolean(d.uptimeAlert && d.uptimeAlert.snoozeRemainingSec > 0);
+      if (uptimePill) uptimePill.classList.toggle("warn", isOver && !isSnoozed);
+      if (heroBox) heroBox.classList.toggle("over-threshold", isOver && !isSnoozed);
+
+      // Banner cảnh báo đầu trang
+      const alertBanner = document.getElementById("uptime-alert-banner");
+      if (alertBanner) {
+        if (isOver && !isSnoozed && !(d.shutdownState && d.shutdownState.active)) {
+          alertBanner.classList.add("visible");
+          document.getElementById("alert-banner-uptime").innerText = d.uptimeFormatted || shortUp;
+          const thFormatted = Math.round((d.uptimeAlert.thresholdMinutes || 180) / 60 * 10) / 10;
+          document.getElementById("alert-banner-desc").innerText =
+            `Máy tính đã hoạt động quá ngưỡng ${thFormatted} giờ. Bạn có thể tắt máy ngay hoặc tạm hoãn cảnh báo.`;
+        } else {
+          alertBanner.classList.remove("visible");
+        }
+      }
+
+      // 2. Countdown & Daily Schedule Status
+      const sch = d.schedule || {};
+      const cdBox = document.getElementById("countdown-active-box");
+      const cdTag = document.getElementById("countdown-status-tag");
+      const summaryEl = document.getElementById("status-schedule-summary");
+
+      if (sch.countdownActive && sch.countdownRemainingSec > 0) {
+        if (cdBox) cdBox.classList.add("visible");
+        document.getElementById("countdown-remain-display").innerText = formatCountdownClock(sch.countdownRemainingSec);
+        const targetClock = new Date(sch.countdownTargetAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+        const actName = sch.countdownAction === "restart" ? "Khởi động lại" : (sch.countdownAction === "screen-off" ? "Tắt màn hình" : "Tắt máy");
+        document.getElementById("countdown-target-desc").innerText =
+          sch.waitingForAiIdleReason || `${actName} lúc ${targetClock}`;
+        if (cdTag) {
+          cdTag.className = "status-tag warn";
+          cdTag.innerText = `Đếm ngược ${Math.ceil(sch.countdownRemainingSec / 60)}p`;
+        }
+        if (summaryEl) {
+          summaryEl.className = "status-sub-badge active-timer";
+          summaryEl.innerText = `⏳ ${actName} sau ${Math.ceil(sch.countdownRemainingSec / 60)}p (${targetClock})`;
+        }
+        if (homeScheduleBadge) {
+          homeScheduleBadge.innerText = `⏳ Còn ${Math.ceil(sch.countdownRemainingSec / 60)}p`;
+        }
+      } else {
+        if (cdBox) cdBox.classList.remove("visible");
+        if (cdTag) {
+          cdTag.className = "status-tag online";
+          cdTag.innerText = "Sẵn sàng";
+        }
+        if (sch.dailyEnabled && sch.dailyTime) {
+          if (summaryEl) {
+            summaryEl.className = "status-sub-badge active-timer";
+            summaryEl.innerText = `📅 Hẹn tắt lúc ${sch.dailyTime}`;
+          }
+          if (homeScheduleBadge) homeScheduleBadge.innerText = `📅 Hẹn ${sch.dailyTime}`;
+        } else if (d.uptimeAlert && d.uptimeAlert.enabled) {
+          const thH = Math.round((d.uptimeAlert.thresholdMinutes / 60) * 10) / 10;
+          if (summaryEl) {
+            summaryEl.className = "status-sub-badge";
+            summaryEl.innerText = isSnoozed
+              ? `⏸️ Đã hoãn báo (${Math.ceil(d.uptimeAlert.snoozeRemainingSec / 60)}p)`
+              : `Báo khi máy bật > ${thH} giờ`;
+          }
+          if (homeScheduleBadge) homeScheduleBadge.innerText = `Đã bật ${shortUp}`;
+        } else {
+          if (summaryEl) {
+            summaryEl.className = "status-sub-badge";
+            summaryEl.innerText = "Chưa đặt lịch tắt";
+          }
+          if (homeScheduleBadge) homeScheduleBadge.innerText = `Uptime ${shortUp}`;
+        }
+      }
+
+    }
+
+    // =============================================================
+    // 7. TRẠNG THÁI SERVER & POLLING (STATUS PULL)
     // =============================================================
     let isHubActionPending = false;
     let loopId = null;
@@ -1391,7 +2271,7 @@
         const res = await fetch("/api/status?t=" + Date.now());
         if (!res.ok) return;
         const d = await res.json();
-        
+
         document.getElementById("host-name").innerText = d.hostname || "Admin-PC";
         document.getElementById("ip-val").innerText = d.tailscaleIp || "100.94.115.99";
 
@@ -1401,6 +2281,8 @@
         if (d.memory) {
           document.getElementById("ram-box").innerText = `RAM ${d.memory.percent}%`;
         }
+
+        applyScheduleStatusToUi(d);
 
         const isRunning = Boolean(d.aiHub && d.aiHub.running);
         const tag = document.getElementById("hub-status-tag");
@@ -1421,7 +2303,7 @@
               homeHubBadge.style.background = "var(--emerald-bg)";
               homeHubBadge.style.color = "var(--emerald)";
             }
-            
+
             btnStart.disabled = true;
             btnRestart.disabled = false;
             btnStop.disabled = false;
@@ -1438,7 +2320,7 @@
               homeHubBadge.style.background = "var(--rose-bg)";
               homeHubBadge.style.color = "var(--rose)";
             }
-            
+
             btnStart.disabled = false;
             btnRestart.disabled = true;
             btnStop.disabled = true;
@@ -1450,7 +2332,7 @@
           }
         }
 
-        // Dong bo activePrompt
+        // Đồng bộ activePrompt
         const promptStatusTitle = document.getElementById("console-status-text");
         const btnAbortEl = document.getElementById("btn-abort-prompt");
         if (d.activePrompt && !isPromptActive) {
@@ -1461,17 +2343,17 @@
           if (promptStatusTitle) promptStatusTitle.innerText = "Terminal Output (Realtime)";
         }
 
-        // Dem nguoc tat may
+        // Đếm ngược tắt máy khẩn cấp
         const hud = document.getElementById("emergency-hud");
         const btnSysRestart = document.getElementById("btn-sys-restart");
         const btnSysShutdown = document.getElementById("btn-sys-shutdown");
 
         if (d.shutdownState && d.shutdownState.active) {
           hud.style.display = "block";
-          document.getElementById("emergency-label").innerText = 
+          document.getElementById("emergency-label").innerText =
             d.shutdownState.type === "restart" ? "ĐANG CHỜ RESTART MÁY" : "ĐANG CHỜ TẮT MÁY";
           document.getElementById("emergency-countdown").innerText = `${d.shutdownState.secondsLeft}s`;
-          
+
           btnSysRestart.classList.add("disabled");
           btnSysShutdown.classList.add("disabled");
         } else {
@@ -1483,7 +2365,7 @@
     }
 
     // =============================================================
-    // 7. HUB & SYSTEM ACTIONS
+    // 8. HUB & SYSTEM ACTIONS
     // =============================================================
     async function hubAction(a) {
       if (isHubActionPending) return;
@@ -1541,7 +2423,7 @@
     }
 
     // =============================================================
-    // 8. PROMPT RUNNER (SSE STREAMING CHUẨN)
+    // 9. PROMPT RUNNER (SSE STREAMING CHUẨN)
     // =============================================================
     function clearConsoleLog() {
       const con = document.getElementById("console-output");
@@ -1577,7 +2459,7 @@
       const selectedModel = currentSelectedModelId || "ag/gemini-3.8-flash";
       const currentModelObj = SYSTEM_MODELS.find(m => m.id === selectedModel) || { name: "AI", provider: "Hub" };
       const modelLabel = currentModelObj.name;
-      
+
       box.value = "";
       box.disabled = true;
       btn.disabled = true;
@@ -1617,7 +2499,7 @@
           const { done, value } = await reader.read();
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
-          
+
           const blocks = buffer.split(/(?:\r?\n){2}/);
           buffer = blocks.pop() || "";
 
@@ -1673,7 +2555,7 @@
     }
 
     // =============================================================
-    // 9. POLLING LOOP & VISIBILITY API
+    // 10. POLLING LOOP & INITIALIZATION
     // =============================================================
     function startLoop() {
       if (!loopId) { pullStatus(); loopId = setInterval(pullStatus, 3000); }
@@ -1687,7 +2569,9 @@
       else stopLoop();
     });
 
+    loadRemoteConfig();
     startLoop();
   </script>
+  <script src="/mobile.js?v=17"></script>
 </body>
 </html>

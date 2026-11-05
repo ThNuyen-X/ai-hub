@@ -1104,6 +1104,38 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ auxiliaryModel: auxiliarySettings.get(id) }));
     return;
   }
+  if (req.method === "GET" && req.url === "/api/meme-pack") {
+    let pack = "doraemon";
+    try {
+      const cfgPath = path.join(__dirname, "meme_cursor_config.json");
+      if (fs.existsSync(cfgPath)) {
+        const parsed = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
+        if (parsed && parsed.pack) pack = parsed.pack;
+      }
+    } catch {}
+    res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+    res.end(JSON.stringify({ pack, available: ["doraemon", "dragonball"] }));
+    return;
+  }
+  if (req.method === "POST" && req.url === "/api/meme-pack") {
+    let body = "";
+    req.on("data", chunk => { body += chunk; if (body.length > 1024) body = ""; });
+    req.on("end", () => {
+      try {
+        const data = JSON.parse(body);
+        const valid = ["doraemon", "dragonball"];
+        const pack = valid.includes(data.pack) ? data.pack : "doraemon";
+        const cfgPath = path.join(__dirname, "meme_cursor_config.json");
+        fs.writeFileSync(cfgPath, JSON.stringify({ pack }, null, 2), "utf8");
+        res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+        res.end(JSON.stringify({ ok: true, pack }));
+      } catch (err) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
   const urlObj = new URL(req.url, `http://${req.headers.host}`);
   const pathname = urlObj.pathname;
 

@@ -1601,6 +1601,32 @@
         </button>
       </div>
 
+      <!-- Meme Cursor Pack Selector: Doraemon vs Dragon Ball -->
+      <div class="flex flex-col gap-1 pt-1.5 border-t" style="border-color: var(--border-subtle);">
+        <div class="flex items-center justify-between px-0.5 text-[10.5px]" style="color: var(--text-sub);">
+          <span class="font-medium flex items-center gap-1">
+            <span>✨</span>
+            <span>Con trỏ Meme:</span>
+          </span>
+          <span id="currentMemePackBadge" class="text-[10px] font-semibold text-amber-500">Doraemon</span>
+        </div>
+        <div class="flex items-center p-0.5 rounded-lg border text-xs"
+             style="background-color: var(--bg-surface); border-color: var(--border);">
+          <button id="memePackBtn-doraemon" onclick="setMemePack('doraemon')"
+                  class="flex-1 py-1 rounded-md text-[11px] font-medium text-center ease-spring flex items-center justify-center gap-1.5"
+                  title="Meme Doraemon hoạt hình mượt mà">
+            <span>🐱</span>
+            <span>Doraemon</span>
+          </button>
+          <button id="memePackBtn-dragonball" onclick="setMemePack('dragonball')"
+                  class="flex-1 py-1 rounded-md text-[11px] font-medium text-center ease-spring flex items-center justify-center gap-1.5"
+                  title="Meme Dragon Ball (Goku & Vegeta)">
+            <span>⚡</span>
+            <span>Dragon Ball</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </aside>
 
@@ -4426,6 +4452,60 @@
           hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
         }
       }
+    }
+
+    let activeMemePack = localStorage.getItem('ai_hub_meme_pack') || 'doraemon';
+    async function loadMemePack() {
+      try {
+        const saved = localStorage.getItem('ai_hub_meme_pack');
+        if (saved) updateMemePackUI(saved);
+        const res = await fetch('/api/meme-pack');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.pack) {
+            updateMemePackUI(data.pack);
+            localStorage.setItem('ai_hub_meme_pack', data.pack);
+          }
+        }
+      } catch (e) {
+        const saved = localStorage.getItem('ai_hub_meme_pack') || 'doraemon';
+        updateMemePackUI(saved);
+      }
+    }
+
+    async function setMemePack(pack) {
+      updateMemePackUI(pack);
+      localStorage.setItem('ai_hub_meme_pack', pack);
+      try {
+        await fetch('/api/meme-pack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pack })
+        });
+        showToast(`Đã chọn bộ meme: ${pack === 'dragonball' ? 'Dragon Ball ⚡' : 'Doraemon 🐱'}`, 'info', 1800);
+      } catch (e) {
+        showToast(`Đã chọn bộ meme: ${pack === 'dragonball' ? 'Dragon Ball ⚡' : 'Doraemon 🐱'}`, 'info', 1800);
+      }
+    }
+
+    function updateMemePackUI(pack) {
+      activeMemePack = pack;
+      const badge = document.getElementById('currentMemePackBadge');
+      if (badge) badge.textContent = pack === 'dragonball' ? 'Dragon Ball' : 'Doraemon';
+      ['doraemon', 'dragonball'].forEach(p => {
+        const btn = document.getElementById(`memePackBtn-${p}`);
+        if (btn) {
+          if (p === pack) {
+            btn.style.background = 'var(--bg-card)';
+            btn.style.color = 'var(--text-main)';
+            btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          } else {
+            btn.style.background = 'transparent';
+            btn.style.color = 'var(--text-sub)';
+            btn.style.boxShadow = 'none';
+          }
+        }
+      });
     }
 
     function cycleTheme() {
@@ -13486,6 +13566,7 @@
     // INITIALIZATION
     const savedTheme = localStorage.getItem('ai_hub_theme') || 'warm';
     setTheme(savedTheme);
+    loadMemePack();
     const rawSavedModel = localStorage.getItem('ai_hub_model') || 'cx/gpt-6.1-sol';
     const savedModel = normalizeModelId(rawSavedModel);
     if (savedModel !== rawSavedModel) {

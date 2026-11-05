@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meme Cursor Showcase - Doraemon & Dragon Ball</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #090d16;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 30px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #38bdf8 0%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+    p.sub {
+      color: #94a3b8;
+      font-size: 13.5px;
+      margin-top: 0;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .pack-selector {
+      display: flex;
+      gap: 12px;
+      background: #131b2e;
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid #1e293b;
+      margin-bottom: 30px;
+      z-index: 10;
+    }
+    .pack-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+    .pack-btn.active {
+      background: #1e293b;
+      color: #38bdf8;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .pack-btn[data-pack="dragonball"].active {
+      color: #f59e0b;
+    }
+    .interactive-zone {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 950px;
+    }
+    .card {
+      background: #131b2e;
+      border: 1.5px solid #1e293b;
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .card:hover {
+      border-color: #38bdf8;
+      background: #17233d;
+      transform: translateY(-3px);
+    }
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+    .card p {
+      margin: 0;
+      font-size: 12.5px;
+      color: #94a3b8;
+    }
+    input {
+      width: 80%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0a0f1d;
+      color: #fff;
+      font-size: 13px;
+      margin-top: 12px;
+      outline: none;
+    }
+    input:focus { border-color: #38bdf8; }
+    button.action-btn {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    button.action-btn:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Bộ Sưu Tập Con Trỏ Meme Hoạt Hình Mượt Mà</h1>
+  <p class="sub">Tùy chọn chuyển đổi tức thì giữa Doraemon và Dragon Ball (Goku & Vegeta)</p>
+
+  <div class="pack-selector">
+    <button class="pack-btn" id="btn-doraemon" data-pack="doraemon" onclick="switchPack('doraemon')">
+      <span>🐱</span>
+      <span>Doraemon Meme</span>
+    </button>
+    <button class="pack-btn active" id="btn-dragonball" data-pack="dragonball" onclick="switchPack('dragonball')">
+      <span>⚡</span>
+      <span>Dragon Ball (Goku & Vegeta)</span>
+    </button>
+  </div>
+
+  <div class="interactive-zone">
+    <div class="card" id="card-run">
+      <h3>🏃 Chạy Lon Ton / Thần Tốc</h3>
+      <p>Rê chuột tự do qua lại để xem meme đổi sang tư thế chạy sải bước & quay đầu</p>
+    </div>
+    <div class="card" id="card-inspect">
+      <h3>🔍 Soi Kính Lúp / Dò Scouter</h3>
+      <p>Hover chuột vào thẻ này để nhân vật nghiêng người quan sát chi tiết</p>
+    </div>
+    <div class="card" id="card-click">
+      <h3>💥 Bấm Chuột (Click)</h3>
+      <p>Click chuột vào nút bên dưới để nhân vật nhảy múa / bộc phát Super Saiyan</p>
+      <button class="action-btn" id="test-click-btn" onclick="triggerMemeClick(event)">Bấm Thử Nghiệm Ngay</button>
+    </div>
+    <div class="card" id="card-type">
+      <h3>✍️ Nhập Liệu / Luyện Công</h3>
+      <p>Click và gõ văn bản vào ô dưới đây để xem nhân vật cặm cụi gõ phím / tụ Ki</p>
+      <input type="text" id="test-type-input" placeholder="Nhập văn bản vào đây..." />
+    </div>
+  </div>
+
+  <!-- Client-side multi-pack cursor runner -->
+  <script>
+    const PACK_DATA = {
+      doraemon: {
+        name: 'Doraemon',
+        bubbleBg: '#ffffff',
+        bubbleColor: '#0f172a',
+        bubbleBorder: 'rgba(0, 159, 232, 0.45)',
+        shadow: 'rgba(0, 159, 232, 0.35)',
+        primary: '#009fe8',
+        actionText: {
+          idle: 'Doraemon đang ăn bánh rán! 🍘',
+          run: 'Doraemon đang chạy lon ton! 🏃',
+          inspect: 'Doraemon đang soi kính lúp! 🔍',
+          wave: 'Doraemon vẫy tay chào bạn! 👋',
+          click: 'Doraemon đang nhảy múa! 🎶',
+          typing: 'Doraemon đang gõ phím cặm cụi! ✍️'
+        },
+        memes: {
+          eat: '/stickers/candidates/cand_4.webp',
+          run: '/stickers/candidates/cand_7.webp',
+          inspect: '/stickers/candidates/cand_12.webp',
+          wave: '/stickers/candidates/cand_1.webp',
+          click: '/stickers/candidates/cand_8.webp',
+          dance: '/stickers/candidates/cand_11.webp'
+        }
+      },
+      dragonball: {
+        name: 'Dragon Ball',
+        bubbleBg: '#1e1b4b',
+        bubbleColor: '#fef08a',
+        bubbleBorder: 'rgba(245, 158, 11, 0.65)',
+        shadow: 'rgba(245, 158, 11, 0.45)',
+        primary: '#f59e0b',
+        actionText: {
+          idle: 'Goku ăn no nê ngon lành! 🍖',
+          run: 'Goku đang phi nước đại thần tốc! ⚡',
+          inspect: 'Vegeta dò chỉ số sức mạnh Scouter! 🎯',
+          wave: 'Goku chào đồng đội thân thiện! 👋',
+          click: 'Super Saiyan bộc phát Ki dũng mãnh! 🔥',
+          typing: 'Goku tích tụ năng lượng luyện công! ⚡'
+        },
+        memes: {
+          eat: '/stickers/dragonball/db_1.webp',
+          run: '/stickers/dragonball/db_19.webp',
+          inspect: '/stickers/dragonball/db_7.webp',
+          wave: '/stickers/dragonball/db_21.webp',
+          click: '/stickers/dragonball/db_34.webp',
+          dance: '/stickers/dragonball/db_3.webp'
+        }
+      }
+    };
+
+    let curPack = localStorage.getItem('ai_hub_meme_pack') || 'dragonball';
+
+    function initCursor() {
+      const cfg = PACK_DATA[curPack] || PACK_DATA.dragonball;
+      let style = document.getElementById('meme-cursor-style');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'meme-cursor-style';
+        document.head.appendChild(style);
+      }
+      style.textContent = `
+        * { cursor: default !important; }
+        .meme-cursor-wrap {
+          position: fixed; z-index: 2147483647; pointer-events: none;
+          width: 76px; height: 76px; transform: translate(-38px, -38px);
+          transition: left 0.16s cubic-bezier(0.2, 0, 0.2, 1), top 0.16s cubic-bezier(0.2, 0, 0.2, 1);
+          will-change: left, top, transform;
+        }
+        .meme-img {
+          width: 100%; height: 100%; object-fit: contain;
+          filter: drop-shadow(0 4px 12px ${cfg.shadow});
+          transition: transform 0.2s ease;
+        }
+        .meme-turn-left { transform: rotateY(180deg); }
+        .meme-speech-bubble {
+          position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(4px);
+          background: ${cfg.bubbleBg}; color: ${cfg.bubbleColor};
+          border: 1.5px solid ${cfg.bubbleBorder};
+          padding: 4px 10px; border-radius: 14px; font-size: 11px; font-weight: 700;
+          white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+          pointer-events: none; opacity: 0; transition: all 0.22s ease;
+        }
+        .meme-speech-bubble.active { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .meme-ripple {
+          position: fixed; width: 44px; height: 44px; border-radius: 50%;
+          border: 3px solid ${cfg.primary}; pointer-events: none;
+          transform: translate(-50%, -50%) scale(0.2);
+          opacity: 1; animation: memeRipplePop 0.65s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+          z-index: 2147483646;
+        }
+        @keyframes memeRipplePop {
+          0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+          100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+        }
+      `;
+
+      let cursor = document.getElementById('live-meme-cursor');
+      if (!cursor) {
+        cursor = document.createElement('div');
+        cursor.id = 'live-meme-cursor';
+        cursor.className = 'meme-cursor-wrap';
+        cursor.innerHTML = '<div id="meme-bubble" class="meme-speech-bubble"></div><img id="meme-img" class="meme-img" src="' + cfg.memes.eat + '" />';
+        document.body.appendChild(cursor);
+      } else {
+        document.getElementById('meme-img').src = cfg.memes.eat;
+      }
+
+      window.memeState = {
+        posX: window.innerWidth / 2, posY: window.innerHeight / 2,
+        lastMoveTime: Date.now(), currentAction: 'idle', turnLeft: false
+      };
+      cursor.style.left = window.memeState.posX + 'px';
+      cursor.style.top = window.memeState.posY + 'px';
+      const b = document.getElementById('meme-bubble');
+      if (b) {
+        b.textContent = cfg.actionText.idle;
+        b.classList.add('active');
+        setTimeout(() => b.classList.remove('active'), 2500);
+      }
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      const cursor = document.getElementById('live-meme-cursor');
+      if (!cursor || !window.memeState) return;
+      const s = window.memeState;
+      const dx = e.clientX - s.posX;
+      if (Math.abs(dx) > 8) {
+        s.turnLeft = dx < 0;
+        const img = document.getElementById('meme-img');
+        if (img) {
+          if (s.turnLeft) img.classList.add('meme-turn-left');
+          else img.classList.remove('meme-turn-left');
+        }
+      }
+      s.posX = e.clientX; s.posY = e.clientY;
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+      s.lastMoveTime = Date.now();
+
+      const cfg = PACK_DATA[curPack] || PACK_DATA.dragonball;
+      if (s.currentAction !== 'run' && s.currentAction !== 'inspect' && s.currentAction !== 'click' && s.currentAction !== 'typing') {
+        s.currentAction = 'run';
+        const img = document.getElementById('meme-img');
+        if (img && !img.src.includes(cfg.memes.run)) img.src = cfg.memes.run;
+        const b = document.getElementById('meme-bubble');
+        if (b) {
+          b.textContent = cfg.actionText.run;
+          b.classList.add('active');
+        }
+      }
+    }, { passive: true });
+
+    setInterval(() => {
+      const s = window.memeState;
+      if (!s) return;
+      const idleTime = Date.now() - s.lastMoveTime;
+      if (idleTime > 1100 && (s.currentAction === 'run' || s.currentAction === 'inspect')) {
+        s.currentAction = 'idle';
+        const cfg = PACK_DATA[curPack] || PACK_DATA.dragonball;
+        const img = document.getElementById('meme-img');
+        const b = document.getElementById('meme-bubble');
+        if (img) img.src = cfg.memes.eat;
+        if (b) {
+          b.textContent = cfg.actionText.idle;
+          b.classList.add('active');
+          setTimeout(() => { if (s.currentAction === 'idle') b.classList.remove('active'); }, 2200);
+        }
+      }
+    }, 500);
+
+    // Hover inspect
+    document.addEventListener('mouseover', (e) => {
+      if (e.target.closest('#card-inspect')) {
+        const s = window.memeState;
+        if (!s) return;
+        s.currentAction = 'inspect';
+        const cfg = PACK_DATA[curPack] || PACK_DATA.dragonball;
+        const img = document.getElementById('meme-img');
+        const b = document.getElementById('meme-bubble');
+        if (img) img.src = cfg.memes.inspect;
+        if (b) {
+          b.textContent = cfg.actionText.inspect;
+          b.classList.add('active');
+        }
+      }
+    });
+
+    // Input typing
+    document.addEventListener('input', (e) => {
+      if (e.target.id === 'test-type-input') {
+        const s = window.memeState;
+        if (!s) return;
+        s.currentAction = 'typing';
+        s.lastMoveTime = Date.now();
+        const cfg = PACK_DATA[curPack] || PACK_DATA.dragonball;
+        const img = document.getElementById('meme-img');
+        const b = document.getElementById('meme-bubble');
+        if (img) img.src = cfg.memes.run;
+        if (b) {
+          b.textContent = cfg.actionText.typing;
+          b.classList.add('active');
+          setTimeout(() => { if (s.currentAction === 'typing') s.currentAction = 'idle'; }, 2000);
+        }
+      }
+    });
+
+    function triggerMemeClick(e) {
+      const s = window.memeState;
+      if (s) s.currentAction = 'click';
+      const cfg = PACK_DATA[curPack] || PACK_DATA.dragonball;
+      const rip = document.createElement('div');
+      rip.className = 'meme-ripple';
+      rip.style.left = e.clientX + 'px';
+      rip.style.top = e.clientY + 'px';
+      document.body.appendChild(rip);
+      setTimeout(() => rip.remove(), 700);
+
+      const img = document.getElementById('meme-img');
+      const b = document.getElementById('meme-bubble');
+      if (img) img.src = cfg.memes.click || cfg.memes.dance;
+      if (b) {
+        b.textContent = cfg.actionText.click;
+        b.classList.add('active');
+        setTimeout(() => b.classList.remove('active'), 2500);
+      }
+    }
+
+    async function switchPack(pack) {
+      curPack = pack;
+      localStorage.setItem('ai_hub_meme_pack', pack);
+      document.getElementById('btn-doraemon').classList.toggle('active', pack === 'doraemon');
+      document.getElementById('btn-dragonball').classList.toggle('active', pack === 'dragonball');
+      try {
+        await fetch('/api/meme-pack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pack })
+        });
+      } catch (e) {}
+      initCursor();
+    }
+
+    document.getElementById('btn-doraemon').classList.toggle('active', curPack === 'doraemon');
+    document.getElementById('btn-dragonball').classList.toggle('active', curPack === 'dragonball');
+    initCursor();
+  </script>
+</body>
+</html>

@@ -157,3 +157,7 @@
 
 
 - Atoma flow: scope every request by cameraId; zero-only probes cannot prove filtering. Use UTC query times and overwrite unique area/month snapshots to avoid offset encoding and repeat-count errors.
+
+- CameraAI incidents: use vendor incidentId as durable identity, share a transactional paginated-ingestion checkpoint across indicator jobs, and project by event month/functionType; never turn invalid dates/API failures into current-time events or zero totals.
+
+- Preserve IOC business schemas: keep vendor IDs, checkpoints, area breakdowns and owned target-row links in integration sidecar tables; migrations being allowed is not permission to extend indicator-table columns.

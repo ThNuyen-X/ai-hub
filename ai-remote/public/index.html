@@ -10,19 +10,19 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   
-  <link rel="manifest" href="/manifest.json?v=13">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=13">
-  <link rel="apple-touch-icon" href="/icon.svg?v=13">
-  <title>Bò Tót Remote</title>
+  <link rel="manifest" href="/manifest.json?v=14">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=14">
+  <link rel="apple-touch-icon" href="/icon.svg?v=14">
+  <title>Bò Tót Remote Controller</title>
 
-  <!-- BE VIETNAM PRO -->
+  <!-- FONT BE VIETNAM PRO & JETBRAINS MONO -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
 
   <style>
     /* =============================================================
-       HIGH CONTRAST & MAXIMUM READABILITY PALETTES
+       THEME VARIABLES (DARK / WARM / LIGHT)
        ============================================================= */
     :root, [data-theme="dark"] {
       --font: 'Be Vietnam Pro', -apple-system, sans-serif;
@@ -51,10 +51,13 @@
 
       --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
       --seg-bg: #1c2030;
+      --overlay-bg: rgba(0, 0, 0, 0.75);
     }
 
-    /* WARM MODE (SÁNG RỰC RỠ, NỀN KEM, CHỮ NÂU ĐẬM RÕ RÀNG) */
     [data-theme="warm"] {
+      --font: 'Be Vietnam Pro', -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+
       --bg: #f7f2e7;
       --card-bg: #ffffff;
       --card-inner: #f0e6d6;
@@ -78,10 +81,13 @@
 
       --card-shadow: 0 8px 24px rgba(130, 80, 30, 0.08);
       --seg-bg: #eddcc6;
+      --overlay-bg: rgba(42, 20, 6, 0.55);
     }
 
-    /* LIGHT MODE */
     [data-theme="light"] {
+      --font: 'Be Vietnam Pro', -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+
       --bg: #f1f5f9;
       --card-bg: #ffffff;
       --card-inner: #f8fafc;
@@ -103,8 +109,9 @@
       --indigo: #4f46e5;
       --indigo-bg: rgba(79, 70, 229, 0.12);
 
-      --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      --card-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
       --seg-bg: #e2e8f0;
+      --overlay-bg: rgba(15, 23, 42, 0.6);
     }
 
     * {
@@ -112,21 +119,17 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
     }
 
     body {
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text-main);
-      font-family: var(--font);
-      min-height: 100vh;
-      padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)) 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      padding: 12px 14px 40px;
       max-width: 480px;
       margin: 0 auto;
-      transition: background 0.25s ease, color 0.25s ease;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* TOP BAR */
@@ -134,62 +137,65 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 4px 2px;
+      margin-bottom: 12px;
+      padding-top: max(6px, env(safe-area-inset-top));
     }
     .brand-title-box {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .brand-logo {
-      width: 46px;
-      height: 46px;
+      width: 42px;
+      height: 42px;
       object-fit: contain;
     }
     .brand-texts h1 {
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 900;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
+      letter-spacing: -0.3px;
+      line-height: 1.15;
     }
     .brand-texts p {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      color: var(--text-sub);
+      color: var(--text-dim);
     }
 
     /* THEME SWITCHER */
     .theme-seg {
-      display: flex;
       background: var(--seg-bg);
-      border: 1px solid var(--border);
-      border-radius: 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
       padding: 3px;
-      gap: 2px;
+      display: flex;
+      gap: 3px;
     }
     .theme-btn {
-      border: none;
       background: transparent;
-      color: var(--text-sub);
+      border: none;
+      color: var(--text-dim);
       font-family: var(--font);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
-      padding: 6px 11px;
+      padding: 5px 10px;
       border-radius: 14px;
       cursor: pointer;
+      transition: all 0.15s ease;
     }
     .theme-btn.active {
-      background: var(--card-bg);
-      color: var(--text-main);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      background: var(--accent-btn);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
-    /* STATUS BANNER (TO, RÕ, ĐẬM NÉT) */
+    /* STATUS BANNER */
     .status-card {
       background: var(--card-bg);
       border: 2px solid var(--border);
-      border-radius: 20px;
-      padding: 14px 16px;
+      border-radius: 18px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -203,110 +209,248 @@
     .live-dot {
       width: 12px;
       height: 12px;
-      border-radius: 50%;
       background: var(--emerald);
+      border-radius: 50%;
       box-shadow: 0 0 10px var(--emerald);
-      flex-shrink: 0;
+      animation: pulse 2s infinite;
     }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     .host-name {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.2;
     }
     .ip-badge {
-      font-size: 13px;
-      font-weight: 800;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
       color: var(--accent);
       cursor: pointer;
-      font-family: var(--mono);
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
     .status-right {
       display: flex;
-      gap: 8px;
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 800;
+      gap: 6px;
     }
     .stat-pill {
-      background: var(--card-inner);
-      padding: 5px 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
       border-radius: 10px;
+      background: var(--card-inner);
       border: 1px solid var(--border);
     }
     .stat-pill.batt { color: var(--emerald); }
-    .stat-pill.ram { color: var(--accent); }
+    .stat-pill.ram { color: var(--amber); }
 
-    /* EMERGENCY HUD */
+    /* EMERGENCY COUNTDOWN HUD */
     .emergency-hud {
+      background: var(--rose-bg);
+      border: 2px solid var(--rose);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 14px;
+      text-align: center;
       display: none;
+      animation: flash 1s infinite alternate;
+    }
+    @keyframes flash { from { border-color: var(--rose); } to { border-color: transparent; } }
+    .emergency-hud h3 { font-size: 14px; font-weight: 900; color: var(--rose); margin-bottom: 4px; }
+    .emergency-hud .num { font-family: var(--mono); font-size: 32px; font-weight: 900; color: var(--rose); line-height: 1; margin-bottom: 8px; }
+    .emergency-hud button {
       background: var(--rose);
       color: #fff;
-      padding: 16px;
-      border-radius: 20px;
-      text-align: center;
-    }
-    .emergency-hud h3 { font-size: 15px; font-weight: 900; }
-    .emergency-hud .num { font-size: 44px; font-weight: 900; font-family: var(--mono); margin: 2px 0 8px; }
-    .emergency-hud button {
-      background: #fff;
-      color: var(--rose);
       border: none;
-      padding: 12px;
-      border-radius: 14px;
-      font-size: 15px;
+      font-family: var(--font);
+      font-size: 14px;
       font-weight: 900;
-      width: 100%;
+      padding: 12px 24px;
+      border-radius: 14px;
       cursor: pointer;
+      width: 100%;
     }
 
-    /* SECTION CARDS (TO, RÕ, DỄ NHÌN) */
+    /* =============================================================
+       VIEW CONTAINER & NAVIGATION (SPA ARCHITECTURE)
+       ============================================================= */
+    .app-view {
+      display: none;
+      animation: viewFade 0.18s ease-out;
+    }
+    .app-view.active {
+      display: block;
+    }
+    @keyframes viewFade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* VIEW BACK BUTTON BAR */
+    .view-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .btn-back-menu {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 800;
+      padding: 8px 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-back-menu:active { transform: scale(0.96); border-color: var(--accent); }
+    .btn-back-menu svg { width: 18px; height: 18px; color: var(--accent); }
+    .view-header-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* =============================================================
+       TRANG CHỦ (VIEW 1): 3 NÚT LỚN CHỐNG BẤM NHẦM
+       ============================================================= */
+    .home-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .hub-nav-tile {
+      background: var(--card-bg);
+      border: 2.5px solid var(--border);
+      border-radius: 22px;
+      padding: 18px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      transition: all 0.18s ease;
+      text-decoration: none;
+      color: var(--text-main);
+      min-height: 100px;
+    }
+    .hub-nav-tile:active {
+      transform: scale(0.97);
+      border-color: var(--border-accent);
+    }
+    .hub-tile-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+      overflow: hidden;
+    }
+    .hub-tile-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1.5px solid transparent;
+    }
+    .hub-tile-icon-box svg { width: 28px; height: 28px; }
+    
+    .hub-tile-texts {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+    }
+    .hub-tile-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hub-tile-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+    .hub-tile-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .hub-tile-desc {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      line-height: 1.3;
+    }
+    .hub-tile-arrow {
+      width: 24px;
+      height: 24px;
+      color: var(--text-dim);
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    /* THEME MAU CHO 3 TILE */
+    .tile-hub .hub-tile-icon-box { background: var(--emerald-bg); color: var(--emerald); border-color: rgba(16, 185, 129, 0.3); }
+    .tile-hub .hub-tile-badge { background: var(--emerald-bg); color: var(--emerald); }
+    
+    .tile-system .hub-tile-icon-box { background: rgba(56, 189, 248, 0.16); color: var(--accent); border-color: rgba(56, 189, 248, 0.3); }
+    .tile-system .hub-tile-badge { background: rgba(56, 189, 248, 0.16); color: var(--accent); }
+
+    .tile-prompt .hub-tile-icon-box { background: var(--amber-bg); color: var(--amber); border-color: rgba(245, 158, 11, 0.3); }
+    .tile-prompt .hub-tile-badge { background: var(--amber-bg); color: var(--amber); }
+
+    /* =============================================================
+       SECTION CARD (CHO CÁC VIEW CON)
+       ============================================================= */
     .section-card {
       background: var(--card-bg);
       border: 2px solid var(--border);
-      border-radius: 24px;
-      padding: 18px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      border-radius: 22px;
+      padding: 16px;
+      margin-bottom: 14px;
       box-shadow: var(--card-shadow);
     }
-
     .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 14px;
     }
     .section-title {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 900;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--text-sub);
+      letter-spacing: -0.2px;
     }
 
+    /* STATUS TAGS */
     .status-tag {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 8px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
     }
-    .status-tag.online { background: var(--emerald-bg); color: var(--emerald); border: 1px solid rgba(16,185,129,0.3); }
-    .status-tag.offline { background: var(--rose-bg); color: var(--rose); border: 1px solid rgba(239,68,68,0.3); }
+    .status-tag.online { background: var(--emerald-bg); color: var(--emerald); border: 1px solid var(--emerald); }
+    .status-tag.offline { background: var(--rose-bg); color: var(--rose); border: 1px solid var(--rose); }
 
-    /* NÚT BẤM TO BỰ (DỄ CHẠM NGÓN TAY) */
-    .grid-3-col {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    .grid-2-col {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
+    /* GRIDS */
+    .grid-3-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    .grid-2-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 
+    /* BIG BUTTONS */
     .big-btn {
       background: var(--card-inner);
       border: 2px solid var(--border);
@@ -323,19 +467,11 @@
       font-weight: 800;
       cursor: pointer;
       transition: all 0.15s ease;
-      text-decoration: none;
-      min-height: 72px;
+      min-height: 76px;
     }
-    .big-btn:active:not(:disabled) {
-      transform: scale(0.95);
-      border-color: var(--border-accent);
-    }
-    .big-btn svg {
-      width: 28px;
-      height: 28px;
-    }
+    .big-btn:active:not(:disabled) { transform: scale(0.95); }
+    .big-btn svg { width: 28px; height: 28px; }
 
-    /* TRẠNG THÁI KHÓA (DISABLED) CHUẨN XỊN CHỐNG THAO TÁC THỪA */
     .big-btn:disabled, button:disabled {
       opacity: 0.35 !important;
       cursor: not-allowed !important;
@@ -345,40 +481,35 @@
       border-style: dashed !important;
     }
 
-    .open-web-button.disabled {
-      opacity: 0.35 !important;
-      cursor: not-allowed !important;
-      pointer-events: none !important;
-      filter: grayscale(0.85) !important;
-      border-style: dashed !important;
-    }
+    .big-btn.btn-start { color: var(--emerald); background: var(--emerald-bg); border-color: rgba(16, 185, 129, 0.4); }
+    .big-btn.btn-restart { color: var(--amber); background: var(--amber-bg); border-color: rgba(245, 158, 11, 0.4); }
+    .big-btn.btn-stop { color: var(--rose); background: var(--rose-bg); border-color: rgba(239, 68, 68, 0.4); }
 
-    .big-btn.btn-start { color: var(--emerald); background: var(--emerald-bg); border-color: rgba(16, 185, 129, 0.35); }
-    .big-btn.btn-restart { color: var(--amber); background: var(--amber-bg); border-color: rgba(245, 158, 11, 0.35); }
-    .big-btn.btn-stop { color: var(--rose); background: var(--rose-bg); border-color: rgba(239, 68, 68, 0.35); }
-    .big-btn.btn-cyan { color: var(--accent); background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); }
-    .big-btn.btn-indigo { color: var(--indigo); background: var(--indigo-bg); border-color: rgba(129, 140, 248, 0.35); }
-
-    /* NÚT MỞ WEB TO ĐÙNG RỰC RỠ */
     .open-web-button {
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: var(--accent-btn);
       color: #ffffff;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 900;
-      padding: 16px 18px;
+      padding: 16px;
       border-radius: 18px;
       text-decoration: none;
       box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
       transition: all 0.15s ease;
     }
     .open-web-button:active:not(.disabled) { transform: scale(0.97); }
+    .open-web-button.disabled {
+      opacity: 0.35 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      border-style: dashed !important;
+    }
     .open-web-button div { display: flex; align-items: center; gap: 8px; }
     .open-web-button svg { width: 20px; height: 20px; }
 
-    /* HARDWARE BUTTONS (TẮT MÀN HÌNH, KHÓA MÁY...) */
+    /* HARDWARE BUTTONS */
     .hw-btn {
       background: var(--card-inner);
       border: 2px solid var(--border);
@@ -391,105 +522,52 @@
       cursor: pointer;
       color: var(--text-main);
       font-family: var(--font);
-      min-height: 84px;
+      min-height: 90px;
       transition: all 0.15s ease;
     }
-    .hw-btn:active:not(.disabled) {
-      transform: scale(0.95);
-      border-color: var(--border-accent);
-    }
-    .hw-btn.disabled {
-      opacity: 0.35 !important;
-      cursor: not-allowed !important;
-      pointer-events: none !important;
-      filter: grayscale(0.85) !important;
-    }
+    .hw-btn:active:not(.disabled) { transform: scale(0.95); border-color: var(--accent); }
+    .hw-btn.disabled { opacity: 0.35 !important; cursor: not-allowed !important; pointer-events: none !important; }
     .hw-icon-box {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: var(--card-bg);
       border: 1px solid var(--border);
     }
-    .hw-icon-box svg { width: 22px; height: 22px; }
-    .hw-btn .hw-text-title {
-      font-size: 14px;
-      font-weight: 800;
-      line-height: 1.2;
-    }
-    .hw-btn .hw-text-desc {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-sub);
-    }
+    .hw-icon-box svg { width: 24px; height: 24px; }
+    .hw-btn .hw-text-title { font-size: 14px; font-weight: 800; line-height: 1.2; }
+    .hw-btn .hw-text-desc { font-size: 11px; font-weight: 600; color: var(--text-sub); }
 
     /* =============================================================
-       CUSTOM COMBOBOX UI (CHUẨN MOBILE - THAY THẾ HOÀN TOÀN SELECT NATIVE)
+       MODEL SELECTOR TRIGGER BOX (MỞ POPUP)
        ============================================================= */
-    .combobox-wrapper {
-      position: relative;
-      margin-bottom: 12px;
-      user-select: none;
-    }
-    .combobox-header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-    .combobox-label {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-    }
-    .combobox-count-badge {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent);
-      background: rgba(56, 189, 248, 0.12);
-      padding: 2px 8px;
-      border-radius: 10px;
-    }
-    /* Trigger Box */
-    .combobox-trigger {
-      width: 100%;
+    .model-trigger-card {
       background: var(--card-inner);
       border: 2px solid var(--border);
-      border-radius: 16px;
-      padding: 10px 14px;
+      border-radius: 18px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
+      margin-bottom: 12px;
       transition: all 0.15s ease;
-      color: var(--text-main);
-      box-sizing: border-box;
-      min-height: 58px;
     }
-    .combobox-trigger:active {
-      transform: scale(0.98);
-      border-color: var(--accent);
-    }
-    .combobox-trigger.open {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-    }
-    .combobox-trigger-left {
+    .model-trigger-card:active { transform: scale(0.98); border-color: var(--accent); }
+    .model-trigger-left {
       display: flex;
       align-items: center;
       gap: 12px;
-      overflow: hidden;
       flex: 1;
+      overflow: hidden;
     }
-    .model-icon-box {
-      width: 40px;
-      height: 40px;
-      border-radius: 13px;
+    .model-avatar-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -497,197 +575,61 @@
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid var(--border);
     }
-    .model-icon-box svg {
-      width: 22px;
-      height: 22px;
-      flex-shrink: 0;
-      display: block;
-    }
-    .model-icon-box.gemini {
-      background: rgba(49, 134, 255, 0.14);
-      border-color: rgba(49, 134, 255, 0.35);
-    }
-    .model-icon-box.claude {
-      background: rgba(217, 119, 87, 0.14);
-      border-color: rgba(217, 119, 87, 0.35);
-    }
-    .model-icon-box.openai {
-      color: #10b981;
-      background: rgba(16, 185, 129, 0.14);
-      border-color: rgba(16, 185, 129, 0.35);
-    }
-    .model-icon-box.claude-cli {
-      color: #f43f5e;
-      background: rgba(244, 63, 94, 0.14);
-      border-color: rgba(244, 63, 94, 0.35);
-    }
+    .model-avatar-box svg { width: 24px; height: 24px; display: block; }
+    .model-avatar-box.gemini { background: rgba(49, 134, 255, 0.16); border-color: rgba(49, 134, 255, 0.35); }
+    .model-avatar-box.claude { background: rgba(217, 119, 87, 0.16); border-color: rgba(217, 119, 87, 0.35); }
+    .model-avatar-box.openai { color: #10b981; background: rgba(16, 185, 129, 0.16); border-color: rgba(16, 185, 129, 0.35); }
+    .model-avatar-box.claude-cli { color: #f43f5e; background: rgba(244, 63, 94, 0.16); border-color: rgba(244, 63, 94, 0.35); }
 
-    .combobox-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
-    }
-    .combobox-info-top {
+    .model-trigger-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+    .model-trigger-top { display: flex; align-items: center; gap: 6px; }
+    .model-trigger-name { font-size: 14px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .model-trigger-badge { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); color: var(--text-sub); }
+    .model-trigger-tag { font-size: 11px; font-weight: 600; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .model-trigger-action {
       display: flex;
       align-items: center;
-      gap: 6px;
-    }
-    .combobox-current-name {
-      font-size: 14px;
+      gap: 4px;
+      font-size: 12px;
       font-weight: 800;
-      color: var(--text-main);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .combobox-provider-tag {
-      font-size: 10px;
-      font-weight: 800;
-      padding: 1px 6px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.12);
-      color: var(--text-sub);
-      text-transform: uppercase;
-    }
-    .combobox-current-desc {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-sub);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .combobox-chevron {
-      width: 20px;
-      height: 20px;
-      color: var(--text-dim);
-      transition: transform 0.25s ease;
+      color: var(--accent);
       flex-shrink: 0;
       margin-left: 8px;
     }
-    .combobox-trigger.open .combobox-chevron {
-      transform: rotate(180deg);
-      color: var(--accent);
-    }
+    .model-trigger-action svg { width: 16px; height: 16px; }
 
-    /* Dropdown Popover List */
-    .combobox-menu {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: var(--card-bg);
-      border: 2px solid var(--border-accent);
-      border-radius: 18px;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
-      z-index: 1000;
-      padding: 8px;
-      display: none;
-      max-height: 380px;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-    }
-    .combobox-menu.open {
-      display: block;
-      animation: menuFadeIn 0.18s ease-out;
-    }
-    @keyframes menuFadeIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .combobox-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      border: 1px solid transparent;
-      margin-bottom: 4px;
-    }
-    .combobox-item:last-child {
-      margin-bottom: 0;
-    }
-    .combobox-item:active {
-      transform: scale(0.98);
-    }
-    .combobox-item:hover {
-      background: var(--card-inner);
-    }
-    .combobox-item.selected {
-      background: var(--emerald-bg);
-      border-color: rgba(16, 185, 129, 0.35);
-    }
-    .combobox-item-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    /* PROMPT BOX & TERMINAL */
+    .prompt-box-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .prompt-input-field {
       flex: 1;
-      overflow: hidden;
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 14px;
+      border-radius: 16px;
+      outline: none;
     }
-    .combobox-item-texts {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
-    }
-    .combobox-item-title-row {
+    .prompt-input-field:focus { border-color: var(--accent); }
+    .btn-submit-prompt {
+      background: var(--accent-btn);
+      color: #ffffff;
+      border: none;
+      border-radius: 16px;
+      padding: 0 18px;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: var(--font);
+      cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
     }
-    .combobox-item-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--text-main);
-    }
-    .combobox-item.selected .combobox-item-title {
-      color: var(--emerald);
-    }
-    .combobox-item-badge {
-      font-size: 10px;
-      font-weight: 800;
-      padding: 1px 6px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-sub);
-    }
-    .combobox-item-desc {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-sub);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .combobox-check {
-      width: 20px;
-      height: 20px;
-      color: var(--emerald);
-      flex-shrink: 0;
-      display: none;
-    }
-    .combobox-item.selected .combobox-check {
-      display: block;
-    }
-
-    /* Backdrop click outside */
-    .combobox-backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 990;
-      display: none;
-    }
-    .combobox-backdrop.open {
-      display: block;
-    }
+    .btn-submit-prompt:active:not(:disabled) { transform: scale(0.95); }
+    .btn-submit-prompt:disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
 
     .btn-abort-prompt {
       background: var(--rose-bg);
@@ -702,16 +644,14 @@
       display: none;
       align-items: center;
       gap: 6px;
-      white-space: nowrap;
-      transition: all 0.15s ease;
     }
     .btn-abort-prompt:active { transform: scale(0.95); }
     .btn-abort-prompt.visible { display: flex; }
+
     .console-header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 10px;
       margin-bottom: 6px;
     }
     .console-title {
@@ -728,70 +668,134 @@
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
-      padding: 3px 8px;
-      border-radius: 8px;
-      transition: color 0.15s ease;
+      padding: 2px 6px;
     }
-    .btn-clear-console:hover {
-      color: var(--text-main);
-    }
+    .btn-clear-console:hover { color: var(--text-main); }
 
-    /* RESCUE PROMPT BAR */
-    .prompt-box-row {
-      display: flex;
-      gap: 8px;
-    }
-    .prompt-input-field {
-      flex: 1;
-      background: var(--card-inner);
-      border: 2px solid var(--border);
-      color: var(--text-main);
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 600;
-      padding: 12px 14px;
-      border-radius: 16px;
-      outline: none;
-    }
-    .prompt-input-field:focus {
-      border-color: var(--accent);
-    }
-    .btn-submit-prompt {
-      background: var(--accent-btn);
-      color: #ffffff;
-      border: none;
-      border-radius: 16px;
-      padding: 0 18px;
-      font-size: 14px;
-      font-weight: 800;
-      font-family: var(--font);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-submit-prompt:active:not(:disabled) { transform: scale(0.95); }
-    .btn-submit-prompt:disabled {
-      opacity: 0.4 !important;
-      cursor: not-allowed !important;
-    }
-
-    /* CONSOLE */
     .console-display {
       background: var(--card-inner);
       border: 2px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 12px;
       font-family: var(--mono);
       font-size: 12px;
       font-weight: 600;
-      height: 130px;
+      height: 220px;
       overflow-y: auto;
       color: var(--accent);
       white-space: pre-wrap;
       word-break: break-all;
       line-height: 1.45;
     }
+
+    /* =============================================================
+       MODAL POPUP BOTTOM SHEET (CHỌN MODEL AI CHUẨN MOBILE)
+       ============================================================= */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--overlay-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 2500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+    .modal-overlay.open {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-sheet {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      border: 2px solid var(--border-accent);
+      border-bottom: none;
+      border-radius: 26px 26px 0 0;
+      padding: 18px 16px max(24px, env(safe-area-inset-bottom));
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-overlay.open .modal-sheet {
+      transform: translateY(0);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      border-bottom: 1.5px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .modal-title-box { display: flex; flex-direction: column; gap: 2px; }
+    .modal-title { font-size: 16px; font-weight: 900; color: var(--text-main); }
+    .modal-subtitle { font-size: 11px; font-weight: 600; color: var(--text-dim); }
+    .modal-close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--card-inner);
+      border: 1.5px solid var(--border);
+      color: var(--text-main);
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close-btn:active { transform: scale(0.92); }
+
+    .modal-list {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-bottom: 10px;
+    }
+    .modal-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--card-inner);
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .modal-item:active { transform: scale(0.98); }
+    .modal-item.selected {
+      background: var(--emerald-bg);
+      border-color: rgba(16, 185, 129, 0.45);
+    }
+    .modal-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+    }
+    .modal-item-texts { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+    .modal-item-top { display: flex; align-items: center; gap: 6px; }
+    .modal-item-name { font-size: 14px; font-weight: 800; color: var(--text-main); }
+    .modal-item.selected .modal-item-name { color: var(--emerald); }
+    .modal-item-badge { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: var(--text-sub); }
+    .modal-item-desc { font-size: 11px; font-weight: 600; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .modal-item-check { width: 22px; height: 22px; color: var(--emerald); flex-shrink: 0; display: none; }
+    .modal-item.selected .modal-item-check { display: block; }
 
     /* TOAST */
     .toast-popup {
@@ -807,7 +811,7 @@
       font-size: 13px;
       font-weight: 800;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-      z-index: 2000;
+      z-index: 3000;
       pointer-events: none;
       transition: transform 0.25s ease;
     }
@@ -819,13 +823,13 @@
   <!-- TOAST -->
   <div class="toast-popup" id="toast">Thông báo</div>
 
-  <!-- TOP BAR -->
+  <!-- TOP BAR (LUÔN CỐ ĐỊNH Ở TRÊN ĐẦU) -->
   <header class="top-bar">
     <div class="brand-title-box">
-      <img src="/icon.svg?v=13" alt="Bò Tót" class="brand-logo">
+      <img src="/icon.svg?v=14" alt="Bò Tót" class="brand-logo" onclick="switchView('home')">
       <div class="brand-texts">
         <h1>BÒ TÓT REMOTE</h1>
-        <p>Điều Khiển Máy Tính Từ Xa</p>
+        <p>Điều Khiển Laptop Từ Xa</p>
       </div>
     </div>
     <!-- 3 THEME PILLS -->
@@ -836,13 +840,13 @@
     </div>
   </header>
 
-  <!-- STATUS BANNER (TO, RÕ, ĐẬM NÉT) -->
+  <!-- STATUS BANNER (REALTIME TẤT CẢ CÁC TRANG) -->
   <section class="status-card">
     <div class="status-left">
       <div class="live-dot" title="Laptop Online"></div>
       <div>
         <div class="host-name" id="host-name">Admin-PC</div>
-        <div class="ip-badge" onclick="copyIp()" title="Chạm để copy">
+        <div class="ip-badge" onclick="copyIp()" title="Chạm để copy IP">
           <span id="ip-val">100.94.115.99</span> 📋
         </div>
       </div>
@@ -853,193 +857,434 @@
     </div>
   </section>
 
-  <!-- EMERGENCY HUD -->
+  <!-- EMERGENCY HUD (ĐẾM NGƯỢC TẮT MÁY KHẨN CẤP) -->
   <div class="emergency-hud" id="emergency-hud">
     <h3 id="emergency-label">LỆNH TẮT MÁY ĐANG CHỜ</h3>
     <div class="num" id="emergency-countdown">30s</div>
     <button onclick="abortShutdownCmd()">🛑 HỦY TẮT MÁY NGAY</button>
   </div>
 
-  <!-- KHỐI 1: MÁY CHỦ AI HUB (PORT 20130) -->
-  <section class="section-card">
-    <div class="section-header">
-      <span class="section-title">Máy Chủ AI Hub (Port 20130)</span>
-      <span class="status-tag online" id="hub-status-tag">ĐANG CHẠY</span>
-    </div>
-
-    <!-- 3 NÚT BẬT / RESTART / TẮT (TỰ ĐỘNG DISABLE THÔNG MINH) -->
-    <div class="grid-3-col">
-      <button class="big-btn btn-start" id="btn-hub-start" onclick="hubAction('start')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span id="text-hub-start">Bật Server</span>
-      </button>
-      <button class="big-btn btn-restart" id="btn-hub-restart" onclick="hubAction('restart')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        <span id="text-hub-restart">Restart</span>
-      </button>
-      <button class="big-btn btn-stop" id="btn-hub-stop" onclick="hubAction('stop')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span id="text-hub-stop">Tắt Server</span>
-      </button>
-    </div>
-
-    <!-- NÚT MỞ GIAO DIỆN WEB (TỰ ĐỘNG DISABLE KHI SERVER TẮT) -->
-    <a href="#" target="_blank" class="open-web-button" id="web-portal-link">
-      <div>
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-        <span id="web-portal-text">Mở Giao Diện Web AI Hub (Cổng 20130)</span>
-      </div>
-      <span style="font-size: 18px;" id="web-portal-arrow">➔</span>
-    </a>
-  </section>
-
-  <!-- KHỐI 2: ĐIỀU KHIỂN LAPTOP WINDOWS -->
-  <section class="section-card">
-    <div class="section-header">
-      <span class="section-title">Điều Khiển Laptop</span>
-      <span style="font-size: 12px; font-weight: 800; color: var(--emerald);">Win32 &lt;10ms</span>
-    </div>
-
-    <!-- 4 NÚT VUÔNG TO RÕ -->
-    <div class="grid-2-col">
-      <div class="hw-btn" id="btn-sys-screen" onclick="systemAction('screen-off')">
-        <div class="hw-icon-box" style="color: var(--accent);">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-        </div>
-        <div>
-          <div class="hw-text-title">Tắt Màn Hình</div>
-          <div class="hw-text-desc">Tắt đen tức thì, máy vẫn chạy ngầm</div>
-        </div>
-      </div>
-
-      <div class="hw-btn" id="btn-sys-lock" onclick="systemAction('lock')">
-        <div class="hw-icon-box" style="color: var(--indigo);">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        </div>
-        <div>
-          <div class="hw-text-title">Khóa Windows</div>
-          <div class="hw-text-desc">Khóa về màn hình đăng nhập</div>
-        </div>
-      </div>
-
-      <div class="hw-btn" id="btn-sys-restart" onclick="confirmSystemAction('restart')">
-        <div class="hw-icon-box" style="color: var(--amber);">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        </div>
-        <div>
-          <div class="hw-text-title">Khởi Động Lại</div>
-          <div class="hw-text-desc">Đếm ngược 30s an toàn có nút hủy</div>
-        </div>
-      </div>
-
-      <div class="hw-btn" id="btn-sys-shutdown" onclick="confirmSystemAction('shutdown')">
-        <div class="hw-icon-box" style="color: var(--rose);">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a9 9 0 01-12.728 0m12.728 0l-2.829-2.829M8.464 15.536a5 5 0 01-7.072 0m7.072 0l-2.829-2.829"/></svg>
-        </div>
-        <div>
-          <div class="hw-text-title">Tắt Máy Laptop</div>
-          <div class="hw-text-desc">Đếm ngược 30s kèm nút hủy</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- KHỐI 3: CỨU HỘ & PROMPT (D:\ai-hub) -->
-  <section class="section-card">
-    <div class="section-header">
-      <span class="section-title">Cứu Hộ &amp; Prompt AI</span>
-      <span style="font-size: 12px; font-weight: 800; color: var(--amber);">D:\ai-hub</span>
-    </div>
-
-    <!-- CUSTOM COMBOBOX MODEL AI (KHÔNG DÙNG SELECT TRÌNH DUYỆT) -->
-    <div class="combobox-wrapper" id="combobox-container">
-      <div class="combobox-header-row">
-        <span class="combobox-label">Model AI Agent</span>
-        <span class="combobox-count-badge" id="model-count-badge">7 Models</span>
-      </div>
-
-      <!-- Trigger Box -->
-      <div class="combobox-trigger" id="combobox-trigger" onclick="toggleCombobox()">
-        <div class="combobox-trigger-left">
-          <div class="model-icon-box gemini" id="current-model-icon"></div>
-          <div class="combobox-info">
-            <div class="combobox-info-top">
-              <span class="combobox-current-name" id="current-model-name">Gemini 3.8 Flash</span>
-              <span class="combobox-provider-tag" id="current-model-tag">Google</span>
+  <!-- =============================================================
+       VIEW 1: TRANG CHỦ (3 NÚT LỚN CHUYỂN TRANG CHỐNG BẤM NHẦM)
+       ============================================================= -->
+  <div class="app-view active" id="view-home">
+    <div class="home-grid">
+      
+      <!-- NÚT 1: MÁY CHỦ AI HUB -->
+      <div class="hub-nav-tile tile-hub" onclick="switchView('hub')">
+        <div class="hub-tile-left">
+          <div class="hub-tile-icon-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+          </div>
+          <div class="hub-tile-texts">
+            <div class="hub-tile-title-row">
+              <span class="hub-tile-title">Máy Chủ AI Hub</span>
+              <span class="hub-tile-badge" id="home-hub-badge">Đang tải...</span>
             </div>
-            <div class="combobox-current-desc" id="current-model-desc">Tốc độ cao, suy luận thích ứng</div>
+            <div class="hub-tile-desc">Bật, tắt, khởi động lại server & mở giao diện Web cổng 20130</div>
           </div>
         </div>
-        <svg class="combobox-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-        </svg>
+        <svg class="hub-tile-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
       </div>
 
-      <!-- Backdrop click outside -->
-      <div class="combobox-backdrop" id="combobox-backdrop" onclick="closeCombobox()"></div>
+      <!-- NÚT 2: ĐIỀU KHIỂN LAPTOP -->
+      <div class="hub-nav-tile tile-system" onclick="switchView('system')">
+        <div class="hub-tile-left">
+          <div class="hub-tile-icon-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <div class="hub-tile-texts">
+            <div class="hub-tile-title-row">
+              <span class="hub-tile-title">Điều Khiển Laptop</span>
+              <span class="hub-tile-badge">Win32 &lt;10ms</span>
+            </div>
+            <div class="hub-tile-desc">Tắt màn hình tức thì, khóa Windows, khởi động & tắt máy an toàn</div>
+          </div>
+        </div>
+        <svg class="hub-tile-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      </div>
 
-      <!-- Dropdown Popover List -->
-      <div class="combobox-menu" id="combobox-menu">
+      <!-- NÚT 3: CỨU HỘ & PROMPT AI -->
+      <div class="hub-nav-tile tile-prompt" onclick="switchView('prompt')">
+        <div class="hub-tile-left">
+          <div class="hub-tile-icon-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div class="hub-tile-texts">
+            <div class="hub-tile-title-row">
+              <span class="hub-tile-title">Cứu Hộ &amp; Prompt AI</span>
+              <span class="hub-tile-badge" id="home-prompt-badge">Gemini Flash</span>
+            </div>
+            <div class="hub-tile-desc">Gửi lệnh chạy AI cho D:ai-hub, chọn Model, xem Terminal realtime</div>
+          </div>
+        </div>
+        <svg class="hub-tile-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =============================================================
+       VIEW 2: TRANG MÁY CHỦ AI HUB (PORT 20130)
+       ============================================================= -->
+  <div class="app-view" id="view-hub">
+    <div class="view-nav-bar">
+      <button class="btn-back-menu" onclick="switchView('home')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <span>Menu Chính</span>
+      </button>
+      <span class="view-header-title">Máy Chủ 20130</span>
+    </div>
+
+    <section class="section-card">
+      <div class="section-header">
+        <span class="section-title">Trạng Thái Máy Chủ</span>
+        <span class="status-tag online" id="hub-status-tag">ĐANG CHẠY</span>
+      </div>
+
+      <!-- 3 NÚT BẬT / RESTART / TẮT SERVER -->
+      <div class="grid-3-col">
+        <button class="big-btn btn-start" id="btn-hub-start" onclick="hubAction('start')">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="text-hub-start">Bật Server</span>
+        </button>
+        <button class="big-btn btn-restart" id="btn-hub-restart" onclick="hubAction('restart')">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span id="text-hub-restart">Restart</span>
+        </button>
+        <button class="big-btn btn-stop" id="btn-hub-stop" onclick="hubAction('stop')">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="text-hub-stop">Tắt Server</span>
+        </button>
+      </div>
+
+      <!-- NÚT MỞ GIAO DIỆN WEB -->
+      <a href="#" target="_blank" class="open-web-button" id="web-portal-link">
+        <div>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          <span id="web-portal-text">Mở Giao Diện Web AI Hub (Cổng 20130)</span>
+        </div>
+        <span style="font-size: 18px;" id="web-portal-arrow">↗</span>
+      </a>
+    </section>
+  </div>
+
+  <!-- =============================================================
+       VIEW 3: TRANG ĐIỀU KHIỂN LAPTOP WINDOWS
+       ============================================================= -->
+  <div class="app-view" id="view-system">
+    <div class="view-nav-bar">
+      <button class="btn-back-menu" onclick="switchView('home')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <span>Menu Chính</span>
+      </button>
+      <span class="view-header-title">Phần Cứng &amp; Nguồn</span>
+    </div>
+
+    <section class="section-card">
+      <div class="section-header">
+        <span class="section-title">Lệnh Hệ Thống Windows</span>
+        <span style="font-size: 12px; font-weight: 800; color: var(--emerald);">An Toàn 30s</span>
+      </div>
+
+      <div class="grid-2-col">
+        <!-- TẮT MÀN HÌNH -->
+        <div class="hw-btn" id="btn-sys-screen" onclick="systemAction('screen-off')">
+          <div class="hw-icon-box" style="color: var(--accent);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </div>
+          <div>
+            <div class="hw-text-title">Tắt Màn Hình</div>
+            <div class="hw-text-desc">Tắt đen tức thì, máy vẫn chạy ngầm</div>
+          </div>
+        </div>
+
+        <!-- KHÓA WINDOWS -->
+        <div class="hw-btn" id="btn-sys-lock" onclick="systemAction('lock')">
+          <div class="hw-icon-box" style="color: var(--indigo);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <div>
+            <div class="hw-text-title">Khóa Windows</div>
+            <div class="hw-text-desc">Khóa về màn hình đăng nhập</div>
+          </div>
+        </div>
+
+        <!-- KHỞI ĐỘNG LẠI -->
+        <div class="hw-btn" id="btn-sys-restart" onclick="confirmSystemAction('restart')">
+          <div class="hw-icon-box" style="color: var(--amber);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </div>
+          <div>
+            <div class="hw-text-title">Khởi Động Lại</div>
+            <div class="hw-text-desc">Đếm ngược 30s an toàn có nút hủy</div>
+          </div>
+        </div>
+
+        <!-- TẮT MÁY -->
+        <div class="hw-btn" id="btn-sys-shutdown" onclick="confirmSystemAction('shutdown')">
+          <div class="hw-icon-box" style="color: var(--rose);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a9 9 0 01-12.728 0m12.728 0l-2.829-2.829M8.464 15.536a5 5 0 01-7.072 0m7.072 0l-2.829-2.829"/></svg>
+          </div>
+          <div>
+            <div class="hw-text-title">Tắt Máy Laptop</div>
+            <div class="hw-text-desc">Đếm ngược 30s kèm nút hủy</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =============================================================
+       VIEW 4: TRANG CỨU HỘ & PROMPT AI (D:ai-hub)
+       ============================================================= -->
+  <div class="app-view" id="view-prompt">
+    <div class="view-nav-bar">
+      <button class="btn-back-menu" onclick="switchView('home')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <span>Menu Chính</span>
+      </button>
+      <span class="view-header-title">Cứu Hộ D:ai-hub</span>
+    </div>
+
+    <section class="section-card">
+      <div class="section-header">
+        <span class="section-title">Prompt AI Agent</span>
+        <span style="font-size: 12px; font-weight: 800; color: var(--amber);">D:ai-hub</span>
+      </div>
+
+      <!-- NÚT TRIGGER MỞ POPUP CHỌN MODEL AI -->
+      <div class="model-trigger-card" onclick="openModelModal()">
+        <div class="model-trigger-left">
+          <div class="model-avatar-box gemini" id="current-model-icon"></div>
+          <div class="model-trigger-info">
+            <div class="model-trigger-top">
+              <span class="model-trigger-name" id="current-model-name">Gemini 3.8 Flash</span>
+              <span class="model-trigger-badge" id="current-model-badge">Mặc định</span>
+            </div>
+            <div class="model-trigger-tag" id="current-model-tag">Tốc độ cao, suy luận thích ứng</div>
+          </div>
+        </div>
+        <div class="model-trigger-action">
+          <span>Đổi</span>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+      <!-- Ô NHẬP LỆNH PROMPT & CÁC NÚT HÀNH ĐỘNG -->
+      <div class="prompt-box-row">
+        <input type="text" class="prompt-input-field" id="prompt-field" placeholder="Nhập lệnh cứu hộ hoặc prompt..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitPromptCmd();}">
+        <button class="btn-abort-prompt" id="btn-abort-prompt" onclick="abortPromptCmd()" title="Dừng prompt khẩn cấp">
+          <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          <span>Dừng</span>
+        </button>
+        <button class="btn-submit-prompt" id="btn-submit-prompt" onclick="submitPromptCmd()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          <span id="text-btn-prompt">Gửi</span>
+        </button>
+      </div>
+
+      <!-- THANH TERMINAL LOG & NÚT XÓA MÀN HÌNH -->
+      <div class="console-header-row">
+        <span class="console-title" id="console-status-text">Terminal Output (Realtime)</span>
+        <button class="btn-clear-console" onclick="clearConsoleLog()">Xóa màn hình</button>
+      </div>
+
+      <!-- MÀN HÌNH TERMINAL (RỘNG RÃI HƠN) -->
+      <div class="console-display" id="console-output">Sẵn sàng nhận lệnh từ điện thoại...</div>
+    </section>
+  </div>
+
+  <!-- =============================================================
+       MODAL POPUP BOTTOM SHEET: CHỌN MODEL AI (7 MODEL HỆ THỐNG)
+       ============================================================= -->
+  <div class="modal-overlay" id="model-modal" onclick="closeModelModal(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <span class="modal-title">Chọn Model AI Agent</span>
+          <span class="modal-subtitle">7 Model chính thức trên hệ thống AI Hub</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeModelModal()">✕</button>
+      </div>
+      <div class="modal-list" id="modal-model-list">
         <!-- Render dong tu danh sach model he thong -->
       </div>
     </div>
-
-    <div class="prompt-box-row">
-      <input type="text" class="prompt-input-field" id="prompt-field" placeholder="Nhập lệnh cứu hộ hoặc prompt..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitPromptCmd();}">
-      <button class="btn-abort-prompt" id="btn-abort-prompt" onclick="abortPromptCmd()" title="Dừng prompt khẩn cấp">
-        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-        <span>Dừng</span>
-      </button>
-      <button class="btn-submit-prompt" id="btn-submit-prompt" onclick="submitPromptCmd()">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-        <span id="text-btn-prompt">Gửi</span>
-      </button>
-    </div>
-
-    <!-- THANH TIÊU ĐỀ TERMINAL & NÚT XÓA LOG -->
-    <div class="console-header-row">
-      <span class="console-title" id="console-status-text">Terminal Output (Realtime)</span>
-      <button class="btn-clear-console" onclick="clearConsoleLog()">Xóa màn hình</button>
-    </div>
-
-    <!-- MÀN HÌNH TERMINAL (CHỮ TO RÕ RÀNG) -->
-    <div class="console-display" id="console-output">Sẵn sàng nhận lệnh từ điện thoại...</div>
-  </section>
+  </div>
 
   <script>
-    // THEME MANAGEMENT
+    // =============================================================
+    // 1. THEME MANAGEMENT (DARK / WARM / LIGHT)
+    // =============================================================
     function setAppTheme(t) {
       document.documentElement.setAttribute("data-theme", t);
-      localStorage.setItem("bo-tot-theme-v10", t);
+      localStorage.setItem("bo-tot-theme-v14", t);
       document.querySelectorAll(".theme-btn").forEach(b => b.classList.remove("active"));
-      const el = document.getElementById(`btn-${t}`);
+      const el = document.getElementById("btn-" + t);
       if (el) el.classList.add("active");
     }
-    setAppTheme(localStorage.getItem("bo-tot-theme-v10") || "dark");
+    setAppTheme(localStorage.getItem("bo-tot-theme-v14") || "dark");
 
-    // TOAST NOTIFICATION
+    // =============================================================
+    // 2. TOAST POPUP
+    // =============================================================
     let toastTimer = null;
     function showToast(msg) {
       const el = document.getElementById("toast");
       el.innerText = msg;
       el.classList.add("visible");
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove("visible"), 2000);
+      toastTimer = setTimeout(() => el.classList.remove("visible"), 2200);
     }
 
     function copyIp() {
       const ip = document.getElementById("ip-val").innerText;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(ip);
-        showToast(`Đã copy IP: ${ip}`);
+        showToast("Đã copy IP: " + ip);
       }
     }
 
-    // BIẾN TRẠNG THÁI ĐANG THỰC THI (PENDING STATE)
-    let isHubActionPending = false;
+    // =============================================================
+    // 3. SPA VIEW SWITCHER (CHUYỂN TRANG 3 NÚT CHỐNG BẤM NHẦM)
+    // =============================================================
+    let currentView = "home";
 
-    // STATUS POLLING
+    function switchView(viewName) {
+      currentView = viewName;
+      document.querySelectorAll(".app-view").forEach(v => v.classList.remove("active"));
+      const target = document.getElementById("view-" + viewName);
+      if (target) {
+        target.classList.add("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      // Dong bo URL Hash de ho tro nut Back vat ly cua dien thoai
+      if (location.hash !== "#" + viewName) {
+        history.pushState(null, "", "#" + viewName);
+      }
+    }
+
+    window.addEventListener("popstate", () => {
+      const hash = location.hash.replace("#", "") || "home";
+      if (["home", "hub", "system", "prompt"].includes(hash)) {
+        currentView = hash;
+        document.querySelectorAll(".app-view").forEach(v => v.classList.remove("active"));
+        const target = document.getElementById("view-" + hash);
+        if (target) target.classList.add("active");
+      }
+    });
+
+    // Khoi tao theo URL hash neu co
+    if (location.hash) {
+      const initHash = location.hash.replace("#", "");
+      if (["hub", "system", "prompt"].includes(initHash)) {
+        switchView(initHash);
+      }
+    }
+
+    // =============================================================
+    // 4. VECTOR SVG CHÍNH HÃNG CỦA CÁC MODEL PROVIDER
+    // =============================================================
+    const MODEL_SVGS = {
+      gemini: '<svg viewBox="0 0 24 24" fill="none"><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="#3186FF"/><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#botot-g1)"/><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#botot-g2)"/><defs><linearGradient id="botot-g1" x1="7" y1="15.5" x2="11" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#08B962"/><stop offset="1" stop-color="#08B962" stop-opacity="0"/></linearGradient><linearGradient id="botot-g2" x1="8" y1="5.5" x2="11.5" y2="11" gradientUnits="userSpaceOnUse"><stop stop-color="#F94543"/><stop offset="1" stop-color="#F94543" stop-opacity="0"/></linearGradient></defs></svg>',
+      
+      claude: '<svg viewBox="0 0 24 24" fill="none"><path d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z" fill="#D97757"/></svg>',
+      
+      openai: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.205 8.658v-2.26c0-.19.072-.333.238-.428l4.543-2.616c.619-.357 1.356-.523 2.117-.523 2.854 0 4.662 2.212 4.662 4.566 0 .167 0 .357-.024.547l-4.71-2.759a.797.797 0 00-.856 0l-5.97 3.473zm10.609 8.8V12.06c0-.333-.143-.57-.429-.737l-5.97-3.473 1.95-1.118a.433.433 0 01.476 0l4.543 2.617c1.309.76 2.189 2.378 2.189 3.948 0 1.808-1.07 3.473-2.76 4.163zM7.802 12.703l-1.95-1.142c-.167-.095-.239-.238-.239-.428V5.899c0-2.545 1.95-4.472 4.591-4.472 1 0 1.927.333 2.712.928L8.23 5.067c-.285.166-.428.404-.428.737v6.898zM12 15.128l-2.795-1.57v-3.33L12 8.658l2.795 1.57v3.33L12 15.128zm1.796 7.23c-1 0-1.927-.332-2.712-.927l4.686-2.712c.285-.166.428-.404.428-.737v-6.898l1.974 1.142c.167.095.238.238.238.428v5.233c0 2.545-1.974 4.472-4.614 4.472zm-5.637-5.303l-4.544-2.617c-1.308-.761-2.188-2.378-2.188-3.948A4.482 4.482 0 014.21 6.327v5.423c0 .333.143.571.428.738l5.947 3.449-1.95 1.118a.432.432 0 01-.476 0zm-.262 3.9c-2.688 0-4.662-2.021-4.662-4.519 0-.19.024-.38.047-.57l4.686 2.71c.286.167.571.167.856 0l5.97-3.448v2.26c0 .19-.07.333-.237.428l-4.543 2.616c-.619.357-1.356.523-2.117.523zm5.899 2.83a5.947 5.947 0 005.827-4.756C22.287 18.339 24 15.84 24 13.296c0-1.665-.713-3.282-1.998-4.448.119-.5.19-.999.19-1.498 0-3.401-2.759-5.947-5.946-5.947-.642 0-1.26.095-1.88.31A5.962 5.962 0 0010.205 0a5.947 5.947 0 00-5.827 4.757C1.713 5.447 0 7.945 0 10.49c0 1.666.713 3.283 1.998 4.448-.119.5-.19 1-.19 1.499 0 3.401 2.759 5.946 5.946 5.946.642 0 1.26-.095 1.88-.309a5.96 5.96 0 004.162 1.713z"/></svg>',
+      
+      "claude-cli": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="4" stroke-width="2"/><path d="M7 10l3 2.5-3 2.5M13 15h4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+
+    // =============================================================
+    // 5. DANH SÁCH 7 MODEL CHÍNH THỨC TRÊN AI HUB
+    // =============================================================
+    const SYSTEM_MODELS = [
+      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", badge: "Mặc định", icon: "gemini" },
+      { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", badge: "Khuyên dùng", icon: "claude" },
+      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol (Codex)", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", badge: "Codex", icon: "openai" },
+      { id: "claude-code", name: "Claude Code", provider: "Anthropic", tag: "Agent tự hành chính chủ Claude", badge: "Agent CLI", icon: "claude-cli" },
+      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", badge: "Argon High", icon: "gemini" },
+      { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", badge: "Opus High", icon: "claude" },
+      { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", badge: "Open Source", icon: "openai" }
+    ];
+
+    let currentSelectedModelId = localStorage.getItem("bo-tot-model-v14") || "ag/gemini-3.8-flash";
+
+    // RENDER POPUP LIST MODEL
+    function renderModelModalList() {
+      const listEl = document.getElementById("modal-model-list");
+      if (!listEl) return;
+      listEl.innerHTML = SYSTEM_MODELS.map(m => {
+        const isSelected = m.id === currentSelectedModelId;
+        return `
+          <div class="modal-item ${isSelected ? 'selected' : ''}" onclick="selectModelItem('${m.id}')">
+            <div class="modal-item-left">
+              <div class="model-avatar-box ${m.icon}">${MODEL_SVGS[m.icon] || MODEL_SVGS.openai}</div>
+              <div class="modal-item-texts">
+                <div class="modal-item-top">
+                  <span class="modal-item-name">${m.name}</span>
+                  <span class="modal-item-badge">${m.badge}</span>
+                </div>
+                <div class="modal-item-desc">${m.tag}</div>
+              </div>
+            </div>
+            <svg class="modal-item-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+        `;
+      }).join("");
+
+      updateModelTriggerDisplay();
+    }
+
+    function updateModelTriggerDisplay() {
+      const model = SYSTEM_MODELS.find(m => m.id === currentSelectedModelId) || SYSTEM_MODELS[0];
+      const iconBox = document.getElementById("current-model-icon");
+      const nameEl = document.getElementById("current-model-name");
+      const badgeEl = document.getElementById("current-model-badge");
+      const tagEl = document.getElementById("current-model-tag");
+      const homePromptBadge = document.getElementById("home-prompt-badge");
+
+      if (iconBox) {
+        iconBox.className = "model-avatar-box " + model.icon;
+        iconBox.innerHTML = MODEL_SVGS[model.icon] || MODEL_SVGS.openai;
+      }
+      if (nameEl) nameEl.innerText = model.name;
+      if (badgeEl) badgeEl.innerText = model.badge;
+      if (tagEl) tagEl.innerText = model.tag;
+      if (homePromptBadge) homePromptBadge.innerText = model.name.split(" ")[0] + " " + (model.name.split(" ")[1] || "");
+    }
+
+    function openModelModal() {
+      renderModelModalList();
+      const modal = document.getElementById("model-modal");
+      if (modal) modal.classList.add("open");
+    }
+
+    function closeModelModal() {
+      const modal = document.getElementById("model-modal");
+      if (modal) modal.classList.remove("open");
+    }
+
+    function selectModelItem(modelId) {
+      currentSelectedModelId = modelId;
+      localStorage.setItem("bo-tot-model-v14", modelId);
+      renderModelModalList();
+      closeModelModal();
+      const m = SYSTEM_MODELS.find(x => x.id === modelId);
+      if (m) showToast("Đã chọn: " + m.name);
+    }
+
+    renderModelModalList();
+
+    // =============================================================
+    // 6. TRẠNG THÁI SERVER & POLLING (STATUS PULL)
+    // =============================================================
+    let isHubActionPending = false;
     let loopId = null;
+
     async function pullStatus() {
       try {
         const res = await fetch("/api/status?t=" + Date.now());
@@ -1056,11 +1301,9 @@
           document.getElementById("ram-box").innerText = `RAM ${d.memory.percent}%`;
         }
 
-        // =======================================================
-        // LOGIC DISABLE THÔNG MINH CHO CÁC NÚT BẤM (SMART DISABLE)
-        // =======================================================
         const isRunning = Boolean(d.aiHub && d.aiHub.running);
         const tag = document.getElementById("hub-status-tag");
+        const homeHubBadge = document.getElementById("home-hub-badge");
         const btnStart = document.getElementById("btn-hub-start");
         const btnRestart = document.getElementById("btn-hub-restart");
         const btnStop = document.getElementById("btn-hub-stop");
@@ -1072,13 +1315,16 @@
           if (isRunning) {
             tag.className = "status-tag online";
             tag.innerText = `ĐANG CHẠY (${d.aiHub.pid || "?"})`;
+            if (homeHubBadge) {
+              homeHubBadge.innerText = "Đang chạy (" + (d.aiHub.pid || "?") + ")";
+              homeHubBadge.style.background = "var(--emerald-bg)";
+              homeHubBadge.style.color = "var(--emerald)";
+            }
             
-            // Server đang chạy -> Disable nút Bật, Cho phép Restart & Tắt
             btnStart.disabled = true;
             btnRestart.disabled = false;
             btnStop.disabled = false;
 
-            // Cho phép mở Web Portal
             webPortal.classList.remove("disabled");
             webPortal.href = `http://${d.tailscaleIp || "100.94.115.99"}:20130`;
             webText.innerText = "Mở Giao Diện Web AI Hub (Cổng 20130)";
@@ -1086,13 +1332,16 @@
           } else {
             tag.className = "status-tag offline";
             tag.innerText = "ĐÃ DỪNG";
+            if (homeHubBadge) {
+              homeHubBadge.innerText = "Đã dừng";
+              homeHubBadge.style.background = "var(--rose-bg)";
+              homeHubBadge.style.color = "var(--rose)";
+            }
             
-            // Server đã tắt -> Cho phép Bật, Disable Restart & Tắt
             btnStart.disabled = false;
             btnRestart.disabled = true;
             btnStop.disabled = true;
 
-            // Khóa nút mở Web Portal vì server đã tắt
             webPortal.classList.add("disabled");
             webPortal.removeAttribute("href");
             webText.innerText = "Web AI Hub (Máy chủ đang tắt - Hãy bấm Bật Server)";
@@ -1100,7 +1349,7 @@
           }
         }
 
-        // Đồng bộ trạng thái Prompt đang chạy từ server
+        // Dong bo activePrompt
         const promptStatusTitle = document.getElementById("console-status-text");
         const btnAbortEl = document.getElementById("btn-abort-prompt");
         if (d.activePrompt && !isPromptActive) {
@@ -1111,7 +1360,7 @@
           if (promptStatusTitle) promptStatusTitle.innerText = "Terminal Output (Realtime)";
         }
 
-        // Đếm ngược tắt máy / restart
+        // Dem nguoc tat may
         const hud = document.getElementById("emergency-hud");
         const btnSysRestart = document.getElementById("btn-sys-restart");
         const btnSysShutdown = document.getElementById("btn-sys-shutdown");
@@ -1122,7 +1371,6 @@
             d.shutdownState.type === "restart" ? "ĐANG CHỜ RESTART MÁY" : "ĐANG CHỜ TẮT MÁY";
           document.getElementById("emergency-countdown").innerText = `${d.shutdownState.secondsLeft}s`;
           
-          // Disable 2 nút hệ thống khi đang đếm ngược tránh spam lệnh
           btnSysRestart.classList.add("disabled");
           btnSysShutdown.classList.add("disabled");
         } else {
@@ -1133,7 +1381,9 @@
       } catch {}
     }
 
-    // ACTIONS VỚI TRẠNG THÁI KHÓA CHỐNG DOUBLE-CLICK
+    // =============================================================
+    // 7. HUB & SYSTEM ACTIONS
+    // =============================================================
     async function hubAction(a) {
       if (isHubActionPending) return;
       isHubActionPending = true;
@@ -1142,7 +1392,6 @@
       const btnRestart = document.getElementById("btn-hub-restart");
       const btnStop = document.getElementById("btn-hub-stop");
 
-      // Tạm thời disable cả 3 nút trong khi gửi lệnh
       btnStart.disabled = true;
       btnRestart.disabled = true;
       btnStop.disabled = true;
@@ -1172,7 +1421,7 @@
 
     function confirmSystemAction(type) {
       const name = type === "shutdown" ? "TẮT MÁY" : "KHỞI ĐỘNG LẠI";
-      if (confirm(`Bạn có chắc muốn ${name} laptop? (Sẽ đếm ngược 30 giây để hủy trên điện thoại nếu muốn)`)) {
+      if (confirm(`Bạn có chắc muốn ${name} laptop? (Sẽ đếm ngược 30 giây để hủy nếu muốn)`)) {
         fetch(`/api/system/${type}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1190,117 +1439,14 @@
       } catch (e) { showToast(`Lỗi: ${e.message}`); }
     }
 
-    // VECTOR SVG CHINH HANG CHUAN (OPENAI, GEMINI, CLAUDE, TERMINAL)
-    const MODEL_SVGS = {
-      gemini: '<svg viewBox="0 0 24 24" fill="none"><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="#3186FF"/><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#botot-gemini-g1)"/><path d="M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z" fill="url(#botot-gemini-g2)"/><defs><linearGradient id="botot-gemini-g1" x1="7" y1="15.5" x2="11" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#08B962"/><stop offset="1" stop-color="#08B962" stop-opacity="0"/></linearGradient><linearGradient id="botot-gemini-g2" x1="8" y1="5.5" x2="11.5" y2="11" gradientUnits="userSpaceOnUse"><stop stop-color="#F94543"/><stop offset="1" stop-color="#F94543" stop-opacity="0"/></linearGradient></defs></svg>',
-      
-      claude: '<svg viewBox="0 0 24 24" fill="none"><path d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z" fill="#D97757"/></svg>',
-      
-      openai: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.205 8.658v-2.26c0-.19.072-.333.238-.428l4.543-2.616c.619-.357 1.356-.523 2.117-.523 2.854 0 4.662 2.212 4.662 4.566 0 .167 0 .357-.024.547l-4.71-2.759a.797.797 0 00-.856 0l-5.97 3.473zm10.609 8.8V12.06c0-.333-.143-.57-.429-.737l-5.97-3.473 1.95-1.118a.433.433 0 01.476 0l4.543 2.617c1.309.76 2.189 2.378 2.189 3.948 0 1.808-1.07 3.473-2.76 4.163zM7.802 12.703l-1.95-1.142c-.167-.095-.239-.238-.239-.428V5.899c0-2.545 1.95-4.472 4.591-4.472 1 0 1.927.333 2.712.928L8.23 5.067c-.285.166-.428.404-.428.737v6.898zM12 15.128l-2.795-1.57v-3.33L12 8.658l2.795 1.57v3.33L12 15.128zm1.796 7.23c-1 0-1.927-.332-2.712-.927l4.686-2.712c.285-.166.428-.404.428-.737v-6.898l1.974 1.142c.167.095.238.238.238.428v5.233c0 2.545-1.974 4.472-4.614 4.472zm-5.637-5.303l-4.544-2.617c-1.308-.761-2.188-2.378-2.188-3.948A4.482 4.482 0 014.21 6.327v5.423c0 .333.143.571.428.738l5.947 3.449-1.95 1.118a.432.432 0 01-.476 0zm-.262 3.9c-2.688 0-4.662-2.021-4.662-4.519 0-.19.024-.38.047-.57l4.686 2.71c.286.167.571.167.856 0l5.97-3.448v2.26c0 .19-.07.333-.237.428l-4.543 2.616c-.619.357-1.356.523-2.117.523zm5.899 2.83a5.947 5.947 0 005.827-4.756C22.287 18.339 24 15.84 24 13.296c0-1.665-.713-3.282-1.998-4.448.119-.5.19-.999.19-1.498 0-3.401-2.759-5.947-5.946-5.947-.642 0-1.26.095-1.88.31A5.962 5.962 0 0010.205 0a5.947 5.947 0 00-5.827 4.757C1.713 5.447 0 7.945 0 10.49c0 1.666.713 3.283 1.998 4.448-.119.5-.19 1-.19 1.499 0 3.401 2.759 5.946 5.946 5.946.642 0 1.26-.095 1.88-.309a5.96 5.96 0 004.162 1.713z"/></svg>',
-      
-      "claude-cli": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="4" stroke-width="2"/><path d="M7 10l3 2.5-3 2.5M13 15h4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-    };
-
-    // DANH SACH MODEL CHUAN HE THONG (7 MODEL AI HUB)
-    const SYSTEM_MODELS = [
-      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", badge: "Mặc định", icon: "gemini" },
-      { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", badge: "Khuyên dùng", icon: "claude" },
-      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol (Codex)", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", badge: "Codex", icon: "openai" },
-      { id: "claude-code", name: "Claude Code", provider: "Anthropic", tag: "Agent tự hành chính chủ Claude", badge: "Agent CLI", icon: "claude-cli" },
-      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", badge: "Argon High", icon: "gemini" },
-      { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", badge: "Opus High", icon: "claude" },
-      { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", badge: "Open Source", icon: "openai" }
-    ];
-
-    let currentSelectedModelId = localStorage.getItem("bo-tot-model-v12") || "ag/gemini-3.8-flash";
-
-    // RENDER CUSTOM COMBOBOX OPTIONS
-    function renderComboboxMenu() {
-      const menu = document.getElementById("combobox-menu");
-      if (!menu) return;
-      menu.innerHTML = SYSTEM_MODELS.map(m => {
-        const isSelected = m.id === currentSelectedModelId;
-        return `
-          <div class="combobox-item ${isSelected ? 'selected' : ''}" onclick="selectModelItem('${m.id}')">
-            <div class="combobox-item-left">
-              <div class="model-icon-box ${m.icon}">${MODEL_SVGS[m.icon] || MODEL_SVGS.openai}</div>
-              <div class="combobox-item-texts">
-                <div class="combobox-item-title-row">
-                  <span class="combobox-item-title">${m.name}</span>
-                  <span class="combobox-item-badge">${m.badge}</span>
-                </div>
-                <div class="combobox-item-desc">${m.tag}</div>
-              </div>
-            </div>
-            <svg class="combobox-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-            </svg>
-          </div>
-        `;
-      }).join("");
-
-      updateTriggerDisplay();
-    }
-
-    function updateTriggerDisplay() {
-      const model = SYSTEM_MODELS.find(m => m.id === currentSelectedModelId) || SYSTEM_MODELS[0];
-      const iconBox = document.getElementById("current-model-icon");
-      const nameEl = document.getElementById("current-model-name");
-      const tagEl = document.getElementById("current-model-tag");
-      const descEl = document.getElementById("current-model-desc");
-
-      if (iconBox) {
-        iconBox.className = "model-icon-box " + model.icon;
-        iconBox.innerHTML = MODEL_SVGS[model.icon] || MODEL_SVGS.openai;
-      }
-      if (nameEl) nameEl.innerText = model.name;
-      if (tagEl) tagEl.innerText = model.provider;
-      if (descEl) descEl.innerText = model.tag;
-    }
-
-    function toggleCombobox() {
-      const trigger = document.getElementById("combobox-trigger");
-      const menu = document.getElementById("combobox-menu");
-      const backdrop = document.getElementById("combobox-backdrop");
-      const isOpen = menu.classList.contains("open");
-      if (isOpen) {
-        closeCombobox();
-      } else {
-        trigger.classList.add("open");
-        menu.classList.add("open");
-        backdrop.classList.add("open");
-      }
-    }
-
-    function closeCombobox() {
-      const trigger = document.getElementById("combobox-trigger");
-      const menu = document.getElementById("combobox-menu");
-      const backdrop = document.getElementById("combobox-backdrop");
-      if (trigger) trigger.classList.remove("open");
-      if (menu) menu.classList.remove("open");
-      if (backdrop) backdrop.classList.remove("open");
-    }
-
-    function selectModelItem(modelId) {
-      currentSelectedModelId = modelId;
-      localStorage.setItem("bo-tot-model-v12", modelId);
-      renderComboboxMenu();
-      closeCombobox();
-      const m = SYSTEM_MODELS.find(x => x.id === modelId);
-      if (m) showToast("Đã chọn: " + m.name);
-    }
-
-    // Khoi tao Combobox ngay khi trang load
-    renderComboboxMenu();
-
+    // =============================================================
+    // 8. PROMPT RUNNER (SSE STREAMING CHUẨN)
+    // =============================================================
     function clearConsoleLog() {
       const con = document.getElementById("console-output");
-      if (con) {
-        con.innerText = "Đã dọn sạch màn hình console.";
-      }
+      if (con) con.innerText = "Đã dọn sạch màn hình console.";
     }
 
-    // ABORT PROMPT
     async function abortPromptCmd() {
       try {
         const res = await fetch("/api/prompt/abort", { method: "POST" });
@@ -1316,7 +1462,6 @@
       }
     }
 
-    // PROMPT RUNNER (CHUẨN SSE STREAM & ERROR HANDLING)
     let isPromptActive = false;
     async function submitPromptCmd() {
       if (isPromptActive) return;
@@ -1372,7 +1517,6 @@
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
           
-          // Tách khối event chuẩn theo đôi dòng trống (CRLF hoặc LF)
           const blocks = buffer.split(/(?:\r?\n){2}/);
           buffer = blocks.pop() || "";
 
@@ -1407,7 +1551,6 @@
                   con.scrollTop = con.scrollHeight;
                 }
               } catch (parseErr) {
-                // Nếu raw text không phải JSON
                 con.innerText += dataStr + "\n";
                 con.scrollTop = con.scrollHeight;
               }
@@ -1428,7 +1571,9 @@
       }
     }
 
-    // POLLING ENGINE
+    // =============================================================
+    // 9. POLLING LOOP & VISIBILITY API
+    // =============================================================
     function startLoop() {
       if (!loopId) { pullStatus(); loopId = setInterval(pullStatus, 3000); }
     }

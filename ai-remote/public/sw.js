@@ -1,5 +1,5 @@
 // Service Worker - Auto Flush & Network First
-const CACHE_VER = "bo-tot-v13";
+const CACHE_VER = "bo-tot-v14";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();

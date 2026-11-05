@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bò Tót">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
+  <link rel="manifest" href="/manifest.json?v=9">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=9">
+  <link rel="apple-touch-icon" href="/icon.svg?v=9">
+  <title>Bò Tót Remote</title>
+
+  <!-- BE VIETNAM PRO -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* =============================================================
+       HIGH CONTRAST & MAXIMUM READABILITY PALETTES
+       ============================================================= */
+    :root, [data-theme="dark"] {
+      --font: 'Be Vietnam Pro', -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+
+      --bg: #090a10;
+      --card-bg: #131622;
+      --card-inner: #1c2030;
+      --border: rgba(255, 255, 255, 0.14);
+      --border-accent: rgba(56, 189, 248, 0.45);
+      
+      --text-main: #ffffff;
+      --text-sub: #cbd5e1;
+      --text-dim: #94a3b8;
+      
+      --accent: #38bdf8;
+      --accent-btn: #0284c7;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.16);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.16);
+      --rose: #ef4444;
+      --rose-bg: rgba(239, 68, 68, 0.16);
+      --indigo: #818cf8;
+      --indigo-bg: rgba(129, 140, 248, 0.16);
+
+      --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      --seg-bg: #1c2030;
+    }
+
+    /* WARM MODE (SÁNG RỰC RỠ, NỀN KEM, CHỮ NÂU ĐẬM RÕ RÀNG) */
+    [data-theme="warm"] {
+      --bg: #f7f2e7;
+      --card-bg: #ffffff;
+      --card-inner: #f0e6d6;
+      --border: #dfd0bb;
+      --border-accent: #c26100;
+      
+      --text-main: #2a1406;
+      --text-sub: #543015;
+      --text-dim: #7c4d28;
+      
+      --accent: #c26100;
+      --accent-btn: #d97706;
+      --emerald: #059669;
+      --emerald-bg: rgba(5, 150, 105, 0.14);
+      --amber: #b45309;
+      --amber-bg: rgba(180, 83, 9, 0.14);
+      --rose: #b91c1c;
+      --rose-bg: rgba(185, 28, 28, 0.14);
+      --indigo: #854d0e;
+      --indigo-bg: rgba(133, 77, 14, 0.14);
+
+      --card-shadow: 0 8px 24px rgba(130, 80, 30, 0.08);
+      --seg-bg: #eddcc6;
+    }
+
+    /* LIGHT MODE */
+    [data-theme="light"] {
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --card-inner: #f8fafc;
+      --border: #cbd5e1;
+      --border-accent: #0284c7;
+      
+      --text-main: #0f172a;
+      --text-sub: #334155;
+      --text-dim: #64748b;
+      
+      --accent: #0284c7;
+      --accent-btn: #0284c7;
+      --emerald: #059669;
+      --emerald-bg: rgba(5, 150, 105, 0.12);
+      --amber: #d97706;
+      --amber-bg: rgba(217, 119, 6, 0.12);
+      --rose: #dc2626;
+      --rose-bg: rgba(220, 38, 38, 0.12);
+      --indigo: #4f46e5;
+      --indigo-bg: rgba(79, 70, 229, 0.12);
+
+      --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      --seg-bg: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font);
+      min-height: 100vh;
+      padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)) 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    /* TOP BAR */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 2px;
+    }
+    .brand-title-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 46px;
+      height: 46px;
+      object-fit: contain;
+    }
+    .brand-texts h1 {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .brand-texts p {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+
+    /* THEME SWITCHER */
+    .theme-seg {
+      display: flex;
+      background: var(--seg-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .theme-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 11px;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+    .theme-btn.active {
+      background: var(--card-bg);
+      color: var(--text-main);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* STATUS BANNER (TO, RÕ, ĐẬM NÉT) */
+    .status-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--card-shadow);
+    }
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .live-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 10px var(--emerald);
+      flex-shrink: 0;
+    }
+    .host-name {
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .ip-badge {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent);
+      cursor: pointer;
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .status-right {
+      display: flex;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .stat-pill {
+      background: var(--card-inner);
+      padding: 5px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .stat-pill.batt { color: var(--emerald); }
+    .stat-pill.ram { color: var(--accent); }
+
+    /* EMERGENCY HUD */
+    .emergency-hud {
+      display: none;
+      background: var(--rose);
+      color: #fff;
+      padding: 16px;
+      border-radius: 20px;
+      text-align: center;
+    }
+    .emergency-hud h3 { font-size: 15px; font-weight: 900; }
+    .emergency-hud .num { font-size: 44px; font-weight: 900; font-family: var(--mono); margin: 2px 0 8px; }
+    .emergency-hud button {
+      background: #fff;
+      color: var(--rose);
+      border: none;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 900;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    /* SECTION CARDS (TO, RÕ, DỄ NHÌN) */
+    .section-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 24px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+
+    .status-tag {
+      font-size: 13px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    .status-tag.online { background: var(--emerald-bg); color: var(--emerald); border: 1px solid rgba(16,185,129,0.3); }
+    .status-tag.offline { background: var(--rose-bg); color: var(--rose); border: 1px solid rgba(239,68,68,0.3); }
+
+    /* NÚT BẤM TO BỰ (DỄ CHẠM NGÓN TÁY) */
+    .grid-3-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .grid-2-col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .big-btn {
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+      text-decoration: none;
+      min-height: 72px;
+    }
+    .big-btn:active {
+      transform: scale(0.95);
+      border-color: var(--border-accent);
+    }
+    .big-btn svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .big-btn.btn-start { color: var(--emerald); background: var(--emerald-bg); border-color: rgba(16, 185, 129, 0.35); }
+    .big-btn.btn-restart { color: var(--amber); background: var(--amber-bg); border-color: rgba(245, 158, 11, 0.35); }
+    .big-btn.btn-stop { color: var(--rose); background: var(--rose-bg); border-color: rgba(239, 68, 68, 0.35); }
+    .big-btn.btn-cyan { color: var(--accent); background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); }
+    .big-btn.btn-indigo { color: var(--indigo); background: var(--indigo-bg); border-color: rgba(129, 140, 248, 0.35); }
+
+    /* NÚT MỞ WEB TO ĐÙNG RỰC RỠ */
+    .open-web-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--accent-btn);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 900;
+      padding: 16px 18px;
+      border-radius: 18px;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+    }
+    .open-web-button:active { transform: scale(0.97); }
+    .open-web-button div { display: flex; align-items: center; gap: 8px; }
+    .open-web-button svg { width: 20px; height: 20px; }
+
+    /* HARDWARE BUTTONS (TẮT MÀN HÌNH, KHÓA MÁY...) */
+    .hw-btn {
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      color: var(--text-main);
+      font-family: var(--font);
+      min-height: 84px;
+    }
+    .hw-btn:active {
+      transform: scale(0.95);
+      border-color: var(--border-accent);
+    }
+    .hw-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+    }
+    .hw-icon-box svg { width: 22px; height: 22px; }
+    .hw-btn .hw-text-title {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .hw-btn .hw-text-desc {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+
+    /* RESCUE PROMPT BAR */
+    .prompt-box-row {
+      display: flex;
+      gap: 8px;
+    }
+    .prompt-input-field {
+      flex: 1;
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 14px;
+      border-radius: 16px;
+      outline: none;
+    }
+    .prompt-input-field:focus {
+      border-color: var(--accent);
+    }
+    .btn-submit-prompt {
+      background: var(--accent-btn);
+      color: #ffffff;
+      border: none;
+      border-radius: 16px;
+      padding: 0 18px;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: var(--font);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-submit-prompt:active { transform: scale(0.95); }
+
+    /* CONSOLE */
+    .console-display {
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      height: 130px;
+      overflow-y: auto;
+      color: var(--accent);
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.45;
+    }
+
+    /* TOAST */
+    .toast-popup {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 2px solid var(--accent);
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      z-index: 2000;
+      pointer-events: none;
+      transition: transform 0.25s ease;
+    }
+    .toast-popup.visible { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- TOAST -->
+  <div class="toast-popup" id="toast">Thông báo</div>
+
+  <!-- TOP BAR -->
+  <header class="top-bar">
+    <div class="brand-title-box">
+      <img src="/icon.svg?v=9" alt="Bò Tót" class="brand-logo">
+      <div class="brand-texts">
+        <h1>BÒ TÓT REMOTE</h1>
+        <p>Điều Khiển Máy Tính Từ Xa</p>
+      </div>
+    </div>
+    <!-- 3 THEME PILLS -->
+    <div class="theme-seg">
+      <button class="theme-btn active" id="btn-dark" onclick="setAppTheme('dark')">Dark</button>
+      <button class="theme-btn" id="btn-light" onclick="setAppTheme('light')">Light</button>
+      <button class="theme-btn" id="btn-warm" onclick="setAppTheme('warm')">Warm</button>
+    </div>
+  </header>
+
+  <!-- STATUS BANNER (TO, RÕ, ĐẬM NÉT) -->
+  <section class="status-card">
+    <div class="status-left">
+      <div class="live-dot" title="Laptop Online"></div>
+      <div>
+        <div class="host-name" id="host-name">Admin-PC</div>
+        <div class="ip-badge" onclick="copyIp()" title="Chạm để copy">
+          <span id="ip-val">100.94.115.99</span> 📋
+        </div>
+      </div>
+    </div>
+    <div class="status-right">
+      <div class="stat-pill batt" id="batt-box">85% ⚡</div>
+      <div class="stat-pill ram" id="ram-box">RAM 80%</div>
+    </div>
+  </section>
+
+  <!-- EMERGENCY HUD -->
+  <div class="emergency-hud" id="emergency-hud">
+    <h3 id="emergency-label">LỆNH TẮT MÁY ĐANG CHỜ</h3>
+    <div class="num" id="emergency-countdown">30s</div>
+    <button onclick="abortShutdownCmd()">🛑 HỦY TẮT MÁY NGAY</button>
+  </div>
+
+  <!-- KHỐI 1: MÁY CHỦ AI HUB (PORT 20130) -->
+  <section class="section-card">
+    <div class="section-header">
+      <span class="section-title">Máy Chủ AI Hub (Port 20130)</span>
+      <span class="status-tag online" id="hub-status-tag">ĐANG CHẠY</span>
+    </div>
+
+    <!-- 3 NÚT BẬT / RESTART / TẮT (TO & RÕ RÀNG) -->
+    <div class="grid-3-col">
+      <button class="big-btn btn-start" onclick="hubAction('start')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Bật Server
+      </button>
+      <button class="big-btn btn-restart" onclick="hubAction('restart')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Restart
+      </button>
+      <button class="big-btn btn-stop" onclick="hubAction('stop')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Tắt Server
+      </button>
+    </div>
+
+    <!-- NÚT MỞ GIAO DIỆN WEB (TO ĐÙNG RỰC RỠ) -->
+    <a href="#" target="_blank" class="open-web-button" id="web-portal-link">
+      <div>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        <span>Mở Giao Diện Web AI Hub (Cổng 20130)</span>
+      </div>
+      <span style="font-size: 18px;">➔</span>
+    </a>
+  </section>
+
+  <!-- KHỐI 2: ĐIỀU KHIỂN LAPTOP WINDOWS -->
+  <section class="section-card">
+    <div class="section-header">
+      <span class="section-title">Điều Khiển Laptop</span>
+      <span style="font-size: 12px; font-weight: 800; color: var(--emerald);">Win32 &lt;10ms</span>
+    </div>
+
+    <!-- 4 NÚT VUÔNG TO RÕ -->
+    <div class="grid-2-col">
+      <div class="hw-btn" onclick="systemAction('screen-off')">
+        <div class="hw-icon-box" style="color: var(--accent);">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </div>
+        <div>
+          <div class="hw-text-title">Tắt Màn Hình</div>
+          <div class="hw-text-desc">Tắt đen tức thì, máy vẫn chạy ngầm</div>
+        </div>
+      </div>
+
+      <div class="hw-btn" onclick="systemAction('lock')">
+        <div class="hw-icon-box" style="color: var(--indigo);">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <div>
+          <div class="hw-text-title">Khóa Windows</div>
+          <div class="hw-text-desc">Khóa về màn hình đăng nhập</div>
+        </div>
+      </div>
+
+      <div class="hw-btn" onclick="confirmSystemAction('restart')">
+        <div class="hw-icon-box" style="color: var(--amber);">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </div>
+        <div>
+          <div class="hw-text-title">Khởi Động Lại</div>
+          <div class="hw-text-desc">Đếm ngược 30s an toàn có nút hủy</div>
+        </div>
+      </div>
+
+      <div class="hw-btn" onclick="confirmSystemAction('shutdown')">
+        <div class="hw-icon-box" style="color: var(--rose);">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a9 9 0 01-12.728 0m12.728 0l-2.829-2.829M8.464 15.536a5 5 0 01-7.072 0m7.072 0l-2.829-2.829"/></svg>
+        </div>
+        <div>
+          <div class="hw-text-title">Tắt Máy Laptop</div>
+          <div class="hw-text-desc">Đếm ngược 30s kèm nút hủy</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KHỐI 3: CỨU HỘ & PROMPT (D:\ai-hub) -->
+  <section class="section-card">
+    <div class="section-header">
+      <span class="section-title">Cứu Hộ &amp; Prompt AI</span>
+      <span style="font-size: 12px; font-weight: 800; color: var(--amber);">D:\ai-hub</span>
+    </div>
+
+    <div class="prompt-box-row">
+      <input type="text" class="prompt-input-field" id="prompt-field" placeholder="Nhập lệnh cứu hộ hoặc prompt cho AI...">
+      <button class="btn-submit-prompt" onclick="submitPromptCmd()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        Gửi
+      </button>
+    </div>
+
+    <!-- MÀN HÌNH TERMINAL (CHỮ TO RÕ RÀNG) -->
+    <div class="console-display" id="console-output">Sẵn sàng nhận lệnh từ điện thoại...</div>
+  </section>
+
+  <script>
+    // THEME MANAGEMENT
+    function setAppTheme(t) {
+      document.documentElement.setAttribute("data-theme", t);
+      localStorage.setItem("bo-tot-theme-v9", t);
+      document.querySelectorAll(".theme-btn").forEach(b => b.classList.remove("active"));
+      const el = document.getElementById(`btn-${t}`);
+      if (el) el.classList.add("active");
+    }
+    setAppTheme(localStorage.getItem("bo-tot-theme-v9") || "dark");
+
+    // TOAST NOTIFICATION
+    let toastTimer = null;
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.innerText = msg;
+      el.classList.add("visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("visible"), 2000);
+    }
+
+    function copyIp() {
+      const ip = document.getElementById("ip-val").innerText;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(ip);
+        showToast(`Đã copy IP: ${ip}`);
+      }
+    }
+
+    // STATUS POLLING
+    let loopId = null;
+    async function pullStatus() {
+      try {
+        const res = await fetch("/api/status?t=" + Date.now());
+        if (!res.ok) return;
+        const d = await res.json();
+        
+        document.getElementById("host-name").innerText = d.hostname || "Admin-PC";
+        document.getElementById("ip-val").innerText = d.tailscaleIp || "100.94.115.99";
+        document.getElementById("web-portal-link").href = `http://${d.tailscaleIp || "100.94.115.99"}:20130`;
+
+        if (d.battery) {
+          document.getElementById("batt-box").innerText = `${d.battery.percent}% ${d.battery.isCharging ? "⚡" : ""}`;
+        }
+        if (d.memory) {
+          document.getElementById("ram-box").innerText = `RAM ${d.memory.percent}%`;
+        }
+
+        const tag = document.getElementById("hub-status-tag");
+        if (d.aiHub && d.aiHub.running) {
+          tag.className = "status-tag online";
+          tag.innerText = `ĐANG CHẠY (${d.aiHub.pid || "?"})`;
+        } else {
+          tag.className = "status-tag offline";
+          tag.innerText = "ĐÃ DỪNG";
+        }
+
+        const hud = document.getElementById("emergency-hud");
+        if (d.shutdownState && d.shutdownState.active) {
+          hud.style.display = "block";
+          document.getElementById("emergency-label").innerText = 
+            d.shutdownState.type === "restart" ? "ĐANG CHỜ RESTART MÁY" : "ĐANG CHỜ TẮT MÁY";
+          document.getElementById("emergency-countdown").innerText = `${d.shutdownState.secondsLeft}s`;
+        } else {
+          hud.style.display = "none";
+        }
+      } catch {}
+    }
+
+    // ACTIONS
+    async function hubAction(a) {
+      showToast(`Đang gửi lệnh: ${a}`);
+      try {
+        const res = await fetch(`/api/hub/${a}`, { method: "POST" });
+        const d = await res.json();
+        showToast(d.message || "Xong!");
+        pullStatus();
+      } catch (e) { showToast(`Lỗi: ${e.message}`); }
+    }
+
+    async function systemAction(a) {
+      try {
+        const res = await fetch(`/api/system/${a}`, { method: "POST" });
+        const d = await res.json();
+        showToast(d.message || "Thành công!");
+      } catch (e) { showToast(`Lỗi: ${e.message}`); }
+    }
+
+    function confirmSystemAction(type) {
+      const name = type === "shutdown" ? "TẮT MÁY" : "KHỞI ĐỘNG LẠI";
+      if (confirm(`Bạn có chắc muốn ${name} laptop? (Sẽ đếm ngược 30 giây để hủy trên điện thoại nếu muốn)`)) {
+        fetch(`/api/system/${type}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timeout: 30 })
+        }).then(r => r.json()).then(d => { showToast(d.message); pullStatus(); });
+      }
+    }
+
+    async function abortShutdownCmd() {
+      try {
+        const res = await fetch("/api/system/abort-shutdown", { method: "POST" });
+        const d = await res.json();
+        showToast(d.message || "Đã hủy tắt máy!");
+        pullStatus();
+      } catch (e) { showToast(`Lỗi: ${e.message}`); }
+    }
+
+    // PROMPT RUNNER
+    async function submitPromptCmd() {
+      const box = document.getElementById("prompt-field");
+      const p = box.value.trim();
+      if (!p) return showToast("Vui lòng nhập nội dung!");
+      box.value = "";
+      
+      const con = document.getElementById("console-output");
+      con.innerText += `\n>>> [D:\\ai-hub] ${p}\n`;
+      con.scrollTop = con.scrollHeight;
+
+      try {
+        const res = await fetch("/api/prompt/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workspace: "D:\\ai-hub", model: "goose-gemini-flash", prompt: p })
+        });
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const parts = buf.split("\n\n");
+          buf = parts.pop();
+          for (const item of parts) {
+            const m = item.match(/^data:\s*(.+)$/m);
+            if (m) {
+              try {
+                const parsed = JSON.parse(m[1]);
+                if (parsed.text) {
+                  con.innerText += parsed.text;
+                  con.scrollTop = con.scrollHeight;
+                }
+              } catch {}
+            }
+          }
+        }
+      } catch (e) {
+        con.innerText += `\n[LỖI] ${e.message}\n`;
+      }
+    }
+
+    // POLLING ENGINE
+    function startLoop() {
+      if (!loopId) { pullStatus(); loopId = setInterval(pullStatus, 3000); }
+    }
+    function stopLoop() {
+      if (loopId) { clearInterval(loopId); loopId = null; }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") startLoop();
+      else stopLoop();
+    });
+
+    startLoop();
+  </script>
+</body>
+</html>

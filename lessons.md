@@ -144,3 +144,6 @@
 - [DOCX preview & PDF conversion] Use docx-preview with JSZip for paginated A4 white paper rendering isolated from AI Hub dark/warm theme; Mammoth graceful fallback. Separate legacy binary .doc from OpenXML .docx. Non-blocking async server PDF converter with single-concurrency lock, sha256 mtime coalescing cache, 30s timeout, temp-dir cleanup, and honest unsupported explanation if local LibreOffice is absent.
 - DOCX preview scrolling requires display:flex on the document container and min-height:0 through the bounded modal flex chain; removing hidden alone does not activate flex layout.
 - [Multi-device unread sync] Dong bo so badge chua doc giua cac thiet bi qua endpoint /api/sessions/mark-read va SSE event session_read + unread_sync; thiet bi nay xem thi thiet bi kia tu dong bien mat badge tuc thi.
+
+- [Tailscale Mobile Remote] Tach Micro Daemon 20139 doc lap (~15MB RAM) khoi server 20130; Win32 SendMessage tat man hinh <10ms; countdown 30s co abort; PWA dung Visibility API tiet kiem 100% pin dien thoai.
+- [Password policy] Keep the existing password-age cycle, store grace separately with default 0, recheck before CAS ticket issuance and business requests, and never redirect to password change from a generic modal hide event.

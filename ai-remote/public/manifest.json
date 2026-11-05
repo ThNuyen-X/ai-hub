@@ -1,0 +1,18 @@
+{
+  "name": "Bò Tót Remote Controller",
+  "short_name": "Bò Tót",
+  "description": "Hệ thống Bò Tót điều khiển laptop và cứu hộ AI Hub từ xa qua Tailscale",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

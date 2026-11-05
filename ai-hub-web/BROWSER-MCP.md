@@ -2,7 +2,7 @@
 
 ## Browser use policy
 
-Browser tools are opt-in by task, not a default workflow step. Use either Chrome
+Browser tools are opt-in by task, not a default workflow step. Use Chrome
 connection only for explicitly requested browser interaction or a task that genuinely
 requires a live browser, such as an authenticated page or explicit visual UI checks.
 Prefer filesystem, shell, tests, and HTTP for coding, debugging, builds, logs, and API
@@ -11,6 +11,13 @@ take snapshots/screenshots, or trigger the chat pointer for routine verification
 If browser access is not clearly necessary and would touch existing tabs, ask first.
 Keep necessary browser actions minimal. This is an agent instruction policy, not a
 broker-level permission block; browser tools remain available for appropriate tasks.
+
+## Chrome connection modes
+
+AI Hub provides 3 separated Chrome connections:
+1. `chrome_devtools` (DEFAULT): Dedicated Chrome Dev instance running on port 9223 with isolated user profile (`%LOCALAPPDATA%\ai-hub\chrome-dev-profile`). Always stable, persistent, zero authorization prompts, immune to personal tab sleep or DevTools (F12) disconnections. Managed automatically by `browser-dev.cjs` or manually launched via `start-chrome-dev.bat`.
+2. `chrome_devtools_personal`: Connected to the user's everyday personal Chrome through `--autoConnect` (`chrome://inspect/#remote-debugging`). Used only when the user explicitly requests to interact with their personal browser ("dùng Chrome cá nhân của tôi", "xem tab Chrome của tôi").
+3. `chrome_devtools_sso`: Connected to the separate SSO Chrome in `chrome-sso-dev` for internal service workflows.
 
 AI Hub uses the user's existing Chrome through one persistent Chrome DevTools MCP
 process. No cookies or profile files are copied. Enable remote debugging in Chrome

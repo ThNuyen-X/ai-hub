@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Phòng Thí Nghiệm Cử Động Doraemon 3D CGI</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #090d16;
+    color: #f8fafc;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    gap: 24px;
+    margin: 0;
+    min-height: 100vh;
+  }
+  h1 {
+    margin: 0;
+    font-size: 26px;
+    color: #38bdf8;
+    text-shadow: 0 0 25px rgba(56,189,248,0.35);
+    text-align: center;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: -16px;
+    text-align: center;
+    max-width: 700px;
+  }
+  .controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    background: #131c2e;
+    padding: 12px 20px;
+    border-radius: 40px;
+    border: 1px solid #1e293b;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .btn-act {
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-act:hover {
+    background: #0288d1;
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(2, 136, 209, 0.4);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 340px);
+    gap: 24px;
+  }
+  .card {
+    background: #131b2e;
+    border: 1px solid #1f2a40;
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+  }
+  .card h3 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    color: #38bdf8;
+    text-align: center;
+  }
+  .stage {
+    position: relative;
+    width: 290px;
+    height: 200px;
+    background: radial-gradient(circle at center, #17223b 0%, #0a0f1d 100%);
+    border: 1px solid #233352;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    perspective: 900px;
+  }
+
+  /* ================= DORAEMON 3D VOLUMETRIC ENGINE ================= */
+  .doraemon-full-body {
+    overflow: visible;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.65));
+    transform-origin: 48px 54px;
+  }
+
+  /* KHỚP ĐỘNG HỌC CỐ ĐỊNH */
+  .doraemon-arm-left { transform-origin: 30px 58px !important; }
+  .doraemon-arm-right { transform-origin: 66px 58px !important; }
+  .doraemon-head { transform-origin: 48px 52px !important; }
+  .doraemon-leg-left { transform-origin: 38px 84px !important; }
+  .doraemon-leg-right { transform-origin: 58px 84px !important; }
+  .doraemon-tail { transform-origin: 48px 80px !important; }
+
+  /* CHỚP MẮT & LẮC ĐUÔI */
+  @keyframes d-blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.08); } }
+  .doraemon-eye-l, .doraemon-eye-r { transform-origin: 48px 21px; animation: d-blink 3.4s infinite; }
+  @keyframes d-tail-wag { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(18deg); } }
+  .doraemon-tail { animation: d-tail-wag 1.6s ease-in-out infinite; }
+
+  /* ---------------- 1. QUAY NGƯỜI SANG 1 BÊN SOI KÍNH LÚP ---------------- */
+  @keyframes d-inspect-body-3d {
+    0% { transform: rotateY(-44deg) rotate(14deg) translateY(4px); }
+    100% { transform: rotateY(-54deg) rotate(22deg) translateY(10px); }
+  }
+  @keyframes d-inspect-head-3d {
+    0%, 100% { transform: rotate(12deg) translateY(2px); }
+    50% { transform: rotate(18deg) translateY(6px); }
+  }
+  @keyframes d-inspect-arm-r-3d {
+    0% { transform: rotate(-30deg); }
+    100% { transform: rotate(-48deg); }
+  }
+  @keyframes d-inspect-arm-l-3d {
+    0%, 100% { transform: rotate(-18deg); }
+    50% { transform: rotate(-26deg); }
+  }
+  @keyframes d-glass-shine {
+    0% { filter: drop-shadow(0 0 4px #00e5ff) brightness(1.1); }
+    100% { filter: drop-shadow(0 0 18px #00e5ff) brightness(1.7); }
+  }
+  @keyframes d-scan-beam-sweep {
+    0%, 100% { opacity: 0.35; transform: rotate(0deg) scale(0.9); }
+    50% { opacity: 0.85; transform: rotate(10deg) scale(1.15); }
+  }
+
+  .act-inspect .doraemon-full-body { animation: d-inspect-body-3d 1.6s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-head { animation: d-inspect-head-3d 1.6s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-arm-right { animation: d-inspect-arm-r-3d 1.6s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-arm-left { animation: d-inspect-arm-l-3d 1.6s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-glass { display: block !important; animation: d-glass-shine 0.8s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-scan-beam { display: block !important; animation: d-scan-beam-sweep 1.4s ease-in-out infinite !important; }
+  .act-inspect .doraemon-eyes { transform: translate(3px, 2px); }
+
+  /* ---------------- 2. 1 TAY CẦM BÁNH ĂN + TAY TRÁI XOA BỤNG ---------------- */
+  @keyframes d-eat-arm-r-3d {
+    0%, 15% { transform: rotate(155deg); }      /* Hạ bánh ngang ngực nhai */
+    40%, 80% { transform: rotate(178deg); }     /* Đưa bánh chạm sát miệng cắn măm măm */
+    100% { transform: rotate(155deg); }
+  }
+  @keyframes d-eat-arm-l-3d {
+    0%, 100% { transform: rotate(-82deg); }
+    50% { transform: rotate(-100deg); }
+  }
+  @keyframes d-eat-head-3d {
+    0%, 15%, 100% { transform: translateY(0) rotate(0deg); }
+    40%, 80% { transform: translateY(5px) rotate(6deg); }
+  }
+  @keyframes d-chew-3d {
+    0%, 100% { transform: scaleY(0.4) scaleX(0.85); }
+    50% { transform: scaleY(1.4) scaleX(1.2); }
+  }
+
+  .act-eat .doraemon-dorayaki { display: block !important; }
+  .act-eat .doraemon-arm-right { animation: d-eat-arm-r-3d 1.5s ease-in-out infinite !important; }
+  .act-eat .doraemon-arm-left { animation: d-eat-arm-l-3d 0.75s ease-in-out infinite !important; }
+  .act-eat .doraemon-head { animation: d-eat-head-3d 1.5s ease-in-out infinite !important; }
+  .act-eat .doraemon-smile-mouth { display: none !important; }
+  .act-eat .doraemon-chew-mouth { display: block !important; transform-origin: 48px 43px; animation: d-chew-3d 0.22s ease-in-out infinite alternate !important; }
+  .act-eat .doraemon-normal-eyes { display: none !important; }
+  .act-eat .doraemon-happy-eyes { display: block !important; }
+  .act-eat .doraemon-blush { display: block !important; }
+
+  /* ---------------- 3. VẪY TAY CHÀO ---------------- */
+  @keyframes d-wave-3d {
+    0%, 100% { transform: rotate(170deg); }
+    50% { transform: rotate(130deg); }
+  }
+  .act-wave .doraemon-arm-right { animation: d-wave-3d 0.55s ease-in-out infinite !important; }
+  .act-wave .doraemon-happy-eyes { display: block !important; }
+  .act-wave .doraemon-normal-eyes { display: none !important; }
+
+  /* ---------------- 4. XOAY TRÒN 360° ---------------- */
+  @keyframes d-spin-3d {
+    0% { transform: rotateY(0deg) scale(1); }
+    50% { transform: rotateY(180deg) scale(1.15) translateY(-10px); }
+    100% { transform: rotateY(360deg) scale(1); }
+  }
+  .act-spin .doraemon-full-body { animation: d-spin-3d 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite !important; }
+  .act-spin .doraemon-happy-eyes { display: block !important; }
+  .act-spin .doraemon-normal-eyes { display: none !important; }
+
+  /* ---------------- 5. CLICK NỔ SAO LẤP LÁNH ---------------- */
+  @keyframes d-click-body { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-14px) scale(1.08) rotate(-6deg); } 65% { transform: translateY(10px) scale(0.92); } 100% { transform: translateY(0) scale(1); } }
+  @keyframes d-click-hand { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-50deg); } }
+  @keyframes d-star-pop { 0% { transform: scale(0) rotate(0deg); opacity: 1; } 100% { transform: scale(1.8) rotate(180deg) translateY(-20px); opacity: 0; } }
+  .act-click .doraemon-full-body { animation: d-click-body 0.6s ease-in-out infinite !important; }
+  .act-click .doraemon-arm-right { animation: d-click-hand 0.6s ease-in-out infinite !important; }
+  .act-click .doraemon-sparkles { display: block !important; }
+
+  /* Mặc định ẩn phụ kiện khi không bật class */
+  .doraemon-glass, .doraemon-dorayaki, .doraemon-scan-beam, .doraemon-happy-eyes, .doraemon-chew-mouth, .doraemon-blush, .doraemon-sparkles {
+    display: none;
+  }
+
+  /* Con trỏ Doraemon động chạy theo chuột trên trang này */
+  .interactive-cursor {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999999;
+    transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  .cursor-bubble {
+    position: absolute;
+    left: 55px;
+    top: -25px;
+    background: #ffffff;
+    border: 2px solid #009fe8;
+    color: #0b4f8a;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 14px;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  }
+</style>
+</head>
+<body>
+  <h1>Phòng Thí Nghiệm Cử Động Doraemon 3D CGI</h1>
+  <div class="subtitle">Đổ bóng thể tích 3D (Spherical CGI Shading), chuẩn điện ảnh Stand By Me. Bấm các nút dưới đây để chuyển đổi cử động hoặc nhấp chuột lên màn hình để thử con trỏ:</div>
+  
+  <div class="controls-bar">
+    <button class="btn-act" onclick="setInteractiveAction('act-eat', 'Măm măm bánh rán nè 🥞😋')">🥞 1. Ăn bánh rán (1 tay + xoa bụng)</button>
+    <button class="btn-act" onclick="setInteractiveAction('act-inspect', 'Nghiêng mình soi kính lúp 🔍✨')">🔍 2. Quay người 3/4 soi kính lúp</button>
+    <button class="btn-act" onclick="setInteractiveAction('act-wave', 'Doraemon chào bạn nha 👋😊')">👋 3. Vẫy tay chào bạn</button>
+    <button class="btn-act" onclick="setInteractiveAction('act-spin', 'Xoay tròn 360° vui sướng! 🌀✨')">🌀 4. Xoay tròn 360° 3D</button>
+    <button class="btn-act" onclick="setInteractiveAction('act-click', 'Doraemon bấm chọn! 🎯✨')">✨ 5. Click bắn sao lấp lánh</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>1. Quay người 3/4 soi kính lúp</h3>
+      <div class="stage act-inspect" id="stage-1"></div>
+    </div>
+    <div class="card">
+      <h3>2. 1 tay cầm bánh ăn + tay trái xoa bụng</h3>
+      <div class="stage act-eat" id="stage-2"></div>
+    </div>
+    <div class="card">
+      <h3>3. Vẫy tay chào bạn</h3>
+      <div class="stage act-wave" id="stage-3"></div>
+    </div>
+    <div class="card">
+      <h3>4. Xoay tròn 360° 3D</h3>
+      <div class="stage act-spin" id="stage-4"></div>
+    </div>
+  </div>
+
+  <!-- Con trỏ Doraemon nổi sống động tương tác theo chuột -->
+  <div class="interactive-cursor act-eat" id="live-cursor" style="left: 120px; top: 180px;">
+    <div class="cursor-bubble" id="live-bubble">Măm măm bánh rán nè 🥞😋</div>
+    <div id="live-doraemon-host"></div>
+  </div>
+
+  <template id="doraemon-svg-template">
+    <svg class="doraemon-full-body" viewBox="0 0 96 102" width="112" height="120">
+      <defs>
+        <!-- 3D Blue Head Spherical Gradient -->
+        <radialGradient id="d-3d-blue-head" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#42a5f5"/>
+          <stop offset="45%" stop-color="#0288d1"/>
+          <stop offset="85%" stop-color="#01579b"/>
+          <stop offset="100%" stop-color="#003c71"/>
+        </radialGradient>
+
+        <!-- 3D Blue Body Cylindrical Gradient -->
+        <radialGradient id="d-3d-blue-body" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#29b6f6"/>
+          <stop offset="55%" stop-color="#0288d1"/>
+          <stop offset="90%" stop-color="#01579b"/>
+          <stop offset="100%" stop-color="#002d56"/>
+        </radialGradient>
+
+        <!-- 3D White Sphere (Face, Belly, Hands, Feet) -->
+        <radialGradient id="d-3d-white" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="65%" stop-color="#f0f4f8"/>
+          <stop offset="92%" stop-color="#d9e2ec"/>
+          <stop offset="100%" stop-color="#bcccdc"/>
+        </radialGradient>
+
+        <!-- 3D Red Glossy Nose / Collar -->
+        <radialGradient id="d-3d-red-nose" cx="30%" cy="25%" r="70%">
+          <stop offset="0%" stop-color="#ff8a80"/>
+          <stop offset="35%" stop-color="#f44336"/>
+          <stop offset="80%" stop-color="#c62828"/>
+          <stop offset="100%" stop-color="#801313"/>
+        </radialGradient>
+
+        <!-- 3D Metallic Golden Bell -->
+        <radialGradient id="d-3d-bell" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="#fffde7"/>
+          <stop offset="30%" stop-color="#ffee58"/>
+          <stop offset="70%" stop-color="#fbc02d"/>
+          <stop offset="95%" stop-color="#f57f17"/>
+          <stop offset="100%" stop-color="#e65100"/>
+        </radialGradient>
+
+        <!-- 3D Dorayaki Crust -->
+        <radialGradient id="d-3d-dorayaki-top" cx="42%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#fde047"/>
+          <stop offset="35%" stop-color="#d97706"/>
+          <stop offset="85%" stop-color="#92400e"/>
+          <stop offset="100%" stop-color="#713f12"/>
+        </radialGradient>
+
+        <!-- 3D Scan Light Beam -->
+        <linearGradient id="d-scan-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="rgba(0, 229, 255, 0.75)"/>
+          <stop offset="50%" stop-color="rgba(0, 229, 255, 0.3)"/>
+          <stop offset="100%" stop-color="rgba(0, 229, 255, 0.01)"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Chong chóng tre 3D -->
+      <g class="doraemon-copter">
+        <rect x="46.8" y="0.5" width="2.4" height="6.5" rx="1.2" fill="#d97706" stroke="#92400e" stroke-width="0.5"/>
+        <ellipse cx="48" cy="1" rx="20" ry="2.2" fill="url(#d-3d-dorayaki-top)" stroke="#92400e" stroke-width="0.7"/>
+        <circle cx="48" cy="1" r="1.8" fill="url(#d-3d-red-nose)"/>
+      </g>
+
+      <!-- Đuôi đỏ tròn 3D -->
+      <g class="doraemon-tail">
+        <line x1="48" y1="80" x2="48" y2="87" stroke="#b71c1c" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="48" cy="88" r="4.5" fill="url(#d-3d-red-nose)" stroke="#801313" stroke-width="0.8"/>
+        <circle cx="46.8" cy="86.8" r="1.2" fill="#ffffff" opacity="0.8"/>
+      </g>
+
+      <!-- Đôi chân tròn trịa 3D (Spherical Foot) -->
+      <g class="doraemon-feet">
+        <g class="doraemon-leg-left">
+          <ellipse cx="38" cy="88" rx="11" ry="6.5" fill="url(#d-3d-white)" stroke="#94a3b8" stroke-width="1.1"/>
+          <ellipse cx="37" cy="86.5" rx="7" ry="3.5" fill="#ffffff" opacity="0.6"/>
+        </g>
+        <g class="doraemon-leg-right">
+          <ellipse cx="58" cy="88" rx="11" ry="6.5" fill="url(#d-3d-white)" stroke="#94a3b8" stroke-width="1.1"/>
+          <ellipse cx="57" cy="86.5" rx="7" ry="3.5" fill="#ffffff" opacity="0.6"/>
+        </g>
+      </g>
+
+      <!-- Thân mình xanh Doraemon 3D (Volumetric Torso) -->
+      <path d="M28 54 Q25 78 35 84 Q48 87 61 84 Q71 78 68 54 Z" fill="url(#d-3d-blue-body)" stroke="#003c71" stroke-width="1.3"/>
+
+      <!-- Bụng trắng & Túi thần kỳ 4D 3D -->
+      <g class="doraemon-belly">
+        <ellipse cx="48" cy="69" rx="16.5" ry="14.5" fill="url(#d-3d-white)" stroke="#cbd5e1" stroke-width="0.9"/>
+        <path d="M34 66 Q48 66 62 66 Q62 80 48 80 Q34 80 34 66 Z" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+        <line x1="34" y1="66" x2="62" y2="66" stroke="#94a3b8" stroke-width="1.2"/>
+        <path d="M34 66 Q48 66 62 66" stroke="rgba(0,0,0,0.12)" stroke-width="2.5" fill="none"/>
+      </g>
+
+      <!-- Đầu Doraemon 3D & Khuôn mặt (Volumetric Spherical Head) -->
+      <g class="doraemon-head">
+        <circle cx="48" cy="31" r="24" fill="url(#d-3d-blue-head)" stroke="#003c71" stroke-width="1.4"/>
+        <ellipse cx="42" cy="18" rx="8" ry="4" fill="#ffffff" opacity="0.35" transform="rotate(-15 42 18)"/>
+        
+        <!-- Mặt trắng 3D -->
+        <ellipse cx="48" cy="35" rx="19.5" ry="17" fill="url(#d-3d-white)" stroke="#cbd5e1" stroke-width="0.8"/>
+        
+        <!-- Má hồng khi ăn ngon / vui mừng -->
+        <g class="doraemon-blush">
+          <ellipse cx="33" cy="39" rx="4.5" ry="2.8" fill="rgba(255, 112, 67, 0.7)"/>
+          <ellipse cx="63" cy="39" rx="4.5" ry="2.8" fill="rgba(255, 112, 67, 0.7)"/>
+        </g>
+        
+        <!-- Mắt bình thường 3D (biết chớp) -->
+        <g class="doraemon-eyes doraemon-normal-eyes">
+          <ellipse class="doraemon-eye-l" cx="42.5" cy="21" rx="5.4" ry="7.2" fill="#ffffff" stroke="#94a3b8" stroke-width="1.1"/>
+          <ellipse class="doraemon-eye-r" cx="53.5" cy="21" rx="5.4" ry="7.2" fill="#ffffff" stroke="#94a3b8" stroke-width="1.1"/>
+          <ellipse cx="44.2" cy="21.5" rx="2.2" ry="2.8" fill="#1e293b"/>
+          <circle cx="45" cy="20.3" r="1" fill="#ffffff"/>
+          <ellipse cx="51.8" cy="21.5" rx="2.2" ry="2.8" fill="#1e293b"/>
+          <circle cx="52.6" cy="20.3" r="1" fill="#ffffff"/>
+        </g>
+        
+        <!-- Mắt cười tít hình cung ^ ^ khi ăn ngon / vẫy tay -->
+        <g class="doraemon-happy-eyes">
+          <path d="M38 22 Q43 15 47 22" stroke="#1e293b" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <path d="M49 22 Q53 15 58 22" stroke="#1e293b" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </g>
+        
+        <!-- Mũi đỏ tròn 3D bóng bẩy -->
+        <circle cx="48" cy="28" r="3.8" fill="url(#d-3d-red-nose)" stroke="#801313" stroke-width="0.7"/>
+        <circle cx="46.8" cy="26.8" r="1.1" fill="#ffffff" opacity="0.9"/>
+        
+        <!-- Ria mép 6 sợi rõ nét -->
+        <path d="M31 30 L43 32 M30 34 L43 34 M31 39 L43 36 M65 30 L53 32 M66 34 L53 34 M65 39 L53 36" stroke="#1e293b" stroke-width="1.3" stroke-linecap="round"/>
+        
+        <!-- Miệng cười tươi bình thường -->
+        <g class="doraemon-smile-mouth">
+          <path d="M48 31.8 L48 43 M36 38 Q48 51 60 38" stroke="#1e293b" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+        </g>
+        
+        <!-- Miệng nhai măm măm mở ra khép lại khi ăn bánh rán -->
+        <g class="doraemon-chew-mouth">
+          <path d="M48 31.8 L48 39" stroke="#1e293b" stroke-width="1.2" stroke-linecap="round"/>
+          <ellipse cx="48" cy="43" rx="7.8" ry="6.2" fill="#c62828" stroke="#1e293b" stroke-width="1.3"/>
+          <ellipse cx="48" cy="44.8" rx="5" ry="3" fill="#f48fb1"/>
+        </g>
+        
+        <!-- Vòng cổ đỏ 3D & Chuông vàng kim loại 3D -->
+        <rect x="33" y="50" width="30" height="4.6" rx="2.3" fill="url(#d-3d-red-nose)" stroke="#801313" stroke-width="0.6"/>
+        <circle cx="48" cy="54" r="4.2" fill="url(#d-3d-bell)" stroke="#b45309" stroke-width="1"/>
+        <ellipse cx="46.8" cy="52.8" rx="1.5" ry="0.8" fill="#ffffff" opacity="0.85"/>
+        <line x1="44.2" y1="53.4" x2="51.8" y2="53.4" stroke="#78350f" stroke-width="0.9"/>
+        <circle cx="48" cy="55.2" r="1" fill="#1e293b"/>
+      </g>
+
+      <!-- TAY TRÁI 3D (Khớp vai cố định 30, 58) -->
+      <g class="doraemon-arm-left">
+        <path d="M30 58 Q18 64 16 72" stroke="url(#d-3d-blue-body)" stroke-width="7.5" stroke-linecap="round" fill="none"/>
+        <circle cx="15" cy="73" r="6.2" fill="url(#d-3d-white)" stroke="#94a3b8" stroke-width="1"/>
+        <circle cx="13.8" cy="71.8" r="1.8" fill="#ffffff" opacity="0.75"/>
+      </g>
+
+      <!-- TAY PHẢI 3D (Khớp vai cố định 66, 58) -->
+      <g class="doraemon-arm-right">
+        <path d="M66 58 Q78 64 80 72" stroke="url(#d-3d-blue-body)" stroke-width="7.5" stroke-linecap="round" fill="none"/>
+        
+        <!-- Kính lúp thần kỳ 3D -->
+        <g class="doraemon-glass">
+          <line x1="81" y1="73" x2="90" y2="78" stroke="url(#d-3d-bell)" stroke-width="3.8" stroke-linecap="round"/>
+          <circle cx="95" cy="82" r="11.5" fill="rgba(0, 229, 255, 0.35)" stroke="#0288d1" stroke-width="2.5"/>
+          <circle cx="95" cy="82" r="9.5" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.3"/>
+          <path d="M91 78 A 7 7 0 0 1 98 78" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none"/>
+          
+          <!-- Tia quét nón phát quang 3D -->
+          <g class="doraemon-scan-beam" style="transform-origin: 95px 82px;">
+            <polygon points="95,82 65,130 125,130" fill="url(#d-scan-grad)" style="filter:blur(2.5px);"/>
+          </g>
+        </g>
+        
+        <!-- Bánh rán Dorayaki 3D nướng phồng xốp (1 tay cầm bánh) -->
+        <g class="doraemon-dorayaki">
+          <ellipse cx="81" cy="71" rx="11" ry="6.5" fill="#78350f" stroke="#451a03" stroke-width="0.8"/>
+          <ellipse cx="81" cy="70" rx="9" ry="3.8" fill="#2d0a04"/>
+          <ellipse cx="81" cy="68.5" rx="11" ry="6.2" fill="url(#d-3d-dorayaki-top)" stroke="#78350f" stroke-width="0.8"/>
+          <ellipse cx="78" cy="66.5" rx="4.5" ry="2.2" fill="#fef08a" opacity="0.6"/>
+        </g>
+        
+        <!-- Bàn tay phải tròn xoe 3D đỡ lấy bánh / kính -->
+        <circle cx="81" cy="73" r="6.2" fill="url(#d-3d-white)" stroke="#94a3b8" stroke-width="1"/>
+        <circle cx="79.8" cy="71.8" r="1.8" fill="#ffffff" opacity="0.75"/>
+      </g>
+
+      <!-- Hiệu ứng ngôi sao lấp lánh khi click -->
+      <g class="doraemon-sparkles" style="transform-origin: 48px 54px; animation: d-star-pop 0.6s ease-out forwards;">
+        <polygon points="48,15 50,21 56,21 51,25 53,31 48,27 43,31 45,25 40,21 46,21" fill="#ffeb3b"/>
+        <polygon points="25,35 26.5,39 31,39 27.5,42 29,46 25,43 21,46 22.5,42 19,39 23.5,39" fill="#00e5ff"/>
+        <polygon points="72,32 73.5,36 78,36 74.5,39 76,43 72,40 68,43 69.5,39 66,36 70.5,36" fill="#ff4081"/>
+      </g>
+    </svg>
+  </template>
+
+  <script>
+    const tpl = document.getElementById('doraemon-svg-template').content;
+    ['stage-1', 'stage-2', 'stage-3', 'stage-4'].forEach(id => {
+      document.getElementById(id).appendChild(tpl.cloneNode(true));
+    });
+    document.getElementById('live-doraemon-host').appendChild(tpl.cloneNode(true));
+
+    const liveCursor = document.getElementById('live-cursor');
+    const liveBubble = document.getElementById('live-bubble');
+
+    function setInteractiveAction(cls, text) {
+      liveCursor.className = 'interactive-cursor ' + cls;
+      liveBubble.textContent = text;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      liveCursor.style.transform = `translate(${e.clientX - 48}px, ${e.clientY - 55}px)`;
+    });
+
+    window.addEventListener('click', (e) => {
+      const origClass = liveCursor.className;
+      const origText = liveBubble.textContent;
+      liveCursor.className = 'interactive-cursor act-click';
+      liveBubble.textContent = 'Doraemon bấm chọn! 🎯✨';
+      setTimeout(() => {
+        liveCursor.className = origClass;
+        liveBubble.textContent = origText;
+      }, 700);
+    });
+  </script>
+</body>
+</html>

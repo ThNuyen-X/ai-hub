@@ -32,3 +32,10 @@ node_modules/
 coverage/
 .DS_Store
 Thumbs.db
+
+# 3D assets & raw crawl caches
+ai-hub-web/public/*.glb
+ai-hub-web/public/stickers/
+ai-hub-web/public/stickers_found.json
+ai-hub-web/public/vendor/
+

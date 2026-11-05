@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Bộ Sưu Tập Meme Doraemon Động Tuyển Chọn (Từ Internet)</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #090d16;
+    color: #f8fafc;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  h1 { margin: 0; color: #38bdf8; font-size: 24px; }
+  .subtitle { font-size: 13px; color: #94a3b8; margin-top: -8px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 180px);
+    gap: 14px;
+  }
+  .card {
+    background: #131b2e;
+    border: 1px solid #1f2a40;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .card:hover {
+    border-color: #38bdf8;
+    transform: translateY(-4px);
+    background: #1b2640;
+  }
+  .stage {
+    width: 150px;
+    height: 140px;
+    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .stage img {
+    max-width: 130px;
+    max-height: 130px;
+    object-fit: contain;
+  }
+  .card-label {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #cbd5e1;
+    font-weight: bold;
+  }
+  /* Con trỏ bay theo chuột */
+  .live-cursor {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999999;
+    transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  .live-cursor img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
+  }
+  .bubble {
+    position: absolute;
+    left: 75px;
+    top: -18px;
+    background: #fff;
+    border: 2px solid #009fe8;
+    color: #0b4f8a;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <h1>Bộ Sưu Tập Meme Doraemon Động Tuyển Chọn (Từ Internet)</h1>
+  <div class="subtitle">Bấm vào bất kỳ meme nào bên dưới để chọn làm con trỏ chuột di chuyển sống động:</div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="live-cursor" id="cursor-wrap" style="left: 100px; top: 100px;">
+    <div class="bubble" id="bubble">Doraemon đang bơi lắc vòng! 🛸</div>
+    <img id="cursor-img" src="/stickers/hula_hoop.webp" alt="Cursor">
+  </div>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const cursorWrap = document.getElementById('cursor-wrap');
+    const cursorImg = document.getElementById('cursor-img');
+    const bubble = document.getElementById('bubble');
+
+    const labels = [
+      'Lắc hông nhí nhảnh', 'Vẫy tay chào', 'Nhảy múa vui nhộn', 'Bay chong chóng tre',
+      'Đứng ăn bánh rán', 'Bất ngờ hốt hoảng', 'Cười toe toét', 'Lon ton chạy bộ',
+      'Xoay vòng tít mù', 'Hula hoop lắc vòng', 'Gật gù đắc ý', 'Chạy trốn chuột',
+      'Uống trà sữa', 'Mắt long lanh', 'Bay lượn trên trời', 'Khoanh tay suy nghĩ',
+      'Nháy mắt tinh nghịch', 'Tung tăng dạo phố', 'Nhảy tưng tưng', 'Cười tít mắt'
+    ];
+
+    for (let i = 0; i < 25; i++) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const src = `/stickers/candidates/cand_${i}.webp`;
+      const label = labels[i % labels.length] + ' #' + (i + 1);
+      card.innerHTML = `
+        <div class="stage"><img src="${src}" onerror="this.parentElement.parentElement.remove()"></div>
+        <div class="card-label">${label}</div>
+      `;
+      card.onclick = () => {
+        cursorImg.src = src;
+        bubble.textContent = label + ' ✨';
+      };
+      grid.appendChild(card);
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      cursorWrap.style.transform = `translate(${e.clientX - 40}px, ${e.clientY - 40}px)`;
+    });
+  </script>
+</body>
+</html>

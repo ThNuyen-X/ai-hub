@@ -1285,15 +1285,22 @@
       outline-offset: 2px;
     }
     #modelDropdownMenu { max-width:calc(100vw - 24px);max-height:calc(100dvh - 90px);overflow-y:auto; }
-    .browser-activity { display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(110deg,#0ea5e910,var(--bg-card));color:var(--text-main); }
-    .browser-activity-pointer { display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:10px;background:#0ea5e918;color:#0284c7; }
+    .browser-activity { display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px 14px;border:1px solid #0284c740;border-radius:14px;background:linear-gradient(110deg,#0ea5e915,var(--bg-card));color:var(--text-main);box-shadow:0 4px 16px rgba(14,165,233,0.08); }
+    .browser-activity-pointer { display:grid;place-items:center;flex-shrink:0;width:52px;height:56px;border-radius:12px;background:#0ea5e918;border:1px solid #0ea5e930;position:relative;overflow:visible; }
     .browser-activity-copy { display:grid;gap:4px;min-width:0; }
-    .browser-activity strong { font-size:12px;font-weight:600; }
+    .browser-activity strong { font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px; }
     .browser-activity small { font-size:11px;color:var(--text-sub);overflow-wrap:anywhere; }
-    .browser-activity[data-state="working"] .browser-activity-pointer { animation:browser-pointer 1.4s ease-in-out infinite; }
-    .browser-activity[data-state="failed"] { border-color:#ef444460; }
-    @keyframes browser-pointer { 50% { transform:translate(3px,-2px); } }
-    @media(prefers-reduced-motion:reduce) { .browser-activity-pointer { animation:none !important; } }
+    .browser-activity[data-state="working"] .browser-doraemon-svg { animation:browser-float 1.8s ease-in-out infinite; }
+    .browser-activity[data-state="working"] .browser-copter { transform-origin:36px 3px;animation:browser-copter-spin 0.12s linear infinite; }
+    .browser-activity[data-state="working"] .browser-arm-l { transform-origin:24px 48px;animation:browser-type-l 0.35s ease-in-out infinite; }
+    .browser-activity[data-state="working"] .browser-arm-r { transform-origin:48px 48px;animation:browser-type-r 0.35s ease-in-out infinite; }
+    .browser-activity[data-state="failed"] { border-color:#ef444460;background:linear-gradient(110deg,#ef444415,var(--bg-card)); }
+    .browser-activity[data-state="completed"] { border-color:#10b98140; }
+    @keyframes browser-copter-spin { 0% { transform:scaleX(1); } 50% { transform:scaleX(-1); } 100% { transform:scaleX(1); } }
+    @keyframes browser-float { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+    @keyframes browser-type-l { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-3px) rotate(10deg); } }
+    @keyframes browser-type-r { 0%, 100% { transform:translateY(-3px) rotate(-10deg); } 50% { transform:translateY(0); } }
+    @media(prefers-reduced-motion:reduce) { .browser-activity[data-state="working"] .browser-doraemon-svg, .browser-activity[data-state="working"] .browser-copter, .browser-activity[data-state="working"] .browser-arm-l, .browser-activity[data-state="working"] .browser-arm-r { animation:none !important; } }
 
 
     #filePreviewDialog { min-height: 0; height: 88dvh; }
@@ -12222,7 +12229,7 @@
         const pointer = document.createElement('span');
         pointer.className = 'browser-activity-pointer';
         pointer.setAttribute('aria-hidden', 'true');
-        pointer.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M5 3v17l4-5 4 7 3-2-4-6 7-1z"/></svg>';
+        pointer.innerHTML = '<svg class="browser-doraemon-svg" viewBox="0 0 72 84" width="46" height="53" style="overflow:visible;"><g class="browser-copter"><rect x="34.5" y="2" width="3" height="7" fill="#fbc02d" rx="1"/><ellipse cx="36" cy="2" rx="18" ry="2.2" fill="#f57f17"/><circle cx="36" cy="2" r="2" fill="#d32f2f"/></g><g class="browser-feet"><ellipse cx="27" cy="75" rx="7" ry="4.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="45" cy="75" rx="7" ry="4.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><ellipse cx="36" cy="55" rx="17" ry="17" fill="#009fe8" stroke="#0d47a1" stroke-width="1.5"/><ellipse cx="36" cy="56" rx="13" ry="13" fill="#ffffff"/><path d="M26 55 Q36 55 46 55 Q46 66 36 66 Q26 66 26 55 Z" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><line x1="26" y1="55" x2="46" y2="55" stroke="#0d47a1" stroke-width="1.2"/><g class="browser-arm-l"><path d="M24 48 Q14 52 14 58" stroke="#009fe8" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="13" cy="59" r="5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><g class="browser-arm-r"><path d="M48 48 Q58 52 58 58" stroke="#009fe8" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="59" cy="59" r="5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><g class="browser-head"><circle cx="36" cy="26" r="19" fill="#009fe8" stroke="#0d47a1" stroke-width="1.5"/><ellipse cx="36" cy="29" rx="15" ry="13.5" fill="#ffffff"/><ellipse cx="31" cy="18" rx="4" ry="5.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="41" cy="18" rx="4" ry="5.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="32.5" cy="18.5" rx="1.6" ry="2.2" fill="#212121"/><circle cx="33" cy="17.5" r="0.6" fill="#ffffff"/><ellipse cx="39.5" cy="18.5" rx="1.6" ry="2.2" fill="#212121"/><circle cx="40" cy="17.5" r="0.6" fill="#ffffff"/><circle cx="36" cy="23.5" r="2.8" fill="#e53935" stroke="#b71c1c" stroke-width="0.7"/><circle cx="35.2" cy="22.7" r="0.7" fill="#ffffff"/><path d="M23 25 L31 27 M22 29 L31 29 M23 33 L31 31 M49 25 L41 27 M50 29 L41 29 M49 33 L41 31" stroke="#212121" stroke-width="0.9" stroke-linecap="round"/><path d="M36 26.3 L36 36 M27 32 Q36 41 45 32" stroke="#212121" stroke-width="1.1" fill="none" stroke-linecap="round"/><rect x="25" y="41.5" width="22" height="3.2" rx="1.6" fill="#d32f2f"/><circle cx="36" cy="44.5" r="2.8" fill="#fbc02d" stroke="#f57f17" stroke-width="0.8"/><line x1="33.8" y1="43.8" x2="38.2" y2="43.8" stroke="#b71c1c" stroke-width="0.5"/><circle cx="36" cy="45.2" r="0.6" fill="#212121"/></g></svg>';
         const copy = document.createElement('span');
         copy.className = 'browser-activity-copy';
         copy.append(document.createElement('strong'), document.createElement('small'));
@@ -12238,9 +12245,9 @@
         card.dataset.target = args.url ? String(args.url).slice(0, 180) : (args.pageId != null ? 'Tab #' + args.pageId : 'Chrome hiện tại');
       }
       card.dataset.state = state;
-      const titles = { working: 'AI đang thao tác trình duyệt', completed: 'Thao tác trình duyệt đã xong', failed: 'Thao tác trình duyệt gặp lỗi', ended: 'Đã kết thúc lượt dùng trình duyệt' };
+      const titles = { working: 'Doraemon đang thao tác trình duyệt 🚁', completed: 'Doraemon đã hoàn thành thao tác ✨', failed: 'Doraemon gặp sự cố trên trình duyệt 😵', ended: 'Đã kết thúc lượt dùng trình duyệt' };
       card.querySelector('strong').textContent = titles[state] || titles.ended;
-      card.querySelector('small').textContent = (card.dataset.action || '') + ' · ' + (card.dataset.target || 'Chrome') + ' · Con trỏ minh họa';
+      card.querySelector('small').textContent = (card.dataset.action || '') + ' · ' + (card.dataset.target || 'Chrome') + ' · Doraemon & Chuột ảo';
     }
 
     // EVENT PROCESSING LOGIC (CENTRALIZED FOR SSE & EVENTSOURCE)

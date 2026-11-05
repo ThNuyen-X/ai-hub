@@ -2239,6 +2239,15 @@ const server = http.createServer((req, res) => {
         args.push("--with-extension", `chrome_devtools:"${process.execPath}" "${path.join(__dirname, "browser-mcp.cjs")}"`);
       }
 
+      const personalBrowserEnabled = browserEnabled;
+      const savedPersonalBrowser = personalBrowserEnabled && resume && hasSessionExtension(
+        path.join(process.env.APPDATA, 'Block', 'goose', 'data', 'sessions', 'sessions.db'),
+        sessionId, 'chrome_devtools_personal'
+      );
+      if (personalBrowserEnabled && !savedPersonalBrowser) {
+        args.push('--with-extension', `chrome_devtools_personal:"${process.execPath}" "${path.join(__dirname, 'browser-personal.cjs')}"`);
+      }
+
       const ssoBrowserEnabled = browserEnabled && require('./browser-sso.cjs').ssoAvailable();
       const savedSsoBrowser = ssoBrowserEnabled && resume && hasSessionExtension(
         path.join(process.env.APPDATA, 'Block', 'goose', 'data', 'sessions', 'sessions.db'),

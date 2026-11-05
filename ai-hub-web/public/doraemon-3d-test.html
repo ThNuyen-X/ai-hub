@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Mô Hình Doraemon 3D CGI Thực Tế (Three.js WebGL)</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #090d16;
+    color: #f8fafc;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-height: 100vh;
+  }
+  h1 {
+    margin: 0;
+    color: #38bdf8;
+    font-size: 26px;
+    text-shadow: 0 0 25px rgba(56,189,248,0.4);
+    text-align: center;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: -8px;
+    text-align: center;
+  }
+  .actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    background: #131c2e;
+    padding: 10px 20px;
+    border-radius: 40px;
+    border: 1px solid #1e293b;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+  .btn-act {
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-act:hover {
+    background: #0288d1;
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(2, 136, 209, 0.4);
+  }
+  .viewer-container {
+    position: relative;
+    width: 640px;
+    height: 580px;
+    background: radial-gradient(circle at center, #17223b 0%, #0a0f1d 100%);
+    border: 1px solid #233352;
+    border-radius: 20px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.65);
+    overflow: hidden;
+    cursor: grab;
+  }
+  .viewer-container:active {
+    cursor: grabbing;
+  }
+  #canvas3d {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .hint-overlay {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid #334155;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #cbd5e1;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+  }
+  .bubble-3d {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: #ffffff;
+    border: 2px solid #009fe8;
+    color: #0b4f8a;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+</style>
+<script src="/vendor/three.min.js"></script>
+<script src="/vendor/GLTFLoader.js"></script>
+<script src="/vendor/DRACOLoader.js"></script>
+</head>
+<body>
+  <h1>Mô Hình Doraemon 3D CGI Thực Tế (WebGL Three.js)</h1>
+  <div class="subtitle">Đã nạp trực tiếp mô hình 3D nguyên bản từ internet (GitHub). Bạn có thể dùng chuột giữ và xoay 360° tự do!</div>
+
+  <div class="actions-bar">
+    <button class="btn-act" onclick="setAction('idle')">🛸 Chế độ Tự Nhiên</button>
+    <button class="btn-act" onclick="setAction('eat')">🥞 Ăn Bánh Rán Măm Măm</button>
+    <button class="btn-act" onclick="setAction('inspect')">🔍 Nghiêng Người Soi Kính Lúp</button>
+    <button class="btn-act" onclick="setAction('wave')">👋 Vẫy Tay Chào Bạn</button>
+    <button class="btn-act" onclick="setAction('spin')">🌀 Xoay Tròn 360°</button>
+  </div>
+
+  <div class="viewer-container">
+    <div class="bubble-3d" id="speech-bubble">Doraemon 3D sẵn sàng! 🛸✨</div>
+    <canvas id="canvas3d"></canvas>
+    <div class="hint-overlay">🖱️ Giữ chuột trái & kéo để xoay 3D mọi góc nhìn</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas3d');
+    const bubble = document.getElementById('speech-bubble');
+    const width = 640;
+    const height = 580;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
+    camera.position.set(0, 0, 4.4);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+
+    // Thiết lập hệ thống ánh sáng chuẩn CGI Studio
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    keyLight.position.set(4, 5, 5);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.6);
+    fillLight.position.set(-4, -1, -2);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xfff59d, 0.8);
+    rimLight.position.set(0, 6, -4);
+    scene.add(rimLight);
+
+    let doraemonModel = null;
+    let dorayakiMesh = null;
+    let magnifyingGlassMesh = null;
+    let currentAction = 'idle';
+
+    // Tạo phụ kiện 3D: Bánh rán Dorayaki
+    function createDorayaki() {
+      const group = new THREE.Group();
+      const topGeom = new THREE.CylinderGeometry(0.32, 0.35, 0.12, 24);
+      const matCake = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 });
+      const topMesh = new THREE.Mesh(topGeom, matCake);
+      topMesh.position.y = 0.06;
+      group.add(topMesh);
+
+      const beanGeom = new THREE.CylinderGeometry(0.28, 0.28, 0.08, 24);
+      const matBean = new THREE.MeshStandardMaterial({ color: 0x3d0c02, roughness: 0.8 });
+      const beanMesh = new THREE.Mesh(beanGeom, matBean);
+      group.add(beanMesh);
+
+      const botMesh = new THREE.Mesh(topGeom, matCake);
+      botMesh.position.y = -0.06;
+      group.add(botMesh);
+
+      group.scale.set(0.65, 0.65, 0.65);
+      return group;
+    }
+
+    // Tạo phụ kiện 3D: Kính lúp phát quang
+    function createMagnifyingGlass() {
+      const group = new THREE.Group();
+      // Vành kính
+      const ringGeom = new THREE.TorusGeometry(0.3, 0.035, 16, 32);
+      const matGold = new THREE.MeshStandardMaterial({ color: 0xfbc02d, metalness: 0.6, roughness: 0.2 });
+      const ringMesh = new THREE.Mesh(ringGeom, matGold);
+      group.add(ringMesh);
+
+      // Mặt kính thủy tinh
+      const glassGeom = new THREE.CircleGeometry(0.29, 32);
+      const matGlass = new THREE.MeshPhysicalMaterial({
+        color: 0x00e5ff,
+        transparent: true,
+        opacity: 0.45,
+        roughness: 0.1,
+        transmission: 0.8
+      });
+      const glassMesh = new THREE.Mesh(glassGeom, matGlass);
+      group.add(glassMesh);
+
+      // Cán kính
+      const handleGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.45, 16);
+      const handleMesh = new THREE.Mesh(handleGeom, matGold);
+      handleMesh.position.y = -0.42;
+      group.add(handleMesh);
+
+      group.scale.set(0.7, 0.7, 0.7);
+      return group;
+    }
+
+    dorayakiMesh = createDorayaki();
+    dorayakiMesh.visible = false;
+    scene.add(dorayakiMesh);
+
+    magnifyingGlassMesh = createMagnifyingGlass();
+    magnifyingGlassMesh.visible = false;
+    scene.add(magnifyingGlassMesh);
+
+    // Tải mô hình 3D Doraemon chính hãng từ file glb đã nạp
+    const loader = new THREE.GLTFLoader();
+    const dracoLoader = new THREE.DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.1/');
+    loader.setDRACOLoader(dracoLoader);
+
+    loader.load('/dora2.glb', (gltf) => {
+      doraemonModel = gltf.scene;
+
+      const box = new THREE.Box3().setFromObject(doraemonModel);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 2.4 / maxDim;
+
+      doraemonModel.scale.set(scale, scale, scale);
+      doraemonModel.position.x = -center.x * scale;
+      doraemonModel.position.y = -center.y * scale - 0.2;
+      doraemonModel.position.z = -center.z * scale;
+
+      scene.add(doraemonModel);
+      bubble.textContent = 'Đã nạp mô hình 3D Doraemon từ internet! 🌟';
+    }, undefined, (err) => {
+      bubble.textContent = 'Lỗi nạp mô hình: ' + err.message;
+    });
+
+    // Điều khiển xoay 3D bằng chuột
+    let isDragging = false;
+    let prevMouse = { x: 0, y: 0 };
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      prevMouse = { x: e.clientX, y: e.clientY };
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging || !doraemonModel) return;
+      const dx = e.clientX - prevMouse.x;
+      const dy = e.clientY - prevMouse.y;
+      doraemonModel.rotation.y += dx * 0.01;
+      doraemonModel.rotation.x += dy * 0.006;
+      prevMouse = { x: e.clientX, y: e.clientY };
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Chuyển đổi trạng thái hành động
+    function setAction(act) {
+      currentAction = act;
+      if (!doraemonModel) return;
+
+      if (act === 'eat') {
+        bubble.textContent = 'Măm măm bánh rán nè 🥞😋';
+        dorayakiMesh.visible = true;
+        magnifyingGlassMesh.visible = false;
+      } else if (act === 'inspect') {
+        bubble.textContent = 'Nghiêng mình soi kính lúp 🔍✨';
+        dorayakiMesh.visible = false;
+        magnifyingGlassMesh.visible = true;
+      } else if (act === 'wave') {
+        bubble.textContent = 'Doraemon chào bạn nha 👋😊';
+        dorayakiMesh.visible = false;
+        magnifyingGlassMesh.visible = false;
+      } else if (act === 'spin') {
+        bubble.textContent = 'Xoay tròn 360° vui sướng! 🌀✨';
+        dorayakiMesh.visible = false;
+        magnifyingGlassMesh.visible = false;
+      } else {
+        bubble.textContent = 'Chong chóng tre sẵn sàng! 🛸';
+        dorayakiMesh.visible = false;
+        magnifyingGlassMesh.visible = false;
+      }
+    }
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      if (doraemonModel) {
+        if (currentAction === 'idle') {
+          if (!isDragging) {
+            doraemonModel.rotation.y = Math.sin(t * 0.9) * 0.35;
+          }
+          doraemonModel.position.y = Math.sin(t * 2.5) * 0.08 - 0.2;
+        } else if (currentAction === 'eat') {
+          // Đầu và thân gật gù nhai bánh
+          doraemonModel.rotation.x = 0.12 + Math.sin(t * 4) * 0.08;
+          doraemonModel.rotation.y = -0.15;
+          doraemonModel.position.y = Math.sin(t * 4) * 0.04 - 0.2;
+
+          // Bánh rán đưa lên miệng rồi hạ xuống
+          const eatPhase = Math.sin(t * 3.5);
+          dorayakiMesh.position.set(0.12, 0.15 + eatPhase * 0.18, 0.85);
+          dorayakiMesh.rotation.set(0.3, -0.2, eatPhase * 0.2);
+        } else if (currentAction === 'inspect') {
+          // Quay người 3/4 cúi xuống soi
+          doraemonModel.rotation.y = -0.65 + Math.sin(t * 1.5) * 0.1;
+          doraemonModel.rotation.x = 0.25;
+          doraemonModel.position.y = -0.25;
+
+          // Kính lúp chúc xuống soi chi tiết
+          magnifyingGlassMesh.position.set(0.65, -0.15, 0.7);
+          magnifyingGlassMesh.rotation.set(-0.35, -0.4, Math.sin(t * 2) * 0.15);
+        } else if (currentAction === 'wave') {
+          doraemonModel.rotation.y = Math.sin(t * 4) * 0.25;
+          doraemonModel.rotation.z = Math.sin(t * 5) * 0.06;
+          doraemonModel.position.y = Math.sin(t * 4) * 0.06 - 0.2;
+        } else if (currentAction === 'spin') {
+          doraemonModel.rotation.y += 0.08;
+          doraemonModel.position.y = Math.sin(t * 6) * 0.14 - 0.2;
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>

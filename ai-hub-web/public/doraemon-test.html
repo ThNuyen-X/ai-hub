@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Doraemon Motion Verification Lab</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0f172a;
+    color: #f8fafc;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
+    margin: 0;
+  }
+  h1 { margin: 0; font-size: 22px; color: #38bdf8; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 320px);
+    gap: 24px;
+    transform: scale(1.35);
+    transform-origin: top center;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  }
+  .card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #38bdf8;
+    text-align: center;
+  }
+  .stage {
+    position: relative;
+    width: 260px;
+    height: 180px;
+    background: #090d16;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    perspective: 800px;
+  }
+
+  /* ================= DORAEMON ANIMATION ENGINE V2026.11 ================= */
+  .doraemon-full-body {
+    overflow: visible;
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.45));
+    transform-origin: 48px 54px;
+  }
+
+  /* KHỚP ĐỘNG HỌC CỐ ĐỊNH */
+  .doraemon-arm-left { transform-origin: 30px 58px !important; }
+  .doraemon-arm-right { transform-origin: 66px 58px !important; }
+  .doraemon-head { transform-origin: 48px 52px !important; }
+  .doraemon-leg-left { transform-origin: 38px 84px !important; }
+  .doraemon-leg-right { transform-origin: 58px 84px !important; }
+  .doraemon-tail { transform-origin: 48px 80px !important; }
+
+  /* CHỚP MẮT & LẮC ĐUÔI */
+  @keyframes d-blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.08); } }
+  .doraemon-eye-l, .doraemon-eye-r { transform-origin: 48px 21px; animation: d-blink 3.4s infinite; }
+  @keyframes d-tail-wag { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(18deg); } }
+  .doraemon-tail { animation: d-tail-wag 1.6s ease-in-out infinite; }
+
+  /* ---------------- 1. QUAY NGƯỜI SANG 1 BÊN SOI KÍNH LÚP ---------------- */
+  /* Toàn thân quay hẳn sang 1 bên góc nghiêng (rotateY -46deg), cúi rạp người về trước (rotate 18deg, translateY 8px) */
+  @keyframes d-inspect-body-v11 {
+    0% { transform: rotateY(-40deg) rotate(14deg) translateY(4px); }
+    100% { transform: rotateY(-50deg) rotate(20deg) translateY(10px); }
+  }
+  @keyframes d-inspect-head-v11 {
+    0%, 100% { transform: rotate(12deg) translateY(2px); }
+    50% { transform: rotate(18deg) translateY(6px); }
+  }
+  /* Tay phải đưa kính lúp vươn dài ra phía trước chúc xuống quét soi */
+  @keyframes d-inspect-arm-r-v11 {
+    0% { transform: rotate(-30deg); }
+    100% { transform: rotate(-46deg); }
+  }
+  /* Tay trái chống hông sau lưng (tucked sau lưng) */
+  @keyframes d-inspect-arm-l-v11 {
+    0%, 100% { transform: rotate(-18deg); }
+    50% { transform: rotate(-26deg); }
+  }
+  @keyframes d-glass-shine {
+    0% { filter: drop-shadow(0 0 4px #00e5ff) brightness(1.1); }
+    100% { filter: drop-shadow(0 0 16px #00e5ff) brightness(1.6); }
+  }
+  @keyframes d-scan-beam-sweep {
+    0%, 100% { opacity: 0.35; transform: rotate(0deg) scale(0.9); }
+    50% { opacity: 0.8; transform: rotate(10deg) scale(1.15); }
+  }
+
+  .act-inspect .doraemon-full-body { animation: d-inspect-body-v11 1.6s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-head { animation: d-inspect-head-v11 1.6s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-arm-right { animation: d-inspect-arm-r-v11 1.6s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-arm-left { animation: d-inspect-arm-l-v11 1.6s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-glass { display: block !important; animation: d-glass-shine 0.8s ease-in-out infinite alternate !important; }
+  .act-inspect .doraemon-scan-beam { display: block !important; animation: d-scan-beam-sweep 1.4s ease-in-out infinite !important; }
+  .act-inspect .doraemon-eyes { transform: translate(3px, 2px); }
+
+  /* ---------------- 2. 1 TAY CẦM BÁNH ĂN + TAY TRÁI XOA BỤNG ---------------- */
+  /* Chỉ 1 tay (tay phải) cầm bánh đưa lên miệng cắn măm măm rồi hạ xuống một chút nhai */
+  @keyframes d-eat-arm-r-v11 {
+    0%, 15% { transform: rotate(155deg); }      /* Hạ bánh ngang ngực nhai */
+    40%, 80% { transform: rotate(178deg); }     /* Đưa bánh chạm sát miệng cắn măm măm */
+    100% { transform: rotate(155deg); }
+  }
+  /* Tay trái xoa bụng tròn trịa liên tục */
+  @keyframes d-eat-arm-l-v11 {
+    0%, 100% { transform: rotate(-82deg); }
+    50% { transform: rotate(-100deg); }
+  }
+  /* Đầu cúi gật gù khen ngon */
+  @keyframes d-eat-head-v11 {
+    0%, 15%, 100% { transform: translateY(0) rotate(0deg); }
+    40%, 80% { transform: translateY(5px) rotate(6deg); }
+  }
+  /* Miệng nhai măm măm liên tục */
+  @keyframes d-chew-v11 {
+    0%, 100% { transform: scaleY(0.4) scaleX(0.85); }
+    50% { transform: scaleY(1.4) scaleX(1.2); }
+  }
+
+  .act-eat .doraemon-dorayaki { display: block !important; }
+  .act-eat .doraemon-arm-right { animation: d-eat-arm-r-v11 1.5s ease-in-out infinite !important; }
+  .act-eat .doraemon-arm-left { animation: d-eat-arm-l-v11 0.75s ease-in-out infinite !important; }
+  .act-eat .doraemon-head { animation: d-eat-head-v11 1.5s ease-in-out infinite !important; }
+  .act-eat .doraemon-smile-mouth { display: none !important; }
+  .act-eat .doraemon-chew-mouth { display: block !important; transform-origin: 48px 43px; animation: d-chew-v11 0.22s ease-in-out infinite alternate !important; }
+  .act-eat .doraemon-normal-eyes { display: none !important; }
+  .act-eat .doraemon-happy-eyes { display: block !important; }
+  .act-eat .doraemon-blush { display: block !important; }
+
+  /* ---------------- 3. VẪY TAY CHÀO ---------------- */
+  @keyframes d-wave-v11 {
+    0%, 100% { transform: rotate(170deg); }
+    50% { transform: rotate(130deg); }
+  }
+  .act-wave .doraemon-arm-right { animation: d-wave-v11 0.55s ease-in-out infinite !important; }
+  .act-wave .doraemon-happy-eyes { display: block !important; }
+  .act-wave .doraemon-normal-eyes { display: none !important; }
+
+  /* ---------------- 4. XOAY 360° VUI SƯỚNG ---------------- */
+  @keyframes d-spin-v11 {
+    0% { transform: rotateY(0deg) scale(1); }
+    50% { transform: rotateY(180deg) scale(1.15) translateY(-10px); }
+    100% { transform: rotateY(360deg) scale(1); }
+  }
+  .act-spin .doraemon-full-body { animation: d-spin-v11 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite !important; }
+  .act-spin .doraemon-happy-eyes { display: block !important; }
+  .act-spin .doraemon-normal-eyes { display: none !important; }
+
+  /* Mặc định ẩn phụ kiện khi không bật class */
+  .doraemon-glass, .doraemon-dorayaki, .doraemon-scan-beam, .doraemon-happy-eyes, .doraemon-chew-mouth, .doraemon-blush {
+    display: none;
+  }
+</style>
+</head>
+<body>
+  <h1>Doraemon Motion Verification Lab</h1>
+  <div class="grid">
+    <div class="card">
+      <h3>1. Quay người sang 1 bên cúi soi kính lúp</h3>
+      <div class="stage act-inspect" id="stage-1"></div>
+    </div>
+    <div class="card">
+      <h3>2. 1 tay cầm bánh ăn + tay trái xoa bụng</h3>
+      <div class="stage act-eat" id="stage-2"></div>
+    </div>
+    <div class="card">
+      <h3>3. Vẫy tay chào bạn</h3>
+      <div class="stage act-wave" id="stage-3"></div>
+    </div>
+    <div class="card">
+      <h3>4. Xoay tròn 360°</h3>
+      <div class="stage act-spin" id="stage-4"></div>
+    </div>
+  </div>
+
+  <template id="doraemon-svg-template">
+    <svg class="doraemon-full-body" viewBox="0 0 96 102" width="105" height="112">
+      <defs>
+        <radialGradient id="d-bell-grad" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#fff59d"/>
+          <stop offset="60%" stop-color="#fbc02d"/>
+          <stop offset="100%" stop-color="#f57f17"/>
+        </radialGradient>
+        <linearGradient id="d-scan-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="rgba(0, 229, 255, 0.65)"/>
+          <stop offset="100%" stop-color="rgba(0, 229, 255, 0.02)"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Chong chóng tre -->
+      <g class="doraemon-copter">
+        <rect x="46.8" y="0.5" width="2.4" height="6.5" rx="1.2" fill="#e65100"/>
+        <ellipse cx="48" cy="1" rx="20" ry="2.2" fill="#ffb300" stroke="#b26a00" stroke-width="0.7"/>
+        <circle cx="48" cy="1" r="1.8" fill="#d32f2f"/>
+      </g>
+
+      <!-- Đuôi đỏ -->
+      <g class="doraemon-tail">
+        <line x1="48" y1="80" x2="48" y2="87" stroke="#b71c1c" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="48" cy="88" r="4.2" fill="#e53935" stroke="#b71c1c" stroke-width="1"/>
+      </g>
+
+      <!-- Đôi chân tròn trịa -->
+      <g class="doraemon-leg-left">
+        <ellipse cx="38" cy="88" rx="10.5" ry="6.2" fill="#ffffff" stroke="#0d47a1" stroke-width="1.5"/>
+      </g>
+      <g class="doraemon-leg-right">
+        <ellipse cx="58" cy="88" rx="10.5" ry="6.2" fill="#ffffff" stroke="#0d47a1" stroke-width="1.5"/>
+      </g>
+
+      <!-- Thân mình xanh Doraemon -->
+      <path d="M28 54 Q25 78 35 84 Q48 87 61 84 Q71 78 68 54 Z" fill="#009fe8" stroke="#0d47a1" stroke-width="1.7"/>
+
+      <!-- Bụng trắng & Túi thần kỳ 4D -->
+      <g class="doraemon-belly">
+        <ellipse cx="48" cy="69" rx="16.5" ry="14.5" fill="#ffffff"/>
+        <path d="M34 66 Q48 66 62 66 Q62 80 48 80 Q34 80 34 66 Z" fill="#ffffff" stroke="#0d47a1" stroke-width="1.4"/>
+        <line x1="34" y1="66" x2="62" y2="66" stroke="#0d47a1" stroke-width="1.4"/>
+      </g>
+
+      <!-- Đầu Doraemon & Khuôn mặt -->
+      <g class="doraemon-head">
+        <circle cx="48" cy="31" r="24" fill="#009fe8" stroke="#0d47a1" stroke-width="1.7"/>
+        <ellipse cx="48" cy="35" rx="19.5" ry="17" fill="#ffffff"/>
+        <!-- Má hồng khi ăn ngon / vui mừng -->
+        <g class="doraemon-blush">
+          <ellipse cx="33" cy="39" rx="4.2" ry="2.6" fill="rgba(255, 112, 67, 0.65)"/>
+          <ellipse cx="63" cy="39" rx="4.2" ry="2.6" fill="rgba(255, 112, 67, 0.65)"/>
+        </g>
+        <!-- Mắt bình thường -->
+        <g class="doraemon-eyes doraemon-normal-eyes">
+          <ellipse class="doraemon-eye-l" cx="42.5" cy="21" rx="5.4" ry="7.2" fill="#ffffff" stroke="#0d47a1" stroke-width="1.4"/>
+          <ellipse class="doraemon-eye-r" cx="53.5" cy="21" rx="5.4" ry="7.2" fill="#ffffff" stroke="#0d47a1" stroke-width="1.4"/>
+          <ellipse cx="44.2" cy="21.5" rx="2.1" ry="2.7" fill="#212121"/>
+          <circle cx="45" cy="20.5" r="0.9" fill="#ffffff"/>
+          <ellipse cx="51.8" cy="21.5" rx="2.1" ry="2.7" fill="#212121"/>
+          <circle cx="52.6" cy="20.5" r="0.9" fill="#ffffff"/>
+        </g>
+        <!-- Mắt cười tít hình cung ^ ^ khi ăn ngon / vẫy tay -->
+        <g class="doraemon-happy-eyes">
+          <path d="M38 22 Q43 16 47 22" stroke="#212121" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M49 22 Q53 16 58 22" stroke="#212121" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- Mũi đỏ tròn & điểm sáng -->
+        <circle cx="48" cy="28" r="3.6" fill="#e53935" stroke="#b71c1c" stroke-width="0.9"/>
+        <circle cx="47" cy="27" r="1" fill="#ffffff"/>
+        <!-- Ria mép -->
+        <path d="M31 30 L43 32 M30 34 L43 34 M31 39 L43 36 M65 30 L53 32 M66 34 L53 34 M65 39 L53 36" stroke="#212121" stroke-width="1.2" stroke-linecap="round"/>
+        <!-- Miệng cười tươi bình thường -->
+        <g class="doraemon-smile-mouth">
+          <path d="M48 31.5 L48 43 M36 38 Q48 51 60 38" stroke="#212121" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- Miệng nhai măm măm khi ăn bánh rán -->
+        <g class="doraemon-chew-mouth">
+          <path d="M48 31.5 L48 39" stroke="#212121" stroke-width="1.2" stroke-linecap="round"/>
+          <ellipse cx="48" cy="43" rx="7.5" ry="6" fill="#d32f2f" stroke="#212121" stroke-width="1.3"/>
+          <ellipse cx="48" cy="44.5" rx="4.8" ry="2.8" fill="#f48fb1"/>
+        </g>
+        <!-- Vòng cổ đỏ & Chuông vàng -->
+        <rect x="33" y="50" width="30" height="4.4" rx="2.2" fill="#d32f2f"/>
+        <circle cx="48" cy="54" r="3.8" fill="url(#d-bell-grad)" stroke="#f57f17" stroke-width="1"/>
+        <line x1="44.5" y1="53.2" x2="51.5" y2="53.2" stroke="#b71c1c" stroke-width="0.8"/>
+        <circle cx="48" cy="55" r="0.9" fill="#212121"/>
+      </g>
+
+      <!-- TAY TRÁI (Khớp vai cố định 30, 58) -->
+      <g class="doraemon-arm-left">
+        <path d="M30 58 Q18 64 16 72" stroke="#009fe8" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <circle cx="15" cy="73" r="6" fill="#ffffff" stroke="#0d47a1" stroke-width="1.4"/>
+      </g>
+
+      <!-- TAY PHẢI (Khớp vai cố định 66, 58) -->
+      <g class="doraemon-arm-right">
+        <path d="M66 58 Q78 64 80 72" stroke="#009fe8" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <!-- Kính lúp thần kỳ (gắn liền trên bàn tay phải) -->
+        <g class="doraemon-glass">
+          <line x1="81" y1="73" x2="90" y2="78" stroke="#fbc02d" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="95" cy="82" r="11" fill="rgba(0, 229, 255, 0.4)" stroke="#009fe8" stroke-width="2.3"/>
+          <circle cx="95" cy="82" r="9" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.2"/>
+          <path d="M91 79 A 6 6 0 0 1 97 79" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <!-- Tia quét nón phát quang chiếu từ kính lúp -->
+          <g class="doraemon-scan-beam" style="transform-origin: 95px 82px;">
+            <polygon points="95,82 70,125 120,125" fill="url(#d-scan-grad)" style="filter:blur(2px);"/>
+          </g>
+        </g>
+        <!-- Bánh rán Dorayaki nằm trên bàn tay phải (1 tay cầm bánh) -->
+        <g class="doraemon-dorayaki">
+          <ellipse cx="81" cy="71" rx="10.5" ry="6.2" fill="#a16207" stroke="#713f12" stroke-width="0.9"/>
+          <ellipse cx="81" cy="71" rx="8.5" ry="3.6" fill="#451a03"/>
+          <ellipse cx="81" cy="69" rx="10.5" ry="5.8" fill="#ca8a04" stroke="#713f12" stroke-width="0.9"/>
+          <ellipse cx="79" cy="67" rx="4.2" ry="2" fill="#fef08a" opacity="0.6"/>
+        </g>
+        <!-- Bàn tay phải tròn xoe trắng đỡ lấy bánh / kính -->
+        <circle cx="81" cy="73" r="6" fill="#ffffff" stroke="#0d47a1" stroke-width="1.4"/>
+      </g>
+    </svg>
+  </template>
+
+  <script>
+    const tpl = document.getElementById('doraemon-svg-template').content;
+    ['stage-1', 'stage-2', 'stage-3', 'stage-4'].forEach(id => {
+      document.getElementById(id).appendChild(tpl.cloneNode(true));
+    });
+  </script>
+</body>
+</html>

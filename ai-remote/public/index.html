@@ -10,9 +10,9 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   
-  <link rel="manifest" href="/manifest.json?v=14">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=14">
-  <link rel="apple-touch-icon" href="/icon.svg?v=14">
+  <link rel="manifest" href="/manifest.json?v=15">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=15">
+  <link rel="apple-touch-icon" href="/icon.svg?v=15">
   <title>Bò Tót Remote Controller</title>
 
   <!-- FONT BE VIETNAM PRO & JETBRAINS MONO -->
@@ -689,7 +689,7 @@
     }
 
     /* =============================================================
-       MODAL POPUP BOTTOM SHEET (CHỌN MODEL AI CHUẨN MOBILE)
+       MODAL POPUP DIALOG (CĂN GIỮA 100% - CUSTOM SCROLLBAR CAO CẤP)
        ============================================================= */
     .modal-overlay {
       position: fixed;
@@ -698,12 +698,13 @@
       right: 0;
       bottom: 0;
       background: var(--overlay-bg);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       z-index: 2500;
       display: none;
-      align-items: flex-end;
-      justify-content: center;
+      align-items: center;     /* CĂN CHÍNH GIỮA THEO CHIỀU DỌC */
+      justify-content: center; /* CĂN CHÍNH GIỮA THEO CHIỀU NGANG */
+      padding: 18px 14px;
       opacity: 0;
       transition: opacity 0.22s ease;
     }
@@ -711,76 +712,129 @@
       display: flex;
       opacity: 1;
     }
-    .modal-sheet {
+
+    /* Modal Dialog Căn Giữa Hoàn Chỉnh */
+    .modal-dialog {
       width: 100%;
-      max-width: 480px;
+      max-width: 440px;
+      max-height: 82vh;
       background: var(--card-bg);
       border: 2px solid var(--border-accent);
-      border-bottom: none;
-      border-radius: 26px 26px 0 0;
-      padding: 18px 16px max(24px, env(safe-area-inset-bottom));
-      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
-      transform: translateY(100%);
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      max-height: 85vh;
+      border-radius: 28px;
+      padding: 20px 18px;
+      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.75);
+      transform: scale(0.92);
+      opacity: 0;
+      transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
     }
-    .modal-overlay.open .modal-sheet {
-      transform: translateY(0);
+    .modal-overlay.open .modal-dialog {
+      transform: scale(1);
+      opacity: 1;
     }
+
     .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding-bottom: 14px;
-      border-bottom: 1.5px solid var(--border);
-      margin-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 14px;
+      flex-shrink: 0;
     }
-    .modal-title-box { display: flex; flex-direction: column; gap: 2px; }
-    .modal-title { font-size: 16px; font-weight: 900; color: var(--text-main); }
-    .modal-subtitle { font-size: 11px; font-weight: 600; color: var(--text-dim); }
+    .modal-title-box { display: flex; flex-direction: column; gap: 3px; }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-subtitle {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
     .modal-close-btn {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       background: var(--card-inner);
-      border: 1.5px solid var(--border);
+      border: 2px solid var(--border);
       color: var(--text-main);
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 900;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: all 0.15s ease;
     }
-    .modal-close-btn:active { transform: scale(0.92); }
+    .modal-close-btn:active { transform: scale(0.92); border-color: var(--accent); }
 
+    /* DANH SÁCH VỚI THANH CUỘN ĐƯỢC TÙY BIẾN HOÀN TOÀN (CUSTOM SCROLLBAR) */
     .modal-list {
       overflow-y: auto;
       overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding-bottom: 10px;
+      gap: 8px;
+      padding-right: 6px;
+      margin-right: -4px;
+      max-height: calc(82vh - 90px);
     }
+
+    /* THANH CUỘN TINH TẾ THAY THẾ THANH CUỘN MẶC ĐỊNH */
+    .modal-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .modal-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .modal-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 10px;
+      transition: background 0.2s ease;
+    }
+    .modal-list::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+    [data-theme="warm"] .modal-list::-webkit-scrollbar-thumb {
+      background: rgba(180, 83, 9, 0.25);
+    }
+    [data-theme="light"] .modal-list::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.16);
+    }
+
+    /* CÁC ITEM CARD MODEL */
     .modal-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 14px;
-      border-radius: 16px;
+      padding: 13px 14px;
+      border-radius: 18px;
       background: var(--card-inner);
-      border: 1.5px solid var(--border);
+      border: 2px solid var(--border);
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.16s ease;
+      min-height: 64px;
+      box-sizing: border-box;
     }
     .modal-item:active { transform: scale(0.98); }
+    .modal-item:hover { border-color: var(--border-accent); }
     .modal-item.selected {
       background: var(--emerald-bg);
-      border-color: rgba(16, 185, 129, 0.45);
+      border-color: rgba(16, 185, 129, 0.55);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12);
     }
+
     .modal-item-left {
       display: flex;
       align-items: center;
@@ -788,14 +842,56 @@
       flex: 1;
       overflow: hidden;
     }
+    .modal-avatar-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid var(--border);
+    }
+    .modal-avatar-box svg { width: 24px; height: 24px; display: block; }
+    .modal-avatar-box.gemini { background: rgba(49, 134, 255, 0.16); border-color: rgba(49, 134, 255, 0.4); }
+    .modal-avatar-box.claude { background: rgba(217, 119, 87, 0.16); border-color: rgba(217, 119, 87, 0.4); }
+    .modal-avatar-box.openai { color: #10b981; background: rgba(16, 185, 129, 0.16); border-color: rgba(16, 185, 129, 0.4); }
+    .modal-avatar-box.claude-cli { color: #f43f5e; background: rgba(244, 63, 94, 0.16); border-color: rgba(244, 63, 94, 0.4); }
+
     .modal-item-texts { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
     .modal-item-top { display: flex; align-items: center; gap: 6px; }
     .modal-item-name { font-size: 14px; font-weight: 800; color: var(--text-main); }
     .modal-item.selected .modal-item-name { color: var(--emerald); }
-    .modal-item-badge { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: var(--text-sub); }
+    .modal-item-badge { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: var(--text-sub); }
     .modal-item-desc { font-size: 11px; font-weight: 600; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .modal-item-check { width: 22px; height: 22px; color: var(--emerald); flex-shrink: 0; display: none; }
-    .modal-item.selected .modal-item-check { display: block; }
+
+    /* NÚT RADIO / CHECKMARK XANH NGỌC SẮC NÉT */
+    .modal-radio-circle {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .modal-item.selected .modal-radio-circle {
+      border-color: var(--emerald);
+      background: var(--emerald);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+    .modal-radio-circle svg {
+      width: 14px;
+      height: 14px;
+      color: #ffffff;
+      display: none;
+    }
+    .modal-item.selected .modal-radio-circle svg {
+      display: block;
+    }
 
     /* TOAST */
     .toast-popup {
@@ -826,7 +922,7 @@
   <!-- TOP BAR (LUÔN CỐ ĐỊNH Ở TRÊN ĐẦU) -->
   <header class="top-bar">
     <div class="brand-title-box">
-      <img src="/icon.svg?v=14" alt="Bò Tót" class="brand-logo" onclick="switchView('home')">
+      <img src="/icon.svg?v=15" alt="Bò Tót" class="brand-logo" onclick="switchView('home')">
       <div class="brand-texts">
         <h1>BÒ TÓT REMOTE</h1>
         <p>Điều Khiển Laptop Từ Xa</p>
@@ -1099,16 +1195,19 @@
        MODAL POPUP BOTTOM SHEET: CHỌN MODEL AI (7 MODEL HỆ THỐNG)
        ============================================================= -->
   <div class="modal-overlay" id="model-modal" onclick="closeModelModal(event)">
-    <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-box">
-          <span class="modal-title">Chọn Model AI Agent</span>
-          <span class="modal-subtitle">7 Model chính thức trên hệ thống AI Hub</span>
+          <span class="modal-title">
+            <span>Chọn Model AI</span>
+            <span style="font-size:11px;font-weight:800;background:rgba(56,189,248,0.15);color:var(--accent);padding:2px 8px;border-radius:10px;">7 Models</span>
+          </span>
+          <span class="modal-subtitle">Hệ thống AI Hub 9Router &amp; Anthropic CLI</span>
         </div>
-        <button class="modal-close-btn" onclick="closeModelModal()">✕</button>
+        <button class="modal-close-btn" onclick="closeModelModal()" title="Đóng">✕</button>
       </div>
       <div class="modal-list" id="modal-model-list">
-        <!-- Render dong tu danh sach model he thong -->
+        <!-- Render động từ danh sách model hệ thống -->
       </div>
     </div>
   </div>
@@ -1220,7 +1319,7 @@
         return `
           <div class="modal-item ${isSelected ? 'selected' : ''}" onclick="selectModelItem('${m.id}')">
             <div class="modal-item-left">
-              <div class="model-avatar-box ${m.icon}">${MODEL_SVGS[m.icon] || MODEL_SVGS.openai}</div>
+              <div class="modal-avatar-box ${m.icon}">${MODEL_SVGS[m.icon] || MODEL_SVGS.openai}</div>
               <div class="modal-item-texts">
                 <div class="modal-item-top">
                   <span class="modal-item-name">${m.name}</span>
@@ -1229,9 +1328,11 @@
                 <div class="modal-item-desc">${m.tag}</div>
               </div>
             </div>
-            <svg class="modal-item-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-            </svg>
+            <div class="modal-radio-circle">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
           </div>
         `;
       }).join("");

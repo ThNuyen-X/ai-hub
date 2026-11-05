@@ -242,6 +242,17 @@ function abortSystemShutdown() {
 }
 
 // Đọc danh sách workspaces
+// Cac model co san tren 9Router (chuan theo AI Hub)
+const AVAILABLE_MODELS = [
+  { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", badge: "Mặc định", icon: "gemini", default: true },
+  { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", badge: "Khuyên dùng", icon: "claude" },
+  { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol (Codex)", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", badge: "Codex", icon: "openai" },
+  { id: "claude-code", name: "Claude Code", provider: "Anthropic", tag: "Agent tự hành chính chủ Claude", badge: "Agent CLI", icon: "claude" },
+  { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", badge: "Argon High", icon: "gemini" },
+  { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", badge: "Opus High", icon: "claude" },
+  { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", badge: "Open Source", icon: "openai" }
+];
+
 function getWorkspaces() {
   try {
     if (fs.existsSync(WORKSPACES_JSON)) {
@@ -340,6 +351,11 @@ const server = http.createServer((req, res) => {
   }
 
   // 2. Danh sách workspaces
+    // Danh sach model AI chuan he thong
+  if (req.method === "GET" && pathname === "/api/models") {
+    return sendJson({ models: AVAILABLE_MODELS });
+  }
+
   if (req.method === "GET" && pathname === "/api/workspaces") {
     return sendJson({ workspaces: getWorkspaces() });
   }
@@ -436,10 +452,12 @@ const server = http.createServer((req, res) => {
       } else {
         // Goose model
         execCmd = gooseExe;
-        let gooseModel = "ag/gemini-3.8-flash";
-        if (model === "goose-gemini-argon") gooseModel = "ag/gemini-4-argon-high";
+        let gooseModel = model || "ag/gemini-3.8-flash";
+        // Fallback cho cac alias cu neu co
+        if (model === "goose-gemini-flash") gooseModel = "ag/gemini-3.8-flash";
         else if (model === "goose-claude-sonnet") gooseModel = "ag/claude-sonnet-5-5-high";
         else if (model === "goose-codex") gooseModel = "cx/gpt-6.1-sol";
+        else if (model === "goose-gemini-argon") gooseModel = "ag/gemini-4-argon-high";
 
         env.GOOSE_PROVIDER = "openai";
         env.GOOSE_MODEL = gooseModel;

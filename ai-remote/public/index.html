@@ -10,9 +10,9 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   
-  <link rel="manifest" href="/manifest.json?v=11">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=11">
-  <link rel="apple-touch-icon" href="/icon.svg?v=11">
+  <link rel="manifest" href="/manifest.json?v=12">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg?v=12">
+  <link rel="apple-touch-icon" href="/icon.svg?v=12">
   <title>Bò Tót Remote</title>
 
   <!-- BE VIETNAM PRO -->
@@ -426,46 +426,251 @@
       color: var(--text-sub);
     }
 
-    /* MODEL SELECTOR */
-    .model-select-row {
+    /* =============================================================
+       CUSTOM COMBOBOX UI (CHUẨN MOBILE - THAY THẾ HOÀN TOÀN SELECT NATIVE)
+       ============================================================= */
+    .combobox-wrapper {
+      position: relative;
+      margin-bottom: 12px;
+      user-select: none;
+    }
+    .combobox-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .combobox-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .combobox-count-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    /* Trigger Box */
+    .combobox-trigger {
+      width: 100%;
+      background: var(--card-inner);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: var(--text-main);
+      box-sizing: border-box;
+      min-height: 58px;
+    }
+    .combobox-trigger:active {
+      transform: scale(0.98);
+      border-color: var(--accent);
+    }
+    .combobox-trigger.open {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+    .combobox-trigger-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+      flex: 1;
+    }
+    .model-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 900;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+    }
+    .model-icon-box.gemini { color: #38bdf8; background: rgba(56, 189, 248, 0.16); }
+    .model-icon-box.claude { color: #f59e0b; background: rgba(245, 158, 11, 0.16); }
+    .model-icon-box.openai { color: #10b981; background: rgba(16, 185, 129, 0.16); }
+    .model-icon-box.claude-cli { color: #e11d48; background: rgba(225, 29, 72, 0.16); }
+
+    .combobox-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .combobox-info-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .combobox-current-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .combobox-provider-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-sub);
+      text-transform: uppercase;
+    }
+    .combobox-current-desc {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .combobox-chevron {
+      width: 20px;
+      height: 20px;
+      color: var(--text-dim);
+      transition: transform 0.25s ease;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+    .combobox-trigger.open .combobox-chevron {
+      transform: rotate(180deg);
+      color: var(--accent);
+    }
+
+    /* Dropdown Popover List */
+    .combobox-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      border: 2px solid var(--border-accent);
+      border-radius: 18px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      z-index: 1000;
+      padding: 8px;
+      display: none;
+      max-height: 380px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .combobox-menu.open {
+      display: block;
+      animation: menuFadeIn 0.18s ease-out;
+    }
+    @keyframes menuFadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .combobox-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 10px;
-    }
-    .model-label {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-    .model-select {
-      flex: 1;
-      background: var(--card-inner);
-      border: 2px solid var(--border);
-      color: var(--text-main);
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 700;
-      padding: 10px 14px;
+      padding: 12px 14px;
       border-radius: 14px;
-      outline: none;
       cursor: pointer;
-      -webkit-appearance: none;
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      background-size: 16px;
-      padding-right: 38px;
-      transition: border-color 0.15s ease;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      margin-bottom: 4px;
     }
-    .model-select:focus {
-      border-color: var(--accent);
+    .combobox-item:last-child {
+      margin-bottom: 0;
     }
+    .combobox-item:active {
+      transform: scale(0.98);
+    }
+    .combobox-item:hover {
+      background: var(--card-inner);
+    }
+    .combobox-item.selected {
+      background: var(--emerald-bg);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+    .combobox-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+    }
+    .combobox-item-texts {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .combobox-item-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .combobox-item-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .combobox-item.selected .combobox-item-title {
+      color: var(--emerald);
+    }
+    .combobox-item-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-sub);
+    }
+    .combobox-item-desc {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .combobox-check {
+      width: 20px;
+      height: 20px;
+      color: var(--emerald);
+      flex-shrink: 0;
+      display: none;
+    }
+    .combobox-item.selected .combobox-check {
+      display: block;
+    }
+
+    /* Backdrop click outside */
+    .combobox-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 990;
+      display: none;
+    }
+    .combobox-backdrop.open {
+      display: block;
+    }
+
     .btn-abort-prompt {
       background: var(--rose-bg);
       color: var(--rose);
@@ -599,7 +804,7 @@
   <!-- TOP BAR -->
   <header class="top-bar">
     <div class="brand-title-box">
-      <img src="/icon.svg?v=11" alt="Bò Tót" class="brand-logo">
+      <img src="/icon.svg?v=12" alt="Bò Tót" class="brand-logo">
       <div class="brand-texts">
         <h1>BÒ TÓT REMOTE</h1>
         <p>Điều Khiển Máy Tính Từ Xa</p>
@@ -728,16 +933,37 @@
       <span style="font-size: 12px; font-weight: 800; color: var(--amber);">D:\ai-hub</span>
     </div>
 
-    <!-- BỘ CHỌN MODEL AI (ĐẦY ĐỦ 4 MODEL CHUẨN) -->
-    <div class="model-select-row">
-      <span class="model-label">Model AI</span>
-      <select class="model-select" id="model-select" onchange="onModelChange()">
-        <option value="goose-gemini-flash">⚡ Gemini 3.8 Flash (Mặc định - Nhanh)</option>
-        <option value="goose-claude-sonnet">🧠 Claude 3.5 Sonnet (Code chuẩn)</option>
-        <option value="goose-codex">💡 Codex / GPT-6.1 (Logic cao)</option>
-        <option value="claude-code">🤖 Claude Code (Agent độc lập)</option>
-        <option value="goose-gemini-argon">🔥 Gemini 4 Argon High</option>
-      </select>
+    <!-- CUSTOM COMBOBOX MODEL AI (KHÔNG DÙNG SELECT TRÌNH DUYỆT) -->
+    <div class="combobox-wrapper" id="combobox-container">
+      <div class="combobox-header-row">
+        <span class="combobox-label">Model AI Agent</span>
+        <span class="combobox-count-badge" id="model-count-badge">7 Models</span>
+      </div>
+
+      <!-- Trigger Box -->
+      <div class="combobox-trigger" id="combobox-trigger" onclick="toggleCombobox()">
+        <div class="combobox-trigger-left">
+          <div class="model-icon-box gemini" id="current-model-icon">⚡</div>
+          <div class="combobox-info">
+            <div class="combobox-info-top">
+              <span class="combobox-current-name" id="current-model-name">Gemini 3.8 Flash</span>
+              <span class="combobox-provider-tag" id="current-model-tag">Google</span>
+            </div>
+            <div class="combobox-current-desc" id="current-model-desc">Tốc độ cao, suy luận thích ứng</div>
+          </div>
+        </div>
+        <svg class="combobox-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+
+      <!-- Backdrop click outside -->
+      <div class="combobox-backdrop" id="combobox-backdrop" onclick="closeCombobox()"></div>
+
+      <!-- Dropdown Popover List -->
+      <div class="combobox-menu" id="combobox-menu">
+        <!-- Render dong tu danh sach model he thong -->
+      </div>
     </div>
 
     <div class="prompt-box-row">
@@ -946,18 +1172,97 @@
       } catch (e) { showToast(`Lỗi: ${e.message}`); }
     }
 
-    // MODEL SELECTION & PERSISTENCE
-    const modelSelect = document.getElementById("model-select");
-    const savedModel = localStorage.getItem("bo-tot-model-v11") || "goose-gemini-flash";
-    if (modelSelect) {
-      modelSelect.value = savedModel;
+    // DANH SACH MODEL CHUAN HE THONG (7 MODEL AI HUB)
+    const SYSTEM_MODELS = [
+      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", badge: "Mặc định", icon: "gemini", emoji: "⚡" },
+      { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", badge: "Khuyên dùng", icon: "claude", emoji: "🧠" },
+      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol (Codex)", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", badge: "Codex", icon: "openai", emoji: "💡" },
+      { id: "claude-code", name: "Claude Code", provider: "Anthropic", tag: "Agent tự hành chính chủ Claude", badge: "Agent CLI", icon: "claude-cli", emoji: "🤖" },
+      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", badge: "Argon High", icon: "gemini", emoji: "🔥" },
+      { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", badge: "Opus High", icon: "claude", emoji: "👑" },
+      { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", badge: "Open Source", icon: "openai", emoji: "🌐" }
+    ];
+
+    let currentSelectedModelId = localStorage.getItem("bo-tot-model-v12") || "ag/gemini-3.8-flash";
+
+    // RENDER CUSTOM COMBOBOX OPTIONS
+    function renderComboboxMenu() {
+      const menu = document.getElementById("combobox-menu");
+      if (!menu) return;
+      menu.innerHTML = SYSTEM_MODELS.map(m => {
+        const isSelected = m.id === currentSelectedModelId;
+        return `
+          <div class="combobox-item ${isSelected ? 'selected' : ''}" onclick="selectModelItem('${m.id}')">
+            <div class="combobox-item-left">
+              <div class="model-icon-box ${m.icon}">${m.emoji}</div>
+              <div class="combobox-item-texts">
+                <div class="combobox-item-title-row">
+                  <span class="combobox-item-title">${m.name}</span>
+                  <span class="combobox-item-badge">${m.badge}</span>
+                </div>
+                <div class="combobox-item-desc">${m.tag}</div>
+              </div>
+            </div>
+            <svg class="combobox-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+        `;
+      }).join("");
+
+      updateTriggerDisplay();
     }
-    function onModelChange() {
-      if (modelSelect) {
-        localStorage.setItem("bo-tot-model-v11", modelSelect.value);
-        showToast("Đã chọn: " + modelSelect.options[modelSelect.selectedIndex].text.split(" ")[1]);
+
+    function updateTriggerDisplay() {
+      const model = SYSTEM_MODELS.find(m => m.id === currentSelectedModelId) || SYSTEM_MODELS[0];
+      const iconBox = document.getElementById("current-model-icon");
+      const nameEl = document.getElementById("current-model-name");
+      const tagEl = document.getElementById("current-model-tag");
+      const descEl = document.getElementById("current-model-desc");
+
+      if (iconBox) {
+        iconBox.className = "model-icon-box " + model.icon;
+        iconBox.innerText = model.emoji;
+      }
+      if (nameEl) nameEl.innerText = model.name;
+      if (tagEl) tagEl.innerText = model.provider;
+      if (descEl) descEl.innerText = model.tag;
+    }
+
+    function toggleCombobox() {
+      const trigger = document.getElementById("combobox-trigger");
+      const menu = document.getElementById("combobox-menu");
+      const backdrop = document.getElementById("combobox-backdrop");
+      const isOpen = menu.classList.contains("open");
+      if (isOpen) {
+        closeCombobox();
+      } else {
+        trigger.classList.add("open");
+        menu.classList.add("open");
+        backdrop.classList.add("open");
       }
     }
+
+    function closeCombobox() {
+      const trigger = document.getElementById("combobox-trigger");
+      const menu = document.getElementById("combobox-menu");
+      const backdrop = document.getElementById("combobox-backdrop");
+      if (trigger) trigger.classList.remove("open");
+      if (menu) menu.classList.remove("open");
+      if (backdrop) backdrop.classList.remove("open");
+    }
+
+    function selectModelItem(modelId) {
+      currentSelectedModelId = modelId;
+      localStorage.setItem("bo-tot-model-v12", modelId);
+      renderComboboxMenu();
+      closeCombobox();
+      const m = SYSTEM_MODELS.find(x => x.id === modelId);
+      if (m) showToast("Đã chọn: " + m.name);
+    }
+
+    // Khoi tao Combobox ngay khi trang load
+    renderComboboxMenu();
 
     function clearConsoleLog() {
       const con = document.getElementById("console-output");
@@ -994,8 +1299,9 @@
       const p = box.value.trim();
       if (!p) return showToast("Vui lòng nhập nội dung prompt!");
 
-      const selectedModel = (modelSelect && modelSelect.value) ? modelSelect.value : "goose-gemini-flash";
-      const modelLabel = modelSelect ? modelSelect.options[modelSelect.selectedIndex].text.split(" ")[1] : "AI";
+      const selectedModel = currentSelectedModelId || "ag/gemini-3.8-flash";
+      const currentModelObj = SYSTEM_MODELS.find(m => m.id === selectedModel) || { name: "AI", provider: "Hub" };
+      const modelLabel = currentModelObj.name;
       
       box.value = "";
       box.disabled = true;

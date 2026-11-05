@@ -603,7 +603,8 @@ function listFolderEntries(targetPath, foldersOnly) {
     const entries = fs.readdirSync(current, { withFileTypes: true });
     const items = [];
     for (const entry of entries) {
-      if (entry.name.startsWith(".") || entry.name.startsWith("$") || entry.name === "node_modules") continue;
+      const isAllowedDotFile = /^\.(?:env(?:\.[\w.\-]+)?|gitignore|goosehints|dockerignore|editorconfig|npmrc)$/i.test(entry.name);
+      if ((entry.name.startsWith(".") && !isAllowedDotFile) || entry.name.startsWith("$") || entry.name === "node_modules") continue;
       const fullPath = path.join(current, entry.name);
       let isDirectory = entry.isDirectory();
       let size = 0;
@@ -1368,11 +1369,16 @@ const server = http.createServer((req, res) => {
         const baseName = path.basename(resolved);
         const ext = path.extname(resolved).toLowerCase();
 
+        const isDotFile = baseName.startsWith(".");
+        const isTextSource = [".html", ".htm", ".jsp", ".java", ".js", ".cjs", ".mjs", ".ts", ".tsx", ".jsx", ".css", ".scss", ".json", ".xml", ".svg", ".md", ".txt", ".log", ".sql", ".py", ".go", ".rs", ".cs", ".c", ".h", ".cpp", ".yaml", ".yml", ".toml", ".properties", ".env", ".sh", ".bat", ".cmd", ".ps1"].includes(ext)
+          || isDotFile
+          || baseName.toLowerCase().endsWith(".env");
+
         if (process.platform === "win32") {
           if (isDir) {
             const cp = spawn("explorer.exe", [resolved], { detached: true, stdio: "ignore" });
             cp.unref();
-          } else if (!payload.reveal && [".html", ".htm", ".jsp", ".java", ".js", ".cjs", ".mjs", ".ts", ".tsx", ".jsx", ".css", ".scss", ".json", ".xml", ".svg", ".md", ".txt", ".log", ".sql", ".py", ".go", ".rs", ".cs", ".c", ".h", ".cpp", ".yaml", ".yml", ".toml", ".properties", ".env", ".sh", ".bat", ".cmd", ".ps1"].includes(ext)) {
+          } else if (!payload.reveal && isTextSource) {
             // Open source as text instead of launching browser associations or executing scripts.
             const cp = spawn("notepad.exe", [resolved], { detached: true, stdio: "ignore" });
             cp.unref();

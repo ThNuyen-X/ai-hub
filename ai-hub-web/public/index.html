@@ -1972,14 +1972,6 @@
         <p class="text-xs text-[var(--text-sub)]">Đường dẫn tệp sẽ tự động được chèn vào prompt</p>
       </div>
 
-      <!-- Floating Scroll to Bottom Pill -->
-      <button id="scrollToBottomPill" onclick="scrollToBottomSmooth(true)" 
-              class="hidden fixed bottom-28 right-6 sm:right-8 z-30 flex items-center gap-2 px-3.5 py-1.5 rounded-full shadow-lg border text-xs font-semibold backdrop-blur-md transition-all duration-300 transform hover:scale-105"
-              style="background: var(--glass-bg); border-color: var(--border-focus); color: var(--text-main); box-shadow: var(--shadow-popover);">
-        <svg class="w-3.5 h-3.5 text-blue-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
-        <span>Cuộn xuống dưới</span>
-        <span id="unreadScrollBadge" class="hidden px-1.5 py-0.2 rounded-full bg-blue-500 text-[10px] text-white font-mono font-bold">0</span>
-      </button>
       
       <!-- Bento Grid Hero Welcome Cockpit (When Chat is Empty) -->
       <div id="welcomeBanner" class="max-w-4xl mx-auto rounded-3xl p-6 sm:p-8 border my-4 shadow-sm relative overflow-hidden"
@@ -4327,8 +4319,7 @@
       setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
     };
 
-    // SCROLL TO BOTTOM DETECTION, USER SCROLL LOCK & UNREAD BADGE
-    let unreadScrollCount = 0;
+    // SCROLL TO BOTTOM DETECTION & USER SCROLL LOCK
     let isChatUserScrolledUp = false;
     let _programmaticScrollGuard = false;
 
@@ -4338,8 +4329,6 @@
     }
 
     function checkScrollDistance() {
-      const pill = document.getElementById('scrollToBottomPill');
-      const badge = document.getElementById('unreadScrollBadge');
       if (!chatFeed) return;
       const distanceToBottom = getChatDistanceToBottom();
       if (!_programmaticScrollGuard) {
@@ -4350,14 +4339,6 @@
           initialBottomFollow = false;
         }
       }
-      if (!pill) return;
-      if (distanceToBottom > 120 || isChatUserScrolledUp) {
-        pill.classList.remove('hidden');
-      } else {
-        pill.classList.add('hidden');
-        unreadScrollCount = 0;
-        if (badge) badge.classList.add('hidden');
-      }
     }
 
     let _notifyMsgRafId = 0;
@@ -4367,16 +4348,7 @@
         _notifyMsgRafId = 0;
         if (!chatFeed) return;
         const distanceToBottom = getChatDistanceToBottom();
-        const pill = document.getElementById('scrollToBottomPill');
-        const badge = document.getElementById('unreadScrollBadge');
-        if (isChatUserScrolledUp || distanceToBottom > 80) {
-          unreadScrollCount++;
-          if (pill) pill.classList.remove('hidden');
-          if (badge) {
-            badge.innerText = unreadScrollCount + ' mới';
-            badge.classList.remove('hidden');
-          }
-        } else {
+        if (!isChatUserScrolledUp && distanceToBottom <= 80) {
           scrollToBottom(false);
         }
       });
@@ -5734,7 +5706,9 @@
       if (getRecordedFileChange(s)) return true;
 
       const isRelativeExplicit = /^\.{1,2}[\/\\][\w.\-\/\\ ]+$/i.test(s);
-      const isKnownExtPath = /^[\p{L}\p{N}_.\- ]+(?:[\/\\][\p{L}\p{N}_.\-\/\\ ]+)?\.(?:js|cjs|mjs|ts|jsx|tsx|json|html|css|scss|bat|ps1|cmd|sh|cs|py|cpp|c|h|java|go|rs|md|txt|log|svg|png|jpg|jpeg|ico|toml|yaml|yml|env|sql|xml|lock|vue|svelte|goosehints|gitignore|docx|doc|xlsx|xls|csv|pdf|mp4|webm|mov|mp3|wav|ogg|flac|m4a|avif|gif|bmp)$/iu.test(s);
+      const extList = 'js|cjs|mjs|ts|jsx|tsx|json|html|css|scss|bat|ps1|cmd|sh|cs|py|cpp|c|h|java|go|rs|md|txt|log|svg|png|jpg|jpeg|ico|toml|yaml|yml|env|sql|xml|lock|vue|svelte|goosehints|gitignore|docx|doc|xlsx|xls|csv|pdf|mp4|webm|mov|mp3|wav|ogg|flac|m4a|avif|gif|bmp';
+      const dotList = 'env(?:\\.[\\w.\\-]+)?|gitignore|goosehints|dockerignore|npmrc|editorconfig|gitattributes|eslintrc(?:\\.[\\w.\\-]+)?';
+      const isKnownExtPath = new RegExp('^(?:[\\p{L}\\p{N}_.\\- ]+[\\/\\\\])*(?:[\\p{L}\\p{N}_.\\- ]+\\.(?:' + extList + ')|\\.(?:' + dotList + '))$', 'iu').test(s);
       if (isRelativeExplicit || isKnownExtPath) {
         if (/^[a-zA-Z0-9\-]+\.(?:com|org|net|io|dev|ai|app|gov|edu|vn)$/i.test(s)) return false;
         return true;
@@ -5761,7 +5735,7 @@
       }
 
       const isVerified = Boolean(recorded || (cached && cached.exists));
-      const isDir = !recorded && (cached && cached.exists ? Boolean(cached.isDir) : (!/\.[a-zA-Z0-9]{1,8}$/.test(p) || p.endsWith('/') || p.endsWith('\\')));
+      const isDir = !recorded && (cached && cached.exists ? Boolean(cached.isDir) : (!/\.[a-zA-Z0-9_\-]{1,16}$/.test(p) || p.endsWith('/') || p.endsWith('\\')));
       const icon = recorded
         ? (recorded.status === 'deleted' ? '🗑️' : recorded.status === 'added' ? '🟢' : '📝')
         : (isDir ? '📁' : '📄');
@@ -7862,7 +7836,6 @@
       if (!force && isChatUserScrolledUp) return;
       if (force) {
         isChatUserScrolledUp = false;
-        unreadScrollCount = 0;
       }
       _programmaticScrollGuard = true;
       chatFeed.scrollTop = chatFeed.scrollHeight;
@@ -7875,11 +7848,6 @@
       if (!force && isChatUserScrolledUp) return;
       if (force) {
         isChatUserScrolledUp = false;
-        unreadScrollCount = 0;
-        const pill = document.getElementById('scrollToBottomPill');
-        const badge = document.getElementById('unreadScrollBadge');
-        if (pill) pill.classList.add('hidden');
-        if (badge) badge.classList.add('hidden');
       }
       chatFeed.scrollTo({ top: chatFeed.scrollHeight, behavior: 'smooth' });
     }

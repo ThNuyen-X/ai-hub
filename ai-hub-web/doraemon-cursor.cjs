@@ -63,6 +63,22 @@ function getActivePack() {
 function buildDoraemonFeedback(toolName, rawArgs) {
   const norm = String(toolName || '').replace(/^.*?chrome_devtools[_:]+/, '');
   const args = rawArgs && typeof rawArgs === 'object' ? rawArgs : {};
+  // Capture tools must remove visual feedback before collecting page output.
+  if (['take_screenshot', 'take_snapshot', 'screencast_start', 'screencast_stop'].includes(norm)) {
+    return {
+      pageId: args.pageId ?? undefined,
+      args: [],
+      function: `() => {
+        const root = document.getElementById('__ai_hub_doraemon_root');
+        if (root) root.style.display = 'none';
+        document.querySelectorAll('.d-ripple').forEach(el => el.remove());
+        if ('${norm}' === 'screencast_start') window.__ai_hub_meme_recording = true;
+        if ('${norm}' === 'screencast_stop') window.__ai_hub_meme_recording = false;
+        const s = window.__ai_hub_doraemon_state;
+        if (s && s.idleTimer) clearTimeout(s.idleTimer);
+      }`
+    };
+  }
   let action = 'idle';
   let targetUid = null;
   let customText = '';
@@ -101,12 +117,6 @@ function buildDoraemonFeedback(toolName, rawArgs) {
       action = 'wave';
       customText = 'Chuyển tab #' + (args.pageId ?? '');
       break;
-    case 'take_snapshot':
-    case 'take_screenshot':
-      action = 'inspect';
-      targetUid = args.uid || null;
-      customText = 'Quan sát toàn diện trang';
-      break;
     case 'wait_for':
       action = 'dance';
       customText = 'Chờ nội dung xuất hiện';
@@ -128,8 +138,9 @@ function buildDoraemonFeedback(toolName, rawArgs) {
   const theme = THEMES_CONFIG[activePackName] || THEMES_CONFIG.doraemon;
   const memes = PACKS[activePackName] || PACKS.doraemon;
 
-  const fnSource = `(() => {
+  const fnSource = `(targetEl) => {
     try {
+      if (window.__ai_hub_meme_recording) return;
       const PACK_ID = '${activePackName}';
       const MEME_DATA = ${JSON.stringify(memes)};
       const THEME_CFG = ${JSON.stringify(theme)};
@@ -149,11 +160,12 @@ function buildDoraemonFeedback(toolName, rawArgs) {
         if (oldCursor) oldCursor.remove();
       }
 
+      root.style.display = '';
+
       if (!document.getElementById('__ai_hub_doraemon_style')) {
         const style = document.createElement('style');
         style.id = '__ai_hub_doraemon_style';
         style.textContent = [
-          '* { cursor: default !important; }',
           '.doraemon-cursor-wrap {',
           '  position: fixed; z-index: 2147483647; pointer-events: none;',
           '  width: 72px; height: 72px;',
@@ -190,7 +202,7 @@ function buildDoraemonFeedback(toolName, rawArgs) {
           '  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }',
           '  100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }',
           '}'
-        ].join('\n');
+        ].join('\\n');
         document.head.appendChild(style);
       }
 
@@ -213,66 +225,33 @@ function buildDoraemonFeedback(toolName, rawArgs) {
           turnLeft: false
         };
 
-        const updatePos = (x, y) => {
-          const s = window.__ai_hub_doraemon_state;
-          const dx = x - s.posX;
-          if (Math.abs(dx) > 10) {
-            s.turnLeft = dx < 0;
-            const img = document.getElementById('__doraemon_img');
-            if (img) {
-              if (s.turnLeft) img.classList.add('doraemon-turn-left');
-              else img.classList.remove('doraemon-turn-left');
-            }
-          }
-          s.posX = x; s.posY = y;
-          cursor.style.left = x + 'px';
-          cursor.style.top = y + 'px';
-        };
 
-        window.addEventListener('mousemove', (e) => {
-          updatePos(e.clientX, e.clientY);
-          const s = window.__ai_hub_doraemon_state;
-          s.lastMoveTime = Date.now();
-          if (s.currentAction !== 'run' && s.currentAction !== 'inspect' && s.currentAction !== 'click') {
-            s.currentAction = 'run';
-            const img = document.getElementById('__doraemon_img');
-            if (img && img.src !== MEME_DATA.run) img.src = MEME_DATA.run;
-            const b = document.getElementById('__doraemon_bubble');
-            if (b) {
-              b.textContent = THEME_CFG.actionText.run;
-              b.classList.add('active');
-            }
-          }
-        }, { passive: true });
-
-        setInterval(() => {
-          const s = window.__ai_hub_doraemon_state;
-          if (!s) return;
-          const idleTime = Date.now() - s.lastMoveTime;
-          if (idleTime > 1200 && s.currentAction === 'run') {
-            s.currentAction = 'idle';
-            const img = document.getElementById('__doraemon_img');
-            const b = document.getElementById('__doraemon_bubble');
-            if (img) img.src = MEME_DATA.eat;
-            if (b) {
-              b.textContent = THEME_CFG.actionText.idle;
-              b.classList.add('active');
-              setTimeout(() => { if (s.currentAction === 'idle') b.classList.remove('active'); }, 2500);
-            }
-          }
-        }, 600);
       }
 
       let tx = window.__ai_hub_doraemon_state ? window.__ai_hub_doraemon_state.posX : (window.innerWidth / 2);
       let ty = window.__ai_hub_doraemon_state ? window.__ai_hub_doraemon_state.posY : (window.innerHeight / 2);
 
-      const targetEl = arguments[0] ? document.querySelector('[data-devtools-uid="' + arguments[0] + '"]') : null;
       if (targetEl) {
         const rect = targetEl.getBoundingClientRect();
         tx = rect.left + rect.width / 2;
         ty = rect.top + rect.height / 2;
       }
 
+      const state = window.__ai_hub_doraemon_state;
+      if (state && state.idleTimer) clearTimeout(state.idleTimer);
+      if (state) {
+        const image = document.getElementById('__doraemon_img');
+        if (image) image.classList.toggle('doraemon-turn-left', tx < state.posX);
+        state.currentAction = '${action}';
+        state.idleTimer = setTimeout(() => {
+          if (window.__ai_hub_doraemon_state !== state) return;
+          state.currentAction = 'idle';
+          const image = document.getElementById('__doraemon_img');
+          const bubble = document.getElementById('__doraemon_bubble');
+          if (image) image.src = MEME_DATA.eat;
+          if (bubble) bubble.classList.remove('active');
+        }, 3000);
+      }
       cursor.style.left = tx + 'px';
       cursor.style.top = ty + 'px';
       if (window.__ai_hub_doraemon_state) {
@@ -294,27 +273,27 @@ function buildDoraemonFeedback(toolName, rawArgs) {
         setTimeout(() => rip.remove(), 700);
         if (img) img.src = MEME_DATA.click || MEME_DATA.dance;
         if (b) {
-          b.textContent = '${customText} ' + THEME_CFG.actionText.click;
+          b.textContent = ${JSON.stringify(customText + ' ')} + THEME_CFG.actionText.click;
           b.classList.add('active');
           setTimeout(() => b.classList.remove('active'), 2500);
         }
       } else if (act === 'inspect') {
         if (img) img.src = MEME_DATA.inspect;
         if (b) {
-          b.textContent = '${customText} ' + THEME_CFG.actionText.inspect;
+          b.textContent = ${JSON.stringify(customText + ' ')} + THEME_CFG.actionText.inspect;
           b.classList.add('active');
         }
       } else if (act === 'typing') {
         if (img) img.src = MEME_DATA.run;
         if (b) {
-          b.textContent = '${customText} ' + THEME_CFG.actionText.typing;
+          b.textContent = ${JSON.stringify(customText + ' ')} + THEME_CFG.actionText.typing;
           b.classList.add('active');
           setTimeout(() => b.classList.remove('active'), 2500);
         }
       } else if (act === 'nav') {
         if (img) img.src = MEME_DATA.fly;
         if (b) {
-          b.textContent = '${customText} ' + THEME_CFG.actionText.nav;
+          b.textContent = ${JSON.stringify(customText + ' ')} + THEME_CFG.actionText.nav;
           b.classList.add('active');
           setTimeout(() => b.classList.remove('active'), 3000);
         }
@@ -327,7 +306,7 @@ function buildDoraemonFeedback(toolName, rawArgs) {
         }
       }
     } catch (e) {}
-  })();`;
+  }`;
 
   return {
     function: fnSource,

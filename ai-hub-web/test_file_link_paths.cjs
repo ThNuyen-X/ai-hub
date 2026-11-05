@@ -28,7 +28,7 @@ for (const href of [raw, raw.replace(/ /g, '%20'), 'E:/SSO/Document/' + encodeUR
   assert.equal(result.kind, 'file');
   assert.equal(result.path, raw);
 }
-for (const name of [unicodeName, 'Document/report.docx', 'report.xlsx', 'manual.pdf', 'clip.mp4']) {
+for (const name of [unicodeName, 'Document/report.docx', 'report.xlsx', 'manual.pdf', 'clip.mp4', 'cas-overlay/.env', 'pro-vt-sso/.env', '.env', '.env.example', '.gitignore', '.goosehints']) {
   assert.equal(context.isLocalFilePath(name), true, name);
 }
 assert.equal(context.customRenderer.link({href: 'E:/report%2520name.docx'}).path, 'E:/report%20name.docx');

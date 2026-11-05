@@ -16,6 +16,7 @@
 
 # Local workspace state, conversations, logs and backups.
 **/workspaces.json
+/ai-remote/remote-config.json
 *.db
 *.db-wal
 *.db-shm

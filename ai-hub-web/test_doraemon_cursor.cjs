@@ -16,6 +16,14 @@ const { BrowserHub } = require('./browser-broker.cjs');
   assert.ok(clickFeedback.function.includes('d-ripple'));
   assert.ok(clickFeedback.function.includes('doraemon-meme-img') || clickFeedback.function.includes('doraemon-full-body'), 'Must render meme or full-body Doraemon');
 
+  // MCP expects a callable function and passes resolved DOM elements, not UID attributes.
+  const feedbackFn = require('node:vm').runInNewContext('(' + clickFeedback.function + ')');
+  assert.equal(typeof feedbackFn, 'function');
+  assert.ok(clickFeedback.function.includes('targetEl.getBoundingClientRect()'));
+  assert.ok(!clickFeedback.function.includes('data-devtools-uid'));
+  const quotedFeedback = buildDoraemonFeedback('fill', { uid: '1_3', value: "O'Brien\\notes\n" });
+  assert.equal(typeof require('node:vm').runInNewContext('(' + quotedFeedback.function + ')'), 'function');
+
   const fillFeedback = buildDoraemonFeedback('fill', { uid: '1_3', value: 'Hello Doraemon', pageId: 1 });
   assert.ok(fillFeedback);
   assert.deepEqual(fillFeedback.args, ['1_3']);
@@ -25,6 +33,37 @@ const { BrowserHub } = require('./browser-broker.cjs');
   assert.ok(navFeedback);
   assert.deepEqual(navFeedback.args, []);
   assert.ok(navFeedback.function.includes('example.com'));
+
+  assert.ok(!clickFeedback.function.includes("addEventListener('mousemove'"), 'AI feedback must not follow the human mouse');
+  assert.ok(!clickFeedback.function.includes('setInterval('), 'No perpetual animation timers');
+  const vm = require('node:vm');
+  const root = { style: { display: '' } };
+  let removed = 0;
+  let cleared = 0;
+  const captureContext = {
+    document: {
+      getElementById: () => root,
+      querySelectorAll: () => [{ remove() { removed++; } }]
+    },
+    window: { __ai_hub_doraemon_state: { idleTimer: 1 } },
+    clearTimeout() { cleared++; }
+  };
+  for (const name of ['take_screenshot', 'take_snapshot', 'screencast_start', 'screencast_stop']) {
+    root.style.display = '';
+    const feedback = buildDoraemonFeedback(name, { pageId: 7, uid: 'element' });
+    assert.equal(feedback.pageId, 7);
+    assert.deepEqual(feedback.args, []);
+    vm.runInNewContext('(' + feedback.function + ')()', captureContext);
+    assert.equal(root.style.display, 'none');
+    if (name === 'screencast_start') assert.equal(captureContext.window.__ai_hub_meme_recording, true);
+    if (name === 'screencast_stop') assert.equal(captureContext.window.__ai_hub_meme_recording, false);
+  }
+  assert.equal(removed, 4);
+  assert.equal(cleared, 4);
+  vm.runInNewContext('(' + clickFeedback.function + ')()', {
+    window: { __ai_hub_meme_recording: true },
+    document: { getElementById() { throw new Error('Recording must not create an overlay'); } }
+  });
 
   // Unknown or self-eval tools must return null to prevent loops
   assert.equal(buildDoraemonFeedback('evaluate_script', {}), null);
@@ -67,6 +106,12 @@ const { BrowserHub } = require('./browser-broker.cjs');
   assert.ok(executedCalls.includes('click'), 'Original click should be called');
   assert.equal(executedCalls[0], 'evaluate_script');
   assert.equal(executedCalls[1], 'click');
+
+  for (const name of ['take_screenshot', 'screencast_start', 'screencast_stop']) {
+    executedCalls.length = 0;
+    await hub.handle({ method: 'tools/call', params: { name, arguments: { pageId: 7 } } });
+    assert.deepEqual(executedCalls, ['evaluate_script', name], 'Hide feedback before capture');
+  }
 
   console.log('Doraemon cursor generator and BrowserHub trigger tests passed successfully!');
 })().catch(err => {

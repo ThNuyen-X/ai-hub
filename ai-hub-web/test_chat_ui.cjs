@@ -247,7 +247,10 @@ assert.ok(html.includes('.local-path-badge[data-unverified="1"]'));
 // (4) User scroll-up lock prevents auto-scroll to bottom when new stream/tool items arrive
 assert.ok(source.includes('let isChatUserScrolledUp = false;'));
 assert.ok(source.includes('if (!force && isChatUserScrolledUp) return;'));
-assert.ok(source.includes('if (isChatUserScrolledUp || distanceToBottom > 80)'));
+assert.ok(source.includes('if (!isChatUserScrolledUp && distanceToBottom <= 80)'));
+assert.ok(!html.includes('id="scrollToBottomPill"'));
+assert.ok(!source.includes('unreadScrollCount'));
+assert.ok(html.includes('id="composerBottomArrow"'));
 assert.ok(!source.includes('container.contentBody.appendChild(card);\n      scrollToBottom();'));
 
 // (5) Quick prompt suggestion button aligned left

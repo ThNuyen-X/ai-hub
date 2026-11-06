@@ -184,12 +184,14 @@ function buildDoraemonFeedback(toolName, rawArgs) {
           '  position: absolute; bottom: 76px; left: 50%; transform: translateX(-50%);',
           '  background: ' + THEME_CFG.bubbleBg + '; color: ' + THEME_CFG.bubbleColor + ';',
           '  border: 1.5px solid ' + THEME_CFG.bubbleBorder + ';',
-          '  padding: 4px 10px; border-radius: 14px; font-size: 11px; font-weight: 700;',
+          '  padding: 4px 10px; border-radius: 14px; font-size: 11px; font-weight: 700; line-height: 1.35;',
           '  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;',
-          '  white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,0.18);',
+          '  width: max-content; max-width: min(240px, calc(100vw - 24px)); white-space: normal; overflow-wrap: anywhere; text-align: center;',
+          '  box-shadow: 0 4px 14px rgba(0,0,0,0.18);',
           '  pointer-events: none; opacity: 0; transform: translateX(-50%) translateY(4px);',
           '  transition: opacity 0.22s ease, transform 0.22s ease;',
           '}',
+          '.doraemon-speech-bubble.bubble-below { bottom: auto; top: 74px; }',
           '.doraemon-speech-bubble.active { opacity: 1; transform: translateX(-50%) translateY(0); }',
           '.d-ripple {',
           '  position: fixed; width: 44px; height: 44px; border-radius: 50%;',
@@ -252,16 +254,25 @@ function buildDoraemonFeedback(toolName, rawArgs) {
           if (bubble) bubble.classList.remove('active');
         }, 3000);
       }
-      cursor.style.left = tx + 'px';
-      cursor.style.top = ty + 'px';
+      const vw = Math.max(200, window.innerWidth || 800);
+      const vh = Math.max(200, window.innerHeight || 600);
+      const clampedX = Math.min(vw - 38, Math.max(38, tx));
+      const clampedY = Math.min(vh - 38, Math.max(38, ty));
+      cursor.style.left = clampedX + 'px';
+      cursor.style.top = clampedY + 'px';
       if (window.__ai_hub_doraemon_state) {
-        window.__ai_hub_doraemon_state.posX = tx;
-        window.__ai_hub_doraemon_state.posY = ty;
+        window.__ai_hub_doraemon_state.posX = clampedX;
+        window.__ai_hub_doraemon_state.posY = clampedY;
         window.__ai_hub_doraemon_state.lastMoveTime = Date.now();
       }
 
       const img = document.getElementById('__doraemon_img');
       const b = document.getElementById('__doraemon_bubble');
+      if (b) {
+        b.classList.toggle('bubble-below', clampedY < 110);
+        const shiftX = clampedX < 130 ? (130 - clampedX) : (clampedX > vw - 130 ? (vw - 130 - clampedX) : 0);
+        b.style.left = 'calc(50% + ' + Math.round(shiftX) + 'px)';
+      }
       const act = '${action}';
 
       if (act === 'click') {

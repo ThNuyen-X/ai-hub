@@ -95,6 +95,7 @@ for (const id of [
   'pathContextMenuStatus',
   'pathCtxBtnPreview',
   'pathCtxPreviewLabel',
+  'pathCtxBtnReveal',
   'pathCtxBtnOpen',
   'pathCtxOpenLabel',
   'pathCtxBtnWorkspaceConfig',
@@ -134,7 +135,7 @@ const sandbox = {
   closeSessionContextMenu: () => { sessionMenuClosedCount++; return true; },
   hideHubTooltip: () => {},
   previewLocalFile: (rawPath, e, mode, mutKey) => { lastPreviewCall = { rawPath, mode, mutKey }; },
-  openLocalPath: (rawPath) => { lastOpenCall = rawPath; },
+  openLocalPath: (rawPath, event, reveal) => { lastOpenCall = rawPath; sandbox.lastReveal = reveal; },
   openWorkspaceConfigModal: (wsPath) => { lastWorkspaceConfigCall = wsPath; },
   showToast: () => {},
   soundEffects: { playClick: () => {} },
@@ -197,6 +198,24 @@ assert.equal(mockElements.get('pathContextMenuTitle').textContent, 'ManagerUserC
 assert.equal(mockElements.get('pathContextMenuFullPath').textContent, 'E:\\SSO\\code\\sso\\src\\ManagerUserController.java');
 assert.ok(mockElements.get('pathContextMenuStatus').innerHTML.includes('+5') && mockElements.get('pathContextMenuStatus').innerHTML.includes('-2'));
 assert.equal(mockElements.get('pathCtxPreviewLabel').textContent, 'Xem thay đổi & nội dung');
+
+// Reveal uses the resolved path and never opens the file itself.
+const revealBtn = mockElements.get('pathCtxBtnReveal');
+assert.equal(revealBtn.classList.contains('hidden'), false);
+assert.equal(revealBtn.disabled, false);
+revealBtn.click();
+assert.equal(lastOpenCall, 'E:\\SSO\\code\\sso\\src\\ManagerUserController.java');
+assert.equal(sandbox.lastReveal, true);
+flushTimers(160);
+sandbox.openPathContextMenu({ rawPath: 'removed.txt', isDeleted: true, isDir: false }, 100, 100);
+assert.equal(revealBtn.disabled, true);
+lastOpenCall = null;
+revealBtn.click();
+assert.equal(lastOpenCall, null);
+sandbox.openPathContextMenu({ rawPath: 'E:/SSO', isDir: true }, 100, 100);
+assert.equal(revealBtn.classList.contains('hidden'), true);
+sandbox.openPathContextMenu(sandbox.buildPathContextMenuData(sandbox.resolvePathContextTarget(validBadge)), 300, 240);
+assert.ok(html.includes('reveal: Boolean(reveal)'));
 
 // Test Copy Path action
 mockElements.get('pathCtxBtnCopy').click();

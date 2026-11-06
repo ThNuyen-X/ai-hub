@@ -1285,22 +1285,276 @@
       outline-offset: 2px;
     }
     #modelDropdownMenu { max-width:calc(100vw - 24px);max-height:calc(100dvh - 90px);overflow-y:auto; }
-    .browser-activity { display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px 14px;border:1px solid #0284c740;border-radius:14px;background:linear-gradient(110deg,#0ea5e915,var(--bg-card));color:var(--text-main);box-shadow:0 4px 16px rgba(14,165,233,0.08); }
-    .browser-activity-pointer { display:grid;place-items:center;flex-shrink:0;width:52px;height:56px;border-radius:12px;background:#0ea5e918;border:1px solid #0ea5e930;position:relative;overflow:visible; }
-    .browser-activity-copy { display:grid;gap:4px;min-width:0; }
-    .browser-activity strong { font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px; }
-    .browser-activity small { font-size:11px;color:var(--text-sub);overflow-wrap:anywhere; }
-    .browser-activity[data-state="working"] .browser-doraemon-svg { animation:browser-float 1.8s ease-in-out infinite; }
-    .browser-activity[data-state="working"] .browser-copter { transform-origin:36px 3px;animation:browser-copter-spin 0.12s linear infinite; }
-    .browser-activity[data-state="working"] .browser-arm-l { transform-origin:24px 48px;animation:browser-type-l 0.35s ease-in-out infinite; }
-    .browser-activity[data-state="working"] .browser-arm-r { transform-origin:48px 48px;animation:browser-type-r 0.35s ease-in-out infinite; }
-    .browser-activity[data-state="failed"] { border-color:#ef444460;background:linear-gradient(110deg,#ef444415,var(--bg-card)); }
-    .browser-activity[data-state="completed"] { border-color:#10b98140; }
-    @keyframes browser-copter-spin { 0% { transform:scaleX(1); } 50% { transform:scaleX(-1); } 100% { transform:scaleX(1); } }
-    @keyframes browser-float { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
-    @keyframes browser-type-l { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-3px) rotate(10deg); } }
-    @keyframes browser-type-r { 0%, 100% { transform:translateY(-3px) rotate(-10deg); } 50% { transform:translateY(0); } }
-    @media(prefers-reduced-motion:reduce) { .browser-activity[data-state="working"] .browser-doraemon-svg, .browser-activity[data-state="working"] .browser-copter, .browser-activity[data-state="working"] .browser-arm-l, .browser-activity[data-state="working"] .browser-arm-r { animation:none !important; } }
+    .browser-activity, .browser-tool-card {
+      box-sizing: border-box;
+      min-width: 0;
+      max-width: 100%;
+      width: 100%;
+      container-type: inline-size;
+    }
+    .browser-activity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0;
+      padding: 10px 13px;
+      border: 1px solid rgba(14, 165, 233, 0.28);
+      border-radius: 14px;
+      background: linear-gradient(115deg, rgba(14, 165, 233, 0.11), var(--bg-card) 68%);
+      color: var(--text-main);
+      box-shadow: 0 2px 12px rgba(14, 165, 233, 0.07);
+    }
+    .browser-activity-pointer {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 44px;
+      height: 48px;
+      border-radius: 11px;
+      background: rgba(14, 165, 233, 0.12);
+      border: 1px solid rgba(14, 165, 233, 0.24);
+      position: relative;
+      overflow: hidden;
+    }
+    .browser-activity-pointer svg { width: 38px; height: 44px; display: block; }
+    .browser-activity-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+      flex: 1 1 0%;
+    }
+    .browser-activity-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+    .browser-activity strong {
+      font-size: 12.5px;
+      font-weight: 600;
+      line-height: 1.35;
+      min-width: 0;
+      flex: 1 1 0%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .browser-activity-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      font-size: 10.5px;
+      font-weight: 600;
+      line-height: 1.2;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(14, 165, 233, 0.28);
+      background: rgba(14, 165, 233, 0.12);
+      color: #38bdf8;
+    }
+    .browser-activity-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+    .browser-activity[data-state="working"] .browser-activity-dot { animation: pulse 1.4s ease-in-out infinite; }
+    .browser-activity-step {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      opacity: 0.88;
+    }
+    .browser-activity small {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px 6px;
+      min-width: 0;
+      font-size: 11px;
+      line-height: 1.35;
+      color: var(--text-sub);
+    }
+    .browser-meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      max-width: 100%;
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-main);
+    }
+    .browser-meta-chip.is-mode {
+      border-color: rgba(14, 165, 233, 0.25);
+      background: rgba(14, 165, 233, 0.1);
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    .browser-meta-chip.is-mode[data-channel="personal"] {
+      border-color: rgba(245, 158, 11, 0.3);
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+    }
+    .browser-meta-chip.is-mode[data-channel="sso"] {
+      border-color: rgba(168, 85, 247, 0.3);
+      background: rgba(168, 85, 247, 0.12);
+      color: #c084fc;
+    }
+    .browser-meta-chip.is-tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-sub);
+    }
+    .browser-meta-target {
+      min-width: 0;
+      flex: 1 1 140px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--text-sub);
+    }
+    .browser-activity[data-state="working"] .browser-doraemon-svg { animation: browser-float 1.8s ease-in-out infinite; }
+    .browser-activity[data-state="working"] .browser-copter { transform-origin: 36px 3px; animation: browser-copter-spin 0.12s linear infinite; }
+    .browser-activity[data-state="working"] .browser-arm-l { transform-origin: 24px 48px; animation: browser-type-l 0.35s ease-in-out infinite; }
+    .browser-activity[data-state="working"] .browser-arm-r { transform-origin: 48px 48px; animation: browser-type-r 0.35s ease-in-out infinite; }
+    .browser-activity[data-state="failed"] {
+      border-color: rgba(239, 68, 68, 0.38);
+      background: linear-gradient(115deg, rgba(239, 68, 68, 0.11), var(--bg-card) 68%);
+    }
+    .browser-activity[data-state="failed"] .browser-activity-pointer {
+      border-color: rgba(239, 68, 68, 0.28);
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .browser-activity[data-state="failed"] .browser-activity-pill {
+      border-color: rgba(239, 68, 68, 0.32);
+      background: rgba(239, 68, 68, 0.14);
+      color: #f87171;
+    }
+    .browser-activity[data-state="completed"] {
+      border-color: rgba(16, 185, 129, 0.32);
+      background: linear-gradient(115deg, rgba(16, 185, 129, 0.08), var(--bg-card) 70%);
+    }
+    .browser-activity[data-state="completed"] .browser-activity-pill {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.13);
+      color: #34d399;
+    }
+    .browser-activity[data-state="ended"] {
+      border-color: var(--border-subtle);
+      background: var(--bg-card);
+      box-shadow: none;
+    }
+    .browser-activity[data-state="ended"] .browser-activity-pill {
+      border-color: var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-sub);
+    }
+
+    /* Chrome step rows inside process group */
+    .browser-tool-card > div:first-child {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: 8px;
+      min-width: 0;
+    }
+    .browser-tool-card > div:first-child > div:first-child {
+      flex: 1 1 0%;
+      min-width: 0;
+      margin-right: 0;
+    }
+    .browser-tool-card .browser-tool-action {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .browser-tool-card .browser-channel-tag {
+      flex-shrink: 0;
+      white-space: nowrap;
+      font-size: 9.5px;
+      font-weight: 600;
+      line-height: 1.2;
+      padding: 1px 5px;
+      border-radius: 5px;
+      border: 1px solid rgba(14, 165, 233, 0.26);
+      background: rgba(14, 165, 233, 0.1);
+      color: #38bdf8;
+    }
+    .browser-tool-card .browser-channel-tag[data-channel="personal"] {
+      border-color: rgba(245, 158, 11, 0.3);
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+    }
+    .browser-tool-card .browser-channel-tag[data-channel="sso"] {
+      border-color: rgba(168, 85, 247, 0.3);
+      background: rgba(168, 85, 247, 0.12);
+      color: #c084fc;
+    }
+    .browser-tool-card [id^="toolFilePath_"] {
+      flex: 1 1 0%;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .browser-tool-card > div:first-child > div:last-child {
+      flex-shrink: 0;
+      gap: 4px;
+    }
+    .browser-tool-card [id^="badge_"] { white-space: nowrap; display: inline-flex; align-items: center; }
+    .browser-tool-card [id^="body_"] { min-width: 0; max-width: 100%; box-sizing: border-box; }
+    .browser-tool-card [id^="body_"] .justify-between { flex-wrap: wrap; gap: 6px; }
+    .browser-tool-card pre {
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    /* Container-aware breakpoints: adapts to phones, tablets, AND desktop split-screen windows */
+    @container (max-width: 480px) {
+      .browser-tool-card .tool-status-label { display: none; }
+      .browser-tool-card .tool-status-pill { padding: 2px 6px; min-width: 22px; justify-content: center; gap: 0; }
+      .browser-tool-card [id^="body_"] { padding: 10px; }
+    }
+    @container (max-width: 310px) {
+      .browser-tool-card .browser-channel-tag { display: none; }
+      .browser-tool-card .browser-tool-action { max-width: 108px; overflow: hidden; text-overflow: ellipsis; }
+    }
+    @container (max-width: 430px) {
+      .browser-activity { gap: 9px; padding: 9px 10px; border-radius: 12px; align-items: flex-start; }
+      .browser-activity-pointer { width: 36px; height: 40px; border-radius: 9px; margin-top: 1px; }
+      .browser-activity-pointer svg { width: 31px; height: 36px; }
+      .browser-activity strong { font-size: 12px; }
+      .browser-activity-pill-text { display: none; }
+      .browser-activity-pill { padding: 2px 6px; }
+      .browser-meta-target { flex-basis: 100%; }
+    }
+    @media (max-width: 520px) {
+      .browser-tool-card .tool-status-label { display: none; }
+      .browser-tool-card .tool-status-pill { padding: 2px 6px; min-width: 22px; justify-content: center; gap: 0; }
+      .browser-activity-pill-text { display: none; }
+    }
+    @keyframes browser-copter-spin { 0% { transform: scaleX(1); } 50% { transform: scaleX(-1); } 100% { transform: scaleX(1); } }
+    @keyframes browser-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+    @keyframes browser-type-l { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px) rotate(10deg); } }
+    @keyframes browser-type-r { 0%, 100% { transform: translateY(-3px) rotate(-10deg); } 50% { transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .browser-activity[data-state="working"] .browser-doraemon-svg, .browser-activity[data-state="working"] .browser-copter, .browser-activity[data-state="working"] .browser-arm-l, .browser-activity[data-state="working"] .browser-arm-r, .browser-activity[data-state="working"] .browser-activity-dot { animation: none !important; } }
 
 
     #filePreviewDialog { min-height: 0; height: 88dvh; }
@@ -1537,7 +1791,13 @@
 
 
     <!-- Sidebar Bottom Footer: Storage & Settings -->
-    <div class="p-3 border-t shrink-0 flex flex-col gap-2" style="border-color: var(--border); background-color: var(--bg-card);">
+    <details id="sidebarFooter" class="shrink-0 border-t group" style="border-color: var(--border); background-color: var(--bg-card);" open>
+      <summary class="flex items-center justify-center h-6 cursor-pointer list-none text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 [&::-webkit-details-marker]:hidden" title="&#7848;n / hi&#7879;n ph&#7847;n d&#432;&#7899;i sidebar" aria-label="&#7848;n / hi&#7879;n ph&#7847;n d&#432;&#7899;i sidebar">
+        <svg class="w-4 h-4 rotate-180 group-open:rotate-0 transition-transform duration-200 motion-reduce:transition-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+        </svg>
+      </summary>
+    <div class="px-3 pb-3 flex flex-col gap-2">
       
       <div class="flex items-center justify-between text-[11px]" style="color: var(--text-sub);">
         <div class="flex items-center space-x-2">
@@ -1628,6 +1888,7 @@
       </div>
 
     </div>
+    </details>
   </aside>
 
   <!-- ========================================================
@@ -3347,6 +3608,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
           </svg>
           <span id="pathCtxPreviewLabel" class="flex-1 font-medium text-[13px]">Xem nội dung</span>
+        </button>
+
+        <button id="pathCtxBtnReveal" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
+          <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7zM10 14h6m-3-3l3 3-3 3"/>
+          </svg>
+          <span class="flex-1 font-medium text-[13px]">Mở thư mục chứa file</span>
         </button>
 
         <button id="pathCtxBtnOpen" type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--bg-hover)] text-left transition-colors">
@@ -6571,7 +6839,7 @@
       }
     }
 
-    window.openLocalPath = async function(rawPath, e) {
+    window.openLocalPath = async function(rawPath, e, reveal = false) {
       if (e) e.stopPropagation();
       rawPath = resolvePathFromClickEvent(rawPath, e);
       const triggerEl = (e && e.target && typeof e.target.closest === 'function')
@@ -6592,6 +6860,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             path: rawPath,
+            reveal: Boolean(reveal),
             workspace: (typeof currentWorkspace !== 'undefined' ? currentWorkspace : '') || ''
           })
         });
@@ -7123,6 +7392,13 @@
       const previewLabel = document.getElementById('pathCtxPreviewLabel');
       const openBtn = document.getElementById('pathCtxBtnOpen');
       const openLabel = document.getElementById('pathCtxOpenLabel');
+      const revealBtn = document.getElementById('pathCtxBtnReveal');
+      if (revealBtn && pathData) {
+        revealBtn.classList.toggle('hidden', Boolean(pathData.isDir));
+        revealBtn.disabled = Boolean(pathData.isDeleted);
+        revealBtn.classList.toggle('opacity-45', Boolean(pathData.isDeleted));
+        revealBtn.classList.toggle('cursor-not-allowed', Boolean(pathData.isDeleted));
+      }
       if (!menu || !panel || !pathData || !pathData.rawPath) return;
 
       if (typeof closeSessionContextMenu === 'function') closeSessionContextMenu();
@@ -7281,6 +7557,13 @@
         } else {
           previewLocalFile(rawPath, null, cardMutKey ? 'step-diff' : 'auto', cardMutKey || '');
         }
+      });
+
+      document.getElementById('pathCtxBtnReveal')?.addEventListener('click', () => {
+        if (!currentContextMenuPath || currentContextMenuPath.isDeleted || currentContextMenuPath.isDir) return;
+        const { rawPath, fullPath } = currentContextMenuPath;
+        closePathContextMenu();
+        openLocalPath(fullPath || rawPath, null, true);
       });
 
       document.getElementById('pathCtxBtnOpen')?.addEventListener('click', () => {
@@ -11511,7 +11794,10 @@
         const browserCard = row.querySelector('.browser-activity');
         if (browserCard?.dataset.state === 'working') {
           browserCard.dataset.state = 'ended';
-          browserCard.querySelector('strong').textContent = 'Đã kết thúc lượt dùng trình duyệt';
+          const strongEl = browserCard.querySelector('strong');
+          if (strongEl) strongEl.textContent = 'Đã kết thúc lượt dùng trình duyệt';
+          const pillText = browserCard.querySelector('.browser-activity-pill-text');
+          if (pillText) pillText.textContent = 'Kết thúc';
         }
         // Remove all streaming blinking cursors
         row.querySelectorAll('.streaming-cursor').forEach(el => el.remove());
@@ -11603,13 +11889,20 @@
     }
     window.toggleAiProcessGroup = toggleAiProcessGroup;
 
+    function hasAiProcessText(text) {
+      return String(text || '').replace(/<\/?think>/g, '').replace(/[\s\u200B-\u200D\uFEFF\uFE0F\u270D\u270E\u{1F58A}\u{1F58B}\u{1FAB6}]/gu, '').length > 0;
+    }
+
     function moveActiveTextToProcessGroup(container) {
       if (!container || !container.activeTextContainer) return;
       const block = container.activeTextContainer;
       if (block.querySelectorAll) {
         block.querySelectorAll('.streaming-cursor').forEach(el => el.remove());
       }
-      if (block.innerHTML && block.innerHTML.trim()) {
+      const hasContent = container._activeRawText !== undefined
+        ? hasAiProcessText(container._activeRawText)
+        : !!(block.innerHTML && block.innerHTML.trim());
+      if (hasContent) {
         const processBody = ensureAiProcessGroup(container);
         if (processBody) processBody.appendChild(block);
         updateAiProcessGroupSummary(container);
@@ -11681,6 +11974,16 @@
           updateAiProcessGroupSummary(container);
         }
 
+        const hasThinkingContent = hasAiProcessText(thinkingPart);
+        container._thoughtElement.hidden = !hasThinkingContent;
+        if (!hasThinkingContent) {
+          if (!container._thoughtElement._emptyThought) container._thoughtCount--;
+        } else if (container._thoughtElement._emptyThought) {
+          container._thoughtCount++;
+        }
+        container._thoughtElement._emptyThought = !hasThinkingContent;
+        updateAiProcessGroupSummary(container);
+
         const brainEl = container._thoughtElement.querySelector('.thought-brain-icon');
         if (brainEl) brainEl.className = 'thought-brain-icon ' + (isThinkingDone ? '' : 'animate-pulse');
         const timerEl = container._thoughtElement.querySelector('.thought-timer');
@@ -11697,7 +12000,7 @@
         container.activeTextContainer.innerHTML = parsedAnswer + cursor;
       } else {
         const cursor = isGenerating && !container.isHistorical ? '<span class="streaming-cursor ml-1"></span>' : '';
-        container.activeTextContainer.innerHTML = marked.parse(raw) + cursor;
+        container.activeTextContainer.innerHTML = hasAiProcessText(raw) ? marked.parse(raw) + cursor : '';
       }
 
       if (!container.isHistorical) notifyNewMessageArrived();
@@ -11858,6 +12161,129 @@
       return `<button type="button" class="block min-w-0 max-w-full truncate text-left font-semibold underline underline-offset-4" style="color: var(--text-main);" data-local-path-action="1" data-path="${escapeHtml(path)}" data-mut-key="${escapeHtml(mutKey)}" title="Mở file trên PC: ${escapeHtml(path)}" aria-label="Mở file trên PC: ${escapeHtml(path)}" onclick="event.stopPropagation(); openLocalPath(this.getAttribute('data-path'), event)">${escapeHtml(name)}</button>`;
     }
 
+    const BROWSER_TOOL_LABELS = {
+      list_pages: 'Danh sách tab',
+      select_page: 'Chuyển tab',
+      new_page: 'Mở tab mới',
+      close_page: 'Đóng tab',
+      navigate_page: 'Mở trang',
+      take_snapshot: 'Đọc DOM',
+      take_screenshot: 'Chụp màn hình',
+      click: 'Nhấn chuột',
+      hover: 'Rê chuột',
+      fill: 'Nhập liệu',
+      fill_form: 'Điền biểu mẫu',
+      type_text: 'Gõ văn bản',
+      press_key: 'Nhấn phím',
+      drag: 'Kéo thả',
+      upload_file: 'Tải tệp lên',
+      wait_for: 'Chờ nội dung',
+      evaluate_script: 'Chạy JS',
+      emulate: 'Giả lập khung',
+      resize_page: 'Đổi cỡ trang',
+      handle_dialog: 'Hộp thoại',
+      list_network_requests: 'DS Request mạng',
+      get_network_request: 'Chi tiết Request',
+      list_console_messages: 'Nhật ký Console',
+      get_console_message: 'Chi tiết Console',
+      get_css_styles: 'Kiểm tra CSS',
+      lighthouse_audit: 'Lighthouse',
+      performance_start_trace: 'Đo hiệu năng',
+      performance_stop_trace: 'Dừng đo hiệu năng',
+      performance_analyze_insight: 'Phân tích hiệu năng',
+      screencast_start: 'Quay màn hình',
+      screencast_stop: 'Dừng quay video',
+      take_heapsnapshot: 'Bộ nhớ Heap'
+    };
+
+    function describeBrowserToolCall(toolName, rawArgs) {
+      const raw = String(toolName || '');
+      if (!/chrome_devtools/i.test(raw)) return null;
+      const lower = raw.toLowerCase();
+      const channel = lower.includes('chrome_devtools_personal')
+        ? { key: 'personal', label: 'Cá nhân', fullLabel: 'Chrome Cá nhân' }
+        : lower.includes('chrome_devtools_sso')
+          ? { key: 'sso', label: 'SSO', fullLabel: 'Chrome SSO' }
+          : { key: 'dev', label: 'Chrome', fullLabel: 'Chrome' };
+      const actionKey = lower.replace(/^.*?chrome_devtools(?:_personal|_sso)?[_:]+/, '');
+      const actionLabel = BROWSER_TOOL_LABELS[actionKey] || (actionKey ? actionKey.replace(/_/g, ' ') : 'Thao tác web');
+
+      let parsed = rawArgs;
+      if (typeof rawArgs === 'string') {
+        try { parsed = JSON.parse(rawArgs); } catch (_) { parsed = null; }
+      }
+      const obj = (parsed && typeof parsed === 'object') ? parsed : {};
+      const tabLabel = (obj.pageId !== undefined && obj.pageId !== null && obj.pageId !== '') ? ('Tab #' + obj.pageId) : '';
+
+      let detail = '';
+      if (obj.url) {
+        detail = String(obj.url).replace(/^https?:\/\//i, '').slice(0, 140);
+      } else if (actionKey === 'navigate_page' && obj.type) {
+        const navTypes = { reload: 'Tải lại trang', back: 'Quay lại', forward: 'Tiến tới' };
+        detail = navTypes[obj.type] || String(obj.type);
+      } else if (Array.isArray(obj.elements) && obj.elements.length > 0) {
+        const firstVal = obj.elements[0] && obj.elements[0].value !== undefined ? String(obj.elements[0].value).trim() : '';
+        detail = obj.elements.length + ' trường' + (firstVal ? ' (' + firstVal.slice(0, 32) + (firstVal.length > 32 ? '…' : '') + ')' : '');
+      } else if (obj.value !== undefined && obj.uid) {
+        const valStr = String(obj.value);
+        detail = '"' + valStr.slice(0, 34) + (valStr.length > 34 ? '…' : '') + '" → #' + obj.uid;
+      } else if (obj.text !== undefined) {
+        const txtStr = Array.isArray(obj.text) ? obj.text.join(', ') : String(obj.text);
+        detail = '"' + txtStr.slice(0, 48) + (txtStr.length > 48 ? '…' : '') + '"';
+      } else if (obj.key) {
+        detail = 'Phím ' + String(obj.key);
+      } else if (Array.isArray(obj.filePaths) && obj.filePaths.length > 0) {
+        detail = obj.filePaths.map(p => String(p).split(/[\\/]/).pop() || p).join(', ');
+      } else if (obj.from_uid && obj.to_uid) {
+        detail = '#' + obj.from_uid + ' → #' + obj.to_uid;
+      } else if (obj.uid) {
+        detail = '#' + obj.uid + (obj.dblClick ? ' (nhấp đúp)' : '');
+      } else if (obj.viewport) {
+        detail = String(obj.viewport);
+      } else if (obj.width && obj.height) {
+        detail = obj.width + '×' + obj.height;
+      } else if (typeof obj.function === 'string' && obj.function.trim()) {
+        detail = obj.function
+          .replace(/^\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>\s*\{?\s*/, '')
+          .replace(/\s+/g, ' ')
+          .replace(/\}\s*;?\s*$/, '')
+          .trim()
+          .slice(0, 96);
+      } else if (obj.reqid !== undefined) {
+        detail = 'Request #' + obj.reqid;
+      } else if (obj.msgid !== undefined) {
+        detail = 'Console #' + obj.msgid;
+      }
+
+      const summary = [tabLabel, detail].filter(Boolean).join(' · ') || channel.fullLabel;
+      return { channel, actionKey, actionLabel, tabLabel, detail, summary };
+    }
+
+    function buildToolStatusBadgeHtml(isRunning, isError) {
+      if (isRunning) {
+        return `
+          <span class="tool-status-pill inline-flex items-center gap-1.5 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/20 animate-pulse" title="Đang chạy">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+            <span class="tool-status-label">Đang chạy...</span>
+          </span>
+        `;
+      }
+      if (isError) {
+        return `
+          <span class="tool-status-pill inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 border border-rose-500/25" title="Lỗi">
+            <span aria-hidden="true">✕</span>
+            <span class="tool-status-label">Lỗi</span>
+          </span>
+        `;
+      }
+      return `
+        <span class="tool-status-pill inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25" title="Hoàn thành">
+          <span aria-hidden="true">✓</span>
+          <span class="tool-status-label">Hoàn thành</span>
+        </span>
+      `;
+    }
+
     function appendToolCard(container, toolName, args, isRunning = false, output = null, isError = false) {
       closeActiveThoughtIfNeeded(container);
       flushAiTextRender(container);
@@ -11875,8 +12301,13 @@
         card.style.borderColor = isError ? 'rgba(239, 68, 68, 0.4)' : 'var(--tool-border)';
       }
 
+      const browserMeta = describeBrowserToolCall(toolName, args);
+      if (browserMeta) card.classList.add('browser-tool-card');
+
       let displayParam = '';
-      if (typeof args === 'object' && args !== null) {
+      if (browserMeta) {
+        displayParam = browserMeta.summary;
+      } else if (typeof args === 'object' && args !== null) {
         if (args.command) displayParam = args.command;
         else if (args.path) displayParam = args.path;
         else if (args.query) displayParam = args.query;
@@ -11893,7 +12324,11 @@
       const rawName = (toolName || '').toLowerCase();
       let isFileEdit = false;
 
-      if (rawName.includes('shell') || rawName.includes('bash') || rawName.includes('cmd')) {
+      if (browserMeta) {
+        const iconColor = browserMeta.channel.key === 'personal' ? 'text-amber-400' : browserMeta.channel.key === 'sso' ? 'text-purple-400' : 'text-sky-400';
+        iconSvg = `<svg class="w-4 h-4 ${iconColor} shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.9"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.6 9h16.8M3.6 15h16.8M12 3a14.5 14.5 0 010 18M12 3a14.5 14.5 0 000 18"/></svg>`;
+        friendlyTool = browserMeta.actionLabel;
+      } else if (rawName.includes('shell') || rawName.includes('bash') || rawName.includes('cmd')) {
         iconSvg = '<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
         friendlyTool = 'Thực thi Terminal';
       } else if (rawName.includes('read') || rawName.includes('cat') || rawName.includes('view')) {
@@ -11936,32 +12371,24 @@
         ? 'mt-1.5 p-3.5 rounded-xl border font-mono text-[11px] select-text hidden space-y-3'
         : 'p-3.5 border-t font-mono text-[11px] select-text hidden space-y-3';
 
+      const browserChannelChip = browserMeta && browserMeta.channel.key !== 'dev'
+        ? `<span class="browser-channel-tag" data-channel="${escapeHtml(browserMeta.channel.key)}">${escapeHtml(browserMeta.channel.label)}</span>`
+        : '';
+
       card.innerHTML = `
         <div class="${headerClass} min-w-0 gap-1"
              style="${headerStyle}"
              onclick="toggleCard('${cardId}')" title="Bấm để đóng / mở chi tiết tác vụ">
           <div class="flex items-center gap-1.5 min-w-0 flex-1 ${isFileEdit ? '' : 'mr-3'}">
             ${iconSvg}
-            ${isFileEdit ? '' : `<span class="font-semibold text-xs text-[var(--text-main)] shrink-0">${escapeHtml(friendlyTool)}</span>`}
-            <span id="toolFilePath_${cardId}" class="font-mono text-[11px] min-w-0 truncate opacity-80" style="color: var(--text-sub);">${isFileEdit ? buildCompactFileNameHtml(initialFilePath) : escapeHtml(displayParam)}</span>
+            ${browserChannelChip}
+            ${isFileEdit ? '' : `<span class="${browserMeta ? 'browser-tool-action ' : ''}font-semibold text-xs text-[var(--text-main)] shrink-0">${escapeHtml(friendlyTool)}</span>`}
+            <span id="toolFilePath_${cardId}" class="font-mono text-[11px] min-w-0 truncate opacity-80" style="color: var(--text-sub);" title="${escapeHtml(displayParam)}">${isFileEdit ? buildCompactFileNameHtml(initialFilePath) : escapeHtml(displayParam)}</span>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <span id="inlineFileDiff_${cardId}" class="hidden items-center gap-2"></span>
             <span id="badge_${cardId}">
-              ${isFileEdit ? buildCompactFileStatusHtml(isRunning, isError) : isRunning ? `
-                <span class="inline-flex items-center gap-1.5 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/20 animate-pulse">
-                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                  Đang chạy...
-                </span>
-              ` : (isError ? `
-                <span class="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 border border-rose-500/25">
-                  ✕ Lỗi
-                </span>
-              ` : `
-                <span class="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
-                  ✓ Hoàn thành
-                </span>
-              `)}
+              ${isFileEdit ? buildCompactFileStatusHtml(isRunning, isError) : buildToolStatusBadgeHtml(isRunning, isError)}
             </span>
             <div class="p-1 rounded-md text-[var(--text-sub)]">
               <svg id="chevron_${cardId}" class="w-4 h-4 ease-spring transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -12107,15 +12534,9 @@
       const copyBtn = document.getElementById('copyOutBtn_' + cardId);
 
       if (badge) {
-        badge.innerHTML = card._cardData?.isFileEdit ? buildCompactFileStatusHtml(false, isError) : isError ? `
-          <span class="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 border border-rose-500/25">
-            ✕ Lỗi
-          </span>
-        ` : `
-          <span class="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
-            ✓ Hoàn thành
-          </span>
-        `;
+        badge.innerHTML = card._cardData?.isFileEdit
+          ? buildCompactFileStatusHtml(false, isError)
+          : buildToolStatusBadgeHtml(false, isError);
       }
 
       const expandBtn = document.getElementById('expandOutBtn_' + cardId);
@@ -12277,25 +12698,98 @@
         const pointer = document.createElement('span');
         pointer.className = 'browser-activity-pointer';
         pointer.setAttribute('aria-hidden', 'true');
-        pointer.innerHTML = '<svg class="browser-doraemon-svg" viewBox="0 0 72 84" width="46" height="53" style="overflow:visible;"><g class="browser-copter"><rect x="34.5" y="2" width="3" height="7" fill="#fbc02d" rx="1"/><ellipse cx="36" cy="2" rx="18" ry="2.2" fill="#f57f17"/><circle cx="36" cy="2" r="2" fill="#d32f2f"/></g><g class="browser-feet"><ellipse cx="27" cy="75" rx="7" ry="4.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="45" cy="75" rx="7" ry="4.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><ellipse cx="36" cy="55" rx="17" ry="17" fill="#009fe8" stroke="#0d47a1" stroke-width="1.5"/><ellipse cx="36" cy="56" rx="13" ry="13" fill="#ffffff"/><path d="M26 55 Q36 55 46 55 Q46 66 36 66 Q26 66 26 55 Z" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><line x1="26" y1="55" x2="46" y2="55" stroke="#0d47a1" stroke-width="1.2"/><g class="browser-arm-l"><path d="M24 48 Q14 52 14 58" stroke="#009fe8" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="13" cy="59" r="5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><g class="browser-arm-r"><path d="M48 48 Q58 52 58 58" stroke="#009fe8" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="59" cy="59" r="5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><g class="browser-head"><circle cx="36" cy="26" r="19" fill="#009fe8" stroke="#0d47a1" stroke-width="1.5"/><ellipse cx="36" cy="29" rx="15" ry="13.5" fill="#ffffff"/><ellipse cx="31" cy="18" rx="4" ry="5.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="41" cy="18" rx="4" ry="5.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="32.5" cy="18.5" rx="1.6" ry="2.2" fill="#212121"/><circle cx="33" cy="17.5" r="0.6" fill="#ffffff"/><ellipse cx="39.5" cy="18.5" rx="1.6" ry="2.2" fill="#212121"/><circle cx="40" cy="17.5" r="0.6" fill="#ffffff"/><circle cx="36" cy="23.5" r="2.8" fill="#e53935" stroke="#b71c1c" stroke-width="0.7"/><circle cx="35.2" cy="22.7" r="0.7" fill="#ffffff"/><path d="M23 25 L31 27 M22 29 L31 29 M23 33 L31 31 M49 25 L41 27 M50 29 L41 29 M49 33 L41 31" stroke="#212121" stroke-width="0.9" stroke-linecap="round"/><path d="M36 26.3 L36 36 M27 32 Q36 41 45 32" stroke="#212121" stroke-width="1.1" fill="none" stroke-linecap="round"/><rect x="25" y="41.5" width="22" height="3.2" rx="1.6" fill="#d32f2f"/><circle cx="36" cy="44.5" r="2.8" fill="#fbc02d" stroke="#f57f17" stroke-width="0.8"/><line x1="33.8" y1="43.8" x2="38.2" y2="43.8" stroke="#b71c1c" stroke-width="0.5"/><circle cx="36" cy="45.2" r="0.6" fill="#212121"/></g></svg>';
+        pointer.innerHTML = '<svg class="browser-doraemon-svg" viewBox="0 0 72 84" width="38" height="44"><g class="browser-copter"><rect x="34.5" y="2" width="3" height="7" fill="#fbc02d" rx="1"/><ellipse cx="36" cy="2" rx="18" ry="2.2" fill="#f57f17"/><circle cx="36" cy="2" r="2" fill="#d32f2f"/></g><g class="browser-feet"><ellipse cx="27" cy="75" rx="7" ry="4.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="45" cy="75" rx="7" ry="4.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><ellipse cx="36" cy="55" rx="17" ry="17" fill="#009fe8" stroke="#0d47a1" stroke-width="1.5"/><ellipse cx="36" cy="56" rx="13" ry="13" fill="#ffffff"/><path d="M26 55 Q36 55 46 55 Q46 66 36 66 Q26 66 26 55 Z" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><line x1="26" y1="55" x2="46" y2="55" stroke="#0d47a1" stroke-width="1.2"/><g class="browser-arm-l"><path d="M24 48 Q14 52 14 58" stroke="#009fe8" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="13" cy="59" r="5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><g class="browser-arm-r"><path d="M48 48 Q58 52 58 58" stroke="#009fe8" stroke-width="6" stroke-linecap="round" fill="none"/><circle cx="59" cy="59" r="5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/></g><g class="browser-head"><circle cx="36" cy="26" r="19" fill="#009fe8" stroke="#0d47a1" stroke-width="1.5"/><ellipse cx="36" cy="29" rx="15" ry="13.5" fill="#ffffff"/><ellipse cx="31" cy="18" rx="4" ry="5.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="41" cy="18" rx="4" ry="5.5" fill="#ffffff" stroke="#0d47a1" stroke-width="1.2"/><ellipse cx="32.5" cy="18.5" rx="1.6" ry="2.2" fill="#212121"/><circle cx="33" cy="17.5" r="0.6" fill="#ffffff"/><ellipse cx="39.5" cy="18.5" rx="1.6" ry="2.2" fill="#212121"/><circle cx="40" cy="17.5" r="0.6" fill="#ffffff"/><circle cx="36" cy="23.5" r="2.8" fill="#e53935" stroke="#b71c1c" stroke-width="0.7"/><circle cx="35.2" cy="22.7" r="0.7" fill="#ffffff"/><path d="M23 25 L31 27 M22 29 L31 29 M23 33 L31 31 M49 25 L41 27 M50 29 L41 29 M49 33 L41 31" stroke="#212121" stroke-width="0.9" stroke-linecap="round"/><path d="M36 26.3 L36 36 M27 32 Q36 41 45 32" stroke="#212121" stroke-width="1.1" fill="none" stroke-linecap="round"/><rect x="25" y="41.5" width="22" height="3.2" rx="1.6" fill="#d32f2f"/><circle cx="36" cy="44.5" r="2.8" fill="#fbc02d" stroke="#f57f17" stroke-width="0.8"/><line x1="33.8" y1="43.8" x2="38.2" y2="43.8" stroke="#b71c1c" stroke-width="0.5"/><circle cx="36" cy="45.2" r="0.6" fill="#212121"/></g></svg>';
         const copy = document.createElement('span');
         copy.className = 'browser-activity-copy';
-        copy.append(document.createElement('strong'), document.createElement('small'));
+        const head = document.createElement('span');
+        head.className = 'browser-activity-head';
+        const titleEl = document.createElement('strong');
+        const pill = document.createElement('span');
+        pill.className = 'browser-activity-pill';
+        const dot = document.createElement('span');
+        dot.className = 'browser-activity-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        const pillText = document.createElement('span');
+        pillText.className = 'browser-activity-pill-text';
+        const stepBadge = document.createElement('span');
+        stepBadge.className = 'browser-activity-step';
+        pill.append(dot, pillText, stepBadge);
+        head.append(titleEl, pill);
+        copy.append(head, document.createElement('small'));
         card.append(pointer, copy);
+        card.dataset.steps = '0';
         const body = container.row.querySelector('.ai-content-body');
         if (!body) return;
         body.appendChild(card);
       }
-      const labels = { list_pages: 'Liệt kê tab', select_page: 'Chọn tab', take_snapshot: 'Đọc nội dung trang', take_screenshot: 'Chụp màn hình', click: 'Bấm trên trang', fill: 'Nhập nội dung', fill_form: 'Điền biểu mẫu', navigate_page: 'Điều hướng trang', new_page: 'Mở tab', hover: 'Di con trỏ trên trang', evaluate_script: 'Kiểm tra trang bằng JavaScript', press_key: 'Nhấn phím', wait_for: 'Chờ nội dung trang' };
       if (state === 'working') {
+        const meta = describeBrowserToolCall(tool, args) || {
+          channel: { key: 'dev', label: 'Chrome', fullLabel: 'Chrome' },
+          actionLabel: String(tool || '').replace(/^.*?chrome_devtools[_:]+/, '') || 'Thao tác web',
+          tabLabel: args.pageId != null ? ('Tab #' + args.pageId) : '',
+          detail: args.url ? String(args.url).replace(/^https?:\/\//i, '').slice(0, 140) : ''
+        };
         card.dataset.callId = callId;
-        card.dataset.action = Object.entries(labels).find(([name]) => String(tool).endsWith(name))?.[1] || String(tool).replace(/^.*?chrome_devtools[_:]+/, '');
-        card.dataset.target = args.url ? String(args.url).slice(0, 180) : (args.pageId != null ? 'Tab #' + args.pageId : 'Chrome hiện tại');
+        card.dataset.channel = meta.channel.key;
+        card.dataset.modeLabel = meta.channel.fullLabel;
+        card.dataset.action = meta.actionLabel;
+        card.dataset.tab = meta.tabLabel;
+        card.dataset.target = meta.detail;
+        card.dataset.steps = String((Number(card.dataset.steps) || 0) + 1);
       }
       card.dataset.state = state;
-      const titles = { working: 'Doraemon đang thao tác trình duyệt 🚁', completed: 'Doraemon đã hoàn thành thao tác ✨', failed: 'Doraemon gặp sự cố trên trình duyệt 😵', ended: 'Đã kết thúc lượt dùng trình duyệt' };
-      card.querySelector('strong').textContent = titles[state] || titles.ended;
-      card.querySelector('small').textContent = (card.dataset.action || '') + ' · ' + (card.dataset.target || 'Chrome') + ' · Doraemon & Chuột ảo';
+      const titles = {
+        working: 'Đang thao tác trên Chrome',
+        completed: 'Đã hoàn thành thao tác Chrome',
+        failed: 'Gặp sự cố khi thao tác Chrome',
+        ended: 'Đã kết thúc lượt dùng trình duyệt'
+      };
+      const pillLabels = {
+        working: 'Đang chạy',
+        completed: 'Hoàn tất',
+        failed: 'Sự cố',
+        ended: 'Kết thúc'
+      };
+      const strongEl = card.querySelector('strong');
+      if (strongEl) {
+        strongEl.textContent = titles[state] || titles.ended;
+        strongEl.title = strongEl.textContent;
+      }
+      const pillTextEl = card.querySelector('.browser-activity-pill-text');
+      if (pillTextEl) pillTextEl.textContent = pillLabels[state] || pillLabels.ended;
+      const stepEl = card.querySelector('.browser-activity-step');
+      const steps = Number(card.dataset.steps) || 0;
+      if (stepEl) stepEl.textContent = steps > 0 ? ('#' + steps) : '';
+
+      const smallEl = card.querySelector('small');
+      if (smallEl) {
+        smallEl.replaceChildren();
+        const modeChip = document.createElement('span');
+        modeChip.className = 'browser-meta-chip is-mode';
+        modeChip.dataset.channel = card.dataset.channel || 'dev';
+        modeChip.textContent = card.dataset.modeLabel || 'Chrome';
+        smallEl.appendChild(modeChip);
+
+        if (card.dataset.action) {
+          const actChip = document.createElement('span');
+          actChip.className = 'browser-meta-chip is-action';
+          actChip.textContent = card.dataset.action;
+          smallEl.appendChild(actChip);
+        }
+        if (card.dataset.tab) {
+          const tabChip = document.createElement('span');
+          tabChip.className = 'browser-meta-chip is-tab';
+          tabChip.textContent = card.dataset.tab;
+          smallEl.appendChild(tabChip);
+        }
+        if (card.dataset.target) {
+          const targetEl = document.createElement('span');
+          targetEl.className = 'browser-meta-target';
+          targetEl.textContent = card.dataset.target;
+          targetEl.title = card.dataset.target;
+          smallEl.appendChild(targetEl);
+        }
+      }
     }
 
     // EVENT PROCESSING LOGIC (CENTRALIZED FOR SSE & EVENTSOURCE)

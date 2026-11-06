@@ -631,6 +631,7 @@ vm.runInContext(
     definition('ensureAiProcessGroup'),
     definition('updateAiProcessGroupSummary'),
     definition('toggleAiProcessGroup'),
+    definition('hasAiProcessText'),
     definition('moveActiveTextToProcessGroup'),
   ].join('\n'),
   processGroupSandbox
@@ -676,6 +677,23 @@ mockContainer.activeTextContainer = intermediateBlock;
 processGroupSandbox.moveActiveTextToProcessGroup(mockContainer);
 assert.equal(cursorRemoved, true);
 assert.equal(procBody.children.includes(intermediateBlock), true, 'Intermediate pre-tool text must move into collapsible process group');
+assert.equal(mockContainer.activeTextContainer, null);
+
+// Empty or pen-only process entries must not leave standalone icons.
+for (const text of ['', ' \n\t', '\u200B', '\u{1FAB6}', '\u270D\uFE0F', '<think>\n</think>']) {
+  assert.equal(processGroupSandbox.hasAiProcessText(text), false);
+}
+assert.equal(processGroupSandbox.hasAiProcessText('Checking files...'), true);
+let emptyBlockRemoved = false;
+const emptyProcessBlock = {
+  innerHTML: '<p> </p>',
+  remove() { emptyBlockRemoved = true; },
+};
+mockContainer.activeTextContainer = emptyProcessBlock;
+mockContainer._activeRawText = '\u{1FAB6}\n';
+processGroupSandbox.moveActiveTextToProcessGroup(mockContainer);
+assert.equal(emptyBlockRemoved, true);
+assert.equal(procBody.children.includes(emptyProcessBlock), false);
 assert.equal(mockContainer.activeTextContainer, null);
 
 // Plain header mode for thinking & tool execution (plain-text headers while keeping expand/collapse, fileDiffBar, and light/dark viewer boxes)

@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const html = fs.readFileSync(__dirname + '/public/index.html', 'utf8');
 const start = html.indexOf('    function buildCompactFileStatusHtml(');
-const end = html.indexOf('    function expandToolCardOutput(', start);
+const end = html.indexOf('    async function expandToolCardOutput(', start);
 const escapeHtml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const elements = new Map();
 function element() {

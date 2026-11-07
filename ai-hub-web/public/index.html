@@ -6759,7 +6759,7 @@
       const mdBody = document.getElementById('filePreviewMarkdownBody');
       if (!mdBody) return;
       if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
-        mdBody.innerHTML = marked.parse(markdownText || '');
+        mdBody.innerHTML = parseChatMarkdown(markdownText || '');
         if (window.hljs) {
           mdBody.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
         }
@@ -8822,6 +8822,21 @@
       }
     });
 
+    function initSidebarFooterState() {
+      const footer = document.getElementById('sidebarFooter');
+      if (!footer) return;
+      const key = 'ai_hub_sidebar_footer_collapsed';
+      try {
+        footer.open = localStorage.getItem(key) !== 'true';
+      } catch (_) { /* Keep the default when browser storage is unavailable. */ }
+      footer.addEventListener('toggle', () => {
+        try {
+          localStorage.setItem(key, footer.open ? 'false' : 'true');
+        } catch (_) { /* Disclosure still works without persistent storage. */ }
+      });
+    }
+    initSidebarFooterState();
+
     // SIDEBAR TOGGLE & FILTER
     let sidebarCollapsed = localStorage.getItem('ai_hub_sidebar_collapsed') === 'true';
 
@@ -9025,7 +9040,8 @@
 
     // SESSION MANAGEMENT
     let sessionViewVersion = 0;
-    let allowAutoReconnect = true;
+    // The URL owns initial selection; sidebar loading must not switch to another running session.
+    let allowAutoReconnect = false;
 
     function sessionSlug(name) {
       return String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -9173,6 +9189,7 @@
       detachActiveStream();
       initialBottomFollow = false;
       sessionViewVersion++;
+      resetSessionHistoryPaging();
       allowAutoReconnect = false;
       currentSessionHistoryItems = [];
       currentHistoryRenderIndex = 0;
@@ -10649,7 +10666,7 @@
 
         let parsedSummaryHtml = '';
         try {
-          parsedSummaryHtml = marked.parse(sub.summary || sub.raw || '');
+          parsedSummaryHtml = parseChatMarkdown(sub.summary || sub.raw || '');
         } catch (_) {
           parsedSummaryHtml = `<p class="whitespace-pre-wrap">${escapeHtml(sub.summary || sub.raw || '')}</p>`;
         }
@@ -10830,6 +10847,13 @@
       }
     }
 
+    // Treat HTML in model/tool output as text so it cannot escape chat wrappers.
+    function parseChatMarkdown(text) {
+      const renderer = Object.assign(new marked.Renderer(), customRenderer);
+      renderer.html = token => escapeHtml(typeof token === 'string' ? token : token.text || '');
+      return marked.parse(text || '', { renderer });
+    }
+
     function renderInternalMessageCard(item, container, prepend = false) {
       const row = document.createElement('div');
       row.className = 'internal-message-row w-full my-2.5 px-1 sm:px-2 internal-turn-card';
@@ -10851,7 +10875,7 @@
         window._codeSnippets[entrySnippetId] = (entry.text || '').trim();
         let parsedHtml = '';
         try {
-          parsedHtml = marked.parse(entry.text || '');
+          parsedHtml = parseChatMarkdown(entry.text || '');
         } catch (_) {
           parsedHtml = `<p class="whitespace-pre-wrap">${escapeHtml(entry.text || '')}</p>`;
         }
@@ -10976,7 +11000,7 @@
             } else if (c.output || c.text) {
               out = c.output || c.text || '';
             }
-            toolResponsesMap.set(c.id, { output: out, isError: isErr });
+            toolResponsesMap.set(c.id, { output: out, isError: isErr, historySource: c.historySource });
           }
         });
       });
@@ -11026,12 +11050,14 @@
             return;
           }
           const msgTime = messageTime(msg);
+          const modelId = typeof msg.metadata?.inference?.requestedModel === 'string'
+            ? msg.metadata.inference.requestedModel : null;
           const prevItem = items[items.length - 1];
-          if (prevItem && prevItem.role === 'assistant') {
-            prevItem.rawContent = prevItem.rawContent.concat(contentArr);
+          if (prevItem && prevItem.role === 'assistant' && prevItem.modelId === modelId) {
+            for (const block of contentArr) prevItem.rawContent.push(block);
             if (msgTime) prevItem.endedAt = msgTime;
           } else {
-            items.push({ role: 'assistant', rawContent: [...contentArr], toolResponsesMap, startedAt: msgTime, endedAt: msgTime });
+            items.push({ role: 'assistant', modelId, rawContent: [...contentArr], toolResponsesMap, startedAt: msgTime, endedAt: msgTime });
           }
         }
       });
@@ -11147,8 +11173,10 @@
     function renderSingleHistoryItem(item, container, prepend = false) {
       if (item.role === 'subagent') {
         renderSubagentReportCard(item, container, prepend);
+        item.domRow = prepend ? container.firstChild : container.lastChild;
       } else if (item.role === 'internal') {
         renderInternalMessageCard(item, container, prepend);
+        item.domRow = prepend ? container.firstChild : container.lastChild;
       } else if (item.role === 'user') {
         const row = document.createElement('div');
         row.className = 'user-message-row w-full flex justify-end my-3 px-1 sm:px-2 group';
@@ -11190,7 +11218,7 @@
         }
         if (container === chatFeed) syncLatestUserQuestionEditButton();
       } else if (item.role === 'assistant') {
-        const aiContainer = createAiMessageContainer(currentSelectedModel, false, false);
+        const aiContainer = createAiMessageContainer(item.modelId || null, false, false);
         aiContainer.isHistorical = true;
         aiContainer.row.dataset.turnQuestion = item.questionText || '';
         if (aiContainer.row && aiContainer.row.parentNode === chatFeed) {
@@ -11215,7 +11243,8 @@
             const resp = c.id && item.toolResponsesMap ? item.toolResponsesMap.get(c.id) : null;
             const toolOutput = resp ? resp.output : null;
             const isErr = resp ? resp.isError : false;
-            appendToolCard(aiContainer, toolName, toolArgs, false, toolOutput, isErr);
+            const card = appendToolCard(aiContainer, toolName, toolArgs, false, toolOutput, isErr);
+            if (resp?.historySource) card._historySource = resp.historySource;
           } else if (c.tool_use) {
             hasTools = true;
             const toolName = c.tool_use.name || 'tool';
@@ -11244,6 +11273,7 @@
           }
         }
 
+        item.domRow = aiContainer.row;
         addMessageTiming(aiContainer.row, item);
         if (prepend && container.firstChild) {
           container.insertBefore(aiContainer.row, container.firstChild);
@@ -11253,12 +11283,111 @@
       }
     }
 
-    function renderHistoryLazyBanner() {
+    function scheduleHistoryFileChanges(items, version) {
+      const blocks = items.flatMap(item => (item.rawContent || []).map(block => ({ block, responses: item.toolResponsesMap })));
+      let index = 0;
+      function step() {
+        if (version !== sessionViewVersion) return;
+        const end = Math.min(index + 8, blocks.length);
+        for (; index < end; index++) {
+          const { block, responses } = blocks[index];
+          if (block?.type !== 'toolRequest' && !block?.tool_use) continue;
+          const name = block.toolCall?.value?.name || block.tool_use?.name || block.name || '';
+          if (!/shell|bash|cmd|edit|write|patch|replace/i.test(name)) continue;
+          const args = block.toolCall?.value?.arguments || block.tool_use?.input || block.arguments || {};
+          const response = responses?.get(block.id);
+          const mutations = extractToolFileMutations(name, args, response?.output || block.tool_use?.output || null, !!response?.isError, _sessionHelperScriptsMap);
+          if (mutations.length) recordToolMutationsInSession(mutations, false);
+        }
+        if (index < blocks.length) setTimeout(step, 0);
+      }
+      setTimeout(step, 0);
+    }
+
+    let sessionHistoryPage = null;
+    let sessionHistoryConversation = [];
+    let sessionHistoryLoading = false;
+    let sessionHistoryAbort = null;
+
+    function resetSessionHistoryPaging() {
+      sessionHistoryAbort?.abort();
+      sessionHistoryAbort = new AbortController();
+      sessionHistoryPage = null;
+      sessionHistoryConversation = [];
+      sessionHistoryLoading = false;
       document.getElementById('historyLazyBanner')?.remove();
     }
 
-    function loadMoreSessionHistory() {
-      if (currentHistoryRenderIndex <= 0) return;
+    async function fetchOlderSessionHistory() {
+      if (!currentSessionId || sessionHistoryLoading || !sessionHistoryPage?.hasMore) return false;
+      sessionHistoryLoading = true;
+      const version = sessionViewVersion;
+      const before = sessionHistoryPage.before;
+      try {
+        const res = await fetch('/api/session?id=' + encodeURIComponent(currentSessionId) + '&limit=60&before=' + before, { signal: sessionHistoryAbort?.signal });
+        const data = await res.json();
+        if (version !== sessionViewVersion) return false;
+        if (!res.ok || data.error) throw new Error(data.error || 'History request failed');
+        const previousCount = currentSessionHistoryItems.length;
+        sessionHistoryPage = data.historyPage || null;
+        sessionHistoryConversation = (data.conversation || []).concat(sessionHistoryConversation);
+        const rebuilt = buildHistoryItemsFromConversation(sessionHistoryConversation);
+        scheduleHistoryFileChanges(buildHistoryItemsFromConversation(data.conversation || []), version);
+        // Reuse already rendered items. Only the oldest boundary turn may merge.
+        const delta = rebuilt.length - previousCount;
+        for (let i = 1; i < previousCount; i++) {
+          if (rebuilt[i + delta]) rebuilt[i + delta].domRow = currentSessionHistoryItems[i]?.domRow;
+        }
+        if (currentHistoryRenderIndex === 0) {
+          const height = chatFeed.scrollHeight;
+          const top = chatFeed.scrollTop;
+          currentSessionHistoryItems[0]?.domRow?.remove();
+          currentSessionHistoryItems = rebuilt;
+          const fragment = document.createDocumentFragment();
+          for (let i = 0; i <= delta && i < rebuilt.length; i++) {
+            renderSingleHistoryItem(rebuilt[i], fragment);
+            if (i % 4 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+            if (version !== sessionViewVersion) return false;
+          }
+          chatFeed.insertBefore(fragment, chatFeed.firstChild);
+          chatFeed.scrollTop = top + chatFeed.scrollHeight - height;
+        } else {
+          currentSessionHistoryItems = rebuilt;
+          currentHistoryRenderIndex += delta;
+        }
+        return true;
+      } catch (err) {
+        if (version === sessionViewVersion && err.name !== 'AbortError') {
+          const btn = document.getElementById('historyLazyBanner');
+          if (btn) btn.textContent = 'Tải lịch sử thất bại - bấm để thử lại';
+        }
+        return false;
+      } finally {
+        if (version === sessionViewVersion) sessionHistoryLoading = false;
+      }
+    }
+
+    function renderHistoryLazyBanner() {
+      document.getElementById('historyLazyBanner')?.remove();
+      if (currentSessionId && (sessionHistoryPage?.hasMore || currentHistoryRenderIndex > 0)) {
+        const button = document.createElement('button');
+        button.id = 'historyLazyBanner';
+        button.className = 'block mx-auto my-3 px-3 py-2 text-xs text-blue-400';
+        button.textContent = 'Tải tin nhắn cũ hơn';
+        button.onclick = () => loadMoreSessionHistory();
+        chatFeed.insertBefore(button, chatFeed.firstChild);
+      }
+    }
+
+    async function loadMoreSessionHistory() {
+      if (!currentSessionId) return;
+      const version = sessionViewVersion;
+      if (currentHistoryRenderIndex <= 0) {
+        await fetchOlderSessionHistory();
+        if (version !== sessionViewVersion) return;
+        renderHistoryLazyBanner();
+        return;
+      }
       const prevScrollHeight = chatFeed.scrollHeight;
       const prevScrollTop = chatFeed.scrollTop;
 
@@ -11293,7 +11422,7 @@
       if (isHistoryScrollListening) return;
       isHistoryScrollListening = true;
       chatFeed.addEventListener('scroll', () => {
-        if (chatFeed.scrollTop < 60 && currentHistoryRenderIndex > 0) {
+        if (chatFeed.scrollTop < 60 && (currentHistoryRenderIndex > 0 || sessionHistoryPage?.hasMore)) {
           loadMoreSessionHistory();
         }
       });
@@ -11325,6 +11454,7 @@
         if (backdrop) backdrop.classList.add('hidden');
       }
       const viewVersion = ++sessionViewVersion;
+      resetSessionHistoryPaging();
       allowAutoReconnect = false;
       isChatUserScrolledUp = false;
       resetSessionFileChangeTracking();
@@ -11360,10 +11490,12 @@
       loadWorkspaceTree();
 
       try {
-        const res = await fetch(`/api/session?id=${encodeURIComponent(sessionId)}`);
+        const res = await fetch(`/api/session?id=${encodeURIComponent(sessionId)}&limit=60`, { signal: sessionHistoryAbort.signal });
         const data = await res.json();
         if (viewVersion !== sessionViewVersion) return;
         if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+        sessionHistoryPage = data.historyPage || null;
+        sessionHistoryConversation = data.conversation || [];
         markSessionRead(sessionId, data.id);
 
         const resolvedSessionModel = (data?.isRunning && data?.activeSessionInfo?.model)
@@ -11396,7 +11528,8 @@
           }
         } else {
           currentSessionHistoryItems = buildHistoryItemsFromConversation(data.conversation);
-          seedSessionFileChangesFromHistory(currentSessionHistoryItems, data?.sessionFileChanges);
+          seedSessionFileChangesFromHistory([], data?.sessionFileChanges);
+          scheduleHistoryFileChanges(currentSessionHistoryItems, viewVersion);
           if (data.isRunning && data.activeSessionInfo) {
             runningTurnState = prepareRunningSessionHistoryItems(currentSessionHistoryItems, data.activeSessionInfo);
           }
@@ -11426,6 +11559,8 @@
           reconnectRunningSession(sessionId, data.activeSessionInfo, sessionTitle, runningTurnState?.runningItem);
         }
 
+        renderHistoryLazyBanner();
+        attachHistoryScrollListener();
         syncComposerOverlaySpace();
         scrollToBottom(true);
         settleSessionAtBottom();
@@ -11482,7 +11617,7 @@
       modal.classList.remove('hidden');
       modal.setAttribute('role', 'dialog');
       modal.setAttribute('aria-modal', 'true');
-      document.getElementById('fullConvModalTitle').textContent = currentSessionTitle.innerText;
+      document.getElementById('fullConvModalTitle').textContent = currentSessionTitle.innerText + (sessionHistoryPage?.hasMore ? ' (phần đã tải - cuộn lên trong chat để tải cũ hơn)' : '');
       document.getElementById('fullConvSearchInput').value = '';
       fullConvQuery = '';
       document.getElementById('fullConvCloseButton').focus();
@@ -11699,7 +11834,10 @@
       const banner = document.getElementById('welcomeBanner');
       if (mount && banner) banner.remove();
 
-      const model = resolveModelMeta(modelId || currentSelectedModel);
+      // Null explicitly means historical data has no recorded model.
+      const model = modelId === null
+        ? { name: 'Không rõ model', provider: 'AI', iconType: 'openai' }
+        : resolveModelMeta(modelId || currentSelectedModel);
       const progId = 'prog_' + Math.random().toString(36).substring(2, 9);
       const respId = 'resp_' + Math.random().toString(36).substring(2, 9);
       window._aiResponses[respId] = '';
@@ -11995,12 +12133,12 @@
         const thoughtBodyEl = container._thoughtElement.querySelector('.thought-body');
         if (thoughtBodyEl) thoughtBodyEl.textContent = thinkingPart.trim();
 
-        const parsedAnswer = answerPart.trim() ? marked.parse(answerPart) : '';
+        const parsedAnswer = answerPart.trim() ? parseChatMarkdown(answerPart) : '';
         const cursor = (isGenerating && !container.isHistorical && parsedAnswer) ? '<span class="streaming-cursor ml-1"></span>' : '';
         container.activeTextContainer.innerHTML = parsedAnswer + cursor;
       } else {
         const cursor = isGenerating && !container.isHistorical ? '<span class="streaming-cursor ml-1"></span>' : '';
-        container.activeTextContainer.innerHTML = hasAiProcessText(raw) ? marked.parse(raw) + cursor : '';
+        container.activeTextContainer.innerHTML = hasAiProcessText(raw) ? parseChatMarkdown(raw) + cursor : '';
       }
 
       if (!container.isHistorical) notifyNewMessageArrived();
@@ -12346,12 +12484,9 @@
         friendlyTool = 'Tra cứu / Tìm kiếm';
       }
 
-      appendTerminalLog('tool', `[${friendlyTool}] ${displayParam}`);
+      if (!container.isHistorical) appendTerminalLog('tool', `[${friendlyTool}] ${displayParam}`);
 
-      const argsFormatted = typeof args === 'object' ? JSON.stringify(args, null, 2) : String(args);
       const outputText = output !== null && output !== undefined ? String(output) : '';
-      const formattedOut = formatToolOutputForDisplay(outputText);
-
       const headerClass = usePlainHeader
         ? 'py-1 flex items-center justify-between cursor-pointer select-none opacity-90 hover:opacity-100 transition-opacity'
         : 'px-3.5 py-2.5 flex items-center justify-between cursor-pointer select-none transition-colors hover:bg-[var(--bg-hover)]';
@@ -12401,6 +12536,34 @@
         <div id="body_${cardId}" class="${bodyClass}"
              style="border-color: var(--tool-border); color: var(--text-sub); background: var(--bg-surface);">
           
+
+        </div>
+      `;
+
+      const processBody = ensureAiProcessGroup(container);
+      if (processBody) {
+        processBody.appendChild(card);
+      } else {
+        container.contentBody.appendChild(card);
+      }
+      container._toolCount = (container._toolCount || 0) + 1;
+      updateAiProcessGroupSummary(container);
+      if (!container.isHistorical) notifyNewMessageArrived();
+
+      card._cardData = {
+        cardId,
+        toolName,
+        isFileEdit,
+        args,
+        output: outputText
+      };
+
+      card._hydrateBody = () => {
+        const body = card.querySelector('#body_' + cardId);
+        if (!body) return;
+        const argsFormatted = typeof args === 'object' ? JSON.stringify(args, null, 2) : String(args);
+        const formattedOut = formatToolOutputForDisplay(card._cardData.output);
+        body.innerHTML = `
           <!-- Read tools only show their result; other tools keep arguments. -->
           <div class="space-y-1 ${/^(?:.*(?:__|:))?(?:read|read_file|cat|view)$/.test(rawName) ? 'hidden' : ''}">
             <div class="flex items-center justify-between text-[10px] uppercase font-bold tracking-wider text-zinc-500">
@@ -12435,29 +12598,17 @@
                  style="background: #09090b; border-color: var(--border-subtle); color: ${isError ? '#f87171' : '#e4e4e7'};">${escapeHtml(formattedOut.text || (isRunning ? 'Đang chờ tác vụ hoàn thành và trả về kết quả...' : '(Không có kết quả văn bản trả về)'))}</pre>
           </div>
 
-        </div>
-      `;
-
-      const processBody = ensureAiProcessGroup(container);
-      if (processBody) {
-        processBody.appendChild(card);
-      } else {
-        container.contentBody.appendChild(card);
-      }
-      container._toolCount = (container._toolCount || 0) + 1;
-      updateAiProcessGroupSummary(container);
-      if (!container.isHistorical) notifyNewMessageArrived();
-
-      card._cardData = {
-        cardId,
-        toolName,
-        isFileEdit,
-        args,
-        output: outputText
-      };
-
-      if (!isRunning) {
+        `;
+        if (card._historySource) {
+          const expand = card.querySelector('#expandOutBtn_' + cardId);
+          if (expand) expand.classList.remove('hidden');
+        }
+        card._hydrateBody = null;
         renderToolCardFileChanges(card, isError);
+      };
+      if (!container.isHistorical) {
+        card._hydrateBody();
+        if (!isRunning) renderToolCardFileChanges(card, isError);
       }
 
       return card;
@@ -12561,18 +12712,38 @@
       renderToolCardFileChanges(card, isError, true);
     }
 
-    function expandToolCardOutput(cardId, btn) {
+    async function expandToolCardOutput(cardId, btn) {
       const card = document.getElementById(cardId);
       const outPre = document.getElementById('outputPre_' + cardId);
+      if (card?._historySource) {
+        if (card._outputLoading) return;
+        card._outputLoading = true;
+        if (btn) btn.disabled = true;
+        try {
+          const ref = card._historySource;
+          const res = await fetch('/api/session/tool-output?id=' + encodeURIComponent(ref.sessionId) + '&messageId=' + encodeURIComponent(ref.messageId) + '&blockIndex=' + ref.blockIndex);
+          const data = await res.json();
+          if (!res.ok || data.error) throw new Error(data.error || 'Output request failed');
+          card._cardData.output = data.output;
+          card._historySource = null;
+        } catch (err) {
+          if (btn) btn.textContent = 'Thử lại';
+          return;
+        } finally { card._outputLoading = false; if (btn) btn.disabled = false; }
+      }
       if (outPre && card && card._cardData && card._cardData.output) {
         outPre.textContent = card._cardData.output;
       }
       if (btn) btn.classList.add('hidden');
     }
 
-    function copyOutputFromCard(cardId, btn) {
+    async function copyOutputFromCard(cardId, btn) {
       const card = document.getElementById(cardId);
       const outPre = document.getElementById('outputPre_' + cardId);
+      if (card?._historySource) {
+        await expandToolCardOutput(cardId);
+        if (card._historySource) return;
+      }
       const fullText = (card && card._cardData && card._cardData.output) ? card._cardData.output : (outPre ? outPre.textContent : '');
       if (!fullText) return;
       copyTextToClipboard(fullText, btn);
@@ -12603,6 +12774,8 @@
 
     function toggleCard(id) {
       soundEffects.playClick();
+      const card = document.getElementById(id);
+      if (card?._hydrateBody) card._hydrateBody();
       const body = document.getElementById('body_' + id);
       const chevron = document.getElementById('chevron_' + id);
       if (body) body.classList.toggle('hidden');

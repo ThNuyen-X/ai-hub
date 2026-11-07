@@ -2,6 +2,7 @@
 // AI AGENT HUB - PRO SERVER (MINIMALIST & FAST)
 // ========================================================
 const http = require("node:http");
+const { readHistoryPage, historyOutput } = require("./session-history.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawn, execSync, execFile } = require("node:child_process");
@@ -860,7 +861,7 @@ function findStoredSession(sessionId) {
   }
 }
 
-function getSessionDetail(sessionId, skipCliFallback = false) {
+function getSessionDetail(sessionId, skipCliFallback = false, historyOptions = null) {
   const dbPath = path.join(process.env.APPDATA || "", "Block", "goose", "data", "sessions", "sessions.db");
   if (fs.existsSync(dbPath)) {
     let db;
@@ -877,7 +878,8 @@ function getSessionDetail(sessionId, skipCliFallback = false) {
         } catch {}
       }
       if (row && row.id) {
-        const msgRows = db.prepare(`SELECT message_id, role, created_timestamp, content_json, metadata_json
+        const page = historyOptions ? readHistoryPage(db, row.id, historyOptions) : null;
+        const msgRows = page ? [] : db.prepare(`SELECT message_id, role, created_timestamp, content_json, metadata_json
           FROM messages WHERE session_id = ? ORDER BY id ASC`).all(row.id);
         const conversation = msgRows.map(r => {
           let content = [];
@@ -901,8 +903,9 @@ function getSessionDetail(sessionId, skipCliFallback = false) {
           created_at: row.created_at,
           updated_at: row.updated_at,
           model: extractSessionModel(rowModelConfigJson, row.id, row.name),
-          conversation,
-          message_count: conversation.length
+          conversation: page ? page.conversation : conversation,
+          ...(page ? { historyPage: page.historyPage } : {}),
+          message_count: page ? undefined : conversation.length
         };
       }
       if (skipCliFallback) return { conversation: [] };
@@ -1230,6 +1233,31 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Retrieve a single original output on explicit expansion; never modify stored history.
+  if (req.method === "GET" && pathname === "/api/session/tool-output") {
+    const id = urlObj.searchParams.get("id");
+    const messageId = urlObj.searchParams.get("messageId");
+    const index = Number(urlObj.searchParams.get("blockIndex"));
+    let db;
+    try {
+      if (!id || !messageId || !Number.isSafeInteger(index) || index < 0) throw new Error("Invalid output reference");
+      db = new DatabaseSync(path.join(process.env.APPDATA || "", "Block", "goose", "data", "sessions", "sessions.db"), { readOnly: true });
+      const row = db.prepare("SELECT content_json FROM messages WHERE session_id = ? AND message_id = ? LIMIT 1").get(id, messageId);
+      const block = row && JSON.parse(row.content_json)[index];
+      if (!block || block.type !== "toolResponse") {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Output not found" }));
+      } else {
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+        res.end(JSON.stringify({ output: historyOutput(block) }));
+      }
+    } catch (err) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Unable to read tool output" }));
+    } finally { if (db) db.close(); }
+    return;
+  }
+
   // API: Chi tiet session cu
   if (req.method === "GET" && pathname === "/api/session") {
     const id = urlObj.searchParams.get("id");
@@ -1240,7 +1268,8 @@ const server = http.createServer((req, res) => {
     }
     const runningCtx = getRunningSession(id);
     const isRunning = !!(runningCtx && !runningCtx.isFinished);
-    const detail = getSessionDetail(id, isRunning) || {};
+    const historyOptions = urlObj.searchParams.has("limit") ? { limit: urlObj.searchParams.get("limit"), before: urlObj.searchParams.get("before") } : null;
+    const detail = getSessionDetail(id, isRunning, historyOptions) || {};
     detail.isRunning = isRunning;
     if (!detail.model) {
       const fallbackModel = runningCtx?.info?.model || extractSessionModel(null, id, detail.name);

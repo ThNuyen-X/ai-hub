@@ -16,7 +16,7 @@ assert.match(html, /@container\s*\(max-width:\s*480px\)\s*\{[\s\S]*?\.browser-to
 assert.match(html, /@container\s*\(max-width:\s*430px\)\s*\{[\s\S]*?\.browser-meta-target\s*\{\s*flex-basis:\s*100%;/);
 
 const start = html.indexOf('    function buildCompactFileStatusHtml(');
-const end = html.indexOf('    function expandToolCardOutput(', start);
+const end = html.indexOf('    async function expandToolCardOutput(', start);
 const actStart = html.indexOf('    function updateBrowserActivity(');
 const actEnd = html.indexOf('    // EVENT PROCESSING LOGIC', actStart);
 assert.ok(start > 0 && end > start && actStart > 0 && actEnd > actStart);

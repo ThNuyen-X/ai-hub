@@ -16,4 +16,31 @@ assert.ok(!footer[1].includes('id="workspaceTree"'), 'Workspace navigation stays
 for (const script of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)) {
   new vm.Script(script[1]);
 }
-console.log('Sidebar footer disclosure and inline syntax passed');
+const start = html.indexOf('    function initSidebarFooterState(');
+const end = html.indexOf('\n    initSidebarFooterState();', start);
+assert.ok(start >= 0 && end > start);
+const saved = new Map();
+function mount(storage = {
+  getItem: key => saved.get(key) ?? null,
+  setItem: (key, value) => saved.set(key, value)
+}) {
+  const listeners = {};
+  const footer = { open: true, addEventListener: (type, fn) => { listeners[type] = fn; } };
+  const context = vm.createContext({ document: { getElementById: () => footer }, localStorage: storage });
+  vm.runInContext(html.slice(start, end), context);
+  context.initSidebarFooterState();
+  return { footer, toggle: () => listeners.toggle() };
+}
+let view = mount();
+assert.equal(view.footer.open, true, 'First visit defaults to expanded');
+view.footer.open = false;
+view.toggle();
+view = mount();
+assert.equal(view.footer.open, false, 'Collapsed state survives reload');
+view.footer.open = true;
+view.toggle();
+assert.equal(mount().footer.open, true, 'Expanded state survives reload');
+view = mount({ getItem() { throw Error('blocked'); }, setItem() { throw Error('blocked'); } });
+assert.equal(view.footer.open, true);
+assert.doesNotThrow(() => view.toggle());
+console.log('Sidebar footer disclosure, persisted reload state and inline syntax passed');

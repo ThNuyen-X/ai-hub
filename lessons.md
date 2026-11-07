@@ -186,3 +186,16 @@
 - [AI Translation & Systemd Limits]: Validate CJK/safety fallbacks per chunk instead of discarding whole multi-chunk translations; bind systemd maintenance units to a fixed non-root app user and inspect `/run/systemd/system.control/` runtime drop-ins when `MemoryMax` diverges.
 - [Auth Success Handler Audit]: Treat missing `SavedRequest` as a valid default-redirect login rather than authentication failure; render configured regex service patterns as escaped text instead of URI host parsing.
 - [Responsive Tool & Browser Cards]: Never give a short label `flex-shrink:1; overflow-wrap:anywhere` beside a long `truncate` JSON sibling (flex-basis crushes the label into a vertical column); keep action labels `shrink-0 whitespace-nowrap`, summarize Chrome args cleanly, and use `container-type: inline-size` (`@container`) so split-screen desktop panes adapt like mobile.
+- [2026-11-07] CAS 7.1 JpaBeans: pool.timeout-millis is validationTimeout, maximum-lifetime controls maxLifetime. Verify dependency source before tuning; retain LDAP template auto-config when only disabling repository discovery.
+
+- [Heavy session history]: Page SQLite rows by stable message id; send tool-output previews with on-demand original retrieval, and hydrate collapsed card bodies only on expansion. Guard async history work by view version to avoid cross-session UI updates.
+- [2026-11-07] Next/font Google CSS parser can fail on extensionless font URLs; vendor full licensed fonts via next/font/local, not overlapping subset sources with identical weight. Re-run build before typecheck to regenerate stale .next/types.
+
+- [Chat Markdown] Escape raw HTML tokens before inserting model/tool summaries into UI templates; unmatched JSX/HTML can close accordion wrappers. Preserve custom code/link renderers and test collapsed DOM containment.
+- [2026-11-07] Startup timing: repeat identical runtime/options before diagnosing a regression; record profiled starts separately. JFR thresholded socket samples are not total network wait, and classpath I/O samples do not prove antivirus causation.
+
+- [Session routing] Disable global auto-reconnect before initial workspace/API loading: it can race URL restoration and replace the requested route with another running session. Reconnect only the explicitly selected session.
+
+- [History model labels] Render assistant history from metadata.inference.requestedModel, never currentSelectedModel; keep differing models separate and show unknown when provenance is missing.
+- [TTS Reader Chapter Navigation]: Continuous audio playback across chapters must switch audio session with switchChapter() without destroying HTMLAudioElement to preserve mobile autoplay permissions; provide scrollIntoView center focus.
+- [Session history isolation] New-chat transitions must abort history requests, clear pagination/conversation caches, and version-guard async load-more continuations to prevent previous-session messages leaking into a new view.

@@ -2120,7 +2120,13 @@
       }
     }
 
+    let scheduleStatusVersion = 0;
+    let countdownRequestPending = false;
+
     async function setCountdownTimer(minutes, actionOverride) {
+      if (countdownRequestPending) return false;
+      countdownRequestPending = true;
+      scheduleStatusVersion += 1;
       const action = actionOverride || document.getElementById("custom-countdown-action")?.value || "shutdown";
       try {
         const res = await fetch("/api/schedule/countdown", {
@@ -2133,21 +2139,27 @@
           })
         });
         const d = await res.json();
-        showToast(d.message || "Đã cập nhật hẹn giờ!");
+        if (!res.ok || !d.ok) throw new Error(d.error || "Khong the dat lich hen.");
         applyScheduleStatusToUi(d);
+        document.getElementById("countdown-active-box")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        showToast(d.message || "Đã cập nhật hẹn giờ!");
+        return true;
       } catch (e) {
         showToast("Lỗi: " + e.message);
+        return false;
+      } finally {
+        scheduleStatusVersion += 1;
+        countdownRequestPending = false;
       }
     }
 
-    function startCustomCountdown() {
+    async function startCustomCountdown() {
       const inp = document.getElementById("custom-countdown-min");
       const min = Number(inp?.value);
       if (!min || min <= 0) {
         return showToast("Vui lòng nhập số phút hẹn giờ hợp lệ!");
       }
-      setCountdownTimer(min);
-      inp.value = "";
+      if (await setCountdownTimer(min)) inp.value = "";
     }
 
     async function snoozeUptimeAlert(minutes = 60) {
@@ -2267,6 +2279,7 @@
     let loopId = null;
 
     async function pullStatus() {
+      const statusVersion = scheduleStatusVersion;
       try {
         const res = await fetch("/api/status?t=" + Date.now());
         if (!res.ok) return;
@@ -2282,7 +2295,8 @@
           document.getElementById("ram-box").innerText = `RAM ${d.memory.percent}%`;
         }
 
-        applyScheduleStatusToUi(d);
+        // A poll started before a schedule change must not hide the new countdown.
+        if (!countdownRequestPending && statusVersion === scheduleStatusVersion) applyScheduleStatusToUi(d);
 
         const isRunning = Boolean(d.aiHub && d.aiHub.running);
         const tag = document.getElementById("hub-status-tag");

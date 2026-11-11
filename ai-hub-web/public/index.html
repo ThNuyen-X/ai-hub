@@ -10972,6 +10972,8 @@
     }
 
     function buildHistoryItemsFromConversation(conversation) {
+      const boundaryQuestion = conversation?.[0]?.historyQuestion;
+      if (boundaryQuestion) conversation = [boundaryQuestion, ...conversation];
       const items = [];
       const toolResponsesMap = new Map();
 
@@ -11162,8 +11164,6 @@
       const answerBody = row.querySelector('.ai-content-body');
       if (answerBody) {
         label.classList.add('turn-duration-footer');
-      const boundaryQuestion = conversation?.[0]?.historyQuestion;
-      if (boundaryQuestion) conversation = [boundaryQuestion, ...conversation];
         answerBody.parentElement.appendChild(label);
       } else {
         row.firstElementChild?.appendChild(label);
@@ -11331,6 +11331,7 @@
         if (version !== sessionViewVersion) return false;
         if (!res.ok || data.error) throw new Error(data.error || 'History request failed');
         const previousCount = currentSessionHistoryItems.length;
+        const boundaryCount = sessionHistoryConversation[0]?.historyQuestion ? Math.min(2, previousCount) : 1;
         sessionHistoryPage = data.historyPage || null;
         sessionHistoryConversation = (data.conversation || []).concat(sessionHistoryConversation);
         const rebuilt = buildHistoryItemsFromConversation(sessionHistoryConversation);
@@ -11561,7 +11562,6 @@
           reconnectRunningSession(sessionId, data.activeSessionInfo, sessionTitle, runningTurnState?.runningItem);
         }
 
-        const boundaryCount = sessionHistoryConversation[0]?.historyQuestion ? Math.min(2, previousCount) : 1;
         renderHistoryLazyBanner();
         attachHistoryScrollListener();
         syncComposerOverlaySpace();

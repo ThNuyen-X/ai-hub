@@ -199,3 +199,5 @@
 - [History model labels] Render assistant history from metadata.inference.requestedModel, never currentSelectedModel; keep differing models separate and show unknown when provenance is missing.
 - [TTS Reader Chapter Navigation]: Continuous audio playback across chapters must switch audio session with switchChapter() without destroying HTMLAudioElement to preserve mobile autoplay permissions; provide scrollIntoView center focus.
 - [Session history isolation] New-chat transitions must abort history requests, clear pagination/conversation caches, and version-guard async load-more continuations to prevent previous-session messages leaking into a new view.
+
+- [Paginated question context / scratch isolation] Tool-response rows can push the actual user question outside a 60-row page; attach the preceding visible question as boundary metadata without changing pagination cursors. Use owned workspace/session/turn scratch directories and clean only after child close; never sweep untracked project files.

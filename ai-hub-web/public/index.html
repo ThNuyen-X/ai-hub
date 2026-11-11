@@ -11162,6 +11162,8 @@
       const answerBody = row.querySelector('.ai-content-body');
       if (answerBody) {
         label.classList.add('turn-duration-footer');
+      const boundaryQuestion = conversation?.[0]?.historyQuestion;
+      if (boundaryQuestion) conversation = [boundaryQuestion, ...conversation];
         answerBody.parentElement.appendChild(label);
       } else {
         row.firstElementChild?.appendChild(label);
@@ -11335,16 +11337,16 @@
         scheduleHistoryFileChanges(buildHistoryItemsFromConversation(data.conversation || []), version);
         // Reuse already rendered items. Only the oldest boundary turn may merge.
         const delta = rebuilt.length - previousCount;
-        for (let i = 1; i < previousCount; i++) {
+        for (let i = boundaryCount; i < previousCount; i++) {
           if (rebuilt[i + delta]) rebuilt[i + delta].domRow = currentSessionHistoryItems[i]?.domRow;
         }
         if (currentHistoryRenderIndex === 0) {
           const height = chatFeed.scrollHeight;
           const top = chatFeed.scrollTop;
-          currentSessionHistoryItems[0]?.domRow?.remove();
+          for (let i = 0; i < boundaryCount; i++) currentSessionHistoryItems[i]?.domRow?.remove();
           currentSessionHistoryItems = rebuilt;
           const fragment = document.createDocumentFragment();
-          for (let i = 0; i <= delta && i < rebuilt.length; i++) {
+          for (let i = 0; i < delta + boundaryCount && i < rebuilt.length; i++) {
             renderSingleHistoryItem(rebuilt[i], fragment);
             if (i % 4 === 0) await new Promise(resolve => setTimeout(resolve, 0));
             if (version !== sessionViewVersion) return false;
@@ -11559,6 +11561,7 @@
           reconnectRunningSession(sessionId, data.activeSessionInfo, sessionTitle, runningTurnState?.runningItem);
         }
 
+        const boundaryCount = sessionHistoryConversation[0]?.historyQuestion ? Math.min(2, previousCount) : 1;
         renderHistoryLazyBanner();
         attachHistoryScrollListener();
         syncComposerOverlaySpace();
@@ -14129,7 +14132,7 @@
         const text = bar.dataset.question;
         let attempts = 0;
         while (!activeQuestion?.isConnected && attempts++ < 100) {
-          if (feedId === 'chatFeed' && currentHistoryRenderIndex > 0) loadMoreSessionHistory();
+          if (feedId === 'chatFeed' && (currentHistoryRenderIndex > 0 || sessionHistoryPage?.hasMore)) await loadMoreSessionHistory();
           else if (feedId === 'fullConvMessagesContainer' && fullConvStart > 0) {
             if (fullConvLoading) break;
             await loadFullConvBatch('older');

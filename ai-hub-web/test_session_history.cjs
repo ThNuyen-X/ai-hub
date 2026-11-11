@@ -38,6 +38,20 @@ try {
   assert.ok(JSON.stringify(page).length < 8000);
   assert.equal(historyOutput(JSON.parse(db.prepare('SELECT content_json FROM messages WHERE id=147').get().content_json)[0]), output);
   assert.equal(historyOutput({ toolResult: { value: { stdout: 'ok', stderr: 'err' } } }), 'ok\n[STDERR]: err');
+  insert.run(200, 'long-turn', 'question', 'user', 200, JSON.stringify([{ type: 'text', text: 'Original question' }]), '{"userVisible":true}');
+  for (let i = 201; i <= 380; i++) insert.run(i, 'long-turn', 'long' + i, i % 2 ? 'assistant' : 'user', i,
+    JSON.stringify(i % 2 ? [{ type: 'text', text: 'Working' }] : [{ type: 'toolResponse', output: 'done' }]), null);
+  const longPage = readHistoryPage(db, 'long-turn');
+  assert.equal(longPage.conversation.length, 60);
+  assert.equal(longPage.conversation[0].historyQuestion.id, 'question');
+  assert.equal(longPage.historyPage.before, 321);
+  const older = readHistoryPage(db, 'long-turn', { before: 321 });
+  assert.equal(older.conversation[0].historyQuestion.id, 'question');
+  const oldest = readHistoryPage(db, 'long-turn', { before: 261 });
+  assert.equal(oldest.conversation[0].historyQuestion.id, 'question');
+  const original = readHistoryPage(db, 'long-turn', { before: 201 });
+  assert.equal(original.conversation[0].id, 'question');
+  assert.equal(original.conversation[0].historyQuestion, undefined);
 } finally { db.close(); }
 const html = fs.readFileSync(__dirname + '/public/index.html', 'utf8');
 for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {

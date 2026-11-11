@@ -3,6 +3,7 @@
 // ========================================================
 const http = require("node:http");
 const { readHistoryPage, historyOutput } = require("./session-history.cjs");
+const { createTurnScratch, cleanupTurnScratch, scratchInstruction } = require('./session-scratch.cjs');
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawn, execSync, execFile } = require("node:child_process");
@@ -2224,7 +2225,18 @@ const server = http.createServer((req, res) => {
       const title = existingTitle || sessionTitle(rawPrompt);
 
       const sessionCtx = {
+      let scratch;
+      try {
+        const scratchEnv = { ...process.env };
+        applyWorkspaceEnvToProcessEnv(scratchEnv, cwd);
+        scratch = createTurnScratch(cwd, sessionId, scratchEnv);
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Cannot create agent scratch directory: ' + error.message }));
+        return;
+      }
         process: null,
+        scratch,
         sessionId,
         tempName: (!resume && sessionId.startsWith('session_')) ? sessionId : null,
         info: { model, auxiliaryModel, cwd, sessionId, prompt: rawPrompt, title, startTime: Date.now() },
@@ -2269,6 +2281,8 @@ const server = http.createServer((req, res) => {
 
       applyWorkspaceEnvToProcessEnv(env, cwd);
 
+      env.AI_HUB_SCRATCH_DIR = scratch.dir;
+      env.TEMP = env.TMP = env.TMPDIR = scratch.dir;
       // Explicitly clear inherited auxiliary settings when disabled for this turn.
       delete env.AI_HUB_AUX_MODEL;
       delete env.AI_HUB_AUX_CWD;
@@ -2277,7 +2291,7 @@ const server = http.createServer((req, res) => {
         env.AI_HUB_AUX_CWD = cwd;
       }
       const browserEnabled = browserAvailable();
-      const systemInstruction = buildSystemInstruction(cwd, model) + coordinationInstruction(auxiliaryModel)
+      const systemInstruction = buildSystemInstruction(cwd, model) + scratchInstruction(scratch.dir) + coordinationInstruction(auxiliaryModel)
         + (browserEnabled ? BROWSER_INSTRUCTION : "");
 
       const args = [
@@ -2592,6 +2606,8 @@ const server = http.createServer((req, res) => {
         broadcastHubEvent("session_turn_completed", { sessionId, tempName: sessionCtx.tempName || null, exitCode: code });
       };
       child.on("close", finalizeTurn);
+      // Wait for stdio closure before removing scratch, including stop/error paths.
+      child.once('close', () => { cleanupTurnScratch(scratch).catch(error => console.warn('[SCRATCH CLEANUP] ' + error.message)); });
       // "exit" fires even when a grandchild keeps stdio pipes open (then "close" never fires)
       child.on("exit", (code) => { setTimeout(() => finalizeTurn(code), 2000); });
 

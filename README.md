@@ -53,6 +53,7 @@ set "AI_HUB_HOST=127.0.0.1"
 set "AI_HUB_DEFAULT_WORKSPACE="
 rem Optional semicolon-separated directories searched by the folder matcher.
 set "AI_HUB_SEARCH_ROOTS="
+set "AI_HUB_SCRATCH_ROOT=%LOCALAPPDATA%\ai-hub\scratch"
 set "OPENAI_HOST=http://%NINE_ROUTER_IP%:%NINE_ROUTER_PORT%"
 set "OPENAI_BASE_URL=%OPENAI_HOST%/v1"
 set "OPENAI_API_BASE=%OPENAI_BASE_URL%"
@@ -73,8 +74,15 @@ exit /b
 | `AI_HUB_DEFAULT_WORKSPACE` | Optional fallback workspace | Current directory |
 | `AI_HUB_SEARCH_ROOTS` | Optional semicolon-separated folder search roots | Saved workspaces, home directory and current directory |
 | `AI_HUB_TAILSCALE_IP` | Display fallback when address discovery fails | `127.0.0.1` |
+| `AI_HUB_SCRATCH_ROOT` | Root for disposable web-agent files, grouped by workspace/session/turn | `%LOCALAPPDATA%\ai-hub\scratch` |
 
 The private launcher also exports compatible OpenAI endpoint variables for child processes. `start-web.bat --export-env` loads configuration without starting the web server.
+
+## Disposable Agent Files
+
+Web agent runs receive `AI_HUB_SCRATCH_DIR` and `TEMP`/`TMP`/`TMPDIR` pointing to a unique directory under `AI_HUB_SCRATCH_ROOT/<workspace-key>/<session-key>/<turn-id>`. A new session uses its temporary session key until a later resumed turn has its database ID. Workspace configuration can override `AI_HUB_SCRATCH_ROOT`. The agent is instructed to store disposable scripts, OCR output, crops and screenshots there instead of the project tree.
+
+Only the owned turn directory is removed, asynchronously after the agent process closes (including stop or spawn-error paths). Concurrent turns are isolated. Final deliverables must be saved outside scratch before completion. Abrupt server/machine termination can leave scratch behind; AI Hub does not sweep arbitrary directories or delete existing untracked project files. CLI menus import the root setting, but automatic per-turn management applies to web runs only.
 
 ## Private Data And Publishing
 

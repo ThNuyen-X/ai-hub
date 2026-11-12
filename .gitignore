@@ -14,6 +14,11 @@
 *.local.cjs
 *.local.py
 
+# Agent scratch root from literal Windows environment-variable paths.
+/%LOCALAPPDATA%/
+# Local session diagnostic helper; not part of the application.
+/ai-hub-web/monitor-session-diagnostic.cjs
+
 # Local workspace state, conversations, logs and backups.
 **/workspaces.json
 /ai-remote/remote-config.json

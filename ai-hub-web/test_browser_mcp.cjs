@@ -38,6 +38,34 @@ const { BROWSER_INSTRUCTION, browserAvailable } = require('./browser-mcp.cjs');
   assert.deepEqual(results.map(x => x.content[0].text), ['first', 'second', 'third']);
   assert.equal(starts, 1);
   await assert.rejects(hub.handle({ method: 'unsupported' }), /Unsupported/);
+
+  const dev = require('./browser-dev.cjs');
+  const originalEnsure = dev.ensureDevChrome;
+  let browserStarts = 0;
+  const lazyHub = new BrowserHub();
+  // Fake only the upstream process; keep the production browser-start branch enabled.
+  lazyHub.start = hub.start;
+  lazyHub.triggerDoraemon = async () => { assert.ok(browserStarts > 0); };
+  dev.ensureDevChrome = async () => { browserStarts++; };
+  try {
+    await Promise.all([lazyHub.handle({ method: 'initialize', params: {} }), lazyHub.handle({ method: 'initialize', params: {} })]);
+    await lazyHub.handle({ method: 'tools/list' });
+    await lazyHub.handle({ method: 'ping' });
+    assert.equal(browserStarts, 0, 'handshake and discovery must not open Chrome');
+    const beforeCalls = maximum;
+    const lazyResults = await Promise.all(['lazy-first', 'lazy-second'].map(name => lazyHub.handle({ method: 'tools/call', params: { name } })));
+    assert.equal(browserStarts, 2, 'each action checks the endpoint inside the serialized queue');
+    assert.equal(maximum, beforeCalls, 'lazy startup preserves serialization');
+    assert.deepEqual(lazyResults.map(x => x.content[0].text), ['lazy-first', 'lazy-second']);
+
+    dev.ensureDevChrome = async () => { throw new Error('Chrome unavailable'); };
+    await assert.rejects(lazyHub.handle({ method: 'tools/call', params: { name: 'blocked' } }), /Chrome unavailable/);
+    dev.ensureDevChrome = async () => { browserStarts++; };
+    const recovered = await lazyHub.handle({ method: 'tools/call', params: { name: 'recovered' } });
+    assert.equal(recovered.content[0].text, 'recovered', 'failed startup must not poison the queue');
+  } finally {
+    dev.ensureDevChrome = originalEnsure;
+  }
   const broker = fs.readFileSync(path.join(__dirname, 'browser-broker.cjs'), 'utf8');
   assert.ok(broker.includes("'--autoConnect'"));
   assert.ok(!broker.includes('--remote-debugging-port'));

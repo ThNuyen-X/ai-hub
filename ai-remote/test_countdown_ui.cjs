@@ -30,5 +30,21 @@ const source = html.slice(html.indexOf('    let scheduleStatusVersion ='), html.
   assert.equal(input.value, '30', 'retain input on error');
   assert.equal(events.filter(e => e === 'render').length, 1);
   assert.ok(html.includes('!countdownRequestPending && statusVersion === scheduleStatusVersion'));
-  console.log('PASS: immediate countdown render, duplicate clicks, error handling, stale poll guard');
+  const actionSource = html.slice(html.indexOf('    async function systemAction(a)'), html.indexOf('    function confirmSystemAction(type)'));
+  let powerRequests = 0;
+  let confirmed = false;
+  const powerContext = vm.createContext({
+    confirm: () => confirmed,
+    fetch: async () => { powerRequests++; return { json: async () => ({ ok: true }) }; },
+    showToast() {}
+  });
+  vm.runInContext(actionSource, powerContext);
+  await powerContext.systemAction('lock');
+  await powerContext.systemAction('screen-off');
+  assert.equal(powerRequests, 0, 'reject accidental immediate lock and screen-off');
+  confirmed = true;
+  await powerContext.systemAction('lock');
+  await powerContext.systemAction('screen-off');
+  assert.equal(powerRequests, 2, 'explicit confirmation permits immediate controls');
+  console.log('PASS: countdown render, duplicate clicks, errors, stale polls, immediate power confirmation');
 })().catch(err => { console.error(err); process.exitCode = 1; });

@@ -17,7 +17,10 @@
   - **Quản lý vòng đời Stream (SSE / WebSocket)**: Khi chuyển phiên, dừng tác vụ hoặc đóng tab, luôn đóng kết nối cũ (`es.close()`), xóa `.streaming-cursor` trong phạm vi dòng tin nhắn đó, và cập nhật thẻ công cụ đang chạy về trạng thái kết thúc rõ ràng.
   - **Hiển thị Tiến trình Trực quan**: Thanh trạng thái hoạt động (`.live-progress-container`) phải luôn nằm **dưới cùng** của nội dung phản hồi (`.ai-content-body`) và phản ánh đúng giai đoạn (`Đang suy luận...`, `Đang thực thi: ...`, `Đang xử lý kết quả & tiếp tục...`, `Đang phản hồi...`), không báo `Đã xong tác vụ` khi lượt trả lời của Agent chưa kết thúc.
 
-## 2. Bài Học Thực Chiến (Lessons Learned)
+## 2. 
+- **[Entity / Story Merge & Database Schema]**: Khi gop cac ban ghi lon (nhu gop truyen), luon doi chieu schema thuc te cua cac bang lien ket (reading_progress, reading_history, comments, crawler) de tranh goi sai ten cot va sai UNIQUE constraint trong UPSERT; luon re-map khoa ngoai cap con (chapter_id trong comments) truoc khi xoa ban ghi nguon de tranh kich hoat ON DELETE CASCADE lam mat binh luan cua ban doc.
+- **[Story Chapter Matching & Deduplication]**: Khong dung do dai ky tu de xac dinh chuong trung lap (cac chuong truyen co do dai tuong tu nhau gay false-positive); crawler thuong lam lech so chuong do chuong thong bao (offset); phai trich xuat so chuong tu tieu de va so khop theo thu tu uu tien toan cuc (Multi-pass: Hash SHA-256 -> Title Number + Content Sample -> Clean Title -> Fallback DB Number); luon phan bo assignedNumber an toan chong vi pham UNIQUE constraint khi chuyen giao chuong moi sang truyen dich.
+## Bài Học Thực Chiến (Lessons Learned)
 - **[Windows / Sửa File]**: Nhiều file mã nguồn trên Windows dùng chuẩn xuống dòng `CRLF (\r\n)`. Nếu công cụ `edit` báo không khớp chuỗi dù nội dung đúng, hãy kiểm tra hoặc xử lý đồng nhất `CRLF` thay vì thử lại mù quáng.
 - **[Windows / cmd.exe Inline Script]**: Trong `cmd.exe`, ký tự `\"` không thoát trạng thái dấu ngoặc kép của shell, khiến các toán tử `&` hoặc `&&` bên trong `node -e "..."` dễ bị cắt lệnh. Tránh dùng `\"` kết hợp `&`/`&&` trên cùng dòng `cmd.exe` (ưu tiên tách module `.cjs` hoặc dùng `\x22`).
 - **[AI Hub / Đa Phiên & Chuyển Phiên]**: Khi chuyển qua lại giữa các phiên đang chạy (`activeSessions`), cần gắn cờ `running: true` từ bộ nhớ và kết nối lại SSE (`attachActiveSessionStream`) thay vì gửi lại prompt gây nhân đôi câu hỏi của người dùng.
@@ -200,4 +203,46 @@
 - [TTS Reader Chapter Navigation]: Continuous audio playback across chapters must switch audio session with switchChapter() without destroying HTMLAudioElement to preserve mobile autoplay permissions; provide scrollIntoView center focus.
 - [Session history isolation] New-chat transitions must abort history requests, clear pagination/conversation caches, and version-guard async load-more continuations to prevent previous-session messages leaking into a new view.
 
+- SSE recovery: never treat failed status fetch or EventSource.CLOSED as task completion; retry with last event ID, coalesce visibility/online checks, and clean up recovery listeners.
+- [Pixiv AI Translation & TTS Segment Tracking]: Always include explicit translation instructions inside `contents` (not only `system_instruction`, which LLM gateways may drop), avoid generic story dialogue (`"tôi không thể"`) in AI refusal regexes, validate translated chunk length/line ratios, expand source `(省略...)` notes into narrative transitions, and track `curSegment = { start, end }` in TTS so word-sync mutations of `cur.idx` never cause `advanceNext()` to skip paragraphs.
+
+
+- [Unread sync] Visible session completions and reconnect unread_sync must acknowledge mark-read on the server, not only clear localStorage; otherwise switching sessions restores stale unread badges.
+- **[PostgreSQL Correlated Subqueries & InitPlan]**: Tránh dùng nhiều correlated subqueries lặp trên mỗi dòng hoặc `EXISTS (SELECT 1 FROM genres gn WHERE ... AND gn.name = ANY(s.genres))` (khiến PG quét bảng `genres` trên từng dòng `stories`); hãy gộp thành 1 `LEFT JOIN LATERAL` đi kèm covering partial index + `VACUUM ANALYZE` để đạt `Heap Fetches: 0`, và dùng toán tử giao mảng `s.genres && ARRAY(SELECT gn.name::text FROM genres ...)` để PG thực thi `InitPlan` chỉ 1 lần duy nhất cho toàn truy vấn.
+
+- [Browser MCP] Keep initialize/tools-list browser-free; ensure Chrome only inside queued tools/call before visual feedback. Version the broker pipe when replacing persistent daemon behavior.
+
+- [Sidebar persistence] Restore collapsed sidebar/disclosure state immediately beside its markup, before main-app initialization; keep tests compatible with multiple script blocks and nested details.
+
+- [2026-11-09] Antigravity timeout: inspect live fetchAvailableModels quota per connection; active OAuth does not imply available model quota. Mixed account quotas do not prove pool exhaustion or explain timeout without selected-connection/retry evidence.
+
+- [2026-11-09] Argon diagnosis: identical upstream requests succeeded on healthy accounts (5-7s), timed out on priority account (180s), and returned 429 QUOTA_EXHAUSTED on another. 9Router defaults to fill-first and quota cache skips only <=0; near-zero quota and silent upstream stalls can trap routing before healthy-account fallback.
+
+- [2026-11-09] Argon restored without restart using authenticated 9Router provider PUT API to prioritize verified healthy connections; preserve original priorities in runtime backup. Validate both streaming text (200, 5-6s) and tool_calls (200, 5.6s); priority change is mitigation, not automatic timeout/failover repair.
+
+- [K8s/KHO 504] Distinguish gateway 504 from upstream ConnectTimeoutException using manual request stack traces; kubectl logs --tail=-1 only returns retained current logs, not rotated lifetime logs. Record RBAC limits and compare Kubernetes ICT timestamps with Java UTC timestamps.
+
+- [NLNB periods] bc_nlnb provides both YYYY-MM and YYYY-Qn. Persist by year+quarter+metric; prefer explicit quarterly reports over monthly aggregation to avoid double counting and never update a quarter using year-only lookup.
+- [Chat Compaction Question Header]: Khi lịch sử chat có Conversation Summary, luôn trích xuất câu hỏi từ replay prompt hoặc User Intent để gán cho internal/subagent cards, hiển thị header "Đoạn chat của câu hỏi:" trên thẻ và tự động chèn user message ở trên nếu tin nhắn gốc bị phân trang cắt mất.
+- Menu MFA: update GlobalWebBindingAdvice allowlists with new form fields; consume OTP atomically in Redis and send AJAX challenges to the menu landing URL, never replay POST.
+- MariaDB menu MFA: UNION of menu.URL and permissions.API_PATH can fail with error 1271 on mixed collations even with zero result rows; select separate columns through LEFT JOIN and deduplicate routes in Java.
+- SMTP: leave optional TLS env defaults blank and resolve by port in Java (465 implicit SSL, 587 required STARTTLS); use smtp Transport so mail.smtp TLS and certificate-validation properties apply consistently.
+- [SSO Idle Timeout]: Exclude all background AJAX polling (/notifications, /notifications/count, X-Background-Poll: 1) from resetting SESSION_LAST_ACTIVITY_TIME in SsoSessionValidationFilter, and keep a dedicated client deadlineTimer active even when document.hidden is true.
+
 - [Paginated question context / scratch isolation] Tool-response rows can push the actual user question outside a 60-row page; attach the preceding visible question as boundary metadata without changing pagination cursors. Use owned workspace/session/turn scratch directories and clean only after child close; never sweep untracked project files.
+- **[jsTree / Programmatic Select & Dropdown]**: Khi khởi tạo hoặc sync cây jsTree có pre-selection bằng code (tree.check_node / tree.uncheck_all), phải dùng cờ chặn (syncing = true/false) để bỏ qua listener check_node / uncheck_node, tránh việc event listener đóng dropdown hoặc ghi đè dữ liệu do nhầm tưởng người dùng thao tác.
+- [Hibernate StaleStateException & CreationTimestamp]: Luon khai bao @CreationTimestamp/@UpdateTimestamp tren cac entity datetime(6) tranh Hibernate gui explicit NULL; voi cac bang co UK (ngay, ma_linh_vuc, loai_danh_gia), truy van JPA bat buoc loc dung loai_danh_gia va ngay IS NULL de tranh xung dot entity gay StaleStateException.
+- [TTS / Mobile Audio Interruption]: Đặt navigator.audioSession.type="playback" (kích hoạt ducking tin nhắn/chuông) + theo dõi AudioContext.state === "interrupted" (phát hiện cuộc gọi thoại): tự động dừng ngay lập tức khi gọi điện và auto-resume sau tiếng chuông thông báo mà không làm gián đoạn câu chuyện.
+- [TTS / Chapter Switch & Continuous Audio]: Khi chuyển chương, không gọi pause() trước khi dữ liệu chương mới sẵn sàng (tránh mất Active Audio Session gây NotAllowedError chặn autoplay); không gọi sync audio trong render phase gây race condition; nạp trước chương kế từ giữa chương để chuyển mượt 0ms.
+- [TTS / Vietnamese Pronunciation Lexicon]: Microsoft Edge Neural TTS (vi-VN-HoaiMy/NamMinh) bi loi G2P voi tu van uy bo dau kieu cu tren u (nhu chuy, chuy thu bi doc tach thanh chu y, chu y thu). Chuan hoa sang dau thanh tren am chinh y (chuy, chuy thu) bang normalizeTtsPronunciation() truoc khi truyen vao TTS de phat am dung 1 am tiet lien mach ma van bao toan do dai chuoi va casing.
+
+- Overview report: keep department names intact in form values; use CSS ellipsis and content-aware wrapping for filters/cards instead of canvas truncation and fixed widths.
+- [DisplayTableTag & RowNum Pagination]: Trong custom DisplayTableTag, voi PaginatedList (backend da phan trang SQL), bien tableId_rowNum phai la rowIndex (1..pageSize tren trang hien tai) vi cac JSP da tinh STT bang ${pageIndex * pageSize + rowNum}; chi tinh globalRowNum cho source Collection (phan trang in-memory).
+
+- ProVT restart after Java changes: stop the running JAR first on Windows to release its file lock, package with JDK 21, run explicit main-based checks, verify class bytes in BOOT-INF/classes, then start and check HTTP/logs; restart alone does not deploy target/classes.
+- CAS login: Bootstrap 4 modal adds .show but legacy libstyle.css expects .in; add scoped modal/backdrop .fade.show opacity and dialog transform rules, and verify computed opacity (accessibility snapshots can include invisible dialogs).
+- Hibernate native queries returning entities must expose physical @Column labels, not camelCase property aliases; PASSWORD_HISTORY alias mismatch broke password changes and marked the transaction rollback-only.
+
+- Live terminal logs: pause polling in hidden tabs; cancel requests/timers on close or session switch; coalesce concurrent reads; use file version checks before reading a bounded tail and back off when unchanged.
+- Live log path resolution: resolve literal Join-Path $env:TEMP names against the session scratch directory, never server TEMP; follow the latest existing stage log without executing shell expressions or rerunning commands.
+- Spring Boot 3 management child-context configuration uses META-INF/spring/org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration.imports, not the legacy spring.factories entry; verify registration discovery, not only compilation.

@@ -13,7 +13,8 @@ function getDoraemonFeedback(name, args) {
   }
 }
 const mode = process.argv.includes('--sso') ? 'sso' : (process.argv.includes('--personal') ? 'personal' : 'dev');
-const basePipe = '\\\\.\\pipe\\ai-hub-browser-' + crypto.createHash('sha256').update(__dirname + (process.env.USERNAME || '')).digest('hex').slice(0, 20);
+// A new pipe namespace prevents proxies from reusing an eager-start daemon.
+const basePipe = '\\\\.\\pipe\\ai-hub-browser-lazy-v2-' + crypto.createHash('sha256').update(__dirname + (process.env.USERNAME || '')).digest('hex').slice(0, 20);
 const pipeFor = target => basePipe + (target === 'sso' ? '-sso' : '') + (target === 'personal' ? '-personal' : (target === 'dev' ? '-dev' : ''));
 const pipe = pipeFor(mode);
 const entry = path.join(process.env.LOCALAPPDATA || process.env.USERPROFILE || '.', 'ai-hub', 'browser-mcp', 'node_modules', 'chrome-devtools-mcp', 'build', 'src', 'bin', 'chrome-devtools-mcp.js');
@@ -85,9 +86,7 @@ class BrowserHub {
   }
   async initialize(params) {
     if (!this.ready) {
-      if (mode === 'dev' && !this.customStart) {
-        await require('./browser-dev.cjs').ensureDevChrome();
-      }
+      // MCP initialization and tool discovery must not open a browser.
       this.launch();
       this.ready = this.request('initialize', { ...params, capabilities: {}, clientInfo: { name: 'ai-hub-shared-browser', version: '1.0' } }).then(result => {
         this.child.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
@@ -127,6 +126,10 @@ class BrowserHub {
     const result = this.queue.then(async () => {
       if (!this.child) throw new Error('Browser MCP disconnected; initialize again');
       if (message.method === 'tools/call') {
+        // Keep startup inside the shared queue, before feedback or the real action.
+        if (mode === 'dev' && !this.customStart) {
+          await require('./browser-dev.cjs').ensureDevChrome();
+        }
         await this.triggerDoraemon(message.params).catch(() => {});
       }
       return this.request(message.method, message.params);

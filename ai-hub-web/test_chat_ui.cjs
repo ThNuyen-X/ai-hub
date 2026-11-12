@@ -881,6 +881,7 @@ const modelHelpersMatch = html.match(/const sessionModelsMap = new Map\(\);[\s\S
 assert.ok(modelsMatch && modelHelpersMatch, 'Model helpers must exist in index.html');
 const mockStorage = new Map([['ai_hub_session_model:20261102_4', 'ag/gemini-3.8-flash-high']]);
 const modelCtx = {
+  ModelLevels: require('./public/model-levels.js'),
   currentSelectedModel: 'cx/gpt-6.1-sol',
   allSessionsCache: [{ id: '20261102_4', name: 'cai-trang-chu', model: 'ag/gemini-3.8-flash-high' }],
   localStorage: {
@@ -891,12 +892,12 @@ const modelCtx = {
 };
 vm.createContext(modelCtx);
 vm.runInContext(`${modelsMatch[0]}\n${modelHelpersMatch[0]}`, modelCtx);
-assert.equal(modelCtx.normalizeModelId('ag/gemini-3.8-flash-high'), 'ag/gemini-3.8-flash');
+assert.equal(modelCtx.normalizeModelId('ag/gemini-3.8-flash-high'), 'ag/gemini-3.8-flash-high');
 assert.equal(modelCtx.normalizeModelId('ag/gemini-4-argon-high'), 'ag/gemini-4-argon-high');
-assert.equal(modelCtx.resolveModelMeta('ag/gemini-3.8-flash-high').id, 'ag/gemini-3.8-flash');
-assert.equal(modelCtx.getSessionModel('20261102_4'), 'ag/gemini-3.8-flash');
-assert.equal(mockStorage.get('ai_hub_session_model:20261102_4'), 'ag/gemini-3.8-flash');
+assert.equal(modelCtx.resolveModelMeta('ag/gemini-3.8-flash-high').id, 'ag/gemini-3.8-flash-high');
+assert.equal(modelCtx.getSessionModel('20261102_4'), 'ag/gemini-3.8-flash-high');
+assert.equal(mockStorage.get('ai_hub_session_model:20261102_4'), 'ag/gemini-3.8-flash-high');
 modelCtx.applySessionModelSelection('ag/gemini-3.8-flash-high');
-assert.equal(modelCtx.currentSelectedModel, 'ag/gemini-3.8-flash');
+assert.equal(modelCtx.currentSelectedModel, 'ag/gemini-3.8-flash-high');
 
 console.log('Chat UI: 177 regression checks passed');

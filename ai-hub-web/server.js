@@ -2,6 +2,7 @@
 // AI AGENT HUB - PRO SERVER (MINIMALIST & FAST)
 // ========================================================
 const http = require("node:http");
+const { readCommandLog } = require('./terminal-log.cjs');
 const { readHistoryPage, historyOutput } = require("./session-history.cjs");
 const { createTurnScratch, cleanupTurnScratch, scratchInstruction } = require('./session-scratch.cjs');
 const fs = require("node:fs");
@@ -279,11 +280,12 @@ function attachClientToActiveSession(res, sessionId) {
   if (ctx) attachClientToSession(res, ctx);
 }
 
-// Chuan hoa legacy model ID (chuyen ag/gemini-3.8-flash-high sang adaptive ag/gemini-3.8-flash)
+// Preserve explicit model levels, including Flash High.
 function normalizeModelId(modelId) {
-  if (modelId === "ag/gemini-3.8-flash-high") return "ag/gemini-3.8-flash";
   return modelId;
 }
+
+const { variants: modelLevelVariants } = require('./public/model-levels.js');
 
 // Cac model co san tren 9Router
 const AVAILABLE_MODELS = [
@@ -297,7 +299,7 @@ const AVAILABLE_MODELS = [
   { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini" },
   { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" },
   { id: "ag/gemini-3.1-pro-high", name: "Gemini 3.1 Pro", full: "ag/gemini-3.1-pro-high", group: "gemini", provider: "Google", tag: "Xử lý ngữ cảnh lớn 1M tokens", iconType: "gemini" }
-];
+].flatMap(modelLevelVariants);
 
 // Quan ly danh sach Workspaces
 function getSavedWorkspaces() {
@@ -1256,6 +1258,30 @@ const server = http.createServer((req, res) => {
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Unable to read tool output" }));
     } finally { if (db) db.close(); }
+    return;
+  }
+
+  // Only follow log paths declared by shell calls in this session; never accept a client file path.
+  if (req.method === 'GET' && pathname === '/api/session/terminal-log') {
+    (async () => {
+    try {
+      const ctx = getRunningSession(urlObj.searchParams.get('id'), true);
+      const command = urlObj.searchParams.get('command');
+      const event = ctx?.events?.find(e => e.event === 'tool_call' &&
+        /shell|bash|cmd/i.test(e.payload?.name || '') && e.payload?.args?.command === command);
+      const tail = event && await readCommandLog(command, ctx.scratch?.dir, urlObj.searchParams.get('version') || '');
+      if (!tail) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'No live log file available for this command' }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ ...tail, running: !ctx.isFinished }));
+      }
+    } catch {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unable to read live log file' }));
+    }
+    })();
     return;
   }
 
@@ -2224,7 +2250,6 @@ const server = http.createServer((req, res) => {
         ? getSessionsList().find(s => s.id === storedSession.id)?.name : storedSession.name);
       const title = existingTitle || sessionTitle(rawPrompt);
 
-      const sessionCtx = {
       let scratch;
       try {
         const scratchEnv = { ...process.env };
@@ -2235,8 +2260,9 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: 'Cannot create agent scratch directory: ' + error.message }));
         return;
       }
-        process: null,
+      const sessionCtx = {
         scratch,
+        process: null,
         sessionId,
         tempName: (!resume && sessionId.startsWith('session_')) ? sessionId : null,
         info: { model, auxiliaryModel, cwd, sessionId, prompt: rawPrompt, title, startTime: Date.now() },
@@ -2280,9 +2306,9 @@ const server = http.createServer((req, res) => {
       };
 
       applyWorkspaceEnvToProcessEnv(env, cwd);
-
       env.AI_HUB_SCRATCH_DIR = scratch.dir;
       env.TEMP = env.TMP = env.TMPDIR = scratch.dir;
+
       // Explicitly clear inherited auxiliary settings when disabled for this turn.
       delete env.AI_HUB_AUX_MODEL;
       delete env.AI_HUB_AUX_CWD;
@@ -2605,9 +2631,9 @@ const server = http.createServer((req, res) => {
         if (sessionCtx.tempName) unreadSessionCompletions.add(sessionCtx.tempName);
         broadcastHubEvent("session_turn_completed", { sessionId, tempName: sessionCtx.tempName || null, exitCode: code });
       };
-      child.on("close", finalizeTurn);
       // Wait for stdio closure before removing scratch, including stop/error paths.
       child.once('close', () => { cleanupTurnScratch(scratch).catch(error => console.warn('[SCRATCH CLEANUP] ' + error.message)); });
+      child.on("close", finalizeTurn);
       // "exit" fires even when a grandchild keeps stdio pipes open (then "close" never fires)
       child.on("exit", (code) => { setTimeout(() => finalizeTurn(code), 2000); });
 

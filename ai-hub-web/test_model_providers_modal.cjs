@@ -17,6 +17,8 @@ assert(html.includes('id="modelProviderModalTitle"'), 'Must have modelProviderMo
 assert(html.includes('id="modelProviderModalSubtitle"'), 'Must have modelProviderModalSubtitle');
 assert(html.includes('id="modelProviderModalIcon"'), 'Must have modelProviderModalIcon');
 assert(html.includes('id="modelProviderModalList"'), 'Must have modelProviderModalList for provider models');
+assert(html.includes('id="modelProviderTabs"'), 'Must have modelProviderTabs for quick provider switching');
+assert(html.includes('id="modelProviderModalCurrentLabel"'), 'Must have modelProviderModalCurrentLabel');
 assert(html.includes('backToModelMenu()'), 'Must have backToModelMenu() trigger');
 assert(html.includes('closeModelProviderModal()'), 'Must have closeModelProviderModal() trigger');
 
@@ -28,6 +30,7 @@ assert(providersMatch, 'MODEL_PROVIDERS array must exist in index.html');
 
 const sandbox = {
   console,
+  ModelLevels: require('./public/model-levels.js'),
   localStorage: {
     data: {},
     getItem(k) { return this.data[k] || null; },
@@ -74,6 +77,9 @@ assert.deepStrictEqual(JSON.stringify(geminiModels.map(m => m.id)), JSON.stringi
 
 // 3. Kiem tra logic JavaScript tuong tac: renderModelSelector & openModelProviderPopup
 const helperCode = `
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
   const MODEL_ICONS = {
     openai: '<svg id="mock-openai"></svg>',
     claude: '<svg id="mock-claude"></svg>',
@@ -122,7 +128,9 @@ const fakeDom = {
   modelProviderModalTitle: { innerText: '' },
   modelProviderModalSubtitle: { innerText: '' },
   modelProviderModalIcon: { innerHTML: '', style: {} },
-  modelProviderModalList: { innerHTML: '' }
+  modelProviderModalList: { innerHTML: '' },
+  modelProviderTabs: { innerHTML: '' },
+  modelProviderModalCurrentLabel: { innerHTML: '' }
 };
 
 sandbox.document = {
@@ -160,6 +168,9 @@ assert(fakeDom.modelListOptions.innerHTML.includes("openModelProviderPopup('gemi
 sandbox.openModelProviderPopup('chatgpt');
 assert(!fakeDom.modelProviderModal.classList.contains('hidden'), 'modelProviderModal must be open');
 assert(fakeDom.modelProviderModalTitle.innerText.includes('ChatGPT'), 'Title must mention ChatGPT');
+assert(fakeDom.modelProviderTabs.innerHTML.includes('ChatGPT'), 'Tabs must include ChatGPT');
+assert(fakeDom.modelProviderTabs.innerHTML.includes('Claude'), 'Tabs must include Claude');
+assert(fakeDom.modelProviderTabs.innerHTML.includes('Gemini'), 'Tabs must include Gemini');
 assert(fakeDom.modelProviderModalList.innerHTML.includes('GPT-6.1 Sol'), 'List must include GPT-6.1 Sol');
 assert(fakeDom.modelProviderModalList.innerHTML.includes('GPT OSS 120B'), 'List must include GPT OSS 120B');
 assert(!fakeDom.modelProviderModalList.innerHTML.includes('Claude Sonnet'), 'ChatGPT popup must not include Claude');

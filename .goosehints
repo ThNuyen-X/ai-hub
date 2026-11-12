@@ -12,3 +12,10 @@
 - **Chỉ báo tiến trình (`.live-progress-container`)**: Phải đặt **dưới** `.ai-content-body` và hiển thị đúng trạng thái từng pha (`Đang suy luận...`, `Đang thực thi: ...`, `Đang xử lý kết quả & tiếp tục...`, `Đang phản hồi...`).
 - **Kiểm thử hồi quy**: Sau khi sửa `server.js` hoặc `public/index.html`, bắt buộc chạy tại `D:\ai-hub\ai-hub-web`:
   - `cd /d D:\ai-hub\ai-hub-web & node --check server.js & for %f in (test_*.cjs) do @node "%f"`
+
+## 3. Kiểm Chứng Không Đồng Nghĩa Với Tạo Test Mới
+- Ưu tiên kiểm tra cú pháp, build và chạy test có sẵn; không mặc định tạo thêm file test sau mỗi thay đổi.
+- Chỉ thêm file test lâu dài khi người dùng yêu cầu hoặc có giá trị hồi quy rõ ràng, phù hợp cấu trúc dự án. Với sửa đổi nhỏ, cấu hình hoặc giao diện đơn giản, không thêm test hình thức chỉ để đủ quy trình.
+- Script kiểm chứng tạm phải đặt trong thư mục scratch được cấp cho phiên, không để thành file thừa trong dự án.
+- Nếu không thể kiểm chứng, nêu rõ giới hạn; không tạo test hình thức để thay thế việc kiểm chứng thực tế.
+- Không tự xóa hoặc sửa test hiện có ngoài phạm vi tác vụ.

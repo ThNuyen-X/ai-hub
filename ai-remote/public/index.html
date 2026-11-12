@@ -2409,6 +2409,10 @@
     }
 
     async function systemAction(a) {
+      if (a === 'screen-off' || a === 'lock') {
+        const actionName = a === 'lock' ? 'Khoa Windows' : 'Tat man hinh';
+        if (!confirm(`${actionName} NGAY BAY GIO? Day khong phai hen gio.`)) return;
+      }
       try {
         const res = await fetch(`/api/system/${a}`, { method: "POST" });
         const d = await res.json();

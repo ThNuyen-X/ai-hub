@@ -884,6 +884,8 @@
     body { width: 100% !important; height: 100dvh !important; margin: 0; }
     main, #chatFeed, #terminalDrawer, #terminalLogsFeed { min-height: 0; min-width: 0; }
     #terminalDrawer { overflow: hidden; }
+    #terminalLogsFeed, #liveTerminalOutput { color: #e2e8f0; }
+    #terminalLogsFeed .text-zinc-600 { color: #94a3b8; }
     .ai-content-body, .markdown-body, .user-bubble { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
     .markdown-body pre { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .markdown-body table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1706,6 +1708,15 @@
          class="fixed lg:static inset-y-0 left-0 z-40 w-72 shrink-0 flex flex-col border-r h-full transition-all duration-200 -translate-x-full lg:translate-x-0"
          style="background-color: var(--bg-sidebar); border-color: var(--border);">
     
+    <script src="/model-levels.js"></script>
+  <script>
+      // Restore before the main app initializes, avoiding an expanded flash on reload.
+      try {
+        if (window.innerWidth >= 1024 && localStorage.getItem('ai_hub_sidebar_collapsed') === 'true') {
+          document.getElementById('sidebar').classList.add('sidebar-collapsed');
+        }
+      } catch (_) {}
+    </script>
     <!-- Sidebar Header (56px) -->
     <div class="h-14 px-3.5 flex items-center justify-between border-b shrink-0"
          style="border-color: var(--border);">
@@ -1797,6 +1808,11 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
         </svg>
       </summary>
+    <script>
+      try {
+        document.getElementById('sidebarFooter').open = localStorage.getItem('ai_hub_sidebar_footer_collapsed') !== 'true';
+      } catch (_) {}
+    </script>
     <div class="px-3 pb-3 flex flex-col gap-2">
       
       <div class="flex items-center justify-between text-[11px]" style="color: var(--text-sub);">
@@ -1810,6 +1826,26 @@
           <span id="audioStatusLabel">Bật</span>
         </button>
       </div>
+
+      <details class="rounded-lg border px-2 py-1.5 text-[11px]" style="border-color: var(--border-subtle);">
+        <summary class="cursor-pointer font-medium">Cài đặt âm thanh</summary>
+        <div class="flex flex-col gap-2 pt-2">
+          <label for="soundChoice">Tiếng thông báo</label>
+          <select id="soundChoice" onchange="soundPreferences.select(this.value)" class="w-full rounded border p-1.5" style="background: var(--bg-input); border-color: var(--border);">
+            <option value="chime">Giai điệu mặc định</option>
+            <option value="bell">Chuông trong trẻo</option>
+            <option value="soft">Hai nốt dịu nhẹ</option>
+            <option value="custom">File nhạc riêng</option>
+          </select>
+          <div class="flex gap-2">
+            <button type="button" onclick="document.getElementById('soundFileInput').click()" class="flex-1 rounded border p-1" style="border-color: var(--border);">Chọn file nhạc</button>
+            <button type="button" onclick="soundPreferences.preview()" class="rounded border px-2" style="border-color: var(--border);">Nghe thử</button>
+          </div>
+          <input id="soundFileInput" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.webm" class="hidden" onchange="soundPreferences.upload(this)">
+          <span id="soundFileLabel" class="break-all" style="color: var(--text-sub);"></span>
+          <span style="color: var(--text-sub);">Tối đa 2 MB, phát tối đa 8 giây. Bật loa để nghe thử. Lưu riêng trên trình duyệt này.</span>
+        </div>
+      </details>
 
       <!-- Quick Action Buttons: Keyboard Shortcuts & Export -->
       <div class="flex items-center gap-1.5 pt-1 border-t" style="border-color: var(--border-subtle);">
@@ -3245,33 +3281,43 @@
   </div>
 
   <!-- ========================================================
-       MODAL: CHI TIET MODEL THEO NHA CUNG CAP (ChatGPT, Claude, Gemini)
+       MODAL: CHI TIET MODEL THEO NHA CUNG CAP & CAP DO SUY LUAN (REASONING EFFORT)
        ======================================================== -->
-  <div id="modelProviderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-md" onclick="if(event.target===this) closeModelProviderModal()">
-    <div class="w-full max-w-md rounded-2xl border shadow-2xl flex flex-col overflow-hidden modal-enter"
+  <div id="modelProviderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-black/75 backdrop-blur-md transition-opacity duration-200" onclick="if(event.target===this) closeModelProviderModal()">
+    <div class="w-full max-w-lg sm:max-w-xl max-h-[92vh] sm:max-h-[88vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden modal-enter"
          style="background: var(--spotlight-bg); border-color: var(--border); box-shadow: var(--shadow-popover);">
       <!-- Header -->
-      <div class="px-4 py-3 border-b flex items-center justify-between shrink-0" style="border-color: var(--border-subtle);">
-        <div class="flex items-center space-x-2.5 min-w-0">
-          <div id="modelProviderModalIcon" class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border" style="border-color: var(--border);"></div>
+      <div class="px-3.5 py-3 sm:px-5 sm:py-3.5 border-b flex items-center justify-between shrink-0" style="border-color: var(--border-subtle);">
+        <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+          <button onclick="backToModelMenu()" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95 shrink-0" title="Quay lại danh mục nhà cung cấp (Esc)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div id="modelProviderModalIcon" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 border shadow-xs" style="border-color: var(--border);"></div>
           <div class="min-w-0">
-            <h3 id="modelProviderModalTitle" class="text-xs font-bold truncate" style="color: var(--text-main);">Mô hình</h3>
-            <p id="modelProviderModalSubtitle" class="text-[10.5px] truncate" style="color: var(--text-sub);"></p>
+            <h3 id="modelProviderModalTitle" class="text-xs sm:text-sm font-bold truncate text-[var(--text-main)]">Mô hình AI</h3>
+            <p id="modelProviderModalSubtitle" class="text-[10.5px] sm:text-xs truncate text-[var(--text-sub)]"></p>
           </div>
         </div>
         <div class="flex items-center space-x-1.5 shrink-0 ml-2">
-          <button onclick="closeModelProviderModal()" type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95 text-sm" title="Đóng (Esc)">✕</button>
+          <button onclick="closeModelProviderModal()" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95 text-base" title="Đóng (Esc)">✕</button>
         </div>
       </div>
+
+      <!-- Quick Provider Switcher Tabs (Dễ dàng chuyển đổi trực tiếp giữa OpenAI, Claude, Gemini) -->
+      <div id="modelProviderTabs" class="px-3 sm:px-4 py-2 border-b flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0" style="border-color: var(--border-subtle); background: var(--bg-card);"></div>
+
       <!-- Models List -->
-      <div id="modelProviderModalList" class="p-3 space-y-2 overflow-y-auto max-h-[60vh]"></div>
+      <div id="modelProviderModalList" class="p-3 sm:p-4 space-y-2.5 overflow-y-auto max-h-[58vh] sm:max-h-[62vh]"></div>
+
       <!-- Footer -->
-      <div class="px-4 py-2 border-t text-[11px] flex items-center justify-between shrink-0" style="border-color: var(--border-subtle); color: var(--text-sub); background: var(--bg-card);">
-        <span class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span>9Router AI Hub</span>
-        </span>
-        <span class="text-[10px] opacity-80">Tự động áp dụng cho phiên hiện tại</span>
+      <div class="px-3.5 py-2.5 sm:px-5 sm:py-3 border-t text-[11px] flex items-center justify-between shrink-0" style="border-color: var(--border-subtle); color: var(--text-sub); background: var(--bg-card);">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+          <span id="modelProviderModalCurrentLabel" class="truncate text-[10.5px] sm:text-xs text-[var(--text-sub)]">Tự động áp dụng cho phiên hiện tại</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 ml-2">
+          <button onclick="closeModelProviderModal()" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors active:scale-95 shadow-xs">Xong</button>
+        </div>
       </div>
     </div>
   </div>
@@ -3744,12 +3790,12 @@
     const soundEffects = {
       enabled: localStorage.getItem('ai_hub_sound') !== 'false',
       ctx: null,
-      getCtx() {
+      getCtx(autoResume = true) {
         if (!this.ctx) {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
           if (AudioCtx) this.ctx = new AudioCtx();
         }
-        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        if (autoResume && this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
         return this.ctx;
       },
       playBop() {
@@ -3775,6 +3821,7 @@
         try {
           const ctx = this.getCtx();
           if (!ctx) return;
+          if (window.soundPreferences?.play(ctx)) return;
           const now = ctx.currentTime;
           [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
             const osc = ctx.createOscillator();
@@ -3810,11 +3857,18 @@
           osc.stop(ctx.currentTime + 0.03);
         } catch (_) {}
       },
-      toggle() {
+      async toggle() {
         this.enabled = !this.enabled;
         localStorage.setItem('ai_hub_sound', this.enabled ? 'true' : 'false');
         updateSoundUI();
-        if (this.enabled) this.playBop();
+        if (!this.enabled) { window.soundPreferences?.stop(); return; }
+        try {
+          const ctx = this.getCtx(false);
+          if (!ctx) return;
+          // Wait for audio unlock so the confirmation is audible on the first click.
+          if (ctx.state === 'suspended') await ctx.resume();
+          if (this.enabled) this.playChime();
+        } catch (_) {}
       }
     };
 
@@ -8139,14 +8193,13 @@
     const sessionModelsMap = new Map();
 
     function normalizeModelId(modelId) {
-      if (modelId === 'ag/gemini-3.8-flash-high') return 'ag/gemini-3.8-flash';
       return modelId;
     }
 
     function resolveModelMeta(modelId) {
       const normalized = normalizeModelId(modelId);
       if (!normalized) return MODELS[0];
-      const exact = MODELS.find(m => m.id === normalized || m.full === normalized);
+      const exact = MODELS.flatMap(m => ModelLevels.variants(m)).find(m => m.id === normalized || m.full === normalized);
       if (exact) return exact;
       const lower = String(normalized).toLowerCase();
       if (lower.includes('claude')) return MODELS.find(m => m.group === 'claude' || m.iconType === 'claude') || MODELS[2] || MODELS[0];
@@ -8591,8 +8644,8 @@
       if (listEl) {
         listEl.innerHTML = MODEL_PROVIDERS.map(p => {
           const groupModels = MODELS.filter(m => m.group === p.id);
-          const isGroupActive = groupModels.some(m => m.id === currentSelectedModel || m.full === currentSelectedModel);
-          const activeModelInGroup = groupModels.find(m => m.id === currentSelectedModel || m.full === currentSelectedModel);
+          const isGroupActive = cur.group === p.id;
+          const activeModelInGroup = isGroupActive ? cur : null;
           return `
             <div onclick="openModelProviderPopup('${p.id}')"
                  class="px-2.5 py-2.5 rounded-xl flex items-center justify-between cursor-pointer ease-spring border transition-all ${
@@ -8635,6 +8688,8 @@
       const subEl = document.getElementById('modelProviderModalSubtitle');
       const iconEl = document.getElementById('modelProviderModalIcon');
       const listEl = document.getElementById('modelProviderModalList');
+      const tabsEl = document.getElementById('modelProviderTabs');
+      const currentLabelEl = document.getElementById('modelProviderModalCurrentLabel');
       
       if (titleEl) titleEl.innerText = `Mô hình ${provider.name} (${provider.provider})`;
       if (subEl) subEl.innerText = `${groupModels.length} mô hình tối ưu sẵn sàng qua 9Router`;
@@ -8642,31 +8697,118 @@
         iconEl.style.background = provider.iconBg;
         iconEl.innerHTML = MODEL_ICONS[provider.iconType] || MODEL_ICONS.openai;
       }
+
+      if (tabsEl) {
+        tabsEl.innerHTML = MODEL_PROVIDERS.map(p => {
+          const isActive = p.id === groupId;
+          const count = MODELS.filter(m => m.group === p.id).length;
+          return `
+            <button type="button" onclick="openModelProviderPopup('${p.id}')"
+                    class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all border ${
+                      isActive 
+                        ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-500/25' 
+                        : 'bg-[var(--bg-card)] text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] border-[var(--border-subtle)]'
+                    }">
+              <span class="w-3.5 h-3.5 rounded flex items-center justify-center shrink-0" style="background: ${p.iconBg}">
+                ${MODEL_ICONS[p.iconType] || ''}
+              </span>
+              <span>${p.name}</span>
+              <span class="text-[9.5px] px-1 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[var(--badge-bg)] text-[var(--text-sub)]'} font-mono">${count}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      if (currentLabelEl) {
+        const curMeta = resolveModelMeta(currentSelectedModel);
+        currentLabelEl.innerHTML = `Đang kích hoạt: <span class="font-bold text-[var(--text-main)]">${escapeHtml(curMeta?.name || currentSelectedModel)}</span>`;
+      }
       
       if (listEl) {
         listEl.innerHTML = groupModels.map(m => {
-          const isSelected = m.id === currentSelectedModel;
-          return `
-            <div onclick="selectModelFromPopup('${m.id}')"
-                 class="p-3 rounded-xl flex items-center justify-between cursor-pointer border ease-spring transition-all active:scale-[0.98] ${
-                   isSelected ? 'bg-blue-500/15 border-blue-500/40 ring-1 ring-blue-500/30' : 'hover:bg-[var(--bg-hover)] border-[var(--border-subtle)]'
-                 }">
-              <div class="flex items-center space-x-3 min-w-0">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs"
-                     style="background: ${m.iconBg}; border-color: var(--border);">
-                  ${MODEL_ICONS[m.iconType] || MODEL_ICONS.openai}
+          const variants = ModelLevels.variants(m);
+          const activeVariant = variants.find(v => v.id === currentSelectedModel);
+          const isSelected = !!activeVariant;
+
+          let levelSectionHtml = '';
+          if (variants.length > 1) {
+            const activeLevelKey = activeVariant ? activeVariant.level : null;
+            const levelButtons = variants.map(v => {
+              const active = v.id === currentSelectedModel;
+              const meta = (typeof ModelLevels !== 'undefined' && ModelLevels.getLevelMeta) 
+                ? ModelLevels.getLevelMeta(v.level) 
+                : { label: v.level === 'default' ? 'Mặc định' : v.level[0].toUpperCase() + v.level.slice(1), icon: '⚡' };
+              return `
+                <button type="button"
+                        aria-pressed="${active}"
+                        onclick="event.stopPropagation(); selectModelFromPopup('${v.id}')"
+                        class="flex-1 min-w-[70px] sm:min-w-[80px] min-h-[36px] sm:min-h-[38px] px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 touch-manipulation ${
+                          active
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400 font-bold shadow-sm shadow-blue-500/30 ring-1 ring-blue-300/40'
+                            : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] hover:border-blue-500/40'
+                        }">
+                  <span class="text-xs shrink-0">${meta.icon}</span>
+                  <span class="truncate">${meta.label}</span>
+                  ${active ? '<span class="w-1.5 h-1.5 rounded-full bg-white ml-0.5 shrink-0"></span>' : ''}
+                </button>
+              `;
+            }).join('');
+
+            const currentDesc = activeVariant 
+              ? ((typeof ModelLevels !== 'undefined' && ModelLevels.getLevelMeta) ? ModelLevels.getLevelMeta(activeVariant.level).desc : '')
+              : 'Chọn cấp độ suy luận phù hợp với tác vụ';
+
+            levelSectionHtml = `
+              <div class="mt-2.5 pt-2.5 border-t border-[var(--border-subtle)]/70">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[10.5px] font-semibold text-[var(--text-sub)] flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>Mức suy luận (Reasoning Effort):</span>
+                  </span>
+                  <span class="text-[10px] text-blue-400 font-mono font-medium">${activeLevelKey ? (activeLevelKey === 'default' ? 'MẶC ĐỊNH' : activeLevelKey.toUpperCase()) : 'Chưa kích hoạt'}</span>
                 </div>
-                <div class="min-w-0">
-                  <div class="text-xs font-bold flex items-center gap-1.5 ${isSelected ? 'text-blue-400' : 'text-[var(--text-main)]'}">
-                    <span>${m.name}</span>
-                    <span class="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)]">${m.provider}</span>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-1.5 sm:gap-2" role="group" aria-label="Reasoning level" onclick="event.stopPropagation()">
+                  ${levelButtons}
+                </div>
+                ${currentDesc ? `
+                  <div class="mt-1.5 text-[10px] text-[var(--text-sub)] opacity-80 flex items-center gap-1">
+                    <span class="w-1 h-1 rounded-full bg-blue-400 shrink-0"></span>
+                    <span class="truncate">${currentDesc}</span>
                   </div>
-                  <div class="text-[11px] text-[var(--text-sub)] mt-0.5 truncate">${m.tag}</div>
+                ` : ''}
+              </div>
+            `;
+          }
+
+          return `
+            <div class="rounded-xl sm:rounded-2xl border transition-all duration-200 p-3 sm:p-3.5 ${
+              isSelected 
+                ? 'border-blue-500/50 bg-blue-500/[0.08] shadow-sm ring-1 ring-blue-500/30' 
+                : 'border-[var(--border-subtle)] bg-[var(--bg-card)]/40 hover:border-[var(--border)] hover:bg-[var(--bg-hover)]/60'
+            }">
+              <div class="flex items-start sm:items-center justify-between gap-3 cursor-pointer" onclick="selectModelFromPopup('${m.id}')">
+                <div class="flex items-start sm:items-center space-x-3 min-w-0">
+                  <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-xs"
+                       style="background: ${m.iconBg}; border-color: var(--border);">
+                    ${MODEL_ICONS[m.iconType] || MODEL_ICONS.openai}
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="text-xs sm:text-sm font-bold ${isSelected ? 'text-blue-400' : 'text-[var(--text-main)]'}">${m.name}</span>
+                      <span class="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)] border border-[var(--border-subtle)]">${m.provider}</span>
+                      ${isSelected ? `<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Đang chọn${activeVariant && activeVariant.level && activeVariant.level !== 'default' ? ': ' + activeVariant.level.toUpperCase() : ''}</span>` : ''}
+                    </div>
+                    <div class="text-[11px] text-[var(--text-sub)] mt-0.5 line-clamp-1">${m.tag}</div>
+                  </div>
+                </div>
+                <div class="shrink-0 flex items-center">
+                  ${isSelected
+                    ? `<span class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xs sm:text-sm font-bold shadow-xs" title="Đang sử dụng">✓</span>`
+                    : `<button onclick="event.stopPropagation(); selectModelFromPopup('${m.id}')" type="button" class="min-h-[30px] sm:min-h-[32px] px-3 py-1 rounded-lg text-xs font-semibold text-[var(--text-main)] bg-[var(--bg-hover)] hover:bg-blue-600 hover:text-white border border-[var(--border)] transition-all active:scale-95 shadow-xs">Chọn</button>`
+                  }
                 </div>
               </div>
-              <div class="flex items-center space-x-1 shrink-0 ml-2">
-                ${isSelected ? '<span class="text-blue-400 font-bold text-xs bg-blue-500/20 w-6 h-6 rounded-full flex items-center justify-center">✓</span>' : '<span class="text-xs text-[var(--text-sub)] opacity-50 px-2 py-1 rounded bg-[var(--bg-hover)]">Chọn</span>'}
-              </div>
+              ${levelSectionHtml}
             </div>
           `;
         }).join('');
@@ -9186,6 +9328,7 @@
     }
 
     function newSession(updateUrl = true) {
+      stopLiveTerminalWatch();
       detachActiveStream();
       initialBottomFollow = false;
       sessionViewVersion++;
@@ -9404,6 +9547,84 @@
     document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
 
     // TERMINAL DRAWER CONTROLS
+    let liveTerminalWatch = null;
+
+    function stopLiveTerminalWatch() {
+      const watch = liveTerminalWatch;
+      liveTerminalWatch = null;
+      if (!watch) return;
+      clearTimeout(watch.timer);
+      watch.controller?.abort();
+      document.getElementById('liveTerminalOutput')?.remove();
+      terminalLogsFeed.classList.remove('hidden');
+    }
+
+    function openToolTerminal(cardId) {
+      stopLiveTerminalWatch();
+      const card = document.getElementById(cardId);
+      if (!card?._cardData) return;
+      let args = card._cardData.args;
+      if (typeof args === 'string') { try { args = JSON.parse(args); } catch { args = { command: args }; } }
+      const command = args?.command || '';
+      toggleTerminalDrawer(true);
+      const pre = document.createElement('pre');
+      pre.id = 'liveTerminalOutput';
+      pre.className = 'flex-1 overflow-auto p-3 m-0 text-xs whitespace-pre-wrap select-text';
+      // Terminal backgrounds stay dark in every theme, independently of page text colors.
+      pre.style.color = '#e2e8f0';
+      terminalLogsFeed.classList.add('hidden');
+      terminalDrawer.appendChild(pre);
+      const watch = { sessionId: currentSessionId, timer: null, controller: null, busy: false, version: '', delay: 2000, finished: false };
+      liveTerminalWatch = watch;
+      const poll = async () => {
+        if (liveTerminalWatch !== watch || currentSessionId !== watch.sessionId) { stopLiveTerminalWatch(); return; }
+        if (document.hidden || watch.busy || watch.finished) return;
+        watch.busy = true;
+        watch.controller = new AbortController();
+        const timeout = setTimeout(() => watch.controller.abort(), 8000);
+        let again = false;
+        try {
+          const response = await fetch('/api/session/terminal-log?' + new URLSearchParams({ id: watch.sessionId || '', command, version: watch.version }), { signal: watch.controller.signal });
+          const data = await response.json();
+          if (liveTerminalWatch !== watch) return;
+          if (!response.ok) throw new Error(data.error || 'Live log unavailable');
+          watch.version = data.version || '';
+          watch.delay = data.unchanged ? Math.min(watch.delay * 1.5, 10000) : 2000;
+          if (!data.unchanged) {
+            pre.textContent = command + '\n\n' + data.file + '\nUpdated: ' + data.modified + '\n\n' + data.text;
+            if (terminalAutoScroll) pre.scrollTop = pre.scrollHeight;
+          }
+          again = data.running;
+          watch.finished = !again;
+        } catch (err) {
+          if (liveTerminalWatch !== watch || document.hidden) return;
+          watch.delay = Math.min(watch.delay * 2, 15000);
+          pre.textContent = command + '\n\n' + (card._cardData.output || '').slice(-65536) + '\n\n' +
+            'Chua doc duoc log truc tiep. Lenh can ghi output vao file .log; khong chay lai lenh.\n' + err.message;
+          again = !!card.querySelector('.animate-pulse');
+        } finally {
+          clearTimeout(timeout);
+          watch.busy = false;
+          if (liveTerminalWatch === watch && !document.hidden && !watch.finished && (again || watch.resumePending)) {
+            watch.timer = setTimeout(poll, watch.resumePending ? 0 : watch.delay);
+          }
+          watch.resumePending = false;
+        }
+      };
+      watch.poll = poll;
+      poll();
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      const watch = liveTerminalWatch;
+      if (!watch) return;
+      clearTimeout(watch.timer);
+      if (document.hidden) watch.controller?.abort();
+      else if (watch.busy) watch.resumePending = true;
+      else watch.poll();
+    });
+    window.addEventListener('pagehide', stopLiveTerminalWatch);
+
     function toggleTerminalDrawer(forceState) {
       soundEffects.playClick();
       const isCurrentlyOpen = terminalDrawer.style.height && terminalDrawer.style.height !== '0px';
@@ -9417,6 +9638,7 @@
           requestAnimationFrame(() => { terminalLogsFeed.scrollTop = terminalLogsFeed.scrollHeight; });
         }
       } else {
+        stopLiveTerminalWatch();
         terminalDrawer.style.height = '0px';
       }
     }
@@ -9442,6 +9664,7 @@
 
     let _lastTerminalTextSpan = null;
     function clearTerminalLogs() {
+      stopLiveTerminalWatch();
       terminalLogsFeed.innerHTML = '<div class="text-zinc-500 italic">Logs cleared. Ready for next agent commands.</div>';
       terminalLogEntries = [];
       _lastTerminalTextSpan = null;
@@ -9450,7 +9673,7 @@
     }
 
     function copyTerminalLogs() {
-      const text = terminalLogsFeed.innerText;
+      const text = document.getElementById('liveTerminalOutput')?.textContent ?? terminalLogsFeed.innerText;
       window.writeTextToClipboard(text).then(() => {
         soundEffects.playBop();
         showToast('Đã sao chép toàn bộ logs vào clipboard', 'success');
@@ -9460,7 +9683,7 @@
     }
 
     function downloadTerminalLogs() {
-      const text = terminalLogsFeed.innerText;
+      const text = document.getElementById('liveTerminalOutput')?.textContent ?? terminalLogsFeed.innerText;
       if (!text || text.includes('Logs cleared.')) {
         showToast('Không có log để tải xuống', 'warning');
         return;
@@ -9988,6 +10211,8 @@
       if (isViewing) delete unread[id];
       else unread[id] = Date.now();
       try { localStorage.setItem('ai_hub_unread_completions', JSON.stringify(unread)); } catch (_) {}
+      // A visible completion must also be acknowledged by the server before reconnect sync.
+      if (isViewing) markSessionRead(id, data.tempName);
     }
 
     window.addEventListener('storage', e => {
@@ -10112,6 +10337,10 @@
               if (changed) {
                 try { localStorage.setItem('ai_hub_unread_completions', JSON.stringify(currentUnread)); } catch (_) {}
                 loadWorkspaceTree();
+              }
+              const selected = allSessionsCache.find(s => s.id === currentSessionId || s.tempName === currentSessionId);
+              if ([currentSessionId, selected?.id, selected?.tempName].some(id => id && serverSet.has(id))) {
+                markSessionRead(currentSessionId, selected?.tempName);
               }
             }
           } catch (_) {}
@@ -10634,7 +10863,9 @@
     function renderSubagentReportCard(item, container, prepend = false) {
       const row = document.createElement('div');
       row.className = 'w-full my-3.5 px-1 sm:px-2 subagent-turn-card';
-      row.dataset.turnQuestion = item.questionText || '';
+      const subagentQuestion = (item.questionText || '').trim();
+      row.dataset.turnQuestion = subagentQuestion;
+      if (subagentQuestion) row.dataset.questionText = subagentQuestion;
 
       const subagents = item.subagents || [];
       const cardId = 'subcard_' + Math.random().toString(36).substring(2, 9);
@@ -10712,6 +10943,20 @@
       row.innerHTML = `
         <div class="max-w-4xl mx-auto rounded-2xl border shadow-sm overflow-hidden"
              style="background: var(--bg-card); border-color: var(--border);">
+          ${subagentQuestion ? `
+            <div class="px-3.5 py-1.5 sm:px-4 border-b flex items-start sm:items-center gap-2 text-xs select-none"
+                 style="background: var(--bg-hover); border-color: var(--border-subtle);">
+              <span class="inline-flex items-center gap-1 font-semibold text-[var(--text-sub)] shrink-0 text-[11px]">
+                <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Đoạn chat của câu hỏi:
+              </span>
+              <span class="font-medium text-[var(--text-main)] break-words line-clamp-2 select-text" title="${escapeHtml(subagentQuestion)}">
+                ${escapeHtml(subagentQuestion)}
+              </span>
+            </div>
+          ` : ''}
           <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 flex items-center justify-between border-b"
                style="background: var(--tool-header-bg); border-color: var(--border-subtle);">
             <div class="flex items-center space-x-2.5 min-w-0">
@@ -10753,6 +10998,7 @@
 
       enhanceChatElement(row);
       addMessageTiming(row, item);
+      item.domRow = row;
 
       if (prepend && container.firstChild) {
         container.insertBefore(row, container.firstChild);
@@ -10786,6 +11032,16 @@
       return false;
     }
 
+    function extractUserIntentFromSummary(summaryText) {
+      const text = String(summaryText || '');
+      const m = text.match(/##\s*User Intent\s*\r?\n+-\s*(?:(?:\(LATEST[^)]*\)|ACTIVE:?|LATEST:?|LATEST\s+REQUEST:?|LATEST\s+UNANSWERED\s+REQUEST:?)\s*)?([^\r\n]+)/i)
+        || text.match(/##\s*User Intent\s*\r?\n+([^\r\n#]+)/i);
+      if (m && m[1]) {
+        return m[1].replace(/^[-*•\s]+/, '').replace(/^['"]|['"]$/g, '').trim();
+      }
+      return '';
+    }
+
     function classifyInternalEntry(role, rawText) {
       const text = String(rawText || '').trim();
       if (/^#\s*Conversation Summary\b/i.test(text)) {
@@ -10804,7 +11060,7 @@
       }
       return {
         kind: role === 'assistant' ? 'internal_assistant' : 'internal_prompt',
-        label: role === 'assistant' ? 'Phản hồi nội bộ hệ thống' : 'Ngữ cảnh yêu cầu tiếp nối (Nội bộ)',
+        label: role === 'assistant' ? 'Phản hồi nội bộ hệ thống' : 'Câu hỏi tiếp nối của bạn (Được giữ lại sau khi tóm tắt)',
         text
       };
     }
@@ -10857,7 +11113,9 @@
     function renderInternalMessageCard(item, container, prepend = false) {
       const row = document.createElement('div');
       row.className = 'internal-message-row w-full my-2.5 px-1 sm:px-2 internal-turn-card';
-      row.dataset.turnQuestion = item.questionText || '';
+      const questionText = (item.questionText || '').trim();
+      row.dataset.turnQuestion = questionText;
+      if (questionText) row.dataset.questionText = questionText;
 
       const entries = Array.isArray(item.entries) && item.entries.length > 0
         ? item.entries
@@ -10902,6 +11160,20 @@
       row.innerHTML = `
         <div class="max-w-4xl mx-auto rounded-xl border shadow-2xs overflow-hidden transition-all duration-200"
              style="background: var(--bg-card); border-color: var(--border-subtle);">
+          ${questionText ? `
+            <div class="internal-card-question-header px-3 py-1.5 sm:px-3.5 border-b flex items-start sm:items-center gap-2 text-xs select-none"
+                 style="background: var(--bg-hover); border-color: var(--border-subtle);">
+              <span class="inline-flex items-center gap-1 font-semibold text-[var(--text-sub)] shrink-0 text-[11px]">
+                <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                </svg>
+                Đoạn chat của câu hỏi:
+              </span>
+              <span class="font-medium text-[var(--text-main)] break-words line-clamp-2 select-text" title="${escapeHtml(questionText)}">
+                ${escapeHtml(questionText)}
+              </span>
+            </div>
+          ` : ''}
           <div class="px-3 py-2 sm:px-3.5 sm:py-2 flex items-center justify-between gap-2 cursor-pointer select-none hover:bg-[var(--bg-hover)] transition-colors"
                onclick="toggleInternalMessageAccordion('${cardId}')"
                style="background: var(--tool-header-bg);"
@@ -10946,6 +11218,7 @@
 
       enhanceChatElement(row);
       addMessageTiming(row, item);
+      item.domRow = row;
 
       if (prepend && container.firstChild) {
         container.insertBefore(row, container.firstChild);
@@ -11068,8 +11341,26 @@
       try { savedTimings = JSON.parse(localStorage.getItem('ai_hub_turn_timings:' + currentSessionId) || '[]'); } catch (_) {}
       let turn = null;
       for (const item of items) {
-        if (item.role === 'user') turn = item;
-        else if (turn) {
+        if (item.role === 'user') {
+          turn = item;
+        } else if (item.role === 'internal') {
+          const promptEntry = (item.entries || []).find(e => e.kind === 'internal_prompt');
+          const summaryEntry = (item.entries || []).find(e => e.kind === 'summary');
+          const summaryQuestion = (promptEntry?.text || extractUserIntentFromSummary(summaryEntry?.text) || '').trim();
+          if (turn && turn.text) {
+            item.questionText = turn.text;
+            item.questionItem = turn;
+          } else if (summaryQuestion) {
+            item.questionText = summaryQuestion;
+            turn = { role: 'user', text: summaryQuestion, startedAt: item.startedAt, synthetic: true };
+            item.questionItem = turn;
+          }
+        } else if (item.role === 'subagent') {
+          if (turn && turn.text) {
+            item.questionText = turn.text;
+            item.questionItem = turn;
+          }
+        } else if (turn) {
           item.questionText = turn.text;
           item.questionItem = turn;
         }
@@ -11089,7 +11380,29 @@
           while (pos < items.length && items[pos].role !== 'user') items[pos++].elapsedMs = saved.elapsedMs;
         }
       }
-      return items;
+
+      // Đảm bảo ở đoạn chat khi có phần tóm tắt ý luôn có câu hỏi của người dùng ở trên:
+      // Nếu trước đó trong danh sách chưa có bong bóng user message nào hiển thị cho câu hỏi đó (ví dụ do phân trang):
+      // Tự động chèn một user item ở ngay trên để người dùng luôn thấy câu hỏi của mình ở trên đoạn chat!
+      const finalItems = [];
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        if (it.role === 'user') {
+          finalItems.push(it);
+        } else if (it.role === 'internal' && it.questionText) {
+          const normQuestion = normalizePromptForCompare(it.questionText);
+          const hasUserPrompt = finalItems.some(prev => prev.role === 'user' && normalizePromptForCompare(prev.text) === normQuestion);
+          if (!hasUserPrompt && normQuestion) {
+            const userItem = { role: 'user', text: it.questionText, startedAt: it.startedAt };
+            finalItems.push(userItem);
+            it.questionItem = userItem;
+          }
+          finalItems.push(it);
+        } else {
+          finalItems.push(it);
+        }
+      }
+      return finalItems;
     }
 
     function normalizePromptForCompare(text) {
@@ -11432,6 +11745,7 @@
     }
 
     async function selectSession(sessionId, sessionTitle, wsPath, updateUrl = true) {
+      stopLiveTerminalWatch();
       const matchedCurrent = allSessionsCache.find(s => s.id === sessionId || (s.tempName && s.tempName === sessionId) || s.name === sessionId);
       const isSameAsCurrent = (sessionId === currentSessionId) ||
         Boolean(matchedCurrent && currentSessionId && (matchedCurrent.id === currentSessionId || matchedCurrent.tempName === currentSessionId));
@@ -11544,7 +11858,16 @@
               renderSingleHistoryItem(item, chatFeed, false);
             });
           } else {
-            currentHistoryRenderIndex = totalItems - HISTORY_CHUNK_SIZE;
+            let startIndex = Math.max(0, totalItems - HISTORY_CHUNK_SIZE);
+            while (startIndex > 0 && currentSessionHistoryItems[startIndex]?.role !== 'user') {
+              if (currentSessionHistoryItems[startIndex - 1]?.role === 'user') {
+                startIndex--;
+                break;
+              }
+              startIndex--;
+              if (totalItems - startIndex > HISTORY_CHUNK_SIZE + 6) break;
+            }
+            currentHistoryRenderIndex = startIndex;
             const initialChunk = currentSessionHistoryItems.slice(currentHistoryRenderIndex);
             initialChunk.forEach(item => {
               renderSingleHistoryItem(item, chatFeed, false);
@@ -11602,9 +11925,13 @@
 
     function historyItemText(item) {
       if (item.role === 'user') return item.text || '';
-      if (item.role === 'internal') return (item.title || '') + '\n' + (item.text || '');
+      if (item.role === 'internal') {
+        const qPrefix = item.questionText ? `[Đoạn chat của câu hỏi: ${item.questionText}]\n` : '';
+        return qPrefix + (item.title || '') + '\n' + (item.text || '');
+      }
       if (item.role === 'subagent') {
-        return (item.subagents || []).map(s => `[Subagent ${s.id} - ${s.status}] ${s.summary}`).join('\n');
+        const qPrefix = item.questionText ? `[Đoạn chat của câu hỏi: ${item.questionText}]\n` : '';
+        return qPrefix + (item.subagents || []).map(s => `[Subagent ${s.id} - ${s.status}] ${s.summary}`).join('\n');
       }
       return (item.rawContent || []).map(c => {
         if (c.type === 'toolRequest') return '[Tool] ' + (c.toolCall?.value?.name || c.name || 'tool') + '\n' + safeStringifyCode(c.toolCall?.value?.arguments || c.arguments || {});
@@ -12524,6 +12851,7 @@
             <span id="toolFilePath_${cardId}" class="font-mono text-[11px] min-w-0 truncate opacity-80" style="color: var(--text-sub);" title="${escapeHtml(displayParam)}">${isFileEdit ? buildCompactFileNameHtml(initialFilePath) : escapeHtml(displayParam)}</span>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
+            ${/shell|bash|cmd/i.test(rawName) ? `<button type="button" class="px-2 py-1 rounded text-[11px] text-emerald-400 hover:bg-[var(--bg-hover)]" title="Xem log, khong chay lai lenh" onclick="event.stopPropagation(); openToolTerminal('${cardId}')">Terminal</button>` : ''}
             <span id="inlineFileDiff_${cardId}" class="hidden items-center gap-2"></span>
             <span id="badge_${cardId}">
               ${isFileEdit ? buildCompactFileStatusHtml(isRunning, isError) : buildToolStatusBadgeHtml(isRunning, isError)}
@@ -13074,14 +13402,12 @@
           }
         }
 
-        const replayCursor = Number(aiContainer.replayEventId) || 0;
-        const url = '/api/chat/stream?sessionId=' + encodeURIComponent(sessionId)
-          + (replayCursor > 0 ? '&lastEventId=' + replayCursor : '') + '&_t=' + Date.now();
-        const es = new EventSource(url);
-
+        let replayCursor = Number(aiContainer.replayEventId) || 0;
+        let es;
         let isCompleted = false;
         let errorTimer = null;
         let completeTimer = null;
+        let checking = false;
 
         function closeAndDone() {
           if (!isCompleted) {
@@ -13097,13 +13423,13 @@
               if (!aiContainer.completedAt) aiContainer.completedAt = Date.now();
               aiContainer.finishProgress('Đã dừng tác vụ');
             }
+            document.removeEventListener('visibilitychange', onVisible);
+            window.removeEventListener('online', recoverStream);
             if (window.activeChatEventSource === es) window.activeChatEventSource = null;
             try { es.close(); } catch (_) {}
             resolve();
           }
         }
-        es._closeAndDone = closeAndDone;
-        window.activeChatEventSource = es;
 
         function onEventData(e) {
           if (errorTimer) {
@@ -13116,6 +13442,9 @@
           }
           try {
             const data = JSON.parse(e.data);
+            const eventId = Number(e.lastEventId) || 0;
+            if (eventId > 0 && eventId <= replayCursor) return;
+            if (eventId > 0) replayCursor = eventId;
             handleSessionStreamEvent(data, aiContainer);
             if (data.type === 'finish' || data.type === 'done') {
               closeAndDone();
@@ -13131,35 +13460,60 @@
           'message', 'text', 'thinking', 'stdout', 'status', 'tool_call', 'tool_result', 'auxiliary_progress',
           'stderr', 'raw_log', 'session_info', 'session_title', 'session_file_diffs', 'complete', 'finish', 'done', 'error'
         ];
-        eventNames.forEach(evt => es.addEventListener(evt, onEventData));
-
-        es.onerror = () => {
-          if (isCompleted) return;
-          if (es.readyState === EventSource.CLOSED) {
-            closeAndDone();
-            return;
-          }
-          if (errorTimer) clearTimeout(errorTimer);
-          errorTimer = setTimeout(async () => {
-            if (isCompleted || es.readyState === EventSource.OPEN) return;
-            try {
-              const checkRes = await fetch('/api/sessions?_t=' + Date.now());
-              if (checkRes.ok) {
-                const checkData = await checkRes.json();
-                const sessionsList = Array.isArray(checkData) ? checkData : (checkData?.sessions || []);
-                const stillRunning = sessionsList.some(
-                  s => (s.id === sessionId || s.tempName === sessionId || s.name === sessionId || s.id === currentSessionId || (s.tempName && s.tempName === currentSessionId)) && s.isRunning
-                );
-                if (stillRunning && !isCompleted && aiContainer.viewVersion === sessionViewVersion) {
-                  return;
-                }
-              }
-            } catch (_) {}
-            if (!isCompleted && es.readyState !== EventSource.OPEN) {
-              closeAndDone();
-            }
+        function scheduleRecovery() {
+          if (isCompleted || errorTimer) return;
+          errorTimer = setTimeout(() => {
+            errorTimer = null;
+            recoverStream();
           }, 4500);
-        };
+        }
+
+        function connectStream() {
+          if (es) { try { es.close(); } catch (_) {} }
+          const url = '/api/chat/stream?sessionId=' + encodeURIComponent(sessionId)
+            + (replayCursor > 0 ? '&lastEventId=' + replayCursor : '') + '&_t=' + Date.now();
+          es = new EventSource(url);
+          es._closeAndDone = closeAndDone;
+          window.activeChatEventSource = es;
+          const source = es;
+          eventNames.forEach(evt => source.addEventListener(evt, e => {
+            if (source === es) onEventData(e);
+          }));
+          source.onopen = () => {
+            if (source === es && errorTimer) { clearTimeout(errorTimer); errorTimer = null; }
+          };
+          source.onerror = () => { if (source === es) scheduleRecovery(); };
+        }
+
+        async function recoverStream() {
+          if (isCompleted || checking || es.readyState === EventSource.OPEN) return;
+          if (aiContainer.viewVersion !== sessionViewVersion) { closeAndDone(); return; }
+          checking = true;
+          try {
+            const checkRes = await fetch('/api/sessions?_t=' + Date.now(), { signal: AbortSignal.timeout(10000) });
+            if (!checkRes.ok) throw new Error('Session status unavailable');
+            const checkData = await checkRes.json();
+            const sessionsList = Array.isArray(checkData) ? checkData : (checkData?.sessions || []);
+            if (isCompleted || aiContainer.viewVersion !== sessionViewVersion) return;
+            const stillRunning = sessionsList.some(
+              s => (s.id === sessionId || s.tempName === sessionId || s.id === currentSessionId || (s.tempName && s.tempName === currentSessionId)) && s.isRunning
+            );
+            if (!stillRunning) { closeAndDone(); return; }
+            if (es.readyState !== EventSource.OPEN) connectStream();
+          } catch (_) {
+            // A failed status request is not proof that the background task ended.
+          } finally {
+            checking = false;
+            if (!isCompleted && es.readyState !== EventSource.OPEN) scheduleRecovery();
+          }
+        }
+
+        function onVisible() {
+          if (document.visibilityState === 'visible') recoverStream();
+        }
+        document.addEventListener('visibilitychange', onVisible);
+        window.addEventListener('online', recoverStream);
+        connectStream();
       });
     }
 
@@ -14287,5 +14641,6 @@
       </div>
     </div>
   </dialog>
+  <script src="/sound-settings.js"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const html = fs.readFileSync(__dirname + '/public/index.html', 'utf8');
-const code = html.match(/<script>([\s\S]*)<\/script>/)[1];
+const code = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(match => match[1]).join('\n');
 new vm.Script(code);
 const start = code.indexOf('    function buildInlineErrorHtml(');
 const end = code.indexOf('    function buildWorkspaceTreeSkeletonHtml(', start);

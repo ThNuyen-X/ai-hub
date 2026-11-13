@@ -68,8 +68,9 @@ assert.deepStrictEqual(JSON.stringify(claudeModels.map(m => m.id)), JSON.stringi
 
 // Kiem tra model Gemini
 const geminiModels = Array.from(MODELS.filter(m => m.group === 'gemini'));
-assert.equal(geminiModels.length, 3, 'Gemini group must have 3 models');
+assert.equal(geminiModels.length, 4, 'Gemini group must have 4 models');
 assert.deepStrictEqual(JSON.stringify(geminiModels.map(m => m.id)), JSON.stringify([
+  'ag/gemini-4-hydrogen-high',
   'ag/gemini-3.8-flash',
   'ag/gemini-4-argon-high',
   'ag/gemini-3.1-pro-high'
@@ -200,6 +201,8 @@ assert.equal(fakeDom.currentModelName.innerText, 'Claude Sonnet 5.5');
 sandbox.openModelProviderPopup('gemini');
 assert(!fakeDom.modelProviderModal.classList.contains('hidden'), 'modelProviderModal must be open for Gemini');
 assert(fakeDom.modelProviderModalTitle.innerText.includes('Gemini'), 'Title must mention Gemini');
+assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 4 Hydrogen'));
+assert(fakeDom.modelProviderModalList.innerHTML.includes('ag/gemini-4-hydrogen-high'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 3.8 Flash'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 4 Argon'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 3.1 Pro'));

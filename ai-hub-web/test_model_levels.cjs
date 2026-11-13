@@ -8,6 +8,10 @@ const source = fs.readFileSync(__dirname + '/server.js', 'utf8');
 const context = vm.createContext({ ModelLevels });
 vm.runInContext(html.match(/const MODELS = \[[\s\S]*?\];/)[0] + '\nthis.models = MODELS;', context);
 const models = context.models;
+const hydrogen = models.find(m => m.id.includes('hydrogen'));
+assert.deepEqual(ModelLevels.variants(hydrogen).map(m => m.id), [
+ 'ag/gemini-4-hydrogen-low', 'ag/gemini-4-hydrogen-medium', 'ag/gemini-4-hydrogen-high'
+]);
 const argon = models.find(m => m.id.includes('argon'));
 assert.deepEqual(ModelLevels.variants(argon).map(m => m.id), [
  'ag/gemini-4-argon-low', 'ag/gemini-4-argon-medium', 'ag/gemini-4-argon-high'

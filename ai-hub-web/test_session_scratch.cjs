@@ -25,6 +25,18 @@ const { createTurnScratch, cleanupTurnScratch, scratchInstruction } = require('.
     assert.equal(await cleanupTurnScratch(a), false);
     assert.ok(scratchInstruction(a.dir).includes('NOT the project workspace'));
     assert.ok(scratchInstruction(a.dir).includes('deliverables'));
+    const expanded = createTurnScratch('D:/project', 'expanded', {
+      LOCALAPPDATA: root,
+      AI_HUB_SCRATCH_ROOT: '%localappdata%/ai-hub/scratch'
+    });
+    assert.equal(expanded.root, path.join(root, 'ai-hub', 'scratch'));
+    assert.equal(expanded.dir.includes('%'), false);
+    assert.equal(await cleanupTurnScratch(expanded), true);
+    const unresolved = createTurnScratch('D:/project', 'unresolved', {
+      AI_HUB_SCRATCH_ROOT: '%AI_HUB_UNKNOWN_SCRATCH_VARIABLE%/scratch'
+    });
+    assert.equal(unresolved.dir.includes('%'), false);
+    assert.equal(await cleanupTurnScratch(unresolved), true);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
   console.log('Scratch: workspace/session isolation, per-turn ownership and safe cleanup passed');
 })().catch(error => { console.error(error); process.exitCode = 1; });

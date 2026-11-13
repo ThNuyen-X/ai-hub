@@ -826,9 +826,13 @@
     .conversation-empty { padding: 64px 20px; text-align: center; font-size: 13px; color: var(--text-sub); }
     @media (max-width: 640px) {
       #fullConversationModal { padding: 0; }
-      .conversation-dialog { height: 100dvh; max-height: 100dvh; border-radius: 0; }
-      .conversation-toolbar { padding: 8px 12px; font-size: 10px; }
+      .conversation-dialog { height: var(--mobile-app-height, 100dvh); max-height: var(--mobile-app-height, 100dvh); border-radius: 0; }
+      .conversation-toolbar { padding: 8px 10px; font-size: 10.5px; flex-wrap: wrap; gap: 6px; }
+      .conversation-toolbar > span { width: 100%; margin-right: 0; }
+      #fullConvMessagesContainer { padding: 12px 10px; }
       #fullConvMessagesContainer .group > div { max-width: 100%; }
+      #fullConvMessagesContainer .ai-msg-avatar { width: 26px !important; height: 26px !important; border-radius: 8px !important; }
+      #fullConvMessagesContainer .ai-msg-header { margin-bottom: 6px !important; gap: 6px !important; }
     }
     .transcript-loading { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 180px; font-size: 13px; color: var(--text-sub); }
     .transcript-spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
@@ -889,17 +893,104 @@
     .ai-content-body, .markdown-body, .user-bubble { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
     .markdown-body pre { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .markdown-body table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Shared Terminal Drawer responsive layout */
+    .terminal-drawer-header {
+      min-height: 40px;
+      padding: 6px 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .terminal-drawer-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1 1 200px;
+    }
+    .terminal-drawer-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .terminal-drawer-controls::-webkit-scrollbar { display: none; }
+    .terminal-drawer-controls button { flex-shrink: 0; white-space: nowrap; }
+
+    /* AI message responsive header defaults */
+    .ai-msg-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px 8px;
+      min-width: 0;
+    }
+    .ai-msg-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 3px 6px;
+      min-width: 0;
+      flex: 1 1 140px;
+    }
+    .ai-msg-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    @media (max-width: 1023px) {
+      #terminalDrawer {
+        position: absolute;
+        inset: auto 0 0;
+        max-height: min(68dvh, 420px);
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -12px 40px rgba(0,0,0,.28);
+        z-index: 35;
+      }
+      .terminal-drawer-header {
+        position: relative;
+        height: auto;
+        padding: 7px 42px 7px 12px;
+        gap: 6px;
+      }
+      .terminal-drawer-title-row { flex-basis: 100%; }
+      .terminal-drawer-controls { width: 100%; gap: 4px; padding-bottom: 1px; }
+      #terminalDrawer button { flex-shrink: 0; min-height: 30px; }
+      #terminalDrawer button[onclick="toggleTerminalDrawer(false)"] {
+        position: absolute;
+        right: 8px;
+        top: 6px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+      }
+    }
+
     @media (max-width: 639px) {
       body { height: var(--mobile-app-height, 100dvh) !important; }
       main { overflow: hidden; width: 100%; max-width: 100vw; }
-      #welcomeBanner { padding: 18px 14px; border-radius: 20px; margin-top: 0; }
+      #welcomeBanner { padding: 16px 12px; border-radius: 20px; margin-top: 0; }
       #welcomeBanner > div > button { max-width: 100%; min-width: 0; }
       #welcomeBanner > div > button > span:first-of-type { display: none; }
       #heroWorkspaceLabel { min-width: 0; max-width: 100%; }
-      #welcomeBanner .bento-card { padding: 12px; }
-      #welcomeBanner .grid { margin-top: 16px; gap: 8px; }
+      #welcomeBanner .bento-card { padding: 11px; }
+      #welcomeBanner .grid { margin-top: 14px; gap: 8px; }
       main > header {
-        height: calc(56px + max(0px, env(safe-area-inset-top)));
+        height: calc(54px + max(0px, env(safe-area-inset-top)));
         padding-top: max(6px, env(safe-area-inset-top));
         padding-left: max(8px, env(safe-area-inset-left));
         padding-right: max(8px, env(safe-area-inset-right));
@@ -911,12 +1002,12 @@
       #mobileHeaderComboboxBtn { min-height: 38px; height: 38px; }
       #btnHeaderFullConv, #btnToggleTerminal, #btnToggleFullscreen { display: none !important; }
       #currentSessionFolder { font-size: 12px; }
-      #modelDropdownBtn { min-width: 38px; height: 38px; max-width: 110px; padding: 6px 8px; }
-      #currentModelName { max-width: 58px; }
+      #modelDropdownBtn { min-width: 38px; height: 38px; max-width: 112px; padding: 6px 8px; }
+      #currentModelName { max-width: 60px; }
       #headerLiveTimerBadge { display: none !important; }
       #mobileHeaderComboboxMenu {
         position: fixed;
-        top: max(60px, calc(env(safe-area-inset-top) + 52px));
+        top: max(58px, calc(env(safe-area-inset-top) + 50px));
         left: max(10px, env(safe-area-inset-left));
         right: max(10px, env(safe-area-inset-right));
         margin: 0 auto;
@@ -928,14 +1019,14 @@
       }
       #modelDropdownMenu {
         position: fixed;
-        top: max(60px, calc(env(safe-area-inset-top) + 52px));
+        top: max(58px, calc(env(safe-area-inset-top) + 50px));
         right: max(8px, env(safe-area-inset-right));
         width: min(320px, calc(100vw - 16px));
         max-height: min(68dvh, 460px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
       }
-      #slashCommandsMenu { left: 8px !important; right: 8px !important; bottom: 168px !important; width: auto !important; max-width: none !important; max-height: 48dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+      #slashCommandsMenu { left: 8px !important; right: 8px !important; bottom: 164px !important; width: auto !important; max-width: none !important; max-height: min(44dvh, 280px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
       #sidebar {
         width: min(320px, calc(100vw - 44px));
         padding-top: max(0px, env(safe-area-inset-top));
@@ -945,7 +1036,7 @@
       }
       #sidebar .session-item { min-height: 44px; }
       #chatFeed {
-        padding: 14px 10px;
+        padding: 12px 10px;
         padding-left: max(10px, env(safe-area-inset-left));
         padding-right: max(10px, env(safe-area-inset-right));
         overscroll-behavior-y: contain;
@@ -954,8 +1045,10 @@
       #chatFeed > .group { padding-left: 0; padding-right: 0; }
       #chatFeed > .group > div { min-width: 0; max-width: 100%; }
       #chatFeed > .justify-end > div { max-width: 92%; }
-      #chatFeed .ai-msg-avatar { width: 28px !important; height: 28px !important; border-radius: 8px !important; }
-      #chatFeed .ai-msg-header { margin-bottom: 6px !important; gap: 6px !important; }
+      #chatFeed .ai-msg-avatar, #fullConvMessagesContainer .ai-msg-avatar { width: 26px !important; height: 26px !important; border-radius: 8px !important; }
+      #chatFeed .ai-msg-row, #fullConvMessagesContainer .ai-msg-row { gap: 8px !important; }
+      #chatFeed .ai-msg-header, #fullConvMessagesContainer .ai-msg-header { margin-bottom: 4px !important; gap: 4px 6px !important; }
+      .ai-msg-actions button { padding: 3px 5px; }
       .markdown-body, .user-bubble { font-size: 14px; line-height: 1.72; word-break: break-word; }
       .markdown-body pre { font-size: 12px; -webkit-overflow-scrolling: touch; }
       .question-context { padding: 10px 12px; }
@@ -966,8 +1059,8 @@
         padding: 0 max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
       }
       #btnToggleComposerCollapse {
-        min-height: 36px;
-        min-width: 36px;
+        min-height: 34px;
+        min-width: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -977,17 +1070,21 @@
       #quickPromptChipsBar { max-height: 42px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
       #quickPromptChipsBar button { flex-shrink: 0; min-height: 34px; }
       #agentModeSelector { width: 100%; display: flex; }
-      #agentModeSelector button { flex: 1; justify-content: center; min-height: 36px; font-size: 11px; padding: 6px 6px; white-space: nowrap; }
-      #promptInput { font-size: 16px !important; line-height: 1.5; min-height: 58px; max-height: 140px; padding: 10px 12px; }
+      #agentModeSelector button { flex: 1; justify-content: center; min-height: 34px; font-size: 11px; padding: 5px 6px; white-space: nowrap; }
+      #promptInput { font-size: 16px !important; line-height: 1.5; min-height: 54px; max-height: 140px; padding: 9px 12px; }
       #sessionSearchInput, #modelSearchInput, #fullConvSearchInput, #wsPathInput, #workspaceListFilterInput, #gitCommitMessageInput, .inline-user-edit-textarea { font-size: 16px !important; }
-      #stopBtn { width: 40px; height: 40px; padding: 0; border-radius: 10px; }
-      #sendBtn { height: 40px; padding: 0 16px; font-size: 13px; border-radius: 10px; }
-      #workspaceModal { padding: 0 !important; }
-      #workspaceModal > div {
+      #stopBtn { width: 38px; height: 38px; padding: 0; border-radius: 10px; }
+      #sendBtn { height: 38px; padding: 0 14px; font-size: 13px; border-radius: 10px; }
+      #workspaceModal, #workspaceConfigModal, #attachFileModal, #filePreviewModal, #fullscreenCodeModal { padding: 0 !important; }
+      #workspaceModal > div,
+      #workspaceConfigModal > div,
+      #attachFileModal > div,
+      #filePreviewDialog,
+      #fullscreenCodeModal > div {
         width: 100% !important;
         max-width: 100% !important;
-        height: 100dvh !important;
-        max-height: 100dvh !important;
+        height: var(--mobile-app-height, 100dvh) !important;
+        max-height: var(--mobile-app-height, 100dvh) !important;
         border-radius: 0 !important;
         border-left: none !important;
         border-right: none !important;
@@ -995,27 +1092,17 @@
       #workspaceModal > div > div:last-child { flex-wrap: wrap; gap: 8px; }
       #workspaceModal > div > div:last-child > span { width: 100%; }
       #workspaceModal > div > div:last-child > div { width: 100%; justify-content: flex-end; }
-      #fullscreenCodeModal { padding: 0 !important; }
-      #fullscreenCodeModal > div {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: 100dvh !important;
-        max-height: 100dvh !important;
-        border-radius: 0 !important;
-        border-left: none !important;
-        border-right: none !important;
-      }
+      #workspaceConfigModal > div > div:last-child { flex-wrap: wrap; gap: 8px; }
+      #modelProviderModal { padding: 8px !important; }
+      #modelProviderModal > div { max-height: calc(var(--mobile-app-height, 100dvh) - 16px) !important; }
+      #modelProviderModalList { flex: 1 1 auto; min-height: 0; max-height: none !important; }
+      #attachFilesListContainer { flex: 1 1 auto; min-height: 0; max-height: none !important; }
+      #commandPaletteModal { padding: 10px 8px 8px !important; }
+      #paletteResultsList { max-height: min(55dvh, 320px); }
       #confirmActionModal > div { padding: 18px; border-radius: 18px; }
-      #terminalDrawer { position: absolute; inset: auto 0 0; max-height: 65%; border-radius: 16px 16px 0 0; box-shadow: 0 -12px 40px rgba(0,0,0,.2); }
-      #terminalDrawer > div:first-child { height: auto; min-height: 90px; padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
-      #terminalDrawer > div:first-child > div { width: 100%; min-width: 0; }
-      #terminalDrawer > div:first-child > div:first-child { gap: 8px; }
-      #terminalDrawer > div:first-child > div:first-child > span:first-of-type { font-size: 11px; flex: 1; }
-      #terminalDrawer > div:first-child > div:last-child { overflow-x: auto; gap: 4px; }
-      #terminalDrawer button { flex-shrink: 0; min-width: 32px; min-height: 36px; }
-      #terminalDrawer button[onclick="toggleTerminalDrawer(false)"] { position: absolute; right: 8px; top: 4px; background: var(--bg-surface); }
-      #terminalLineCountBadge { margin-right: 32px; }
-      #terminalLogsFeed { font-size: 12px; overflow: auto; overscroll-behavior: contain; padding-bottom: max(12px, env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
+      .terminal-drawer-header > div:first-child > span:first-of-type { font-size: 11px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #terminalLineCountBadge { margin-right: 4px; }
+      #terminalLogsFeed, #liveTerminalOutput { font-size: 12px; overflow: auto; overscroll-behavior: contain; padding-bottom: max(12px, env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
       #toastContainer {
         top: max(12px, env(safe-area-inset-top));
         left: 12px !important;
@@ -1071,7 +1158,7 @@
     }
     @media (orientation: landscape) and (max-height: 520px) {
       main > header {
-        height: 48px !important;
+        height: 46px !important;
         padding-top: 4px !important;
         padding-bottom: 4px !important;
         padding-left: max(8px, env(safe-area-inset-left)) !important;
@@ -1081,34 +1168,103 @@
       #mobileHeaderComboboxBtn { min-height: 34px !important; height: 34px !important; max-width: 380px !important; }
       #modelDropdownBtn { min-width: 34px !important; height: 34px !important; padding: 4px 8px !important; }
       #mobileHeaderComboboxMenu {
-        top: max(52px, calc(env(safe-area-inset-top) + 42px)) !important;
-        max-height: min(86dvh, 360px) !important;
+        top: max(48px, calc(env(safe-area-inset-top) + 40px)) !important;
+        max-height: calc(100dvh - 56px) !important;
         max-width: 440px !important;
       }
       #modelDropdownMenu {
-        top: max(52px, calc(env(safe-area-inset-top) + 42px)) !important;
-        max-height: min(86dvh, 360px) !important;
+        top: max(48px, calc(env(safe-area-inset-top) + 40px)) !important;
+        max-height: calc(100dvh - 56px) !important;
       }
-      #promptInput {
-        min-height: 44px !important;
-        max-height: 100px !important;
-        padding: 6px 10px !important;
+      #slashCommandsMenu {
+        bottom: 126px !important;
+        max-height: calc(100dvh - 140px) !important;
       }
+      #welcomeBanner { padding: 12px 14px !important; margin: 4px auto !important; border-radius: 16px !important; }
+      #welcomeBanner img { width: 34px !important; height: 34px !important; margin-bottom: 6px !important; }
+      #welcomeBanner h1 { font-size: 16px !important; margin-bottom: 4px !important; }
+      #welcomeBanner p { display: none !important; }
+      #welcomeBanner .grid { margin-top: 10px !important; gap: 6px !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      #welcomeBanner .bento-card { padding: 8px 10px !important; border-radius: 12px !important; }
       .composer-outer {
         padding-left: max(8px, env(safe-area-inset-left)) !important;
         padding-right: max(8px, env(safe-area-inset-right)) !important;
         padding-bottom: max(4px, env(safe-area-inset-bottom)) !important;
+        padding-top: 0 !important;
       }
+      .composer-suggestions-header { min-height: 26px !important; padding-bottom: 2px !important; }
+      #toggleQuickPromptsBtn { padding: 2px 8px !important; font-size: 10px !important; }
+      #composerDockHeader { padding: 3px 8px !important; gap: 6px !important; }
+      #agentModeSelector button { min-height: 26px !important; padding: 2px 8px !important; font-size: 10.5px !important; }
+      #btnToggleComposerCollapse { min-height: 26px !important; height: 26px !important; padding: 0 8px !important; }
+      #promptInput {
+        min-height: 36px !important;
+        max-height: 70px !important;
+        padding: 5px 10px !important;
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+      }
+      #mainDockBox > div:last-child { padding: 3px 8px !important; }
+      #sendBtn { height: 28px !important; padding: 0 12px !important; font-size: 11.5px !important; }
+      #stopBtn { width: 28px !important; height: 28px !important; }
       #chatFeed {
-        padding-left: max(12px, env(safe-area-inset-left)) !important;
-        padding-right: max(12px, env(safe-area-inset-right)) !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+        padding-left: max(10px, env(safe-area-inset-left)) !important;
+        padding-right: max(10px, env(safe-area-inset-right)) !important;
+      }
+      #terminalDrawer {
+        position: absolute !important;
+        inset: auto 0 0 !important;
+        max-height: calc(100dvh - 50px) !important;
+        border-radius: 14px 14px 0 0 !important;
+        z-index: 35 !important;
+      }
+      #modelProviderModal,
+      #workspaceModal,
+      #workspaceConfigModal,
+      #attachFileModal,
+      #keyboardShortcutsModal,
+      #commandPaletteModal,
+      #fullConversationModal,
+      #filePreviewModal,
+      #fullscreenCodeModal {
+        padding: 6px !important;
+      }
+      #modelProviderModal > div,
+      #workspaceModal > div,
+      #workspaceConfigModal > div,
+      #attachFileModal > div,
+      #keyboardShortcutsModal > div,
+      #commandPaletteModal > div,
+      #fullConversationModal > div,
+      #filePreviewDialog,
+      #fullscreenCodeModal > div {
+        max-height: calc(100dvh - 12px) !important;
+        height: calc(100dvh - 12px) !important;
+      }
+      #modelProviderModalList,
+      #attachFilesListContainer,
+      #foldersListContainer,
+      #workspaceConfigRowsContainer,
+      #paletteResultsList {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
       }
     }
+    @media (max-width: 390px) {
+      .ai-msg-role-tag, .ai-msg-role-dot { display: none !important; }
+    }
     @media (max-width: 359px) {
-      #modelDropdownBtn { max-width: 86px; padding: 6px; }
-      #currentModelName { max-width: 40px; }
+      #modelDropdownBtn { max-width: 84px; padding: 5px 6px; }
+      #currentModelName { max-width: 38px; }
       #mobileComboboxSessionTitle { display: none !important; }
       #agentModeSelector button { padding-left: 4px; padding-right: 4px; font-size: 10px; }
+      #chatFeed .ai-msg-avatar, #fullConvMessagesContainer .ai-msg-avatar { width: 22px !important; height: 22px !important; }
+      .ai-msg-actions button { padding: 2px 3px; }
+      #welcomeBanner { padding: 12px 10px; }
+      #modelProviderTabs button { padding: 4px 8px; font-size: 11px; }
     }
 
     /* Unverified candidate local paths look like plain inline code until verified on PC */
@@ -2364,29 +2520,29 @@
         Lệnh nhanh (Slash Commands)
       </div>
       <div class="space-y-0.5">
-        <button onclick="insertSlashCommand('/git ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between hover:bg-[var(--bg-hover)] ease-spring">
-          <span class="font-mono text-emerald-400 font-semibold">/git</span>
-          <span class="text-[11px] text-[var(--text-sub)]">Kiểm tra thay đổi git status & diff</span>
+        <button onclick="insertSlashCommand('/git ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between gap-2 hover:bg-[var(--bg-hover)] ease-spring min-w-0">
+          <span class="font-mono text-emerald-400 font-semibold shrink-0">/git</span>
+          <span class="text-[11px] text-[var(--text-sub)] truncate">Kiểm tra thay đổi git status & diff</span>
         </button>
-        <button onclick="insertSlashCommand('/arch ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between hover:bg-[var(--bg-hover)] ease-spring">
-          <span class="font-mono text-blue-400 font-semibold">/arch</span>
-          <span class="text-[11px] text-[var(--text-sub)]">Phân tích kiến trúc toàn bộ dự án</span>
+        <button onclick="insertSlashCommand('/arch ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between gap-2 hover:bg-[var(--bg-hover)] ease-spring min-w-0">
+          <span class="font-mono text-blue-400 font-semibold shrink-0">/arch</span>
+          <span class="text-[11px] text-[var(--text-sub)] truncate">Phân tích kiến trúc toàn bộ dự án</span>
         </button>
-        <button onclick="insertSlashCommand('/bug ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between hover:bg-[var(--bg-hover)] ease-spring">
-          <span class="font-mono text-amber-400 font-semibold">/bug</span>
-          <span class="text-[11px] text-[var(--text-sub)]">Rà soát bug và các lỗ hổng tiềm ẩn</span>
+        <button onclick="insertSlashCommand('/bug ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between gap-2 hover:bg-[var(--bg-hover)] ease-spring min-w-0">
+          <span class="font-mono text-amber-400 font-semibold shrink-0">/bug</span>
+          <span class="text-[11px] text-[var(--text-sub)] truncate">Rà soát bug và các lỗ hổng tiềm ẩn</span>
         </button>
-        <button onclick="insertSlashCommand('/readme ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between hover:bg-[var(--bg-hover)] ease-spring">
-          <span class="font-mono text-purple-400 font-semibold">/readme</span>
-          <span class="text-[11px] text-[var(--text-sub)]">Viết tài liệu hướng dẫn README.md</span>
+        <button onclick="insertSlashCommand('/readme ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between gap-2 hover:bg-[var(--bg-hover)] ease-spring min-w-0">
+          <span class="font-mono text-purple-400 font-semibold shrink-0">/readme</span>
+          <span class="text-[11px] text-[var(--text-sub)] truncate">Viết tài liệu hướng dẫn README.md</span>
         </button>
-        <button onclick="insertSlashCommand('/test ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between hover:bg-[var(--bg-hover)] ease-spring">
-          <span class="font-mono text-teal-400 font-semibold">/test</span>
-          <span class="text-[11px] text-[var(--text-sub)]">Chạy unit tests và báo cáo kết quả</span>
+        <button onclick="insertSlashCommand('/test ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between gap-2 hover:bg-[var(--bg-hover)] ease-spring min-w-0">
+          <span class="font-mono text-teal-400 font-semibold shrink-0">/test</span>
+          <span class="text-[11px] text-[var(--text-sub)] truncate">Chạy unit tests và báo cáo kết quả</span>
         </button>
-        <button onclick="insertSlashCommand('/clean ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between hover:bg-[var(--bg-hover)] ease-spring">
-          <span class="font-mono text-rose-400 font-semibold">/clean</span>
-          <span class="text-[11px] text-[var(--text-sub)]">Dọn dẹp log, cache và build artifacts</span>
+        <button onclick="insertSlashCommand('/clean ')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between gap-2 hover:bg-[var(--bg-hover)] ease-spring min-w-0">
+          <span class="font-mono text-rose-400 font-semibold shrink-0">/clean</span>
+          <span class="text-[11px] text-[var(--text-sub)] truncate">Dọn dẹp log, cache và build artifacts</span>
         </button>
       </div>
     </div>
@@ -2565,23 +2721,23 @@
          style="background: var(--terminal-bg); border-color: var(--border);">
       
       <!-- Drawer Header Bar -->
-      <div class="h-10 px-4 flex items-center justify-between border-b shrink-0 select-none"
+      <div class="terminal-drawer-header flex items-center justify-between border-b shrink-0 select-none"
            style="border-color: var(--border); background: var(--bg-surface);">
-        <div class="flex items-center space-x-2.5">
-          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="terminal-drawer-title-row">
+          <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
-          <span class="text-xs font-bold font-mono tracking-tight text-[var(--text-main)]">AGENT EXECUTION LOGS</span>
-          <span id="terminalDrawerStatus" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">
+          <span class="text-xs font-bold font-mono tracking-tight text-[var(--text-main)] truncate">AGENT EXECUTION LOGS</span>
+          <span id="terminalDrawerStatus" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 shrink-0">
             Idle
           </span>
-          <span id="terminalLineCountBadge" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">
+          <span id="terminalLineCountBadge" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 shrink-0">
             0 dòng
           </span>
         </div>
 
         <!-- Terminal Log Filters & Action Controls -->
-        <div class="flex items-center space-x-1.5 text-xs font-mono">
+        <div class="terminal-drawer-controls text-xs font-mono">
           <!-- Filter buttons -->
           <button id="termFilterAll" onclick="filterTerminalLogs('all')" class="px-2 py-0.5 rounded text-[10.5px] bg-blue-500/20 text-blue-400 border border-blue-500/30">Tất cả</button>
           <button id="termFilterCmd" onclick="filterTerminalLogs('cmd')" class="px-2 py-0.5 rounded text-[10.5px] hover:bg-[var(--bg-hover)] text-zinc-400">Lệnh</button>
@@ -3304,10 +3460,10 @@
       </div>
 
       <!-- Quick Provider Switcher Tabs (Dễ dàng chuyển đổi trực tiếp giữa OpenAI, Claude, Gemini) -->
-      <div id="modelProviderTabs" class="px-3 sm:px-4 py-2 border-b flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0" style="border-color: var(--border-subtle); background: var(--bg-card);"></div>
+      <div id="modelProviderTabs" class="px-2.5 sm:px-4 py-2 border-b flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 w-full min-w-0" style="border-color: var(--border-subtle); background: var(--bg-card);"></div>
 
       <!-- Models List -->
-      <div id="modelProviderModalList" class="p-3 sm:p-4 space-y-2.5 overflow-y-auto max-h-[58vh] sm:max-h-[62vh]"></div>
+      <div id="modelProviderModalList" class="p-2.5 sm:p-4 space-y-2.5 overflow-y-auto flex-1 min-h-0 max-h-[58vh] sm:max-h-[62vh]"></div>
 
       <!-- Footer -->
       <div class="px-3.5 py-2.5 sm:px-5 sm:py-3 border-t text-[11px] flex items-center justify-between shrink-0" style="border-color: var(--border-subtle); color: var(--text-sub); background: var(--bg-card);">
@@ -3328,19 +3484,19 @@
          style="background: var(--bg-surface); border-color: var(--border-subtle);">
       
       <!-- Modal Header -->
-      <div class="px-4 py-2.5 border-b flex items-center justify-between gap-2 font-mono text-xs select-none"
+      <div class="px-2.5 sm:px-4 py-2 sm:py-2.5 border-b flex items-center justify-between gap-1.5 sm:gap-2 font-mono text-xs select-none"
            style="background: var(--bg-hover); border-color: var(--border-subtle);">
-        <div class="flex items-center space-x-2 min-w-0">
-          <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block shrink-0"></span>
-          <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block shrink-0"></span>
-          <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block shrink-0"></span>
-          <span id="filePreviewTitle" class="ml-2 font-bold truncate max-w-[160px] sm:max-w-md" style="color: var(--text-main);">filename</span>
+        <div class="flex items-center space-x-1.5 sm:space-x-2 min-w-0 flex-1">
+          <span class="hidden sm:inline-block w-3 h-3 rounded-full bg-rose-500/80 shrink-0"></span>
+          <span class="hidden sm:inline-block w-3 h-3 rounded-full bg-amber-500/80 shrink-0"></span>
+          <span class="hidden sm:inline-block w-3 h-3 rounded-full bg-emerald-500/80 shrink-0"></span>
+          <span id="filePreviewTitle" class="sm:ml-2 font-bold truncate min-w-0 flex-1" style="color: var(--text-main);">filename</span>
           <span id="filePreviewStatusBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0"></span>
           <span id="filePreviewDiffStats" class="hidden items-center gap-1.5 text-[11px] font-bold shrink-0"></span>
           <span id="filePreviewSize" class="text-[11px] hidden md:inline shrink-0" style="color: var(--text-sub);">0 KB</span>
         </div>
 
-        <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+        <div class="flex items-center space-x-1 sm:space-x-2 shrink-0">
           <a id="filePreviewNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium ease-spring flex items-center gap-1" title="Mở trong tab trình duyệt mới">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
             <span class="hidden sm:inline">Tab mới</span>
@@ -3440,8 +3596,8 @@
         </div>
 
         <!-- PDF Preview Container -->
-        <div id="filePreviewPdfContainer" class="hidden w-full h-full min-h-[500px] flex-1">
-          <iframe id="filePreviewPdfFrame" class="w-full h-full min-h-[500px] border-0 rounded-b-xl" src=""></iframe>
+        <div id="filePreviewPdfContainer" class="hidden w-full h-full min-h-[240px] sm:min-h-[480px] flex-1">
+          <iframe id="filePreviewPdfFrame" class="w-full h-full min-h-[240px] sm:min-h-[480px] border-0 rounded-b-xl" src=""></iframe>
         </div>
 
         <!-- Word Document (.docx) Preview Container -->
@@ -3530,8 +3686,8 @@
         </div>
 
         <!-- HTML Sandbox Preview Container -->
-        <div id="filePreviewHtmlContainer" class="hidden w-full h-full min-h-[480px] flex-1">
-          <iframe id="filePreviewHtmlFrame" sandbox="allow-scripts allow-same-origin" class="w-full h-full min-h-[480px] border-0 bg-white rounded-b-xl" src=""></iframe>
+        <div id="filePreviewHtmlContainer" class="hidden w-full h-full min-h-[240px] sm:min-h-[480px] flex-1">
+          <iframe id="filePreviewHtmlFrame" sandbox="allow-scripts allow-same-origin" class="w-full h-full min-h-[240px] sm:min-h-[480px] border-0 bg-white rounded-b-xl" src=""></iframe>
         </div>
       </div>
 
@@ -3742,6 +3898,7 @@
       { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "claude", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
       { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "claude", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
       // Gemini (Google & DeepMind)
+      { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Hydrogen", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
       { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
       { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon", iconBg: "rgba(66, 133, 244, 0.1)" },
       { id: "ag/gemini-3.1-pro-high", name: "Gemini 3.1 Pro", full: "ag/gemini-3.1-pro-high", group: "gemini", provider: "Google", tag: "Xử lý ngữ cảnh lớn 1M tokens", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" }
@@ -9569,13 +9726,15 @@
       toggleTerminalDrawer(true);
       const pre = document.createElement('pre');
       pre.id = 'liveTerminalOutput';
-      pre.className = 'flex-1 overflow-auto p-3 m-0 text-xs whitespace-pre-wrap select-text';
+      pre.className = 'flex-1 overflow-auto p-3 m-0 text-xs whitespace-pre-wrap break-words select-text';
       // Terminal backgrounds stay dark in every theme, independently of page text colors.
       pre.style.color = '#e2e8f0';
       terminalLogsFeed.classList.add('hidden');
       terminalDrawer.appendChild(pre);
       const watch = { sessionId: currentSessionId, timer: null, controller: null, busy: false, version: '', delay: 2000, finished: false };
       liveTerminalWatch = watch;
+      const getCardOutput = () => String(card._cardData?.output || '').slice(-65536);
+      const isCardRunning = () => !!card.querySelector('.animate-pulse');
       const poll = async () => {
         if (liveTerminalWatch !== watch || currentSessionId !== watch.sessionId) { stopLiveTerminalWatch(); return; }
         if (document.hidden || watch.busy || watch.finished) return;
@@ -9588,20 +9747,53 @@
           const data = await response.json();
           if (liveTerminalWatch !== watch) return;
           if (!response.ok) throw new Error(data.error || 'Live log unavailable');
+          const hasLogFile = data.hasLogFile !== undefined ? !!data.hasLogFile : Boolean(data.file);
+          const serverOutput = String(data.output || '').slice(-65536);
+          const cardOutput = getCardOutput();
+          const bestOutput = serverOutput || cardOutput;
           watch.version = data.version || '';
           watch.delay = data.unchanged ? Math.min(watch.delay * 1.5, 10000) : 2000;
-          if (!data.unchanged) {
-            pre.textContent = command + '\n\n' + data.file + '\nUpdated: ' + data.modified + '\n\n' + data.text;
+          if (hasLogFile && data.waiting) {
+            pre.textContent = '$ ' + command + '\n\n[Đang chờ tạo file log: ' + (data.file || '...') + ']' +
+              (bestOutput ? '\n\n--- Output hiện có ---\n' + bestOutput : '');
             if (terminalAutoScroll) pre.scrollTop = pre.scrollHeight;
+            again = !!(data.running || isCardRunning());
+            watch.finished = !again;
+          } else if (hasLogFile) {
+            if (!data.unchanged) {
+              pre.textContent = '$ ' + command + '\n\n' + (data.file || '') + (data.modified ? '\nUpdated: ' + data.modified : '') + '\n\n' + (data.text || '');
+              if (terminalAutoScroll) pre.scrollTop = pre.scrollHeight;
+            }
+            again = !!data.running;
+            watch.finished = !again;
+          } else {
+            const runningNow = !!(data.running || isCardRunning());
+            if (bestOutput) {
+              pre.textContent = '$ ' + command + '\n\n' + bestOutput;
+            } else if (runningNow) {
+              pre.textContent = '$ ' + command + '\n\n[Lệnh đang thực thi — output sẽ tự động hiển thị tại đây khi có kết quả từ tiến trình]';
+            } else {
+              pre.textContent = '$ ' + command + '\n\n[Lệnh đã hoàn thành — không có dữ liệu stdout/stderr]';
+            }
+            if (terminalAutoScroll) pre.scrollTop = pre.scrollHeight;
+            again = runningNow;
+            watch.finished = !again;
           }
-          again = data.running;
-          watch.finished = !again;
         } catch (err) {
           if (liveTerminalWatch !== watch || document.hidden) return;
           watch.delay = Math.min(watch.delay * 2, 15000);
-          pre.textContent = command + '\n\n' + (card._cardData.output || '').slice(-65536) + '\n\n' +
-            'Chua doc duoc log truc tiep. Lenh can ghi output vao file .log; khong chay lai lenh.\n' + err.message;
-          again = !!card.querySelector('.animate-pulse');
+          const fallbackOutput = getCardOutput();
+          const runningNow = isCardRunning();
+          if (fallbackOutput) {
+            pre.textContent = '$ ' + command + '\n\n' + fallbackOutput +
+              (runningNow ? '\n\n[Đang chờ cập nhật live stream: ' + err.message + ']' : '');
+          } else if (runningNow) {
+            pre.textContent = '$ ' + command + '\n\n[Lệnh đang thực thi — tạm thời chưa đọc được live stream (' + err.message + ')]';
+          } else {
+            pre.textContent = '$ ' + command + '\n\n[Không có dữ liệu output được lưu cho lệnh này]';
+          }
+          again = runningNow;
+          watch.finished = !again;
         } finally {
           clearTimeout(timeout);
           watch.busy = false;
@@ -9631,7 +9823,8 @@
       const open = (typeof forceState === 'boolean') ? forceState : !isCurrentlyOpen;
 
       if (open) {
-        terminalDrawer.style.height = '240px';
+        const defaultHeight = window.innerHeight <= 520 ? Math.min(220, Math.max(160, Math.floor(window.innerHeight * 0.65))) : 240;
+        terminalDrawer.style.height = defaultHeight + 'px';
         const badge = document.getElementById('terminalDrawerBadge');
         if (badge) badge.classList.add('hidden');
         if (terminalAutoScroll && terminalLogsFeed) {
@@ -9645,12 +9838,10 @@
 
     function toggleTerminalDrawerSize() {
       soundEffects.playClick();
-      const cur = terminalDrawer.style.height;
-      if (cur === '420px') {
-        terminalDrawer.style.height = '220px';
-      } else {
-        terminalDrawer.style.height = '420px';
-      }
+      const cur = parseInt(terminalDrawer.style.height, 10) || 240;
+      const maxH = window.innerHeight <= 520 ? Math.max(180, window.innerHeight - 54) : Math.min(420, Math.max(240, window.innerHeight - 80));
+      const minH = window.innerHeight <= 520 ? Math.min(200, Math.floor(window.innerHeight * 0.58)) : 220;
+      terminalDrawer.style.height = (cur >= maxH - 10 ? minH : maxH) + 'px';
     }
 
     function toggleTerminalAutoScroll() {
@@ -12176,23 +12367,23 @@
       row.className = 'w-full flex justify-start my-4 px-1 sm:px-2 group';
 
       row.innerHTML = `
-        <div class="flex items-start space-x-3 w-full max-w-full lg:max-w-[94%] xl:max-w-[90%]">
-          <div class="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 border shadow-2xs"
+        <div class="ai-msg-row flex items-start gap-2.5 sm:gap-3 w-full max-w-full lg:max-w-[94%] xl:max-w-[90%]">
+          <div class="ai-msg-avatar w-8 h-8 rounded-xl shrink-0 flex items-center justify-center mt-0.5 border shadow-2xs"
                style="background: ${model?.iconBg || 'var(--bg-card)'}; border-color: var(--border);">
             ${MODEL_ICONS[model.iconType] || MODEL_ICONS.openai}
           </div>
 
           <div class="flex-1 min-w-0 space-y-2">
-            <div class="flex items-center justify-between text-[11px] select-none pl-0.5" style="color: var(--text-sub);">
-              <div class="flex items-center space-x-2 font-semibold">
-                <span style="color: var(--text-main); font-weight: 600;">${escapeHtml(model.name)}</span>
-                <span>·</span>
-                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded font-normal" style="background: var(--badge-bg); color: var(--badge-text);">${escapeHtml(model.provider)}</span>
-                <span>·</span>
-                <span class="font-normal opacity-75">Agent</span>
+            <div class="ai-msg-header flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] select-none pl-0.5" style="color: var(--text-sub);">
+              <div class="ai-msg-meta flex items-center flex-wrap gap-x-1.5 gap-y-0.5 font-semibold min-w-0">
+                <span class="truncate max-w-[170px] sm:max-w-none" style="color: var(--text-main); font-weight: 600;">${escapeHtml(model.name)}</span>
+                <span class="shrink-0">·</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded font-normal shrink-0" style="background: var(--badge-bg); color: var(--badge-text);">${escapeHtml(model.provider)}</span>
+                <span class="ai-msg-role-dot shrink-0">·</span>
+                <span class="ai-msg-role-tag font-normal opacity-75 shrink-0">Agent</span>
               </div>
 
-              <div class="flex items-center space-x-1">
+              <div class="ai-msg-actions flex items-center space-x-1 shrink-0 ml-auto">
                 <!-- Text-To-Speech Button -->
                 <button onclick="toggleSpeech('${respId}', this)" 
                         class="opacity-75 sm:opacity-0 sm:group-hover:opacity-100 ease-spring inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] hover:bg-[var(--bg-hover)]"
@@ -13874,6 +14065,12 @@
 
     function handlePromptInputKeydown(e) {
       if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === 'Escape' && isGenerating) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!e.repeat && !stopBtn.disabled) stopBtn.click();
+        return;
+      }
       if (e.key === 'ArrowUp' && promptInput.value === '') {
         e.preventDefault();
         if (promptHistory.length > 0) {

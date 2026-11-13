@@ -2,7 +2,7 @@
 // AI AGENT HUB - PRO SERVER (MINIMALIST & FAST)
 // ========================================================
 const http = require("node:http");
-const { readCommandLog } = require('./terminal-log.cjs');
+const { findLogPaths, readCommandLog } = require('./terminal-log.cjs');
 const { readHistoryPage, historyOutput } = require("./session-history.cjs");
 const { createTurnScratch, cleanupTurnScratch, scratchInstruction } = require('./session-scratch.cjs');
 const fs = require("node:fs");
@@ -296,6 +296,7 @@ const AVAILABLE_MODELS = [
   { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "claude", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude" },
   { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "claude", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", iconType: "claude" },
   // Gemini (Google & DeepMind)
+  { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Hydrogen", iconType: "gemini" },
   { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini" },
   { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" },
   { id: "ag/gemini-3.1-pro-high", name: "Gemini 3.1 Pro", full: "ag/gemini-3.1-pro-high", group: "gemini", provider: "Google", tag: "Xử lý ngữ cảnh lớn 1M tokens", iconType: "gemini" }
@@ -1266,16 +1267,55 @@ const server = http.createServer((req, res) => {
     (async () => {
     try {
       const ctx = getRunningSession(urlObj.searchParams.get('id'), true);
-      const command = urlObj.searchParams.get('command');
-      const event = ctx?.events?.find(e => e.event === 'tool_call' &&
-        /shell|bash|cmd/i.test(e.payload?.name || '') && e.payload?.args?.command === command);
-      const tail = event && await readCommandLog(command, ctx.scratch?.dir, urlObj.searchParams.get('version') || '');
-      if (!tail) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'No live log file available for this command' }));
+      const command = urlObj.searchParams.get('command') || '';
+      const events = Array.isArray(ctx?.events) ? ctx.events : [];
+      const getEventCommand = (rawArgs) => {
+        if (!rawArgs) return '';
+        if (typeof rawArgs === 'string') {
+          try { return JSON.parse(rawArgs)?.command || rawArgs; } catch { return rawArgs; }
+        }
+        return rawArgs.command || '';
+      };
+      let eventIndex = -1;
+      for (let i = events.length - 1; i >= 0; i--) {
+        const e = events[i];
+        if (e.event === 'tool_call' && /shell|bash|cmd/i.test(e.payload?.name || '') && getEventCommand(e.payload?.args) === command) {
+          eventIndex = i;
+          break;
+        }
+      }
+      const event = eventIndex >= 0 ? events[eventIndex] : null;
+      let capturedOutput = '';
+      if (event) {
+        const callId = event.payload?.id || '';
+        const resultEvent = events.slice(eventIndex + 1).find(e => e.event === 'tool_result' &&
+          (!callId || !e.payload?.id || e.payload.id === callId));
+        if (resultEvent && resultEvent.payload?.output !== undefined && resultEvent.payload?.output !== null) {
+          capturedOutput = String(resultEvent.payload.output);
+        }
+      }
+      const declaredFiles = event ? findLogPaths(command, ctx.scratch?.dir, ctx.cwd) : [];
+      const tail = event && await readCommandLog(command, ctx.scratch?.dir, urlObj.searchParams.get('version') || '', ctx.cwd);
+      if (tail) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ ...tail, hasLogFile: true, running: !ctx.isFinished }));
+      } else if (declaredFiles.length > 0 && ctx && !ctx.isFinished) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({
+          hasLogFile: true,
+          waiting: true,
+          file: declaredFiles[declaredFiles.length - 1],
+          text: '',
+          output: capturedOutput,
+          running: true
+        }));
       } else {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-        res.end(JSON.stringify({ ...tail, running: !ctx.isFinished }));
+        res.end(JSON.stringify({
+          hasLogFile: false,
+          running: !!(ctx && !ctx.isFinished),
+          output: capturedOutput
+        }));
       }
     } catch {
       res.writeHead(400, { 'Content-Type': 'application/json' });

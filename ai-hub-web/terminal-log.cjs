@@ -1,28 +1,53 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
-function findLogPaths(command, tempDir) {
+function findLogPaths(command, tempDir, cwd = '') {
   const text = String(command || '');
   const files = [];
+  const resolveCandidate = (rawPath) => {
+    const cleaned = String(rawPath || '').trim().replace(/^['"]|['"]$/g, '');
+    if (!cleaned || !/\.(?:log|txt)$/i.test(cleaned)) return null;
+    if (path.isAbsolute(cleaned)) return cleaned;
+    const envTempMatch = cleaned.match(/^(?:\$env:TEMP|%TEMP%)[\\/](.+)$/i);
+    if (envTempMatch) return tempDir ? path.join(tempDir, envTempMatch[1]) : null;
+    const envScratchMatch = cleaned.match(/^(?:\$env:AI_HUB_SCRATCH_DIR|%AI_HUB_SCRATCH_DIR%)[\\/](.+)$/i);
+    if (envScratchMatch) return tempDir ? path.join(tempDir, envScratchMatch[1]) : null;
+    if (cwd && !cleaned.includes('$') && !cleaned.includes('%')) return path.resolve(cwd, cleaned);
+    return null;
+  };
+  const pushUnique = (file) => {
+    if (file && !files.includes(file)) files.push(file);
+  };
   // Resolve only literal log names, never evaluate shell expressions.
-  const assignments = /\$log\s*=\s*(?:Join-Path\s+\$env:TEMP\s+)?(['"])([^'"\r\n]+\.(?:log|txt))\1/gi;
+  const assignments = /\$log\s*=\s*(?:Join-Path\s+(?:\$env:TEMP|\$env:AI_HUB_SCRATCH_DIR)\s+)?(['"])([^'"\r\n]+\.(?:log|txt))\1/gi;
   for (const match of text.matchAll(assignments)) {
     const rest = text.slice(match.index + match[0].length).split(/\$log\s*=/i)[0];
-    if (!/(?:\*>|>>?|Tee-Object[^;]*-FilePath)\s*\$log\b/i.test(rest)) continue;
+    if (!/(?:\*>|>>?|Tee-Object[^;]*-FilePath|Out-File(?:\s+-FilePath)?)\s*\$log\b/i.test(rest)) continue;
     if (/Join-Path/i.test(match[0])) {
-      if (tempDir && path.basename(match[2]) === match[2]) files.push(path.join(tempDir, match[2]));
-    } else if (path.isAbsolute(match[2])) files.push(match[2]);
+      if (tempDir && path.basename(match[2]) === match[2]) pushUnique(path.join(tempDir, match[2]));
+    } else {
+      pushUnique(resolveCandidate(match[2]));
+    }
+  }
+  const directPatterns = [
+    /(?:\*>|[12]?>|>>|Tee-Object(?:\s+-Append)?(?:\s+-FilePath)?|Out-File(?:\s+-Append)?(?:\s+-FilePath)?)\s*(['"])([^'"\r\n]+\.(?:log|txt))\1/gi,
+    /(?:\*>|[12]?>|>>|Tee-Object(?:\s+-Append)?(?:\s+-FilePath)?|Out-File(?:\s+-Append)?(?:\s+-FilePath)?)\s*([^\s;&|'"`]+\.(?:log|txt))(?=\s|$|[;&|])/gi
+  ];
+  for (const regex of directPatterns) {
+    for (const match of text.matchAll(regex)) {
+      pushUnique(resolveCandidate(match[2] || match[1]));
+    }
   }
   const direct = findLogPath(text);
-  if (direct && path.isAbsolute(direct) && !files.includes(direct)) files.push(direct);
+  if (direct) pushUnique(resolveCandidate(direct));
   return files;
 }
 
 function findLogPath(command) {
   const text = String(command || '');
   const variable = text.match(/\$log\s*=\s*(['"])([^'"\r\n]+\.(?:log|txt))\1/i);
-  if (variable && /(?:\*>|>>?|Tee-Object[^;]*-FilePath)\s*\$log\b/i.test(text)) return variable[2];
-  const direct = text.match(/(?:\*>|2?>|>>|Tee-Object\s+-FilePath)\s*(['"])([^'"\r\n]+\.(?:log|txt))\1/i);
+  if (variable && /(?:\*>|>>?|Tee-Object[^;]*-FilePath|Out-File(?:\s+-FilePath)?)\s*\$log\b/i.test(text)) return variable[2];
+  const direct = text.match(/(?:\*>|2?>|>>|Tee-Object\s+-FilePath|Out-File(?:\s+-FilePath)?)\s*(['"])([^'"\r\n]+\.(?:log|txt))\1/i);
   return direct ? direct[2] : null;
 }
 
@@ -56,8 +81,8 @@ async function readTail(file, version) {
     return { text, size: stat.size, modified: stat.mtime.toISOString(), version: stamp };
   } finally { if (handle) await handle.close(); }
 }
-async function readCommandLog(command, tempDir, version = '') {
-  const files = findLogPaths(command, tempDir);
+async function readCommandLog(command, tempDir, version = '', cwd = '') {
+  const files = findLogPaths(command, tempDir, cwd);
   // Later stages create their logs only after earlier stages complete.
   for (const file of files.reverse()) {
     try { return { ...await readLogTail(file, version), file }; }

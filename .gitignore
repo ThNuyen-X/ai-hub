@@ -45,3 +45,6 @@ ai-hub-web/public/stickers/
 ai-hub-web/public/stickers_found.json
 ai-hub-web/public/vendor/
 
+
+# Local runtime data and disposable scratch files.
+/ai-hub-data/

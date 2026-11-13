@@ -56,19 +56,20 @@ const { findLogPath, findLogPaths, readLogTail, readCommandLog } = require('./te
     createElement: () => ({ style: {}, remove() { nodes.delete(this.id); } }),
     addEventListener: (name, fn) => { listeners[name] = fn; }
   };
-  const context = vm.createContext({ document, window: { addEventListener() {} },
+  const context = vm.createContext({ document, window: { addEventListener() {}, innerHeight: 800 },
     currentSessionId: 'session', terminalLogsFeed: feed, terminalAutoScroll: true,
-    terminalDrawer: { appendChild(pre) { nodes.set(pre.id, pre); } },
+    terminalDrawer: { style: {}, appendChild(pre) { nodes.set(pre.id, pre); } },
     toggleTerminalDrawer() {}, AbortController, URLSearchParams,
     setTimeout(fn, delay) { timers.set(++timerId, { fn, delay }); return timerId; },
     clearTimeout(id) { timers.delete(id); },
-    async fetch() { requests++; return { ok: true, json: async () => ({ version: 'v1', running: true, text: 'log', file: 'build.log' }) }; }
+    async fetch() { requests++; return { ok: true, json: async () => ({ version: 'v1', running: true, hasLogFile: true, text: 'log', file: 'build.log' }) }; }
   });
   vm.runInContext(html.slice(html.indexOf('    let liveTerminalWatch = null;'), html.indexOf('    function toggleTerminalDrawer(forceState)')), context);
   const settle = () => new Promise(resolve => setImmediate(resolve));
   context.openToolTerminal('card');
   await settle();
   assert.equal(requests, 1);
+  assert.ok(nodes.get('liveTerminalOutput').textContent.includes('log'));
   hidden = true; listeners.visibilitychange();
   assert.equal(timers.size, 0, 'Hidden tabs must cancel polling');
   hidden = false; listeners.visibilitychange();
@@ -77,5 +78,34 @@ const { findLogPath, findLogPaths, readLogTail, readCommandLog } = require('./te
   context.stopLiveTerminalWatch();
   assert.equal(timers.size, 0);
   assert.equal(nodes.size, 0);
+
+  // Non-log command should show captured command output without displaying the old '.log' error
+  let nonLogResp = { hasLogFile: false, running: false, output: 'hello stdout' };
+  const nonLogCard = { _cardData: { args: { command: 'echo hello' }, output: 'fallback stdout' }, querySelector: () => null };
+  const nonLogCtx = vm.createContext({
+    document: {
+      hidden: false,
+      getElementById: id => id === 'card2' ? nonLogCard : nodes.get(id),
+      createElement: () => ({ style: {}, remove() { nodes.delete(this.id); } }),
+      addEventListener() {}
+    },
+    window: { addEventListener() {}, innerHeight: 800 },
+    currentSessionId: 'session', terminalLogsFeed: feed, terminalAutoScroll: true,
+    terminalDrawer: { style: {}, appendChild(pre) { nodes.set(pre.id, pre); } },
+    toggleTerminalDrawer() {}, AbortController, URLSearchParams,
+    setTimeout(fn, delay) { timers.set(++timerId, { fn, delay }); return timerId; },
+    clearTimeout(id) { timers.delete(id); },
+    async fetch() { return { ok: true, json: async () => nonLogResp }; }
+  });
+  vm.runInContext(html.slice(html.indexOf('    let liveTerminalWatch = null;'), html.indexOf('    function toggleTerminalDrawer(forceState)')), nonLogCtx);
+  nonLogCtx.openToolTerminal('card2');
+  await settle();
+  assert.ok(nodes.get('liveTerminalOutput').textContent.includes('hello stdout'));
+  assert.ok(!nodes.get('liveTerminalOutput').textContent.includes('Chua doc duoc log truc tiep'));
+  nonLogResp = { hasLogFile: true, waiting: true, file: 'run.log', running: false, output: '' };
+  nonLogCtx.openToolTerminal('card2');
+  await settle();
+  assert.ok(nodes.get('liveTerminalOutput').textContent.includes('run.log'));
+  nonLogCtx.stopLiveTerminalWatch();
   console.log('Terminal log tests passed');
 })().catch(err => { console.error(err); process.exitCode = 1; });

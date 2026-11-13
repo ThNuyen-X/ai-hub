@@ -246,3 +246,20 @@
 - Live terminal logs: pause polling in hidden tabs; cancel requests/timers on close or session switch; coalesce concurrent reads; use file version checks before reading a bounded tail and back off when unchanged.
 - Live log path resolution: resolve literal Join-Path $env:TEMP names against the session scratch directory, never server TEMP; follow the latest existing stage log without executing shell expressions or rerunning commands.
 - Spring Boot 3 management child-context configuration uses META-INF/spring/org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration.imports, not the legacy spring.factories entry; verify registration discovery, not only compilation.
+
+- CAS 7.1.6.2 pentest: disable proxy via cas.sso.proxy-authn-enabled (verified upstream); filter validation attributes at protocol encoding, not principal/MFA; REST error @class comes from RestResourceUtils dedicated mapper, not necessarily global unsafe deserialization.
+
+- ProVT JSP local: executable JAR may compile JSP yet fail loading layout_jsp; normal target/classes + extracted BOOT-INF/lib classpath restores rendering. On this Windows host, avoid relocating Spring classes/resources under percent-containing scratch paths (persistence-unit scanning fails). Verify authenticated HTML, not just startup/302.
+
+- ProVT regression: literal percent in java.io.tmpdir also breaks Jasper generated tag resolution (listHeading_tag/dateChooser_tag); subst alias to same scratch + -Djava.io.tmpdir fixes local runtime. Check AJAX and server exceptions: committed HTML can remain HTTP 200 despite JSP failures.
+
+- MANDATORY regression after shared UI/JSP/security/runtime changes: never accept page HTTP 200 or startup as success. Open affected list screens in browser, wait for AJAX, verify rows or legitimate empty state, test search/filter/pagination, inspect XHR/fetch status AND response body, console and backend logs. Check shared tags/layout and related screens. Fix failures before reporting completion; explicitly list untested workflows.
+
+- Long-lived local apps must not depend on session scratch for generated JSP classes, jars or runtime temp; cleanup causes repeated list AJAX failures later. Keep REQUIRED runtime under ignored target/local-runtime, disposable diagnosis in scratch. Retest after restart and later turns, not only immediately after warmup.
+
+- Scratch paths: Node does not expand Windows environment placeholders automatically; expand configured roots, reject unresolved percent paths, and use an absolute launcher root to avoid Jasper failures and accidental workspace directories.
+- ProVT Docker JVM trustStore replaces default JDK CAs for SMTP too: merge JDK cacerts with verified CAS certificates, retain TLS/hostname checks, and verify the merged store as the non-root container user before push.
+\n- [Menu MFA popup] Check server challenge before showing dialog to avoid flashing on unprotected menus; intercept homepage cards as well as sidebar/header and bump JSP script cache version, then verify with a real authenticated session.
+- [MFA CSS] Global [aria-live=polite] uses position:fixed; scope position:static/inset:auto/z-index:auto for inline accessible dialog errors and verify actual bounding boxes.
+- [MFA resend] Return Redis retryAfter and disable resend during cooldown instead of silently swallowing rejection; scope the existing spinner inside the dialog so background resetProgress cannot hide an active send.
+- [VNeID service links] Enforce account-service links in both the direct callback and SSO ticket gate; citizen metadata must not exempt authorization. LDAP source exemptions apply regardless of login method; resolve VNeID citizenPid through users.IDENTITY_CARD before enforcing service links.

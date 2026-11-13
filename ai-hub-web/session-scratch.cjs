@@ -13,7 +13,16 @@ function key(value) {
 }
 
 function createTurnScratch(cwd, sessionId, env = process.env) {
-  const root = path.resolve(env.AI_HUB_SCRATCH_ROOT || path.join(env.LOCALAPPDATA || os.tmpdir(), 'ai-hub', 'scratch'));
+  // Configuration values are not expanded by Node like they are by cmd.exe.
+  const fallback = path.join(process.env.LOCALAPPDATA || os.tmpdir(), 'ai-hub', 'scratch');
+  const configured = env.AI_HUB_SCRATCH_ROOT || path.join(env.LOCALAPPDATA || process.env.LOCALAPPDATA || os.tmpdir(), 'ai-hub', 'scratch');
+  const source = { ...process.env, ...env };
+  const expanded = configured.replace(/%([^%]+)%/g, (match, name) => {
+    const key = Object.keys(source).find(key => key.toLowerCase() === name.toLowerCase());
+    return key ? source[key] : match;
+  });
+  // Never create literal placeholder directories or pass percent paths to Jasper.
+  const root = path.resolve(expanded.includes('%') ? fallback : expanded);
   const workspace = path.join(root, key(workspaceKey(cwd)));
   const session = path.join(workspace, key(sessionId));
   const dir = path.join(session, randomUUID());

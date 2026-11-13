@@ -1,7 +1,8 @@
 (function (root) {
   'use strict';
-  // Only expose variant IDs advertised by the router catalog.
+  // Only expose variant IDs advertised by the router or verified by live requests.
   const levels = {
+    'ag/gemini-4-hydrogen-high': ['low', 'medium', 'high'],
     'ag/gemini-4-argon-high': ['low', 'medium', 'high'],
     'ag/gemini-3.8-flash': ['low', 'medium', 'high'],
     'ag/gemini-3.1-pro-high': ['low', 'high'],

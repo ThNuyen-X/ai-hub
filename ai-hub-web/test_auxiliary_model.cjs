@@ -11,7 +11,8 @@ const { validateModel, readSources, coordinationInstruction, analyze } = require
     fs.writeFileSync(path.join(root, 'source.js'), 'one\ntwo\nthree\n');
     fs.writeFileSync(path.join(root, '.env'), 'PRIVATE=value');
     assert.equal(validateModel('', []), '');
-    assert.equal(validateModel('ag/gemini-3.8-flash-high', [{ id: 'ag/gemini-3.8-flash' }]), 'ag/gemini-3.8-flash');
+    assert.equal(validateModel('ag/gemini-3.8-flash-high', [{ id: 'ag/gemini-3.8-flash-high' }]), 'ag/gemini-3.8-flash-high');
+    assert.throws(() => validateModel('ag/gemini-3.8-flash-high', [{ id: 'ag/gemini-3.8-flash' }]), /Unknown/);
     assert.throws(() => validateModel('bad', []), /Unknown/);
     assert.equal(readSources(root, [{ path: 'source.js', start: 2, end: 2 }])[0].text, '2: two');
     assert.throws(() => readSources(root, [{ path: '../' }]), /outside/i);

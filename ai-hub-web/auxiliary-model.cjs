@@ -6,7 +6,7 @@ const { readCompletion } = require('./auxiliary-stream.cjs');
 function validateModel(value, models) {
   if (value == null || value === '') return '';
   if (typeof value !== 'string') throw new Error('Invalid auxiliary model');
-  const id = value === 'ag/gemini-3.8-flash-high' ? 'ag/gemini-3.8-flash' : value;
+  const id = require('./public/model-levels.js').normalize(value);
   if (!models.some(model => model.id === id)) throw new Error('Unknown auxiliary model');
   return id;
 }

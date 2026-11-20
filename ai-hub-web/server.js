@@ -282,24 +282,42 @@ function attachClientToActiveSession(res, sessionId) {
 
 // Preserve explicit model levels, including Flash High.
 function normalizeModelId(modelId) {
-  return modelId;
+  return require("./public/model-levels.js").normalize(modelId);
 }
 
 const { variants: modelLevelVariants } = require('./public/model-levels.js');
 
 // Cac model co san tren 9Router
 const AVAILABLE_MODELS = [
-  // ChatGPT (OpenAI & Antigravity)
-  { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", iconType: "openai" },
-  { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", full: "ag/gpt-oss-120b-medium", group: "chatgpt", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", iconType: "openai" },
-  // Claude (Anthropic)
-  { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "claude", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude" },
-  { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "claude", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", iconType: "claude" },
-  // Gemini (Google & DeepMind)
-  { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Hydrogen", iconType: "gemini" },
-  { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini" },
-  { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" },
-  { id: "ag/gemini-3.1-pro-high", name: "Gemini 3.1 Pro", full: "ag/gemini-3.1-pro-high", group: "gemini", provider: "Google", tag: "Xử lý ngữ cảnh lớn 1M tokens", iconType: "gemini" }
+      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/gpt-6.1-sol[1m]", name: "GPT-6.1 Sol / 1M", full: "cx/gpt-6.1-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short requests and tool round-trip verified", iconType: "openai" },
+      { id: "cx/gpt-6.1-terra", name: "GPT-6.1 Terra", full: "cx/gpt-6.1-terra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/gpt-6.1-terra[1m]", name: "GPT-6.1 Terra / 1M", full: "cx/gpt-6.1-terra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short requests and tool round-trip verified", iconType: "openai" },
+      { id: "cx/gpt-6-astra", name: "GPT-6 Astra", full: "cx/gpt-6-astra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/gpt-6-astra[1m]", name: "GPT-6 Astra / 1M", full: "cx/gpt-6-astra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai" },
+      { id: "cx/gpt-6-sol", name: "GPT-6 Sol", full: "cx/gpt-6-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/gpt-6-sol[1m]", name: "GPT-6 Sol / 1M", full: "cx/gpt-6-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai" },
+      { id: "cx/gpt-6-luna", name: "GPT-6 Luna", full: "cx/gpt-6-luna", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/gpt-6-luna[1m]", name: "GPT-6 Luna / 1M", full: "cx/gpt-6-luna[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai" },
+      { id: "cx/gpt-5.6-sol", name: "GPT-5.6 Sol", full: "cx/gpt-5.6-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/gpt-5.6-sol[1m]", name: "GPT-5.6 Sol / 1M", full: "cx/gpt-5.6-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai" },
+      { id: "cx/gpt-5.6-sol-review", name: "GPT-5.6 Sol Review", full: "cx/gpt-5.6-sol-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai" },
+      { id: "cx/gpt-5.6-terra", name: "GPT-5.6 Terra", full: "cx/gpt-5.6-terra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/gpt-5.6-terra[1m]", name: "GPT-5.6 Terra / 1M", full: "cx/gpt-5.6-terra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai" },
+      { id: "cx/gpt-5.6-terra-review", name: "GPT-5.6 Terra Review", full: "cx/gpt-5.6-terra-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai" },
+      { id: "cx/gpt-5.6-luna", name: "GPT-5.6 Luna", full: "cx/gpt-5.6-luna", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/gpt-5.6-luna[1m]", name: "GPT-5.6 Luna / 1M", full: "cx/gpt-5.6-luna[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai" },
+      { id: "cx/gpt-5.6-luna-review", name: "GPT-5.6 Luna Review", full: "cx/gpt-5.6-luna-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai" },
+      { id: "cx/gpt-reserve", name: "GPT Reserve", full: "cx/gpt-reserve", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
+      { id: "cx/codex-auto-review", name: "Codex Auto Review", full: "cx/codex-auto-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai" },
+      { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", full: "ag/gpt-oss-120b-medium", group: "chatgpt", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", iconType: "openai" },
+      { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "claude", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude" },
+      { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "claude", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", iconType: "claude" },
+      { id: "ag/gemini-4-neon-high", name: "Gemini 4 Neon", full: "ag/gemini-4-neon-high", group: "gemini", provider: "DeepMind", tag: "Verified text, streaming and tool round-trip", iconType: "gemini" },
+      { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Verified live; unlisted router alias", iconType: "gemini" },
+      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini" },
+      { id: "ag/gemini-2.5-flash", name: "Gemini 2.5 Flash", full: "ag/gemini-2.5-flash", group: "gemini", provider: "Google", tag: "Verified fast text and tool round-trip", iconType: "gemini" },
+      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" }
 ].flatMap(modelLevelVariants);
 
 // Quan ly danh sach Workspaces
@@ -1431,7 +1449,7 @@ const server = http.createServer((req, res) => {
   if (req.method === "POST" && pathname === "/api/open-path") {
     let body = "";
     req.on("data", chunk => { body += chunk; });
-    req.on("end", () => {
+    req.on("end", async () => {
       try {
         const payload = JSON.parse(body || "{}");
         let targetPath = (payload.path || "").trim();
@@ -1470,30 +1488,9 @@ const server = http.createServer((req, res) => {
           || isDotFile
           || baseName.toLowerCase().endsWith(".env");
 
-        if (process.platform === "win32") {
-          if (isDir) {
-            const cp = spawn("explorer.exe", [resolved], { detached: true, stdio: "ignore" });
-            cp.unref();
-          } else if (!payload.reveal && isTextSource) {
-            // Open source as text instead of launching browser associations or executing scripts.
-            const cp = spawn("notepad.exe", [resolved], { detached: true, stdio: "ignore" });
-            cp.unref();
-          } else if ([".exe", ".bat", ".cmd", ".msi", ".ps1"].includes(ext) || payload.reveal) {
-            const cp = spawn("explorer.exe", ["/select,", resolved], { detached: true, stdio: "ignore" });
-            cp.unref();
-          } else {
-            const cp = spawn("cmd.exe", ["/c", "start", '""', resolved], {
-              detached: true,
-              stdio: "ignore",
-              windowsVerbatimArguments: true
-            });
-            cp.unref();
-          }
-        } else if (process.platform === "darwin") {
-          spawn("open", [resolved], { detached: true, stdio: "ignore" }).unref();
-        } else {
-          spawn("xdg-open", [resolved], { detached: true, stdio: "ignore" }).unref();
-        }
+        await require("./open-local-path.cjs").openLocalPathOnDesktop(resolved, {
+          isDir, isTextSource, reveal: Boolean(payload.reveal)
+        });
 
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify({
@@ -2195,6 +2192,11 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: "Claude Sonnet 4.6 is no longer available. Please select Claude Sonnet 5.5." }));
         return;
       }
+      if (!AVAILABLE_MODELS.some(item => item.id === model)) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Model is unavailable or unverified. Please select a supported model from the model picker." }));
+        return;
+      }
       let auxiliaryModel;
       try { auxiliaryModel = validateAuxiliaryModel(data.auxiliaryModel === undefined ? auxiliarySettings.get(data.sessionId) : data.auxiliaryModel, AVAILABLE_MODELS); }
       catch (error) {
@@ -2453,142 +2455,160 @@ const server = http.createServer((req, res) => {
       child.on("close", () => clearInterval(stallTimer));
       child.on("error", () => clearInterval(stallTimer));
 
-      child.stdout.on("data", (chunk) => {
-        if (sessionCtx.process !== child) return;
-        const str = chunk.toString("utf8");
-        lastActivityAt = Date.now(); stallWarned = false;
-        pendingTools = Math.max(0, pendingTools + (str.match(/"type":"toolRequest"/g) || []).length - (str.match(/"type":"toolResponse"/g) || []).length);
-        buffer += str;
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-          if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-            try {
-              const parsed = JSON.parse(trimmed);
-              if (parsed.type === "message" && parsed.message && parsed.message.content) {
-                for (const item of parsed.message.content) {
-                  if (item.type === "text" && item.text) {
-                    const textVal = typeof item.text === 'string' ? item.text : (item.text?.value || item.text?.text || JSON.stringify(item.text));
-                    broadcastToSession(sessionCtx, "text", { text: textVal });
-                  } else if (item.type === "thinking" && item.thinking) {
-                    const thoughtVal = typeof item.thinking === 'string' ? item.thinking : (item.thinking?.value || item.thinking?.thinking || '');
-                    if (thoughtVal) {
-                      broadcastToSession(sessionCtx, "thinking", { text: thoughtVal });
-                    }
-                  } else if (item.type === "toolRequest" && item.toolCall) {
-                    const reqToolName = item.toolCall.value?.name || "tool";
-                    const reqToolArgs = item.toolCall.value?.arguments || {};
-                    try {
-                      captureExplicitToolPaths(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, reqToolName, reqToolArgs, cwd);
-                    } catch {}
-                    broadcastToSession(sessionCtx, "tool_call", {
-                      name: reqToolName,
-                      id: item.id || "",
-                      args: reqToolArgs
+      const processStdoutLine = (trimmed) => {
+        if (!trimmed) return;
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (parsed.type === "message" && parsed.message && parsed.message.content) {
+              for (const item of parsed.message.content) {
+                if (item.type === "text" && item.text) {
+                  const textVal = typeof item.text === 'string' ? item.text : (item.text?.value || item.text?.text || JSON.stringify(item.text));
+                  broadcastToSession(sessionCtx, "text", { text: textVal });
+                } else if (item.type === "thinking" && item.thinking) {
+                  const thoughtVal = typeof item.thinking === 'string' ? item.thinking : (item.thinking?.value || item.thinking?.thinking || '');
+                  if (thoughtVal) {
+                    broadcastToSession(sessionCtx, "thinking", {
+                      text: thoughtVal,
+                      signature: typeof item.signature === "string" ? item.signature : ""
                     });
-                  } else if (item.type === "toolResponse") {
-                    const isErr = Boolean(item.toolResult?.status === "error" || item.toolResult?.value?.isError || item.toolResult?.error);
-                    let outStr = item.output || item.value || "";
-                    if (!outStr && item.toolResult) {
-                      const trVal = item.toolResult.value;
-                      if (typeof trVal === "object" && trVal !== null) {
-                        const stdout = trVal.structuredContent?.stdout;
-                        const stderr = trVal.structuredContent?.stderr;
-                        if (stdout !== undefined || stderr !== undefined) {
-                          outStr = (stdout || "") + (stderr ? ("\n[STDERR]: " + stderr) : "");
-                        } else if (Array.isArray(trVal.content) && trVal.content[0]?.text) {
-                          outStr = trVal.content.map(c => c.text || "").join("\n");
-                        } else {
-                          outStr = JSON.stringify(trVal, null, 2);
-                        }
-                      } else if (trVal !== undefined && trVal !== null) {
-                        outStr = String(trVal || "");
-                      } else if (item.toolResult.error) {
-                        outStr = String(item.toolResult.error);
-                      }
-                    }
-                    broadcastToSession(sessionCtx, "tool_result", {
-                      output: outStr,
-                      id: item.id || "",
-                      isError: isErr
-                    });
-                    if (!isErr && sessionCtx.turnDiffTracker) {
-                      try {
-                        const liveChanges = syncTurnChanges(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, { explicitOnly: true, allowWorkspaceScan: false });
-                        if (liveChanges.length > 0) {
-                          broadcastToSession(sessionCtx, "session_file_diffs", { sessionId: sessionCtx.info?.sessionId || sessionId, files: liveChanges });
-                        }
-                      } catch {}
-                    }
-                  } else if (item.type === "error") {
-                    broadcastToSession(sessionCtx, "error", { error: item.message || item.text || "Lỗi phản hồi" });
                   }
-                }
-              } else if (parsed.type === "toolResponse") {
-                const isErr = Boolean(parsed.toolResult?.status === "error" || parsed.toolResult?.value?.isError || parsed.toolResult?.error);
-                let outStr = parsed.output || parsed.value || "";
-                if (!outStr && parsed.toolResult) {
-                  const trVal = parsed.toolResult.value;
-                  if (typeof trVal === "object" && trVal !== null) {
-                    const stdout = trVal.structuredContent?.stdout;
-                    const stderr = trVal.structuredContent?.stderr;
-                    if (stdout !== undefined || stderr !== undefined) {
-                      outStr = (stdout || "") + (stderr ? ("\n[STDERR]: " + stderr) : "");
-                    } else if (Array.isArray(trVal.content) && trVal.content[0]?.text) {
-                      outStr = trVal.content.map(c => c.text || "").join("\n");
-                    } else {
-                      outStr = JSON.stringify(trVal, null, 2);
-                    }
-                  } else if (trVal !== undefined && trVal !== null) {
-                    outStr = String(trVal || "");
-                  } else if (parsed.toolResult.error) {
-                    outStr = String(parsed.toolResult.error);
-                  }
-                }
-                broadcastToSession(sessionCtx, "tool_result", {
-                  output: outStr,
-                  id: parsed.id || "",
-                  isError: isErr
-                });
-                if (!isErr && sessionCtx.turnDiffTracker) {
+                } else if (item.type === "toolRequest" && item.toolCall) {
+                  pendingTools++;
+                  const reqToolName = item.toolCall.value?.name || "tool";
+                  const reqToolArgs = item.toolCall.value?.arguments || {};
                   try {
-                    const liveChanges = syncTurnChanges(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, { explicitOnly: true, allowWorkspaceScan: false });
-                    if (liveChanges.length > 0) {
-                      broadcastToSession(sessionCtx, "session_file_diffs", { sessionId: sessionCtx.info?.sessionId || sessionId, files: liveChanges });
-                    }
+                    captureExplicitToolPaths(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, reqToolName, reqToolArgs, cwd);
                   } catch {}
+                  broadcastToSession(sessionCtx, "tool_call", {
+                    name: reqToolName,
+                    id: item.id || "",
+                    args: reqToolArgs
+                  });
+                } else if (item.type === "toolResponse") {
+                  pendingTools = Math.max(0, pendingTools - 1);
+                  const isErr = Boolean(item.toolResult?.status === "error" || item.toolResult?.value?.isError || item.toolResult?.error);
+                  let outStr = item.output || item.value || "";
+                  if (!outStr && item.toolResult) {
+                    const trVal = item.toolResult.value;
+                    if (typeof trVal === "object" && trVal !== null) {
+                      const stdout = trVal.structuredContent?.stdout;
+                      const stderr = trVal.structuredContent?.stderr;
+                      if (stdout !== undefined || stderr !== undefined) {
+                        outStr = (stdout || "") + (stderr ? ("\n[STDERR]: " + stderr) : "");
+                      } else if (Array.isArray(trVal.content) && trVal.content[0]?.text) {
+                        outStr = trVal.content.map(c => c.text || "").join("\n");
+                      } else {
+                        outStr = JSON.stringify(trVal, null, 2);
+                      }
+                    } else if (trVal !== undefined && trVal !== null) {
+                      outStr = String(trVal || "");
+                    } else if (item.toolResult.error) {
+                      outStr = String(item.toolResult.error);
+                    }
+                  }
+                  broadcastToSession(sessionCtx, "tool_result", {
+                    output: outStr,
+                    id: item.id || "",
+                    isError: isErr
+                  });
+                  if (!isErr && sessionCtx.turnDiffTracker) {
+                    try {
+                      const liveChanges = syncTurnChanges(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, { explicitOnly: true, allowWorkspaceScan: false });
+                      if (liveChanges.length > 0) {
+                        broadcastToSession(sessionCtx, "session_file_diffs", { sessionId: sessionCtx.info?.sessionId || sessionId, files: liveChanges });
+                      }
+                    } catch {}
+                  }
+                } else if (item.type === "error") {
+                  broadcastToSession(sessionCtx, "error", { error: item.message || item.text || "Lỗi phản hồi" });
                 }
-              } else if (parsed.type === "error") {
-                broadcastToSession(sessionCtx, "error", { error: parsed.error || "Lỗi tiến trình" });
-              } else if (parsed.type === "complete") {
-                broadcastToSession(sessionCtx, "complete", parsed);
-                // goose may hang on shutdown after finishing; never leave the session stuck as running
-                setTimeout(() => {
-                  if (turnFinalized || sessionCtx.process !== child) return;
-                  console.warn(`[GOOSE HANG] session ${sessionId} completed but PID ${child.pid} still alive, forcing finalize`);
-                  try { child.kill(); } catch {}
-                  finalizeTurn(0);
-                }, 8000);
               }
-            } catch {
-              if (trimmed.toLowerCase().startsWith("error:")) {
-                broadcastToSession(sessionCtx, "error", { error: trimmed });
-              } else {
-                broadcastToSession(sessionCtx, "raw_log", { line: trimmed });
+            } else if (parsed.type === "toolResponse") {
+              pendingTools = Math.max(0, pendingTools - 1);
+              const isErr = Boolean(parsed.toolResult?.status === "error" || parsed.toolResult?.value?.isError || parsed.toolResult?.error);
+              let outStr = parsed.output || parsed.value || "";
+              if (!outStr && parsed.toolResult) {
+                const trVal = parsed.toolResult.value;
+                if (typeof trVal === "object" && trVal !== null) {
+                  const stdout = trVal.structuredContent?.stdout;
+                  const stderr = trVal.structuredContent?.stderr;
+                  if (stdout !== undefined || stderr !== undefined) {
+                    outStr = (stdout || "") + (stderr ? ("\n[STDERR]: " + stderr) : "");
+                  } else if (Array.isArray(trVal.content) && trVal.content[0]?.text) {
+                    outStr = trVal.content.map(c => c.text || "").join("\n");
+                  } else {
+                    outStr = JSON.stringify(trVal, null, 2);
+                  }
+                } else if (trVal !== undefined && trVal !== null) {
+                  outStr = String(trVal || "");
+                } else if (parsed.toolResult.error) {
+                  outStr = String(parsed.toolResult.error);
+                }
               }
+              broadcastToSession(sessionCtx, "tool_result", {
+                output: outStr,
+                id: parsed.id || "",
+                isError: isErr
+              });
+              if (!isErr && sessionCtx.turnDiffTracker) {
+                try {
+                  const liveChanges = syncTurnChanges(sessionCtx.turnDiffTracker, sessionCtx.info?.sessionId || sessionId, { explicitOnly: true, allowWorkspaceScan: false });
+                  if (liveChanges.length > 0) {
+                    broadcastToSession(sessionCtx, "session_file_diffs", { sessionId: sessionCtx.info?.sessionId || sessionId, files: liveChanges });
+                  }
+                } catch {}
+              }
+            } else if (parsed.type === "error") {
+              broadcastToSession(sessionCtx, "error", { error: parsed.error || "Lỗi tiến trình" });
+            } else if (parsed.type === "complete") {
+              broadcastToSession(sessionCtx, "complete", parsed);
+              // goose may hang on shutdown after finishing; never leave the session stuck as running
+              setTimeout(() => {
+                if (turnFinalized || sessionCtx.process !== child) return;
+                console.warn(`[GOOSE HANG] session ${sessionId} completed but PID ${child.pid} still alive, forcing finalize`);
+                try { child.kill(); } catch {}
+                finalizeTurn(0);
+              }, 8000);
             }
-          } else {
+          } catch {
             if (trimmed.toLowerCase().startsWith("error:")) {
               broadcastToSession(sessionCtx, "error", { error: trimmed });
             } else {
               broadcastToSession(sessionCtx, "raw_log", { line: trimmed });
             }
           }
+        } else {
+          if (trimmed.toLowerCase().startsWith("error:")) {
+            broadcastToSession(sessionCtx, "error", { error: trimmed });
+          } else {
+            broadcastToSession(sessionCtx, "raw_log", { line: trimmed });
+          }
+        }
+      };
+
+      const flushStdoutBuffer = () => {
+        if (sessionCtx.process !== child) return;
+        const rest = buffer.trim();
+        if (!rest) return;
+        buffer = "";
+        processStdoutLine(rest);
+      };
+
+      child.stdout.on("data", (chunk) => {
+        if (sessionCtx.process !== child) return;
+        const str = chunk.toString("utf8");
+        lastActivityAt = Date.now(); stallWarned = false;
+        buffer += str;
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          processStdoutLine(line.trim());
         }
       });
+
+      child.stdout.on("end", flushStdoutBuffer);
 
       let auxiliaryStderr = "";
       child.stderr.on("data", (chunk) => {
@@ -2612,6 +2632,7 @@ const server = http.createServer((req, res) => {
       const finalizeTurn = (code) => {
         if (sessionCtx.process !== child || turnFinalized) return;
         turnFinalized = true;
+        flushStdoutBuffer();
         try { restartRecovery.complete(sessionCtx.info?.sessionId || sessionId); }
         catch (error) { console.error("[RESTART CHECKPOINT] " + error.message); }
         console.log(`[GOOSE CLOSE] Exit code: ${code} for session ${sessionId}`);
@@ -2751,7 +2772,7 @@ const server = http.createServer((req, res) => {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("Not Found");
     } else {
-      const noCache = (ext === ".html" || ext === ".json" || ext === ".webmanifest");
+      const noCache = (ext === ".html" || ext === ".js" || ext === ".css" || ext === ".json" || ext === ".webmanifest");
       res.writeHead(200, {
         "Content-Type": mimeTypes[ext] || "application/octet-stream",
         "Cache-Control": noCache ? "no-cache, must-revalidate" : "public, max-age=86400"

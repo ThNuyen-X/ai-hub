@@ -263,3 +263,66 @@
 - [MFA CSS] Global [aria-live=polite] uses position:fixed; scope position:static/inset:auto/z-index:auto for inline accessible dialog errors and verify actual bounding boxes.
 - [MFA resend] Return Redis retryAfter and disable resend during cooldown instead of silently swallowing rejection; scope the existing spinner inside the dialog so background resetProgress cannot hide an active send.
 - [VNeID service links] Enforce account-service links in both the direct callback and SSO ticket gate; citizen metadata must not exempt authorization. LDAP source exemptions apply regardless of login method; resolve VNeID citizenPid through users.IDENTITY_CARD before enforcing service links.
+
+- Oracle client copy: python-oracledb thin cannot fetch named TIMESTAMP(p) WITH TIME ZONE regions (DPY-3022); detect precision-bearing type names and transfer explicit TO_CHAR/TO_TIMESTAMP_TZ FF9 TZR, with per-table commit/count checkpoints for safe resume.
+- [AI Hub UI] Render structured `thinking` blocks directly into `.ai-process-group` without calling `moveActiveTextToProcessGroup` (trailing thinking after `text` must never pull the final answer into the collapsed process group), and read TTS only from direct `.markdown-body` result blocks outside `.ai-process-group`.
+- [AI Hub Stream & Think Recovery] Ignore `think` tags inside markdown code/fences, rescue unsigned trailing `thinking` continuations when upstream cuts off `text` mid-clause, flush trailing `stdout` buffer on EOF, and keep frontend `completeTimer` (9500ms) longer than `server.js` `GOOSE HANG` finalize (8000ms) so `finish` is never raced.
+
+- Docker29/containerd2.4 canary: containerd config v4 uses full CRI plugin URIs, not legacy cri; validate generated TOML before service start, relocate both Docker and containerd stores, and mask auto-start until mount guards/config are ready.
+
+- Redis image selection: verify official-image build commit and test the exact pinned image on real CPUs; no AVX2 does not by itself prove Redis 8 incompatibility, and startup/core tests do not cover every optional module path.
+
+- Redis Cluster fault tests: always restart the stopped primary in finally, verify it rejoins, then restore one-primary-per-host placement; promotion alone can leave two primaries on one host. Disable PTY echo and canonical mode before sending long private JSON payloads.
+- [gRPC auth diagnosis] net.devh client defaults to TLS; plaintext servers require explicit negotiation-type. Gateway catch-all 401 error.token.invalid can mask UNAVAILABLE/NotSslRecordException: compare TLS/plaintext probes before blaming JWT or CAS.
+- [Canary API routing] static gRPC targets can retain obsolete container IPs after recreation; use dns:/// service targets and verify from caller network namespace. URL-based HMAC must include the exact external tunnel origin; HTTP403 alone does not prove missing user grants.
+- [Local bridge to host Redis] Docker bridge traffic to Redis on the same host reaches INPUT without remote-host masquerade; host-IP allowlists can drop it. Permit only the application bridge interface/subnet to TLS client ports, keep bus rules/mTLS/ACL intact, and verify every health check from both FE hosts.
+- [2026-11-16] Removing gRPC domain code requires pruning proto, bean/stub factory wiring and shared DTOs together; clean-package first to eliminate stale generated classes, then inspect rebuilt JAR and run tests.
+
+- ATTT evidence: verify deployed UI, effective transport and aggregate password schemes; local PBKDF2 code does not prove legacy accounts migrated, and ignored certificate errors do not prove trusted HTTPS.
+- Menu MFA: return required=false before challenge permission checks when no account-enabled method applies; failed preflight must navigate through server enforcement, not display an empty OTP dialog.
+- Profile application lists must filter user_service_access.STATUS=1, not only registered service status; removed links otherwise look active while account edit correctly hides them.
+- VNeID authorization by IDENTITY_CARD must filter users.STATUS=1 for both service links and LDAP exemptions; revoked accounts retain the same PID and old active links, otherwise replacement accounts inherit revoked permissions.
+- Application MFA gates must cover both CAS provider bypass (including reused SSO sessions) and custom email OTP webflow decisions; share the system master flag with menu MFA and keep channel/enrollment settings intact.
+- OTP policy method switches must gate CAS providers as well as menu MFA; isolate cache keys by service and method and synchronize channel flags bidirectionally without changing the global master.
+- CAS extension packages may not be component-scanned: register MFA providers explicitly in imported auto-configuration, use constructor injection, and validate with an actual Spring context rather than compile-only tests.
+- CAS custom MFA: registering a provider bean also enables provider-ID events; add its realSubmit transition to the existing policy/trust decision and verify the Spring Webflow graph, not compilation alone.
+- Custom CAS OTP actions that call handlers directly bypass MFA metadata populators: record the configured authentication-context attribute only after verified OTP/trusted-device proof, including the TGT result-builder authentication; validate with DefaultMultifactorAuthenticationContextValidator.
+
+- Map camera visibility: verify the registered micro-app name/entry (operation-map vs operations-map); VMS cameras without catalog types need matching sidebar and marker type registration.
+- **[Spring Boot / CAS AutoConfiguration Controller]**: Kh�ng d?t inner static class g?n `@RestController`/`@Controller` b�n trong class `@AutoConfiguration` k�m `@Bean` kh?i t?o c�ng class d� (Spring `ConfigurationClassParser` s? t? d?ng dang k� c? inner `@Component` l?n `@Bean` g�y l?i `Ambiguous mapping` khi kh?i d?ng); h�y t�ch controller ra class d?c l?p ho?c ch? d�ng `@RequestMapping` + `@ResponseBody`.
+
+- **[Angular @ui-vts/ng-vts Date/Month/Year Picker]**: `VtsPickerComponent.onInputChange` không emit giá trị vào `FormControl` khi gõ tay mà chưa bấm `Enter`, đồng thời `onClickOutside`/`updateInputValue` sẽ tự xóa chuỗi không hợp lệ nếu `controlContainer.pristine` là `true`; cần bật `[vtsKeepInvalidInput]="true"`, `markAsDirty()` ngay trên sự kiện `input` (capture phase), khôi phục raw text khi blur/click ngoài và đồng bộ/validate trực tiếp trước khi submit.
+- **[Thymeleaf / SpringEL Boolean Or]**: Trong bi?u th?c `${a or b}` c?a Thymeleaf (SpringEL `OpOr`), n?u to�n h?ng c� th? `null` th� b?t bu?c b?c Elvis `{(a ?: false) or (b ?: false)}` d? tr�nh l?i `SpelEvaluationException: EL1001E: cannot convert from null to boolean` l�m tr?ng trang khi render.
+
+- Atoma incidents: API may return Xarac instead of XaRac; normalize known functionType values case-insensitively before filtering, and compare raw API counts with ingested counts.
+
+- [Windows PC file open]: Avoid cmd /c start with windowsVerbatimArguments for document paths; use encoded PowerShell Invoke-Item -LiteralPath and await launch errors before reporting success.
+
+- [API authorization / gateway] Verify actual backend requestURI in denial logs before setting contextPath: gateway may strip /operation; wildcard roles cannot fix a mismatched path. Backup DB configuration and increment version for reload/rollback.
+
+- [9Router catalog audit] Catalog membership and HTTP 200 do not prove availability: verify text plus streaming tool calls; retired Claude may return a deprecation message with 200. Preserve explicit Flash High IDs in auxiliary requests.
+
+- [9Router unlisted aliases] Hydrogen low/medium/high can work even when absent from /v1/models. Probe previously supported IDs separately; a single timeout is inconclusive, not proof a model was removed.
+- [2026-11-19 SSO QA] After migrating save responses to data-attt payloads, remove legacy script-regex detection; preserve escaped success feedback across redirects and keep Displaytag pagers outside horizontal scroll regions.
+
+- [Dashboard monetary units] Check card unit and SQL scaling before changing demo amounts: VND values labeled billion VND must be divided by 1e9 exactly once in SQL or UI, preserving raw database amounts.
+- Notification forms: preserve required-key/status data attributes in DOMPurify ADD_ATTR; share backend rules with UI, validate server-side, and encode recipient display names as UTF-8 InternetAddress.
+- JSP inline JavaScript: Jasper can consume backslash-dollar escaping and break regex literals. Use character classes [$] and [{] or external JS; test rendered output, not only raw JSP source.
+
+- Angular select: getters used by ngFor must preserve option array/object identities; recreating options each change-detection cycle can cause repeated select rebuilds and UI lag. Scope custom-height arrow/clear alignment fixes to the affected screen.
+
+- When unifying signing places with the country catalog, align FE options, BE validation/export joins, and deletion guards; preserve legacy references without silently remapping IDs.
+
+- Signing places remain an editable type-58 catalog with Other; country synchronization must add missing entries without replacing catalog IDs or overwriting custom places.
+
+- Project direct activities need their own program FK/collection and additive migration, not synthetic components; keep annual-plan end-date rules isolated when enforcing project TKCT.
+- Catalog repair: inspect references by catalog type, back up before Oracle DML, split itineraries only in multi-value relations, preserve ambiguous singular values; use named binds for repeated Oracle placeholders.
+- [Project attachments] Distinguish omitted attachment fields (preserve legacy clients) from an explicit empty list (soft-deactivate all files); cover both cases with regression tests.
+- [Responsive form gutters] When Bootstrap row labels stack below their col-* breakpoint, retain the same 15px gutter as input wrappers; only left-align below the effective breakpoint and preserve smaller explicit grid classes. Verify text edges via getBoundingClientRect plus computed padding.
+
+- [MySQL recovery] Persist protected dump/row manifests before model recovery; verify empty-string Jedis AUTH against nopass Redis and hold Redis cutover on failure; never repeat a completed import blindly.
+- UC25: Verify gateway Path routing with authenticated live calls when adding controller prefixes; category tests do not detect missing gateway routes.
+
+- [TKCT access control] Never grant internal-data visibility from client isSuperAdmin flags; resolve roles from authenticated server context and regression-test forged flags.
+
+- [Oracle sponsor migration] CATEGORY label column is CATEGORY_NAME; normalize mixed VARCHAR2/NVARCHAR2 backfill expressions with TO_NCHAR to avoid ORA-12704, retaining legacy IDs for rolling compatibility.

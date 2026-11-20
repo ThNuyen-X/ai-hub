@@ -8,6 +8,7 @@ const source = fs.readFileSync(__dirname + '/server.js', 'utf8');
 const context = vm.createContext({ ModelLevels });
 vm.runInContext(html.match(/const MODELS = \[[\s\S]*?\];/)[0] + '\nthis.models = MODELS;', context);
 const models = context.models;
+assert.ok(!models.some(m => /3\.1-pro|carbon/.test(m.id)));
 const hydrogen = models.find(m => m.id.includes('hydrogen'));
 assert.deepEqual(ModelLevels.variants(hydrogen).map(m => m.id), [
  'ag/gemini-4-hydrogen-low', 'ag/gemini-4-hydrogen-medium', 'ag/gemini-4-hydrogen-high'
@@ -19,8 +20,6 @@ assert.deepEqual(ModelLevels.variants(argon).map(m => m.id), [
 const flash = models.find(m => m.id.includes('flash'));
 assert.equal(ModelLevels.variants(flash).length, 4);
 assert.equal(ModelLevels.variants(flash)[3].id, 'ag/gemini-3.8-flash-high');
-const pro = models.find(m => m.id.includes('3.1-pro'));
-assert.deepEqual(ModelLevels.variants(pro).map(m => m.level), ['low', 'high']);
 for (const m of models.filter(m => m.group === 'claude')) {
  assert.deepEqual(ModelLevels.variants(m).map(v => v.level), ['low', 'medium', 'high']);
 }
@@ -37,3 +36,16 @@ assert.ok(!source.includes('if (modelId === "ag/gemini-3.8-flash-high")'));
 assert.ok(html.indexOf('src="/model-levels.js"') < html.indexOf('const MODELS ='));
 assert.ok(html.includes('aria-label="Reasoning level"'));
 console.log('PASS: supported per-model levels, exact variant metadata, Flash High preserved, shared server catalog');
+
+const backendContext = vm.createContext({ modelLevelVariants: ModelLevels.variants });
+vm.runInContext(source.match(/const AVAILABLE_MODELS = \[[\s\S]*?\]\.flatMap\(modelLevelVariants\);/)[0] + '\nthis.models = AVAILABLE_MODELS;', backendContext);
+assert.deepEqual(Array.from(backendContext.models, m => m.id), Array.from(models.flatMap(ModelLevels.variants), m => m.id));
+assert.equal(new Set(backendContext.models.map(m => m.id)).size, 43);
+assert.equal(ModelLevels.normalize('ag/claude-opus-5-5'), 'ag/claude-opus-5-5-high');
+assert.equal(ModelLevels.normalize('ag/gemini-3.8-flash-high'), 'ag/gemini-3.8-flash-high');
+assert.ok(source.includes('!AVAILABLE_MODELS.some(item => item.id === model)'));
+assert.ok(html.includes('normalizedSavedModel) ? normalizedSavedModel : MODELS[0].id'));
+
+const neon = models.find(m => m.id === 'ag/gemini-4-neon-high');
+assert.deepEqual(ModelLevels.variants(neon).map(m => m.id), ['ag/gemini-4-neon-low', 'ag/gemini-4-neon-medium', 'ag/gemini-4-neon-high', 'ag/gemini-4-neon-xhigh']);
+assert.deepEqual(ModelLevels.variants({id: 'ag/gemini-4-neon-xhigh'}).map(m => m.id), ['ag/gemini-4-neon-xhigh']);

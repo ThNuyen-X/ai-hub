@@ -31,4 +31,20 @@ assert.ok(serverSrc.includes('GOOSE_CONTEXT_LIMIT: process.env.GOOSE_CONTEXT_LIM
 assert.ok(batSrc.includes("GOOSE_CONTEXT_LIMIT=400000"));
 assert.ok(ps1Src.includes('$env:GOOSE_CONTEXT_LIMIT = "400000"'));
 
-console.log("System instruction & memory: 18 checks passed");
+for (const cwd of [path.resolve(__dirname, ".."), path.resolve(__dirname, "..", "other-workspace"), ""]) {
+  const prompt = buildSystemInstruction(cwd);
+  assert.ok(prompt.includes("[COPYABLE CONTENT POLICY]"));
+  assert.ok(prompt.includes("ENTIRE ready-to-use draft in a single fenced code block labeled text"));
+  assert.ok(prompt.includes("Do not use a blockquote"));
+  assert.ok(prompt.includes("Do not nest code fences"));
+  assert.ok(prompt.includes("Do not wrap ordinary conversational replies"));
+  assert.ok(prompt.includes("[WORKSPACE TERMINAL POLICY]"));
+  assert.ok(prompt.includes("one Windows Terminal window per workspace"));
+  assert.ok(prompt.includes("wt.exe -w <workspace-window-name> new-tab"));
+  assert.ok(prompt.includes("normalized absolute workspace root"));
+  assert.ok(prompt.includes("Never use -w 0"));
+  assert.ok(prompt.includes("Do not change global Windows Terminal settings"));
+  assert.ok(prompt.includes("If wt.exe is unavailable"));
+}
+
+console.log("System instruction & memory checks passed (including web-wide workspace terminal policy)");

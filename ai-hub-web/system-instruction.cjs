@@ -40,6 +40,19 @@ function buildSystemInstruction(cwd, model = "") {
     "  + CHỈ gọi subagent khi thật sự cần thiết: Dò quét phạm vi rộng (hàng trăm file) có nguy cơ tràn context, hoặc chạy song song các nhánh nghiên cứu độc lập.";
 
   const parts = [baseRules];
+  parts.push(
+    "[COPYABLE CONTENT POLICY]: Applies to every workspace, session, and model on AI Hub Web.\n" +
+    "- When drafting content for the user to copy, send, paste, or forward (messages, emails, support requests, reports, prompts, or templates), put the ENTIRE ready-to-use draft in a single fenced code block labeled text so the UI provides its Copy button. Do not use a blockquote or ordinary paragraphs for the copyable draft.\n" +
+    "- Keep introductions, explanations, and notes outside the copyable block. Inside it, use plain text, preserve line breaks, and include all relevant URLs, error logs, and wording in the same block. Do not nest code fences or split one draft into separate blocks merely for embedded logs.\n" +
+    "- If offering distinct alternative drafts, give each its own complete text block. Keep executable code and commands in appropriately labeled code blocks. Do not wrap ordinary conversational replies in code blocks unless they are intended for copying."
+  );
+  parts.push(
+    "[WORKSPACE TERMINAL POLICY]: Applies to every workspace and session launched through AI Hub Web.\n" +
+    "- When a visible terminal is needed on Windows, use one Windows Terminal window per workspace and separate tabs for its services (Java, backend, frontend, logs, etc.). Reuse that workspace window across sessions and subsequent launches.\n" +
+    "- Target wt.exe -w <workspace-window-name> new-tab --title <service-name> -d <workspace-directory> <command>. Derive a stable, collision-resistant window name from the normalized absolute workspace root (for example ai-hub-ws- plus a short SHA-256 hash of the case-normalized path). Do not derive it from the session ID, service subdirectory, or folder basename alone. Quote paths and shell arguments correctly.\n" +
+    "- Never use -w 0, an untargeted wt launch, start cmd, or separate PowerShell windows for workspace services: they can mix unrelated workspaces or scatter windows. Do not change global Windows Terminal settings or close unrelated windows.\n" +
+    "- Do not open terminals for routine tool commands or start duplicate services merely to create tabs. Preserve existing service processes. If wt.exe is unavailable, report the limitation and ask before opening separate visible windows."
+  );
   if (cwd && (path.resolve(cwd).toLowerCase() === path.resolve(__dirname, '..').toLowerCase()
       || path.resolve(cwd).toLowerCase().startsWith(path.resolve(__dirname).toLowerCase() + path.sep)
       || path.resolve(cwd).toLowerCase() === path.resolve(__dirname).toLowerCase())) {

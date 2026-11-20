@@ -2,17 +2,22 @@
   'use strict';
   // Only expose variant IDs advertised by the router or verified by live requests.
   const levels = {
+    'ag/gemini-4-neon-high': ['low', 'medium', 'high', 'xhigh'],
     'ag/gemini-4-hydrogen-high': ['low', 'medium', 'high'],
     'ag/gemini-4-argon-high': ['low', 'medium', 'high'],
     'ag/gemini-3.8-flash': ['low', 'medium', 'high'],
-    'ag/gemini-3.1-pro-high': ['low', 'high'],
     'ag/claude-sonnet-5-5-high': ['low', 'medium', 'high'],
     'ag/claude-opus-5-5-high': ['low', 'medium', 'high']
   };
+  function normalize(modelId) {
+    if (modelId === 'ag/claude-sonnet-5-5') return 'ag/claude-sonnet-5-5-high';
+    if (modelId === 'ag/claude-opus-5-5') return 'ag/claude-opus-5-5-high';
+    return modelId;
+  }
   function variants(model) {
     const supported = levels[model.id];
     if (!supported) return [model];
-    const base = model.id.replace(/-(low|medium|high)$/, '');
+    const base = model.id.replace(/-(low|medium|high|xhigh)$/, '');
     const choices = supported.map(level => ({ ...model,
       id: base + '-' + level, full: base + '-' + level,
       name: model.name + ' / ' + level[0].toUpperCase() + level.slice(1), level
@@ -29,7 +34,7 @@
   function getLevelMeta(level) {
     return levelMeta[level] || { label: level ? level[0].toUpperCase() + level.slice(1) : 'Default', icon: '✨', desc: '' };
   }
-  const api = { levels, variants, levelMeta, getLevelMeta };
+  const api = { levels, variants, normalize, levelMeta, getLevelMeta };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.ModelLevels = api;
 })(typeof globalThis === 'object' ? globalThis : this);

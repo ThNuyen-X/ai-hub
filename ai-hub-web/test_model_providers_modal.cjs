@@ -55,8 +55,8 @@ assert.deepStrictEqual(JSON.stringify(providerIds), JSON.stringify(['chatgpt', '
 
 // Kiem tra model ChatGPT
 const chatgptModels = Array.from(MODELS.filter(m => m.group === 'chatgpt'));
-assert.equal(chatgptModels.length, 2, 'ChatGPT group must have 2 models');
-assert.deepStrictEqual(JSON.stringify(chatgptModels.map(m => m.id)), JSON.stringify(['cx/gpt-6.1-sol', 'ag/gpt-oss-120b-medium']), 'ChatGPT must contain 6.1 sol and antigravity oss 120b');
+assert.equal(chatgptModels.length, 22, 'ChatGPT group must have all verified GPT routes');
+assert.deepStrictEqual(Array.from(chatgptModels, m => m.id), ["cx/gpt-6.1-sol","cx/gpt-6.1-sol[1m]","cx/gpt-6.1-terra","cx/gpt-6.1-terra[1m]","cx/gpt-6-astra","cx/gpt-6-astra[1m]","cx/gpt-6-sol","cx/gpt-6-sol[1m]","cx/gpt-6-luna","cx/gpt-6-luna[1m]","cx/gpt-5.6-sol","cx/gpt-5.6-sol[1m]","cx/gpt-5.6-sol-review","cx/gpt-5.6-terra","cx/gpt-5.6-terra[1m]","cx/gpt-5.6-terra-review","cx/gpt-5.6-luna","cx/gpt-5.6-luna[1m]","cx/gpt-5.6-luna-review","cx/gpt-reserve","cx/codex-auto-review","ag/gpt-oss-120b-medium"]);
 
 // Kiem tra model Claude
 const claudeModels = Array.from(MODELS.filter(m => m.group === 'claude'));
@@ -68,12 +68,13 @@ assert.deepStrictEqual(JSON.stringify(claudeModels.map(m => m.id)), JSON.stringi
 
 // Kiem tra model Gemini
 const geminiModels = Array.from(MODELS.filter(m => m.group === 'gemini'));
-assert.equal(geminiModels.length, 4, 'Gemini group must have 4 models');
+assert.equal(geminiModels.length, 5, 'Gemini group contains only verified models');
 assert.deepStrictEqual(JSON.stringify(geminiModels.map(m => m.id)), JSON.stringify([
+  'ag/gemini-4-neon-high',
   'ag/gemini-4-hydrogen-high',
   'ag/gemini-3.8-flash',
-  'ag/gemini-4-argon-high',
-  'ag/gemini-3.1-pro-high'
+  'ag/gemini-2.5-flash',
+  'ag/gemini-4-argon-high'
 ]));
 
 // 3. Kiem tra logic JavaScript tuong tac: renderModelSelector & openModelProviderPopup
@@ -205,7 +206,7 @@ assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 4 Hydrogen'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('ag/gemini-4-hydrogen-high'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 3.8 Flash'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 4 Argon'));
-assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 3.1 Pro'));
+assert(!fakeDom.modelProviderModalList.innerHTML.includes('Gemini 3.1 Pro'));
 
 // Test 7: Nút backToModelMenu() dong popup va mo dropdown
 fakeDom.modelDropdownMenu.classList.add('hidden-popover');
@@ -214,3 +215,6 @@ assert(fakeDom.modelProviderModal.classList.contains('hidden'), 'Popup must be c
 assert(fakeDom.modelDropdownMenu.classList.contains('visible-popover'), 'Dropdown menu must be reopened');
 
 console.log('All Model Providers & Sub-popup Modal UI tests passed successfully!');
+
+assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 4 Neon'));
+assert(fakeDom.modelProviderModalList.innerHTML.includes('ag/gemini-4-neon-xhigh'));

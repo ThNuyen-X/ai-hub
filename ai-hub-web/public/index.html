@@ -1418,6 +1418,26 @@
     }
 
 
+    .user-message-row:not([data-question-expanded="true"]) .user-bubble:not(.hidden) {
+      overflow: auto;
+      max-height: min(420px, 55vh);
+    }
+    .user-question-toggle {
+      color: var(--text-sub);
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 6px;
+    }
+    .user-question-toggle:hover { color: var(--text-main); background: var(--bg-hover); }
+    .code-block-container > pre {
+      max-height: min(420px, 55vh);
+      overflow: auto;
+    }
+    @media (max-width: 640px) {
+      .code-block-container > pre,
+      .user-message-row:not([data-question-expanded="true"]) .user-bubble:not(.hidden) { max-height: min(320px, 50vh); }
+    }
+
     /* Auxiliary Model Dialog & Trigger styling */
     .auxiliary-dialog {
       margin: auto;
@@ -3888,27 +3908,46 @@
 
     window._codeSnippets = {};
     window._aiResponses = {};
+    window._aiResultResponses = {};
 
     // MODELS DEFINITIONS
     const MODELS = [
-      // ChatGPT (OpenAI & Antigravity)
-      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Code chuẩn, tư duy sâu", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.1-sol[1m]", name: "GPT-6.1 Sol / 1M", full: "cx/gpt-6.1-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short requests and tool round-trip verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.1-terra", name: "GPT-6.1 Terra", full: "cx/gpt-6.1-terra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.1-terra[1m]", name: "GPT-6.1 Terra / 1M", full: "cx/gpt-6.1-terra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short requests and tool round-trip verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-astra", name: "GPT-6 Astra", full: "cx/gpt-6-astra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-astra[1m]", name: "GPT-6 Astra / 1M", full: "cx/gpt-6-astra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-sol", name: "GPT-6 Sol", full: "cx/gpt-6-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-sol[1m]", name: "GPT-6 Sol / 1M", full: "cx/gpt-6-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-luna", name: "GPT-6 Luna", full: "cx/gpt-6-luna", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-luna[1m]", name: "GPT-6 Luna / 1M", full: "cx/gpt-6-luna[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-sol", name: "GPT-5.6 Sol", full: "cx/gpt-5.6-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-sol[1m]", name: "GPT-5.6 Sol / 1M", full: "cx/gpt-5.6-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-sol-review", name: "GPT-5.6 Sol Review", full: "cx/gpt-5.6-sol-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-terra", name: "GPT-5.6 Terra", full: "cx/gpt-5.6-terra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-terra[1m]", name: "GPT-5.6 Terra / 1M", full: "cx/gpt-5.6-terra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-terra-review", name: "GPT-5.6 Terra Review", full: "cx/gpt-5.6-terra-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-luna", name: "GPT-5.6 Luna", full: "cx/gpt-5.6-luna", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-luna[1m]", name: "GPT-5.6 Luna / 1M", full: "cx/gpt-5.6-luna[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-luna-review", name: "GPT-5.6 Luna Review", full: "cx/gpt-5.6-luna-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-reserve", name: "GPT Reserve", full: "cx/gpt-reserve", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/codex-auto-review", name: "Codex Auto Review", full: "cx/codex-auto-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
       { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", full: "ag/gpt-oss-120b-medium", group: "chatgpt", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      // Claude (Anthropic)
       { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "claude", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
       { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "claude", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
-      // Gemini (Google & DeepMind)
-      { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Hydrogen", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-4-neon-high", name: "Gemini 4 Neon", full: "ag/gemini-4-neon-high", group: "gemini", provider: "DeepMind", tag: "Verified text, streaming and tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Verified live; unlisted router alias", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
       { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
-      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon", iconBg: "rgba(66, 133, 244, 0.1)" },
-      { id: "ag/gemini-3.1-pro-high", name: "Gemini 3.1 Pro", full: "ag/gemini-3.1-pro-high", group: "gemini", provider: "Google", tag: "Xử lý ngữ cảnh lớn 1M tokens", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" }
+      { id: "ag/gemini-2.5-flash", name: "Gemini 2.5 Flash", full: "ag/gemini-2.5-flash", group: "gemini", provider: "Google", tag: "Verified fast text and tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon", iconBg: "rgba(66, 133, 244, 0.1)" }
     ];
 
     const MODEL_PROVIDERS = [
       {
         id: "chatgpt",
         name: "ChatGPT",
-        subtitle: "GPT-6.1 Sol · GPT OSS 120B",
+        subtitle: "GPT-6.1 / GPT-6 / GPT-5.6 / Review / OSS",
         provider: "OpenAI & Antigravity",
         iconType: "openai",
         iconBg: "rgba(16, 185, 129, 0.12)",
@@ -3917,7 +3956,7 @@
       {
         id: "claude",
         name: "Claude",
-        subtitle: "Sonnet 5.5 · Opus 5.5 · Sonnet 4.6",
+        subtitle: "Sonnet 5.5 / Opus 5.5",
         provider: "Anthropic",
         iconType: "claude",
         iconBg: "rgba(217, 119, 6, 0.12)",
@@ -3926,7 +3965,7 @@
       {
         id: "gemini",
         name: "Gemini",
-        subtitle: "3.8 Flash · 4 Argon · 3.1 Pro",
+        subtitle: "4 Neon / 4 Hydrogen / 3.8 Flash / 2.5 Flash / 4 Argon",
         provider: "Google & DeepMind",
         iconType: "gemini",
         iconBg: "rgba(66, 133, 244, 0.12)",
@@ -4711,6 +4750,171 @@
 
     // TEXT-TO-SPEECH (WEB SPEECH API)
     let activeSpeechBtn = null;
+    function countInlineBackticksOutsideFences(raw) {
+      const text = String(raw || '');
+      let inFence = null;
+      let backticks = 0;
+      let i = 0;
+      while (i < text.length) {
+        const atLineStart = (i === 0 || text[i - 1] === '\n');
+        if (atLineStart) {
+          let j = i;
+          while (j < text.length && j - i < 3 && text[j] === ' ') j++;
+          if (j < text.length && (text[j] === '`' || text[j] === '~')) {
+            const ch = text[j];
+            let k = j;
+            while (k < text.length && text[k] === ch) k++;
+            const runLen = k - j;
+            if (runLen >= 3) {
+              if (!inFence) {
+                inFence = { ch, len: runLen };
+                const nl = text.indexOf('\n', k);
+                i = (nl === -1) ? text.length : nl + 1;
+                continue;
+              } else if (inFence.ch === ch && runLen >= inFence.len) {
+                const lineEnd = text.indexOf('\n', k);
+                const tail = (lineEnd === -1 ? text.slice(k) : text.slice(k, lineEnd)).trim();
+                if (!tail) {
+                  inFence = null;
+                  i = (lineEnd === -1) ? text.length : lineEnd + 1;
+                  continue;
+                }
+              }
+            }
+          }
+        }
+        if (inFence) {
+          const nl = text.indexOf('\n', i);
+          i = (nl === -1) ? text.length : nl + 1;
+          continue;
+        }
+        if (text[i] === '`') {
+          let k = i;
+          while (k < text.length && text[k] === '`') k++;
+          if (k - i === 1) backticks++;
+          i = k;
+          continue;
+        }
+        i++;
+      }
+      return { backticks, inFence: !!inFence };
+    }
+
+    function splitThinkSegments(raw) {
+      const text = String(raw || '');
+      let inFence = null;
+      let inlineTickLen = 0;
+      let thinkStart = -1;
+      let i = 0;
+      while (i < text.length) {
+        if (inlineTickLen && text[i] === '\n' && (text[i + 1] === '\n' || (text[i + 1] === '\r' && text[i + 2] === '\n'))) {
+          inlineTickLen = 0;
+        }
+        const atLineStart = (i === 0 || text[i - 1] === '\n');
+        if (!inlineTickLen && atLineStart) {
+          let j = i;
+          while (j < text.length && j - i < 3 && text[j] === ' ') j++;
+          if (j < text.length && (text[j] === '`' || text[j] === '~')) {
+            const ch = text[j];
+            let k = j;
+            while (k < text.length && text[k] === ch) k++;
+            const runLen = k - j;
+            if (runLen >= 3) {
+              if (!inFence) {
+                inFence = { ch, len: runLen };
+                const nl = text.indexOf('\n', k);
+                i = (nl === -1) ? text.length : nl + 1;
+                continue;
+              } else if (inFence.ch === ch && runLen >= inFence.len) {
+                const lineEnd = text.indexOf('\n', k);
+                const tail = (lineEnd === -1 ? text.slice(k) : text.slice(k, lineEnd)).trim();
+                if (!tail) {
+                  inFence = null;
+                  i = (lineEnd === -1) ? text.length : lineEnd + 1;
+                  continue;
+                }
+              }
+            }
+          }
+        }
+        if (inFence) {
+          const nl = text.indexOf('\n', i);
+          i = (nl === -1) ? text.length : nl + 1;
+          continue;
+        }
+        if (text[i] === '`') {
+          let k = i;
+          while (k < text.length && text[k] === '`') k++;
+          const runLen = k - i;
+          if (!inlineTickLen) inlineTickLen = runLen;
+          else if (inlineTickLen === runLen) inlineTickLen = 0;
+          i = k;
+          continue;
+        }
+        if (!inlineTickLen && text.startsWith('<think>', i)) {
+          thinkStart = i;
+          break;
+        }
+        i++;
+      }
+      if (thinkStart === -1) {
+        return { hasThink: false, prefixPart: '', thinkingPart: '', answerPart: text, isThinkingDone: true };
+      }
+      const prefixPart = text.substring(0, thinkStart);
+      const thinkEnd = text.indexOf('</think>', thinkStart + 7);
+      const isThinkingDone = (thinkEnd !== -1);
+      const thinkingPart = isThinkingDone ? text.substring(thinkStart + 7, thinkEnd) : text.substring(thinkStart + 7);
+      const answerPart = isThinkingDone ? text.substring(thinkEnd + 8) : '';
+      return { hasThink: true, prefixPart, thinkingPart, answerPart, isThinkingDone };
+    }
+
+    function extractResultMarkdown(raw) {
+      const text = String(raw || '');
+      const seg = splitThinkSegments(text);
+      if (!seg.hasThink) return hasAiProcessText(text) ? text : '';
+      if (!seg.isThinkingDone) return hasAiProcessText(seg.prefixPart) ? seg.prefixPart : '';
+      const combined = [seg.prefixPart, seg.answerPart].filter(Boolean).join('\n');
+      return hasAiProcessText(combined) ? combined : '';
+    }
+
+    function getSpeechResultText(respId, btn) {
+      const msgRow = btn && btn.closest ? btn.closest('.ai-msg-row') : null;
+      const contentBody = msgRow && msgRow.querySelector ? msgRow.querySelector('.ai-content-body') : null;
+      if (contentBody) {
+        const resultParts = [];
+        for (const child of Array.from(contentBody.children || [])) {
+          if (!child || !child.classList) continue;
+          if (
+            child.classList.contains('ai-process-group') ||
+            child.classList.contains('thought-process-card') ||
+            child.classList.contains('live-progress-container')
+          ) {
+            continue;
+          }
+          if (child.classList.contains('markdown-body')) {
+            if (typeof child._rawResultMarkdown === 'string') {
+              if (child._rawResultMarkdown.trim()) resultParts.push(child._rawResultMarkdown);
+            } else {
+              const clone = child.cloneNode(true);
+              if (clone.querySelectorAll) {
+                clone.querySelectorAll('pre, .code-block-wrapper, .streaming-cursor').forEach(el => {
+                  if (el.classList && el.classList.contains('streaming-cursor')) {
+                    el.remove();
+                  } else {
+                    el.replaceWith(' [Đoạn mã được bỏ qua] ');
+                  }
+                });
+              }
+              const domText = (clone.textContent || '').trim();
+              if (domText) resultParts.push(domText);
+            }
+          }
+        }
+        return resultParts.join('\n\n').trim();
+      }
+      return (window._aiResultResponses && window._aiResultResponses[respId]) || '';
+    }
+
     window.toggleSpeech = function(respId, btn) {
       if (window.speechSynthesis && window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
@@ -4724,9 +4928,9 @@
         }
       }
 
-      const text = window._aiResponses[respId] || '';
+      const text = getSpeechResultText(respId, btn);
       if (!text.trim()) {
-        showToast('Không có nội dung phản hồi để đọc', 'warning');
+        showToast('Không có nội dung kết quả để đọc', 'warning');
         return;
       }
 
@@ -4735,11 +4939,16 @@
         .replace(/```[\s\S]*?```/g, ' [Đoạn mã được bỏ qua] ')
         .replace(/`([^`]+)`/g, '$1')
         .replace(/#+\s+/g, '')
-        .replace(/<think>[\s\S]*?<\/think>/g, '')
+        .replace(/<think>[\s\S]*?(?:<\/think>|$)/g, '')
         .replace(/<[^>]+>/g, '')
         .replace(/[*_~[\]()]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+
+      if (!cleanText) {
+        showToast('Không có nội dung kết quả để đọc', 'warning');
+        return;
+      }
 
       if (!('speechSynthesis' in window)) {
         showToast('Trình duyệt không hỗ trợ Web Speech API', 'warning');
@@ -8123,6 +8332,15 @@
       await sendMessage({ promptOverride: newPrompt, rewindLastTurn: true });
     };
 
+    window.toggleUserQuestion = function(button) {
+      const row = button.closest('.user-message-row');
+      if (!row) return;
+      const expanded = row.dataset.questionExpanded !== 'true';
+      row.dataset.questionExpanded = String(expanded);
+      button.setAttribute('aria-expanded', String(expanded));
+      button.textContent = expanded ? 'Thu g\u1ecdn' : 'M\u1edf r\u1ed9ng';
+    };
+
     window.editUserPrompt = function(id, btnEl) {
       const feed = document.getElementById('chatFeed');
       if (!feed) return;
@@ -8350,6 +8568,9 @@
     const sessionModelsMap = new Map();
 
     function normalizeModelId(modelId) {
+      if (typeof ModelLevels?.normalize === 'function') return ModelLevels.normalize(modelId);
+      if (modelId === 'ag/claude-sonnet-5-5') return 'ag/claude-sonnet-5-5-high';
+      if (modelId === 'ag/claude-opus-5-5') return 'ag/claude-opus-5-5-high';
       return modelId;
     }
 
@@ -11711,6 +11932,7 @@
               <span>Bạn</span>
             </div>
             <div class="user-bubble text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${isCodeLike ? 'font-mono text-[11.5px]' : 'font-medium'}">${escapeHtml((item.text || '').trim())}</div>
+            <button type="button" class="user-question-toggle" aria-expanded="false" onclick="toggleUserQuestion(this)">Mở rộng</button>
           </div>
         `;
         row.dataset.questionText = item.text || '';
@@ -11738,7 +11960,7 @@
           if (c.type === 'thinking' || c.thinking) {
             const thoughtText = typeof c.thinking === 'string' ? c.thinking : (c.thinking?.value || '');
             if (thoughtText.trim()) {
-              appendAiThinking(aiContainer, thoughtText);
+              appendAiThinking(aiContainer, thoughtText, c.signature || '');
               closeActiveThoughtIfNeeded(aiContainer);
               flushAiTextRender(aiContainer);
             }
@@ -11764,6 +11986,11 @@
             }
           }
         });
+
+        if (rescueTrailingThinkingIfNeeded(aiContainer)) {
+          hasText = true;
+        }
+        flushAiTextRender(aiContainer);
 
         if (aiContainer.activeTextContainer && !aiContainer.activeTextContainer.innerHTML.trim()) {
           aiContainer.activeTextContainer.remove();
@@ -12338,6 +12565,7 @@
             <span>Bạn</span>
           </div>
           <div class="user-bubble text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${isCodeLike ? 'font-mono text-[11.5px]' : 'font-medium'}">${escapeHtml((text || '').trim())}</div>
+          <button type="button" class="user-question-toggle" aria-expanded="false" onclick="toggleUserQuestion(this)">Mở rộng</button>
         </div>
       `;
       row.dataset.questionText = text;
@@ -12362,6 +12590,7 @@
       const progId = 'prog_' + Math.random().toString(36).substring(2, 9);
       const respId = 'resp_' + Math.random().toString(36).substring(2, 9);
       window._aiResponses[respId] = '';
+      if (window._aiResultResponses) window._aiResultResponses[respId] = '';
 
       const row = document.createElement('div');
       row.className = 'w-full flex justify-start my-4 px-1 sm:px-2 group';
@@ -12469,7 +12698,7 @@
         window._aiResponses[respId] += t;
       }
 
-      return { row, contentBody, updateProgress, finishProgress, addResponseText };
+      return { row, contentBody, updateProgress, finishProgress, addResponseText, _respId: respId };
     }
 
     // Set window.USE_PLAIN_PROCESS_HEADER = false to revert header lines back to boxed headers
@@ -12568,30 +12797,35 @@
       } else if (typeof block.remove === 'function') {
         block.remove();
       }
+      if (block) delete block._rawResultMarkdown;
+      if (container._respId && typeof window !== 'undefined' && window._aiResultResponses) {
+        window._aiResultResponses[container._respId] = '';
+      }
       container.activeTextContainer = null;
       container._activeRawText = '';
       container._thoughtElement = null;
+      container._activeThoughtRaw = '';
+      container._thoughtSealed = false;
     }
 
-    // PARSED REASONING & MARKDOWN RENDERER (Supports <think>...</think> DeepSeek / Claude / o1)
-    function renderAiTextNow(container) {
+    function syncContainerResultSpeech(container, rawResult) {
       if (!container || !container.activeTextContainer) return;
-      const raw = container._activeRawText || '';
-      const thinkStart = raw.indexOf('<think>');
+      const val = typeof rawResult === 'string' ? rawResult : '';
+      container.activeTextContainer._rawResultMarkdown = val;
+      if (container._respId && typeof window !== 'undefined' && window._aiResultResponses) {
+        window._aiResultResponses[container._respId] = val;
+      }
+    }
 
-      if (thinkStart !== -1) {
-        const thinkEnd = raw.indexOf('</think>');
-        const thinkingPart = (thinkEnd !== -1) ? raw.substring(thinkStart + 7, thinkEnd) : raw.substring(thinkStart + 7);
-        const answerPart = (thinkEnd !== -1) ? raw.substring(thinkEnd + 8) : '';
-
-        const isThinkingDone = (thinkEnd !== -1);
-        const usePlainHeader = (window.USE_PLAIN_PROCESS_HEADER !== false);
-        if (!container._thoughtElement) {
-          const details = document.createElement('details');
-          details.open = false;
-          if (usePlainHeader) {
-            details.className = 'thought-process-card my-1.5 text-xs';
-            details.innerHTML = `
+    function renderThoughtProcessCard(container, thinkingPart, isThinkingDone) {
+      if (!container || !container.contentBody) return;
+      const usePlainHeader = (window.USE_PLAIN_PROCESS_HEADER !== false);
+      if (!container._thoughtElement) {
+        const details = document.createElement('details');
+        details.open = false;
+        if (usePlainHeader) {
+          details.className = 'thought-process-card my-1.5 text-xs';
+          details.innerHTML = `
               <summary class="py-1 cursor-pointer select-none flex items-center justify-between font-mono text-[11px] opacity-90 hover:opacity-100 transition-opacity" style="color: var(--text-muted);">
                 <div class="flex items-center space-x-2">
                   <span class="thought-brain-icon ${isThinkingDone ? '' : 'animate-pulse'}">🧠</span>
@@ -12604,11 +12838,11 @@
               </summary>
               <div class="thought-body mt-1.5 p-3 rounded-xl border text-[12px] font-mono leading-relaxed whitespace-pre-wrap opacity-85 select-text" style="background: var(--bg-surface); border-color: var(--border-subtle); color: var(--text-sub);"></div>
             `;
-          } else {
-            details.className = 'thought-process-card mb-3 rounded-xl border overflow-hidden text-xs';
-            details.style.background = 'var(--bg-surface)';
-            details.style.borderColor = 'var(--border-subtle)';
-            details.innerHTML = `
+        } else {
+          details.className = 'thought-process-card mb-3 rounded-xl border overflow-hidden text-xs';
+          details.style.background = 'var(--bg-surface)';
+          details.style.borderColor = 'var(--border-subtle)';
+          details.innerHTML = `
               <summary class="px-3 py-2 cursor-pointer select-none flex items-center justify-between font-mono text-[11px]" style="background: var(--bg-hover); color: var(--text-muted);">
                 <div class="flex items-center space-x-2">
                   <span class="thought-brain-icon ${isThinkingDone ? '' : 'animate-pulse'}">🧠</span>
@@ -12621,45 +12855,63 @@
               </summary>
               <div class="thought-body p-3 text-[12px] font-mono leading-relaxed whitespace-pre-wrap opacity-85 border-t select-text" style="border-color: var(--border-subtle); color: var(--text-sub);"></div>
             `;
-          }
-          const processBody = ensureAiProcessGroup(container);
-          if (processBody) {
-            processBody.appendChild(details);
-          } else {
-            container.contentBody.insertBefore(details, container.activeTextContainer);
-          }
-          container._thoughtElement = details;
-          container._thoughtCount = (container._thoughtCount || 0) + 1;
-          updateAiProcessGroupSummary(container);
         }
-
-        const hasThinkingContent = hasAiProcessText(thinkingPart);
-        container._thoughtElement.hidden = !hasThinkingContent;
-        if (!hasThinkingContent) {
-          if (!container._thoughtElement._emptyThought) container._thoughtCount--;
-        } else if (container._thoughtElement._emptyThought) {
-          container._thoughtCount++;
+        const processBody = ensureAiProcessGroup(container);
+        if (processBody) {
+          processBody.appendChild(details);
+        } else if (container.activeTextContainer) {
+          container.contentBody.insertBefore(details, container.activeTextContainer);
+        } else {
+          container.contentBody.appendChild(details);
         }
-        container._thoughtElement._emptyThought = !hasThinkingContent;
+        container._thoughtElement = details;
+        container._thoughtCount = (container._thoughtCount || 0) + 1;
         updateAiProcessGroupSummary(container);
+      }
 
-        const brainEl = container._thoughtElement.querySelector('.thought-brain-icon');
-        if (brainEl) brainEl.className = 'thought-brain-icon ' + (isThinkingDone ? '' : 'animate-pulse');
-        const timerEl = container._thoughtElement.querySelector('.thought-timer');
-        if (timerEl) {
-          timerEl.className = 'thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ' +
-            (isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse');
-          timerEl.textContent = isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...';
-        }
-        const thoughtBodyEl = container._thoughtElement.querySelector('.thought-body');
-        if (thoughtBodyEl) thoughtBodyEl.textContent = thinkingPart.trim();
+      const hasThinkingContent = hasAiProcessText(thinkingPart);
+      container._thoughtElement.hidden = !hasThinkingContent;
+      if (!hasThinkingContent) {
+        if (!container._thoughtElement._emptyThought) container._thoughtCount--;
+      } else if (container._thoughtElement._emptyThought) {
+        container._thoughtCount++;
+      }
+      container._thoughtElement._emptyThought = !hasThinkingContent;
+      updateAiProcessGroupSummary(container);
 
+      const brainEl = container._thoughtElement.querySelector('.thought-brain-icon');
+      if (brainEl) brainEl.className = 'thought-brain-icon ' + (isThinkingDone ? '' : 'animate-pulse');
+      const timerEl = container._thoughtElement.querySelector('.thought-timer');
+      if (timerEl) {
+        timerEl.className = 'thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ' +
+          (isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse');
+        timerEl.textContent = isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...';
+      }
+      const thoughtBodyEl = container._thoughtElement.querySelector('.thought-body');
+      if (thoughtBodyEl) thoughtBodyEl.textContent = String(thinkingPart || '').trim();
+    }
+
+    // PARSED REASONING & MARKDOWN RENDERER (Supports <think>...</think> DeepSeek / Claude / o1)
+    function renderAiTextNow(container) {
+      if (!container || !container.activeTextContainer) return;
+      const raw = container._activeRawText || '';
+      const seg = splitThinkSegments(raw);
+
+      if (seg.hasThink) {
+        renderThoughtProcessCard(container, seg.thinkingPart, seg.isThinkingDone);
+
+        const answerPart = seg.isThinkingDone
+          ? (hasAiProcessText(seg.prefixPart) ? [seg.prefixPart, seg.answerPart].filter(Boolean).join('\n') : seg.answerPart)
+          : (hasAiProcessText(seg.prefixPart) ? seg.prefixPart : '');
         const parsedAnswer = answerPart.trim() ? parseChatMarkdown(answerPart) : '';
         const cursor = (isGenerating && !container.isHistorical && parsedAnswer) ? '<span class="streaming-cursor ml-1"></span>' : '';
         container.activeTextContainer.innerHTML = parsedAnswer + cursor;
+        syncContainerResultSpeech(container, hasAiProcessText(answerPart) ? answerPart : '');
       } else {
         const cursor = isGenerating && !container.isHistorical ? '<span class="streaming-cursor ml-1"></span>' : '';
-        container.activeTextContainer.innerHTML = hasAiProcessText(raw) ? parseChatMarkdown(raw) + cursor : '';
+        const hasVisible = hasAiProcessText(raw);
+        container.activeTextContainer.innerHTML = hasVisible ? parseChatMarkdown(raw) + cursor : '';
+        syncContainerResultSpeech(container, hasVisible ? raw : '');
       }
 
       if (!container.isHistorical) notifyNewMessageArrived();
@@ -12678,45 +12930,128 @@
     }
 
     function closeActiveThoughtIfNeeded(container) {
-      if (container && container._activeRawText && container._activeRawText.indexOf('<think>') !== -1 && container._activeRawText.indexOf('</think>') === -1) {
-        container._activeRawText += '\n</think>\n';
+      if (!container) return;
+      if (container._activeRawText) {
+        const seg = splitThinkSegments(container._activeRawText);
+        if (seg.hasThink && !seg.isThinkingDone) {
+          container._activeRawText += '\n</think>\n';
+        }
+      }
+      if (container._thoughtElement && !container._thoughtSealed) {
+        container._thoughtSealed = true;
+        if (typeof container._activeThoughtRaw === 'string') {
+          renderThoughtProcessCard(container, container._activeThoughtRaw, true);
+        }
       }
     }
 
-    function appendAiThinking(container, text) {
-      if (!text) return;
-      if (!container.activeTextContainer) {
-        const newBlock = document.createElement('div');
-        newBlock.className = 'markdown-body font-medium';
-        newBlock.style.color = 'var(--text-main)';
-        container.contentBody.appendChild(newBlock);
-        container.activeTextContainer = newBlock;
-        container._activeRawText = '';
+    function shouldRescueTrailingThinking(prevText, thinkingText, hasSignature, hasTools) {
+      if (hasSignature) return false;
+      const thought = String(thinkingText || '');
+      const trimmedThought = thought.trim();
+      if (!trimmedThought || trimmedThought === '...' || trimmedThought === '…') return false;
+
+      const prev = String(prevText || '');
+      const trimmedPrev = prev.trimEnd();
+      if (trimmedPrev) {
+        const { backticks, inFence } = countInlineBackticksOutsideFences(prev);
+        const oddBackticks = (backticks % 2) === 1;
+        const lastLine = prev.split('\n').pop() || '';
+        const openParens = (lastLine.match(/\(/g) || []).length - (lastLine.match(/\)/g) || []).length;
+        const openBrackets = (lastLine.match(/\[/g) || []).length - (lastLine.match(/\]/g) || []).length;
+        const trailingSpace = /[ \t]$/.test(prev);
+        const endsWithTerminal = /[.!?…:"”’'\`)\]>*_\-\d]$/.test(trimmedPrev);
+        const startsContinuation = /^[`)\]\.,;:?!]/.test(trimmedThought);
+        const cutMidClause = inFence || oddBackticks || openParens > 0 || openBrackets > 0 || (trailingSpace && !endsWithTerminal);
+        if ((cutMidClause && (trimmedThought.length >= 15 || startsContinuation))
+          || (startsContinuation && trimmedThought.length >= 15 && !/^\.{2,}$/.test(trimmedThought))) {
+          return true;
+        }
+        return false;
+      }
+
+      if (!hasTools && trimmedThought.length >= 120) {
+        const looksLikeFormattedResponse = /[\u00C0-\u1EF9]/.test(trimmedThought)
+          || /(^|\n)\s*(#{1,6}\s|[-*+]\s|\d+\.\s|```)/.test(trimmedThought);
+        if (looksLikeFormattedResponse) return true;
+      }
+      return false;
+    }
+
+    function stitchRescuedThinking(prevText, thinkingText) {
+      const prev = String(prevText || '');
+      const thought = String(thinkingText || '');
+      if (!prev.trim()) return thought;
+      const { backticks } = countInlineBackticksOutsideFences(prev);
+      if (thought.startsWith('`') && thought[1] !== '`') {
+        return prev + ((backticks % 2 === 0) ? '`<think>' : '<think>') + thought;
+      }
+      if (/[ \t\n]$/.test(prev) || /^[)\]\.,;:?!]/.test(thought)) {
+        return prev + thought;
+      }
+      return prev + '\n\n' + thought;
+    }
+
+    function rescueTrailingThinkingIfNeeded(container) {
+      if (!container || container._lastStreamBlockType !== 'thinking') return false;
+      const trailingRaw = container._trailingThinkingRaw || '';
+      const hasSig = !!container._trailingThinkingHasSig;
+      const hasTools = (container._toolCount || 0) > 0;
+      const prevRaw = container._activeRawText || '';
+      if (!shouldRescueTrailingThinking(prevRaw, trailingRaw, hasSig, hasTools)) return false;
+
+      if (container._thoughtElement) {
+        if (!container._thoughtElement._emptyThought && container._thoughtCount > 0) {
+          container._thoughtCount--;
+        }
+        if (typeof container._thoughtElement.remove === 'function') {
+          container._thoughtElement.remove();
+        }
         container._thoughtElement = null;
       }
-      if (!container._activeRawText) {
-        container._activeRawText = '<think>\n' + text;
-      } else if (container._activeRawText.indexOf('<think>') !== -1 && container._activeRawText.indexOf('</think>') === -1) {
-        container._activeRawText += text;
+      container._activeThoughtRaw = '';
+      container._thoughtSealed = false;
+      container._trailingThinkingRaw = '';
+      container._trailingThinkingHasSig = false;
+      container._lastStreamBlockType = 'text';
+
+      if (container._processGroup && !(container._thoughtCount > 0) && !(container._toolCount > 0)) {
+        if (typeof container._processGroup.remove === 'function') {
+          container._processGroup.remove();
+        }
+        container._processGroup = null;
+        container._processGroupBody = null;
+        container._processGroupLabel = null;
+        container._processGroupMeta = null;
       } else {
-        flushAiTextRender(container);
-        moveActiveTextToProcessGroup(container);
-        const newBlock = document.createElement('div');
-        newBlock.className = 'markdown-body font-medium';
-        newBlock.style.color = 'var(--text-main)';
-        container.contentBody.appendChild(newBlock);
-        container.activeTextContainer = newBlock;
-        container._activeRawText = '<think>\n' + text;
+        updateAiProcessGroupSummary(container);
+      }
+
+      const stitched = stitchRescuedThinking(prevRaw, trailingRaw);
+      const delta = prevRaw ? stitched.slice(prevRaw.length) : stitched;
+      if (delta) {
+        appendAiText(container, delta);
+      }
+      return true;
+    }
+
+    function appendAiThinking(container, text, signature = '') {
+      if (!container || !text) return;
+      if (container._thoughtSealed) {
         container._thoughtElement = null;
+        container._activeThoughtRaw = '';
+        container._thoughtSealed = false;
       }
-      if (container.isHistorical || !isGenerating || typeof requestAnimationFrame !== 'function') {
-        flushAiTextRender(container);
-      } else if (!container._renderRafId) {
-        container._renderRafId = requestAnimationFrame(() => {
-          container._renderRafId = null;
-          renderAiTextNow(container);
-        });
+      if (container._lastStreamBlockType !== 'thinking') {
+        container._trailingThinkingRaw = '';
+        container._trailingThinkingHasSig = false;
       }
+      container._lastStreamBlockType = 'thinking';
+      container._trailingThinkingRaw = (container._trailingThinkingRaw || '') + text;
+      if (signature) container._trailingThinkingHasSig = true;
+      container._activeThoughtRaw = (container._activeThoughtRaw || '') + text;
+      renderThoughtProcessCard(container, container._activeThoughtRaw, !!container.isHistorical);
+      if (!container.isHistorical) notifyNewMessageArrived();
     }
 
     function appendAiText(container, text) {
@@ -12727,14 +13062,18 @@
         container.contentBody.appendChild(newBlock);
         container.activeTextContainer = newBlock;
         container._activeRawText = '';
-        container._thoughtElement = null;
       }
       if (!container._activeRawText) container._activeRawText = '';
-      if (typeof text === 'string' && text.indexOf('<think>') === -1 && text.indexOf('</think>') === -1) {
+      container._lastStreamBlockType = 'text';
+      container._trailingThinkingRaw = '';
+      container._trailingThinkingHasSig = false;
+      const activeSeg = splitThinkSegments(container._activeRawText);
+      if (!(activeSeg.hasThink && !activeSeg.isThinkingDone) && typeof text === 'string' && text.indexOf('<think>') === -1 && text.indexOf('</think>') === -1) {
         closeActiveThoughtIfNeeded(container);
       }
       container._activeRawText += text;
       container.addResponseText(text);
+      syncContainerResultSpeech(container, extractResultMarkdown(container._activeRawText));
       if (container.historyItem) {
         const content = container.historyItem.rawContent;
         if (!content.length) content.push({ type: 'text', text: '' });
@@ -12944,6 +13283,9 @@
     }
 
     function appendToolCard(container, toolName, args, isRunning = false, output = null, isError = false) {
+      container._lastStreamBlockType = 'tool';
+      container._trailingThinkingRaw = '';
+      container._trailingThinkingHasSig = false;
       closeActiveThoughtIfNeeded(container);
       flushAiTextRender(container);
       moveActiveTextToProcessGroup(container);
@@ -13512,7 +13854,7 @@
       } else if (type === 'thinking') {
         const thoughtVal = (data.text !== undefined) ? data.text : data.value;
         if (thoughtVal) {
-          appendAiThinking(aiContainer, thoughtVal);
+          appendAiThinking(aiContainer, thoughtVal, data.signature || '');
           aiContainer.updateProgress('Đang suy luận...');
         }
       } else if (type === 'stdout' || type === 'text') {
@@ -13553,6 +13895,7 @@
         appendTerminalLog('error', data.error);
       } else if (type === 'done' || type === 'finish' || type === 'complete') {
         if (aiContainer.auxiliaryWorkActive) updateAuxiliaryWorkStatus(aiContainer, { phase: 'ended' });
+        if (typeof rescueTrailingThinkingIfNeeded === 'function') rescueTrailingThinkingIfNeeded(aiContainer);
         closeActiveThoughtIfNeeded(aiContainer);
         flushAiTextRender(aiContainer);
         if (aiContainer.activeTextContainer && !aiContainer.activeTextContainer.innerHTML.trim()) {
@@ -13605,6 +13948,7 @@
             isCompleted = true;
             if (errorTimer) { clearTimeout(errorTimer); errorTimer = null; }
             if (completeTimer) { clearTimeout(completeTimer); completeTimer = null; }
+            if (typeof rescueTrailingThinkingIfNeeded === 'function') rescueTrailingThinkingIfNeeded(aiContainer);
             closeActiveThoughtIfNeeded(aiContainer);
             flushAiTextRender(aiContainer);
             if (aiContainer.viewVersion === sessionViewVersion) {
@@ -13640,7 +13984,7 @@
             if (data.type === 'finish' || data.type === 'done') {
               closeAndDone();
             } else if (data.type === 'complete' && !completeTimer) {
-              completeTimer = setTimeout(closeAndDone, 600);
+              completeTimer = setTimeout(closeAndDone, 9500);
             }
           } catch (err) {
             console.error('SSE parse error:', err, e.data);
@@ -13758,7 +14102,7 @@
             if (text) appendAiText(aiContainer, text);
           } else if (item.type === 'thinking') {
             const text = typeof item.thinking === 'string' ? item.thinking : item.thinking?.value || '';
-            if (text) appendAiThinking(aiContainer, text);
+            if (text) appendAiThinking(aiContainer, text, item.signature || '');
           } else if (item.type === 'toolRequest') {
             const result = item.id && runningItem.toolResponsesMap?.get(item.id);
             appendToolCard(aiContainer, item.toolCall?.value?.name || item.name || 'tool',
@@ -14757,7 +15101,8 @@
     setTheme(savedTheme);
     loadMemePack();
     const rawSavedModel = localStorage.getItem('ai_hub_model') || 'cx/gpt-6.1-sol';
-    const savedModel = normalizeModelId(rawSavedModel);
+    const normalizedSavedModel = normalizeModelId(rawSavedModel);
+    const savedModel = MODELS.flatMap(ModelLevels.variants).some(m => m.id === normalizedSavedModel) ? normalizedSavedModel : MODELS[0].id;
     if (savedModel !== rawSavedModel) {
       try { localStorage.setItem('ai_hub_model', savedModel); } catch (_) {}
     }

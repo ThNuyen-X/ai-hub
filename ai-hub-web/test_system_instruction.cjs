@@ -40,7 +40,12 @@ for (const cwd of [path.resolve(__dirname, ".."), path.resolve(__dirname, "..", 
   assert.ok(prompt.includes("Do not wrap ordinary conversational replies"));
   assert.ok(prompt.includes("[WORKSPACE TERMINAL POLICY]"));
   assert.ok(prompt.includes("one Windows Terminal window per workspace"));
+  assert.ok(prompt.includes("workspace-terminal.cjs"));
   assert.ok(prompt.includes("wt.exe -w <workspace-window-name> new-tab"));
+  assert.ok(prompt.includes("NEVER wrap service commands in cmd /k"));
+  assert.ok(prompt.includes("& exit 0"));
+  assert.ok(prompt.includes("do NOT silently redirect stdout/stderr into `.log` files"));
+  assert.ok(prompt.includes("cleanup --workspace"));
   assert.ok(prompt.includes("normalized absolute workspace root"));
   assert.ok(prompt.includes("Never use -w 0"));
   assert.ok(prompt.includes("Do not change global Windows Terminal settings"));

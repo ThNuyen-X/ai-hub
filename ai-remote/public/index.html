@@ -1843,11 +1843,11 @@
         </div>
         <span class="quick-tile-label">Tắt màn</span>
       </button>
-      <button type="button" class="quick-tile" onclick="systemAction('lock')">
+      <button type="button" class="quick-tile tone-warn" id="quick-sys-hibernate" onclick="confirmSystemAction('hibernate')">
         <div class="quick-tile-icon">
-          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M19.07 4.93L4.93 19.07"/></svg>
         </div>
-        <span class="quick-tile-label">Khóa máy</span>
+        <span class="quick-tile-label">Ngủ đông</span>
       </button>
       <button type="button" class="quick-tile tone-warn" id="quick-sys-restart" onclick="confirmSystemAction('restart')">
         <div class="quick-tile-icon">
@@ -1943,10 +1943,128 @@
     <div class="page-header">
       <div>
         <h2 class="page-title">Hẹn giờ &amp; Cảnh báo</h2>
-        <p class="page-subtitle">Tự động tắt máy và theo dõi thời gian bật liên tục</p>
+        <p class="page-subtitle">Lịch tắt, ngủ, bật máy và cảnh báo bật lâu</p>
       </div>
       <span class="status-tag online" id="countdown-status-tag">Sẵn sàng</span>
     </div>
+
+    <!-- OVERVIEW: LỊCH ĐANG ĐẶT -->
+    <section class="section-card" id="schedule-overview">
+      <div class="section-header">
+        <div class="section-title-group">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span class="section-title">Lịch đang đặt</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Tắt / ngủ máy</span>
+        </div>
+        <span class="mono" id="overview-off" style="font-weight:600;">--</span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Bật máy</span>
+        </div>
+        <span class="mono" id="overview-wake" style="font-weight:600;">--</span>
+      </div>
+
+      <div class="sub-hint" id="wake-warning" style="display:none;color:var(--amber);"></div>
+    </section>
+
+    <!-- CARD: LỊCH TẮT / NGỦ MÁY -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title-group">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+          <span class="section-title">Lịch tắt / ngủ máy</span>
+        </div>
+        <label class="switch-toggle" title="Bật/Tắt lịch tắt hoặc ngủ máy">
+          <input type="checkbox" id="cfg-daily-enabled" onchange="saveAllScheduleConfig()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Giờ thực hiện</span>
+          <span class="form-desc">Giờ máy bắt đầu đếm ngược</span>
+        </div>
+        <input type="time" id="cfg-daily-time" class="form-input mono" value="23:30" onchange="saveAllScheduleConfig()">
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Hành động</span>
+          <span class="form-desc">Đếm ngược 45 giây, có nút hủy</span>
+        </div>
+        <select id="cfg-daily-action" class="form-select" onchange="saveAllScheduleConfig()">
+          <option value="shutdown">Tắt máy</option>
+          <option value="sleep">Ngủ (Sleep)</option>
+          <option value="hibernate">Ngủ đông (Hibernate)</option>
+          <option value="restart">Khởi động lại</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Lặp lại</span>
+          <span class="form-desc">Hàng ngày hoặc chỉ 1 lần</span>
+        </div>
+        <select id="cfg-daily-repeat" class="form-select" onchange="saveAllScheduleConfig()">
+          <option value="daily">Mỗi ngày</option>
+          <option value="once">Chỉ 1 lần</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Đợi tác vụ AI hoàn tất</span>
+          <span class="form-desc">Trì hoãn khi AI Hub đang chạy</span>
+        </div>
+        <label class="switch-toggle">
+          <input type="checkbox" id="cfg-wait-ai" checked onchange="saveAllScheduleConfig()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- CARD: LỊCH BẬT MÁY -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title-group">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <span class="section-title">Lịch bật máy</span>
+        </div>
+        <label class="switch-toggle" title="Bật/Tắt lịch bật máy">
+          <input type="checkbox" id="cfg-wake-enabled" onchange="saveAllScheduleConfig()">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Giờ bật</span>
+          <span class="form-desc">Đánh thức máy đang Sleep / Hibernate</span>
+        </div>
+        <input type="time" id="cfg-wake-time" class="form-input mono" value="07:00" onchange="saveAllScheduleConfig()">
+      </div>
+
+      <div class="form-row">
+        <div class="form-label-box">
+          <span class="form-label">Lặp lại</span>
+          <span class="form-desc">Hàng ngày hoặc chỉ 1 lần</span>
+        </div>
+        <select id="cfg-wake-repeat" class="form-select" onchange="saveAllScheduleConfig()">
+          <option value="daily">Mỗi ngày</option>
+          <option value="once">Chỉ 1 lần</option>
+        </select>
+      </div>
+
+      <div class="sub-hint">Cần cắm sạc. Máy tắt hẳn (Shutdown) không tự bật lại được. Khi cắm sạc, máy sẽ giữ thức sau khi bật.</div>
+    </section>
 
     <!-- CARD 1: HẸN GIỜ ĐẾM NGƯỢC -->
     <section class="section-card">
@@ -1984,6 +2102,8 @@
           <option value="restart">Khởi động lại</option>
           <option value="screen-off">Tắt màn hình</option>
           <option value="lock">Khóa máy</option>
+          <option value="sleep">Ngủ (Sleep)</option>
+          <option value="hibernate">Ngủ đông (Hibernate)</option>
         </select>
         <button type="button" class="btn-small-action" onclick="startCustomCountdown()">Đặt hẹn</button>
       </div>
@@ -2037,60 +2157,6 @@
       </div>
     </section>
 
-    <!-- CARD 3: LỊCH TẮT CỐ ĐỊNH -->
-    <section class="section-card">
-      <div class="section-header">
-        <div class="section-title-group">
-          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          <span class="section-title">Lịch tắt cố định</span>
-        </div>
-        <label class="switch-toggle" title="Bật/Tắt lịch tắt cố định">
-          <input type="checkbox" id="cfg-daily-enabled" onchange="saveAllScheduleConfig()">
-          <span class="switch-slider"></span>
-        </label>
-      </div>
-
-      <div class="form-row">
-        <div class="form-label-box">
-          <span class="form-label">Giờ thực thi</span>
-          <span class="form-desc">Báo trước 5 phút trước khi chạy</span>
-        </div>
-        <input type="time" id="cfg-daily-time" class="form-input mono" value="23:30" onchange="saveAllScheduleConfig()">
-      </div>
-
-      <div class="form-row">
-        <div class="form-label-box">
-          <span class="form-label">Lặp lại</span>
-          <span class="form-desc">Hàng ngày hoặc chỉ 1 lần</span>
-        </div>
-        <select id="cfg-daily-repeat" class="form-select" onchange="saveAllScheduleConfig()">
-          <option value="daily">Mỗi ngày</option>
-          <option value="once">Chỉ 1 lần</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <div class="form-label-box">
-          <span class="form-label">Hành động</span>
-          <span class="form-desc">Đếm ngược 45 giây an toàn</span>
-        </div>
-        <select id="cfg-daily-action" class="form-select" onchange="saveAllScheduleConfig()">
-          <option value="shutdown">Tắt máy</option>
-          <option value="restart">Khởi động lại</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <div class="form-label-box">
-          <span class="form-label">Đợi tác vụ AI hoàn tất</span>
-          <span class="form-desc">Trì hoãn tắt khi AI Hub đang chạy</span>
-        </div>
-        <label class="switch-toggle">
-          <input type="checkbox" id="cfg-wait-ai" checked onchange="saveAllScheduleConfig()">
-          <span class="switch-slider"></span>
-        </label>
-      </div>
-    </section>
   </div>
 
   <!-- =============================================================
@@ -2171,6 +2237,26 @@
           <div>
             <div class="hw-text-title">Khởi động lại</div>
             <div class="hw-text-desc">Đếm ngược 30 giây có nút hủy</div>
+          </div>
+        </div>
+
+        <div class="hw-btn tone-warn" id="btn-sys-sleep" role="button" tabindex="0" onclick="confirmSystemAction('sleep')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();confirmSystemAction('sleep');}">
+          <div class="hw-icon-box">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/><path d="M17 3v4M15 5h4"/></svg>
+          </div>
+          <div>
+            <div class="hw-text-title">Ngủ (Sleep)</div>
+            <div class="hw-text-desc">Đếm ngược 30 giây, bật lại nhanh</div>
+          </div>
+        </div>
+
+        <div class="hw-btn tone-warn" id="btn-sys-hibernate" role="button" tabindex="0" onclick="confirmSystemAction('hibernate')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();confirmSystemAction('hibernate');}">
+          <div class="hw-icon-box">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M19.07 4.93L4.93 19.07"/></svg>
+          </div>
+          <div>
+            <div class="hw-text-title">Ngủ đông</div>
+            <div class="hw-text-desc">Đếm ngược 30 giây, không tốn pin</div>
           </div>
         </div>
 
@@ -2697,6 +2783,9 @@
           if (cfg.schedule.dailyRepeat) document.getElementById("cfg-daily-repeat").value = cfg.schedule.dailyRepeat;
           if (cfg.schedule.dailyAction) document.getElementById("cfg-daily-action").value = cfg.schedule.dailyAction;
           document.getElementById("cfg-wait-ai").checked = cfg.schedule.waitAiIdle !== false;
+          document.getElementById("cfg-wake-enabled").checked = Boolean(cfg.schedule.wakeEnabled);
+          if (cfg.schedule.wakeTime) document.getElementById("cfg-wake-time").value = cfg.schedule.wakeTime;
+          if (cfg.schedule.wakeRepeat) document.getElementById("cfg-wake-repeat").value = cfg.schedule.wakeRepeat;
         }
       } catch (_) {}
     }
@@ -2718,7 +2807,10 @@
           dailyTime: document.getElementById("cfg-daily-time").value || "23:30",
           dailyRepeat: document.getElementById("cfg-daily-repeat").value || "daily",
           dailyAction: document.getElementById("cfg-daily-action").value || "shutdown",
-          waitAiIdle: document.getElementById("cfg-wait-ai").checked
+          waitAiIdle: document.getElementById("cfg-wait-ai").checked,
+          wakeEnabled: document.getElementById("cfg-wake-enabled").checked,
+          wakeTime: document.getElementById("cfg-wake-time").value || "07:00",
+          wakeRepeat: document.getElementById("cfg-wake-repeat").value || "daily"
         }
       };
 
@@ -2799,11 +2891,43 @@
       shutdown: "Tắt máy",
       restart: "Khởi động lại",
       "screen-off": "Tắt màn hình",
-      lock: "Khóa máy"
+      lock: "Khóa máy",
+      sleep: "Ngủ (Sleep)",
+      hibernate: "Ngủ đông"
     };
+
+    function renderScheduleOverview(sch) {
+      const offEl = document.getElementById("overview-off");
+      const wakeEl = document.getElementById("overview-wake");
+      const warnEl = document.getElementById("wake-warning");
+      if (!offEl || !wakeEl) return;
+      const repeatText = (r) => (r === "once" ? "1 lần" : "mỗi ngày");
+      offEl.textContent = sch.dailyEnabled
+        ? `${COUNTDOWN_ACTION_LABELS[sch.dailyAction] || "Tắt máy"} lúc ${sch.dailyTime} · ${repeatText(sch.dailyRepeat)}`
+        : "Chưa đặt";
+      wakeEl.textContent = sch.wakeEnabled
+        ? `Bật lúc ${sch.wakeTime} · ${repeatText(sch.wakeRepeat)}`
+        : "Chưa đặt";
+      const sync = sch.wakeSync || {};
+      let warning = "";
+      if (sch.wakeEnabled) {
+        if (sync.ok === false) {
+          warning = "Không tạo được lịch bật máy trên Windows: " + (sync.message || "lỗi không rõ");
+        } else if (sync.timersAllowed === false) {
+          warning = "Windows chưa cho wake timer chạy đầy đủ khi cắm sạc (đang ở mức Important Only hoặc Tắt), máy có thể không tự bật.";
+        } else if (sch.dailyEnabled && sch.dailyAction === "shutdown") {
+          warning = "Lịch tắt đang là Tắt máy hẳn, máy sẽ không tự bật được. Hãy đổi sang Ngủ hoặc Ngủ đông.";
+        }
+      }
+      if (warnEl) {
+        warnEl.textContent = warning;
+        warnEl.style.display = warning ? "block" : "none";
+      }
+    }
 
     function applyScheduleStatusToUi(d) {
       if (!d) return;
+      renderScheduleOverview(d.schedule || {});
 
       const uptimeSec = d.uptimeSeconds || 0;
       const shortUp = formatShortUptime(uptimeSec);
@@ -2887,7 +3011,7 @@
         if (sch.dailyEnabled && sch.dailyTime) {
           if (summaryEl) {
             summaryEl.className = "status-sub-badge active-timer";
-            summaryEl.innerText = `Hẹn lúc ${sch.dailyTime}`;
+            summaryEl.innerText = `${COUNTDOWN_ACTION_LABELS[sch.dailyAction] || "Tắt máy"} lúc ${sch.dailyTime}`;
           }
           if (homeScheduleBadge) homeScheduleBadge.innerText = `Hẹn ${sch.dailyTime}`;
         } else if (d.uptimeAlert && d.uptimeAlert.enabled) {
@@ -3028,23 +3152,26 @@
         const btnSysShutdown = document.getElementById("btn-sys-shutdown");
         const quickRestart = document.getElementById("quick-sys-restart");
         const quickShutdown = document.getElementById("quick-sys-shutdown");
+        const quickHibernate = document.getElementById("quick-sys-hibernate");
 
         if (d.shutdownState && d.shutdownState.active) {
           hud.style.display = "block";
           document.getElementById("emergency-label").innerText =
-            d.shutdownState.type === "restart" ? "Đang chờ khởi động lại" : "Đang chờ tắt máy";
+            ({ restart: "Đang chờ khởi động lại", sleep: "Đang chờ vào chế độ ngủ", hibernate: "Đang chờ ngủ đông" })[d.shutdownState.type] || "Đang chờ tắt máy";
           document.getElementById("emergency-countdown").innerText = `${d.shutdownState.secondsLeft}s`;
 
           btnSysRestart.classList.add("disabled");
           btnSysShutdown.classList.add("disabled");
           if (quickRestart) quickRestart.classList.add("disabled");
           if (quickShutdown) quickShutdown.classList.add("disabled");
+          if (quickHibernate) quickHibernate.classList.add("disabled");
         } else {
           hud.style.display = "none";
           btnSysRestart.classList.remove("disabled");
           btnSysShutdown.classList.remove("disabled");
           if (quickRestart) quickRestart.classList.remove("disabled");
           if (quickShutdown) quickShutdown.classList.remove("disabled");
+          if (quickHibernate) quickHibernate.classList.remove("disabled");
         }
       } catch {
         setConnectionState(false);
@@ -3128,17 +3255,15 @@
     }
 
     function confirmSystemAction(type) {
-      const isShutdown = type === "shutdown";
+      const cfg = POWER_CONFIRM[type] || POWER_CONFIRM.shutdown;
       const hostName = document.getElementById("host-name")?.innerText || "Laptop";
       openConfirmModal({
-        title: isShutdown ? "Tắt máy laptop?" : "Khởi động lại laptop?",
-        description: isShutdown
-          ? "Hệ thống sẽ bắt đầu đếm ngược 30 giây trước khi tắt hoàn toàn. Bạn luôn có thể bấm Hủy lệnh."
-          : "Hệ thống sẽ bắt đầu đếm ngược 30 giây trước khi khởi động lại. Bạn luôn có thể bấm Hủy lệnh.",
-        confirmText: isShutdown ? "Tắt máy" : "Khởi động lại",
+        title: cfg.title,
+        description: cfg.description,
+        confirmText: cfg.confirmText,
         badge: "Đếm ngược an toàn 30s",
-        tone: isShutdown ? "danger" : "warning",
-        icon: isShutdown ? "power" : "restart",
+        tone: cfg.tone,
+        icon: cfg.icon,
         meta: [
           ["Thiết bị", hostName],
           ["Thời gian chờ", "30 giây · Có nút hủy"]
@@ -3152,6 +3277,29 @@
         }).then(r => r.json()).then(d => { showToast(d.message); pullStatus(); });
       });
     }
+
+    const POWER_CONFIRM = {
+      shutdown: {
+        title: "Tắt máy laptop?",
+        description: "Hệ thống sẽ bắt đầu đếm ngược 30 giây trước khi tắt hoàn toàn. Bạn luôn có thể bấm Hủy lệnh.",
+        confirmText: "Tắt máy", tone: "danger", icon: "power"
+      },
+      restart: {
+        title: "Khởi động lại laptop?",
+        description: "Hệ thống sẽ bắt đầu đếm ngược 30 giây trước khi khởi động lại. Bạn luôn có thể bấm Hủy lệnh.",
+        confirmText: "Khởi động lại", tone: "warning", icon: "restart"
+      },
+      sleep: {
+        title: "Cho laptop ngủ (Sleep)?",
+        description: "Máy sẽ vào chế độ Sleep sau 30 giây. AI Hub và tác vụ nền tạm dừng. Bật lại bằng nút nguồn hoặc lịch bật máy.",
+        confirmText: "Ngủ", tone: "warning", icon: "moon"
+      },
+      hibernate: {
+        title: "Cho laptop ngủ đông (Hibernate)?",
+        description: "Máy sẽ lưu phiên làm việc và tắt nguồn sau 30 giây. AI Hub và tác vụ nền tạm dừng. Bật lại bằng nút nguồn hoặc lịch bật máy.",
+        confirmText: "Ngủ đông", tone: "warning", icon: "moon"
+      }
+    };
 
     async function abortShutdownCmd() {
       try {

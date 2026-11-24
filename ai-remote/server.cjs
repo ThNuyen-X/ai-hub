@@ -7,7 +7,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
 const net = require("node:net");
-const { spawn, exec, execSync } = require("node:child_process");
+const { spawn, exec, execFile, execSync } = require("node:child_process");
 
 const PORT = parseInt(process.env.AI_REMOTE_PORT || "20139", 10);
 const HOST = process.env.AI_REMOTE_HOST || "0.0.0.0";
@@ -38,8 +38,12 @@ const DEFAULT_CONFIG = {
     dailyEnabled: false,
     dailyTime: "23:30",          // HH:MM
     dailyRepeat: "daily",        // "daily" | "once"
-    dailyAction: "shutdown",     // "shutdown" | "restart"
+    dailyAction: "shutdown",     // "shutdown" | "restart" | "sleep" | "hibernate"
     lastTriggeredDate: "",
+    wakeEnabled: false,
+    wakeTime: "07:00",           // HH:MM, danh thuc may dang Sleep/Hibernate
+    wakeRepeat: "daily",         // "daily" | "once"
+    wakeOnceAt: 0,
     waitAiIdle: true             // Đợi phiên AI chạy xong mới tắt máy
   },
 
@@ -298,12 +302,98 @@ function lockWindows() {
   return { ok: true, message: "Đã khóa màn hình laptop." };
 }
 
-function triggerSystemShutdown(type = "shutdown", seconds = 30, reasonText = "") {
+const SUSPEND_TYPES = new Set(["sleep", "hibernate"]);
+
+// Cua so dem nguoc hien tren laptop (xem countdown-popup.ps1)
+const COUNTDOWN_POPUP_SCRIPT = path.join(__dirname, "countdown-popup.ps1");
+const POPUP_TITLES = {
+  shutdown: "Máy sắp tắt",
+  restart: "Máy sắp khởi động lại",
+  sleep: "Máy sắp ngủ",
+  hibernate: "Máy sắp ngủ đông"
+};
+let countdownPopup = null;
+
+function closeCountdownPopup() {
+  if (!countdownPopup) return;
+  try { countdownPopup.kill(); } catch {}
+  countdownPopup = null;
+}
+
+function showCountdownPopup(type, note) {
+  closeCountdownPopup();
+  try {
+    const child = spawn("powershell.exe", [
+      "-NoProfile", "-STA", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass",
+      "-File", COUNTDOWN_POPUP_SCRIPT, "-Port", String(PORT)
+    ], {
+      windowsHide: true,
+      stdio: "ignore",
+      env: Object.assign({}, process.env, {
+        POPUP_TYPE: type || "shutdown",
+        POPUP_TITLE: POPUP_TITLES[type] || POPUP_TITLES.shutdown,
+        POPUP_NOTE: note || "Lệnh từ Bò Tót Remote",
+        POPUP_HINT: "Nhấn Esc để hủy",
+        POPUP_CANCEL: "Hủy"
+      })
+    });
+    child.on("exit", () => { if (countdownPopup === child) countdownPopup = null; });
+    child.on("error", () => { if (countdownPopup === child) countdownPopup = null; });
+    countdownPopup = child;
+  } catch (err) {
+    console.warn("[COUNTDOWN POPUP WARN]", err.message);
+  }
+}
+
+function runSuspend(type) {
+  if (type === "hibernate") {
+    exec("shutdown.exe /h");
+    return;
+  }
+  // PowerState.Suspend = Sleep (S3). Tham so cuoi false = khong ep buoc.
+  execFile("powershell.exe", [
+    "-NoProfile", "-NonInteractive", "-Command",
+    "Add-Type -AssemblyName System.Windows.Forms; [void][System.Windows.Forms.Application]::SetSuspendState([System.Windows.Forms.PowerState]::Suspend, $false, $false)"
+  ], { windowsHide: true }, () => {});
+}
+
+function scheduleSuspend(type, seconds, popupNote = "") {
+  if (shutdownState.active) {
+    abortSystemShutdown();
+  }
+  const safeSeconds = Math.max(5, Math.min(3600, Math.floor(Number(seconds) || 30)));
+  shutdownState = {
+    active: true,
+    type: type,
+    secondsLeft: safeSeconds,
+    timerId: setInterval(() => {
+      shutdownState.secondsLeft -= 1;
+      if (shutdownState.secondsLeft > 0) return;
+      clearInterval(shutdownState.timerId);
+      shutdownState = { active: false, type: null, secondsLeft: 0, timerId: null };
+      closeCountdownPopup();
+      runSuspend(type);
+    }, 1000)
+  };
+  showCountdownPopup(type, popupNote);
+  const label = type === "hibernate" ? "ngủ đông (Hibernate)" : "ngủ (Sleep)";
+  return {
+    ok: true,
+    type: type,
+    secondsLeft: safeSeconds,
+    message: `Máy sẽ ${label} sau ${safeSeconds} giây. Bạn có thể bấm HỦY trên điện thoại.`
+  };
+}
+
+function triggerSystemShutdown(type = "shutdown", seconds = 30, reasonText = "", popupNote = "") {
   if (type === "screen-off") {
     return turnOffScreen();
   }
   if (type === "lock") {
     return lockWindows();
+  }
+  if (SUSPEND_TYPES.has(type)) {
+    return scheduleSuspend(type, seconds, popupNote);
   }
   if (shutdownState.active) {
     abortSystemShutdown();
@@ -326,6 +416,8 @@ function triggerSystemShutdown(type = "shutdown", seconds = 30, reasonText = "")
     }, 1000)
   };
 
+  showCountdownPopup(type, popupNote);
+
   const actionVi = type === "restart" ? "khởi động lại" : "tắt máy";
 
 
@@ -339,6 +431,7 @@ function triggerSystemShutdown(type = "shutdown", seconds = 30, reasonText = "")
 
 function abortSystemShutdown() {
   exec("shutdown.exe /a");
+  closeCountdownPopup();
   if (shutdownState.timerId) {
     clearInterval(shutdownState.timerId);
   }
@@ -375,7 +468,7 @@ async function evaluateUptimeAndSchedules() {
           waitingForAiIdleReason = null;
           upCfg.lastAutoShutdownBootId = bootId;
           saveConfig();
-          triggerSystemShutdown("shutdown", 60, `Tu dong tat may do hoat dong qua ${upCfg.autoShutdownMinutes} phut`);
+          triggerSystemShutdown("shutdown", 60, `Tu dong tat may do hoat dong qua ${upCfg.autoShutdownMinutes} phut`, `Máy đã bật quá ${upCfg.autoShutdownMinutes} phút`);
         }
       }
     }
@@ -387,7 +480,7 @@ async function evaluateUptimeAndSchedules() {
 
     // Đến giờ thực thi
     if (msLeft <= 0) {
-      if (schCfg.waitAiIdle && (schCfg.countdownAction === "shutdown" || schCfg.countdownAction === "restart") && await isAnyAiSessionRunning()) {
+      if (schCfg.waitAiIdle && !["screen-off", "lock"].includes(schCfg.countdownAction) && await isAnyAiSessionRunning()) {
         waitingForAiIdleReason = "Đã đến giờ hẹn tắt máy — đang đợi phiên AI chạy xong...";
       } else {
         waitingForAiIdleReason = null;
@@ -395,7 +488,7 @@ async function evaluateUptimeAndSchedules() {
         schCfg.countdownActive = false;
         schCfg.countdownTargetAt = 0;
         saveConfig();
-        triggerSystemShutdown(actionToRun, 45, "Thuc thi hen gio tu Bo Tot Remote");
+        triggerSystemShutdown(actionToRun, 45, "Thuc thi hen gio tu Bo Tot Remote", "Đến giờ hẹn đếm ngược");
       }
     }
   }
@@ -421,10 +514,17 @@ async function evaluateUptimeAndSchedules() {
             schCfg.dailyEnabled = false;
           }
           saveConfig();
-          triggerSystemShutdown(schCfg.dailyAction || "shutdown", 45, `Lich tat may dinh ky luc ${schCfg.dailyTime}`);
+          triggerSystemShutdown(schCfg.dailyAction || "shutdown", 45, `Lich tat may dinh ky luc ${schCfg.dailyTime}`, `Đến lịch đã đặt lúc ${schCfg.dailyTime}`);
         }
       }
     }
+  }
+
+  if (schCfg.wakeEnabled && schCfg.wakeRepeat === "once" && schCfg.wakeOnceAt && now > schCfg.wakeOnceAt + 1800000) {
+    schCfg.wakeEnabled = false;
+    schCfg.wakeOnceAt = 0;
+    saveConfig();
+    syncWakeTask().catch(() => {});
   }
 }
 
@@ -456,6 +556,87 @@ function getWorkspaces() {
     }
   } catch {}
   return [AI_HUB_DIR, "C:\\Users\\Admin\\OneDrive\\Desktop"];
+}
+
+// ==============================================================================
+// LỊCH BẬT MÁY: đồng bộ cấu hình với Windows Task Scheduler (WakeToRun)
+// ==============================================================================
+const WAKE_TASK_NAME = "BoTotRemoteWake";
+const WAKE_TASK_SCRIPT = path.join(__dirname, "wake-task.ps1");
+const KEEP_AWAKE_SCRIPT = path.join(__dirname, "keep-awake.ps1");
+const WAKE_KEEP_AWAKE_MIN = 20;
+let wakeSyncState = { ok: null, message: "", timersAllowed: null };
+
+function nextOccurrenceMs(hhmm, nowMs = Date.now()) {
+  const [h, m] = String(hhmm).split(":").map(Number);
+  const d = new Date(nowMs);
+  d.setHours(h, m, 0, 0);
+  if (d.getTime() <= nowMs) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
+function formatLocalIso(ms) {
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:00`;
+}
+
+// true = Windows cho phep wake timer khi cắm sạc, false = chặn, null = không đọc được
+function readWakeTimersAllowed() {
+  return new Promise((resolve) => {
+    execFile("powercfg", ["/query", "SCHEME_CURRENT", "SUB_SLEEP", "RTCWAKE"], { windowsHide: true, timeout: 5000 }, (err, stdout) => {
+      const m = !err && /Current AC Power Setting Index:\s*0x([0-9a-f]+)/i.exec(stdout || "");
+      resolve(m ? parseInt(m[1], 16) === 1 : null);
+    });
+  });
+}
+
+function syncWakeTask() {
+  const sch = remoteConfig.schedule;
+  const now = Date.now();
+  let mode = "off";
+  let at = "";
+  if (sch.wakeEnabled && /^([01]\d|2[0-3]):[0-5]\d$/.test(sch.wakeTime || "")) {
+    if (sch.wakeRepeat === "once") {
+      if (sch.wakeOnceAt > now) {
+        mode = "once";
+        at = formatLocalIso(sch.wakeOnceAt);
+      } else {
+        sch.wakeEnabled = false;
+        sch.wakeOnceAt = 0;
+        saveConfig();
+      }
+    } else {
+      mode = "daily";
+      at = formatLocalIso(nextOccurrenceMs(sch.wakeTime, now));
+    }
+  }
+  return new Promise((resolve) => {
+    execFile("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", WAKE_TASK_SCRIPT], {
+      windowsHide: true,
+      timeout: 20000,
+      env: Object.assign({}, process.env, {
+        WAKE_MODE: mode,
+        WAKE_AT: at,
+        WAKE_TASK: WAKE_TASK_NAME,
+        WAKE_SCRIPT: KEEP_AWAKE_SCRIPT,
+        WAKE_MINUTES: String(WAKE_KEEP_AWAKE_MIN)
+      })
+    }, async (err, stdout, stderr) => {
+      if (err) {
+        const detail = String(stderr || err.message || "").trim().split(/\r?\n/)[0].slice(0, 200);
+        wakeSyncState = { ok: false, message: detail, timersAllowed: null };
+        return resolve(wakeSyncState);
+      }
+      const timersAllowed = mode === "off" ? null : await readWakeTimersAllowed();
+      wakeSyncState = {
+        ok: true,
+        message: mode === "off" ? "" : `Đã đặt lịch đánh thức lúc ${at.slice(11, 16)}`,
+        timersAllowed
+      };
+      resolve(wakeSyncState);
+    });
+  });
 }
 
 function buildStatusScheduleSummary() {
@@ -493,6 +674,10 @@ function buildStatusScheduleSummary() {
       dailyTime: schCfg.dailyTime,
       dailyRepeat: schCfg.dailyRepeat,
       dailyAction: schCfg.dailyAction,
+      wakeEnabled: schCfg.wakeEnabled,
+      wakeTime: schCfg.wakeTime,
+      wakeRepeat: schCfg.wakeRepeat,
+      wakeSync: wakeSyncState,
       waitAiIdle: schCfg.waitAiIdle,
       waitingForAiIdleReason
     },
@@ -592,7 +777,9 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === "POST" && pathname === "/api/config") {
-    readJson().then((body) => {
+    readJson().then(async (body) => {
+      const sch = remoteConfig.schedule;
+      const wakeBefore = [sch.wakeEnabled, sch.wakeTime, sch.wakeRepeat].join("|");
       if (body.uptimeAlert && typeof body.uptimeAlert === "object") {
         const u = body.uptimeAlert;
         if (typeof u.enabled === "boolean") remoteConfig.uptimeAlert.enabled = u.enabled;
@@ -607,8 +794,15 @@ const server = http.createServer((req, res) => {
           remoteConfig.schedule.lastTriggeredDate = "";
         }
         if (s.dailyRepeat === "daily" || s.dailyRepeat === "once") remoteConfig.schedule.dailyRepeat = s.dailyRepeat;
-        if (s.dailyAction === "shutdown" || s.dailyAction === "restart") remoteConfig.schedule.dailyAction = s.dailyAction;
+        if (["shutdown", "restart", "sleep", "hibernate"].includes(s.dailyAction)) remoteConfig.schedule.dailyAction = s.dailyAction;
         if (typeof s.waitAiIdle === "boolean") remoteConfig.schedule.waitAiIdle = s.waitAiIdle;
+        if (typeof s.wakeEnabled === "boolean") sch.wakeEnabled = s.wakeEnabled;
+        if (typeof s.wakeTime === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(s.wakeTime.trim())) sch.wakeTime = s.wakeTime.trim();
+        if (s.wakeRepeat === "daily" || s.wakeRepeat === "once") sch.wakeRepeat = s.wakeRepeat;
+      }
+      if ([sch.wakeEnabled, sch.wakeTime, sch.wakeRepeat].join("|") !== wakeBefore) {
+        sch.wakeOnceAt = (sch.wakeEnabled && sch.wakeRepeat === "once") ? nextOccurrenceMs(sch.wakeTime) : 0;
+        await syncWakeTask();
       }
       saveConfig();
       evaluateUptimeAndSchedules().catch(() => {});
@@ -625,7 +819,7 @@ const server = http.createServer((req, res) => {
   if (req.method === "POST" && pathname === "/api/schedule/countdown") {
     readJson().then((body) => {
       const minutes = Number(body.minutes) || 0;
-      const action = ["shutdown", "restart", "screen-off", "lock"].includes(body.action) ? body.action : "shutdown";
+      const action = ["shutdown", "restart", "screen-off", "lock", "sleep", "hibernate"].includes(body.action) ? body.action : "shutdown";
       if (body.cancel || minutes <= 0) {
         remoteConfig.schedule.countdownActive = false;
         remoteConfig.schedule.countdownTargetAt = 0;
@@ -650,7 +844,7 @@ const server = http.createServer((req, res) => {
       }
       saveConfig();
 
-      const actionLabel = action === "restart" ? "khởi động lại" : (action === "screen-off" ? "tắt màn hình" : (action === "lock" ? "khóa máy" : "tắt máy"));
+      const actionLabel = ({ restart: "khởi động lại", "screen-off": "tắt màn hình", lock: "khóa máy", sleep: "cho máy ngủ", hibernate: "ngủ đông" })[action] || "tắt máy";
       const timeStr = new Date(targetAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
       sendJson({
         ok: true,
@@ -724,6 +918,16 @@ const server = http.createServer((req, res) => {
     readJson().then(body => {
       const timeout = typeof body.timeout === "number" ? body.timeout : 30;
       sendJson(triggerSystemShutdown("restart", timeout));
+    });
+    return;
+  }
+  if (req.method === "GET" && pathname === "/api/shutdown-state") {
+    return sendJson({ active: shutdownState.active, type: shutdownState.type, secondsLeft: Math.max(0, shutdownState.secondsLeft) });
+  }
+  if (req.method === "POST" && (pathname === "/api/system/sleep" || pathname === "/api/system/hibernate")) {
+    readJson().then(body => {
+      const timeout = typeof body.timeout === "number" ? body.timeout : 30;
+      sendJson(triggerSystemShutdown(pathname.endsWith("hibernate") ? "hibernate" : "sleep", timeout));
     });
     return;
   }
@@ -867,6 +1071,7 @@ server.on("error", (err) => {
 });
 
 server.listen(PORT, HOST, () => {
+  syncWakeTask().catch(() => {});
   const ip = getTailscaleIp();
   console.log("========================================================");
   console.log("    AI HUB REMOTE CONTROLLER DAEMON DANG CHAY");

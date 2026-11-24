@@ -326,3 +326,5 @@
 - [TKCT access control] Never grant internal-data visibility from client isSuperAdmin flags; resolve roles from authenticated server context and regression-test forged flags.
 
 - [Oracle sponsor migration] CATEGORY label column is CATEGORY_NAME; normalize mixed VARCHAR2/NVARCHAR2 backfill expressions with TO_NCHAR to avoid ORA-12704, retaining legacy IDs for rolling compatibility.
+- **[PostgreSQL Worker Least-Privilege & Savepoint]**: Mọi câu lệnh UPDATE phụ/tùy chọn trên worker (như cập nhật `storage_profiles.used_bytes`) có thể bị từ chối quyền (`InsufficientPrivilege`) bắt buộc phải bọc trong `with conn.transaction():` (SAVEPOINT) để không làm abort toàn bộ transaction PostgreSQL đang chạy (`InFailedSqlTransaction`).
+- **[PostgreSQL Prepared Statement & IndeterminateDatatype]**: Trong `psycopg` `executemany` (pipeline mode), tuyệt đối không viết `%s IS NOT NULL` trần không cast kiểu (PostgreSQL sẽ báo `IndeterminateDatatype: could not determine data type of parameter`); luôn ép kiểu rõ ràng như `COALESCE(%s::text, col)`, và gọi `conn.rollback()` ở đầu khối `except` trước khi ghi trạng thái lỗi vào DB.

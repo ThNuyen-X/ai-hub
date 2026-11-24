@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { createTurnScratch, cleanupTurnScratch, scratchInstruction } = require('./session-scratch.cjs');
+const { createTurnScratch, cleanupTurnScratch, sweepStaleScratch, scratchInstruction } = require('./session-scratch.cjs');
 (async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-scratch-test-'));
   try {
@@ -37,6 +37,22 @@ const { createTurnScratch, cleanupTurnScratch, scratchInstruction } = require('.
     });
     assert.equal(unresolved.dir.includes('%'), false);
     assert.equal(await cleanupTurnScratch(unresolved), true);
+
+    // Sweep stale owned scratch turns while preserving active and unowned directories.
+    const oldTurn = createTurnScratch('D:/sweep', 'old-session', env);
+    const activeTurn = createTurnScratch('D:/sweep', 'active-session', env);
+    const unownedTurn = path.join(oldTurn.session, 'manual-dir');
+    fs.mkdirSync(unownedTurn, { recursive: true });
+    fs.writeFileSync(path.join(oldTurn.dir, 'temp.txt'), 'stale');
+    const past = new Date(Date.now() - 3600000);
+    fs.utimesSync(path.join(oldTurn.dir, '.ai-hub-owned'), past, past);
+    fs.utimesSync(oldTurn.dir, past, past);
+    const swept = await sweepStaleScratch(root, { activeDirs: [activeTurn.dir], maxAgeMs: 60000 });
+    assert.equal(swept.removed, 1);
+    assert.equal(fs.existsSync(oldTurn.dir), false);
+    assert.equal(fs.existsSync(activeTurn.dir), true);
+    assert.equal(fs.existsSync(unownedTurn), true);
+    assert.equal(await cleanupTurnScratch(activeTurn), true);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
   console.log('Scratch: workspace/session isolation, per-turn ownership and safe cleanup passed');
 })().catch(error => { console.error(error); process.exitCode = 1; });

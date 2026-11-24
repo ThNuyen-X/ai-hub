@@ -4,7 +4,31 @@
 const http = require("node:http");
 const { findLogPaths, readCommandLog } = require('./terminal-log.cjs');
 const { readHistoryPage, historyOutput } = require("./session-history.cjs");
-const { createTurnScratch, cleanupTurnScratch, scratchInstruction } = require('./session-scratch.cjs');
+const { resolveScratchRoot, createTurnScratch, cleanupTurnScratch, sweepStaleScratch, scratchInstruction } = require('./session-scratch.cjs');
+
+function cleanupScratchWithRetry(scratch) {
+  if (!scratch) return;
+  cleanupTurnScratch(scratch).then(ok => {
+    if (!ok) {
+      const t = setTimeout(() => {
+        cleanupTurnScratch(scratch).catch(() => {});
+      }, 5000);
+      if (typeof t.unref === 'function') t.unref();
+    }
+  }).catch(error => console.warn('[SCRATCH CLEANUP] ' + error.message));
+}
+
+function runScratchSweep(maxAgeMs = 30 * 60 * 1000) {
+  const activeDirs = [];
+  for (const ctx of activeSessions.values()) {
+    if (ctx && ctx.scratch && ctx.scratch.dir) activeDirs.push(ctx.scratch.dir);
+  }
+  const root = resolveScratchRoot(process.env);
+  return sweepStaleScratch(root, { activeDirs, maxAgeMs }).then(res => {
+    if (res.removed > 0) console.log(`[SCRATCH SWEEP] Removed ${res.removed} stale scratch turn(s) in ${root}`);
+    return res;
+  }).catch(err => console.warn('[SCRATCH SWEEP] ' + err.message));
+}
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawn, execSync, execFile } = require("node:child_process");
@@ -17,6 +41,14 @@ const { validateModel: validateAuxiliaryModel, coordinationInstruction } = requi
 const auxiliarySettings = require("./auxiliary-settings.cjs").createSettings();
 const { hasSessionExtension } = require("./session-extensions.cjs");
 const { browserAvailable, BROWSER_INSTRUCTION } = require("./browser-mcp.cjs");
+const {
+  MAX_TRANSIENT_RETRIES,
+  isTransientProviderError,
+  formatDurationShort,
+  parseTransientRetryDelayMs,
+  cleanupTrailingTransientErrorMessages,
+  createLlmRetryProxy
+} = require("./transient-retry.cjs");
 const {
   getPreviewMimeType,
   getPreviewFileType
@@ -287,6 +319,17 @@ function normalizeModelId(modelId) {
 
 const { variants: modelLevelVariants } = require('./public/model-levels.js');
 
+function resolveGooseMaxTokens(model, envOverride = process.env.GOOSE_MAX_TOKENS) {
+  if (envOverride !== undefined && envOverride !== null && String(envOverride).trim() !== "") {
+    return String(envOverride).trim();
+  }
+  const bareModel = String(model || "").trim().split("/").pop();
+  if (/^gemini(?:[-_.]|$)/i.test(bareModel)) {
+    return process.env.AI_HUB_GEMINI_MAX_TOKENS || "65536";
+  }
+  return "";
+}
+
 // Cac model co san tren 9Router
 const AVAILABLE_MODELS = [
       { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai" },
@@ -317,7 +360,24 @@ const AVAILABLE_MODELS = [
       { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Verified live; unlisted router alias", iconType: "gemini" },
       { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini" },
       { id: "ag/gemini-2.5-flash", name: "Gemini 2.5 Flash", full: "ag/gemini-2.5-flash", group: "gemini", provider: "Google", tag: "Verified fast text and tool round-trip", iconType: "gemini" },
-      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" }
+      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon" },
+      { id: "kr/claude-opus-5.5", name: "Kiro Claude Opus 5.5", full: "kr/claude-opus-5.5", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified streaming & tool calls", iconType: "kiro" },
+      { id: "kr/claude-opus-5", name: "Kiro Claude Opus 5", full: "kr/claude-opus-5", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified live", iconType: "kiro" },
+      { id: "kr/claude-opus-4.8", name: "Kiro Claude Opus 4.8", full: "kr/claude-opus-4.8", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified live", iconType: "kiro" },
+      { id: "kr/claude-opus-4.7", name: "Kiro Claude Opus 4.7", full: "kr/claude-opus-4.7", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified live", iconType: "kiro" },
+      { id: "kr/claude-opus-4.5", name: "Kiro Claude Opus 4.5", full: "kr/claude-opus-4.5", group: "kiro", provider: "Kiro", tag: "200K ctx · Verified live", iconType: "kiro" },
+      { id: "kr/claude-sonnet-5.5", name: "Kiro Claude Sonnet 5.5", full: "kr/claude-sonnet-5.5", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified live & tool calls (unlisted alias)", iconType: "kiro" },
+      { id: "kr/claude-sonnet-5", name: "Kiro Claude Sonnet 5", full: "kr/claude-sonnet-5", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified streaming & tool calls", iconType: "kiro" },
+      { id: "kr/claude-sonnet-4.6", name: "Kiro Claude Sonnet 4.6", full: "kr/claude-sonnet-4.6", group: "kiro", provider: "Kiro", tag: "Verified live & tool calls (unlisted alias)", iconType: "kiro" },
+      { id: "kr/claude-sonnet-4.5", name: "Kiro Claude Sonnet 4.5", full: "kr/claude-sonnet-4.5", group: "kiro", provider: "Kiro", tag: "200K ctx · Verified live", iconType: "kiro" },
+      { id: "kr/claude-haiku-4.5", name: "Kiro Claude Haiku 4.5", full: "kr/claude-haiku-4.5", group: "kiro", provider: "Kiro", tag: "200K ctx · Nhanh, tiết kiệm", iconType: "kiro" },
+      { id: "kr/gpt-5.6-sol", name: "Kiro GPT-5.6 Sol", full: "kr/gpt-5.6-sol", group: "kiro", provider: "Kiro", tag: "272K ctx · Verified live", iconType: "kiro" },
+      { id: "kr/gpt-5.6-terra", name: "Kiro GPT-5.6 Terra", full: "kr/gpt-5.6-terra", group: "kiro", provider: "Kiro", tag: "272K ctx · Verified live", iconType: "kiro" },
+      { id: "kr/gpt-5.6-luna", name: "Kiro GPT-5.6 Luna", full: "kr/gpt-5.6-luna", group: "kiro", provider: "Kiro", tag: "272K ctx · Verified live", iconType: "kiro" },
+      { id: "kr/deepseek-3.2", name: "Kiro DeepSeek 3.2", full: "kr/deepseek-3.2", group: "kiro", provider: "Kiro", tag: "128K ctx · Verified live", iconType: "kiro" },
+      { id: "kr/qwen3-coder-next", name: "Kiro Qwen3 Coder Next", full: "kr/qwen3-coder-next", group: "kiro", provider: "Kiro", tag: "1M ctx · Chuyên lập trình", iconType: "kiro" },
+      { id: "kr/glm-5", name: "Kiro GLM-5", full: "kr/glm-5", group: "kiro", provider: "Kiro", tag: "200K ctx · Verified text & tool calls", iconType: "kiro" },
+      { id: "kr/MiniMax-M2.5", name: "Kiro MiniMax M2.5", full: "kr/MiniMax-M2.5", group: "kiro", provider: "Kiro", tag: "200K ctx · Verified live", iconType: "kiro" }
 ].flatMap(modelLevelVariants);
 
 // Quan ly danh sach Workspaces
@@ -379,7 +439,9 @@ function deleteSession(sessionId) {
     // Neu phien nay dang chay, dung tien trinh
     const runningCtx = getRunningSession(sessionId) || getRunningSession(realId);
     if (runningCtx) {
-      try { process.kill(runningCtx.process.pid); } catch {}
+      runningCtx.isFinished = true;
+      if (runningCtx.retryTimer) { clearTimeout(runningCtx.retryTimer); runningCtx.retryTimer = null; }
+      try { if (runningCtx.process?.pid) process.kill(runningCtx.process.pid); } catch {}
       for (const c of runningCtx.clients) {
         try { c.end(); } catch {}
       }
@@ -432,6 +494,7 @@ function truncateLastUserTurn(sessionId, newTitlePrompt = "") {
     const runningCtx = getRunningSession(sessionId);
     const resolvedRunningId = runningCtx?.resolvedDbId || runningCtx?.info?.sessionId || null;
     if (runningCtx) {
+      if (runningCtx.retryTimer) { clearTimeout(runningCtx.retryTimer); runningCtx.retryTimer = null; }
       try {
         if (runningCtx.process?.pid) {
           if (process.platform === "win32") {
@@ -1098,7 +1161,42 @@ function buildSyntheticUnifiedDiff(content, mode, relLabel) {
   return header.concat(lines.map(l => "+" + l)).join("\n");
 }
 
+const llmRetryProxy = createLlmRetryProxy({
+  getTargetHost: () => NINE_ROUTER_IP,
+  getTargetPort: () => Number(NINE_ROUTER_PORT || 20128),
+  onRetry({ model, attempt, maxRetries, delayMs, statusCode }) {
+    const delayLabel = formatDurationShort(delayMs);
+    console.warn(`[LLM-PROXY RETRY] status=${statusCode} model=${model || "unknown"} retry=${attempt}/${maxRetries} in ${delayMs}ms (${delayLabel})`);
+    for (const ctx of new Set(activeSessions.values())) {
+      if (!ctx || ctx.isFinished) continue;
+      const ctxModel = String(ctx.info?.model || "").toLowerCase();
+      if (!model || !ctxModel || ctxModel === model || ctxModel.endsWith("/" + model) || model.endsWith("/" + ctxModel)) {
+        broadcastToSession(ctx, "stderr", {
+          text: `[AUTO-RETRY] Upstream báo bận tạm thời (${statusCode}), đang tự động gửi lại request sau ${delayLabel} (lần ${attempt}/${maxRetries})...`
+        });
+      }
+    }
+  },
+  onCooldownWait({ model, delayMs, bucket }) {
+    const delayLabel = formatDurationShort(delayMs);
+    console.warn(`[LLM-PROXY COOLDOWN] bucket=${bucket || "unknown"} model=${model || "unknown"} waiting ${delayMs}ms (${delayLabel})`);
+    for (const ctx of new Set(activeSessions.values())) {
+      if (!ctx || ctx.isFinished) continue;
+      const ctxModel = String(ctx.info?.model || "").toLowerCase();
+      if (!model || !ctxModel || ctxModel === model || ctxModel.endsWith("/" + model) || model.endsWith("/" + ctxModel)) {
+        broadcastToSession(ctx, "stderr", {
+          text: `[RATE-LIMIT] Model ${model || ctxModel} đang trong thời gian chờ reset giới hạn, sẽ tự động tiếp tục sau ${delayLabel}...`
+        });
+      }
+    }
+  }
+});
+
 const server = http.createServer((req, res) => {
+  if (req.url && (req.url === "/v1" || req.url.startsWith("/v1/"))) {
+    llmRetryProxy.handleProxyRequest(req, res);
+    return;
+  }
   if (req.method === "POST" && req.url === "/api/auxiliary-settings") {
     let body = "", oversized = false;
     req.on("data", chunk => { if (oversized) return; body += chunk; if (body.length > 4096) { oversized = true; body = ""; } });
@@ -2057,6 +2155,7 @@ const server = http.createServer((req, res) => {
       const targetCtx = targetId ? getRunningSession(targetId) : (activeSessions.values().next().value || null);
       if (targetCtx) {
         console.log(`[STOP] User explicitly stopped task for session ${targetCtx.sessionId} (PID: ${targetCtx.process?.pid})`);
+        if (targetCtx.retryTimer) { clearTimeout(targetCtx.retryTimer); targetCtx.retryTimer = null; }
         try {
           if (targetCtx.process?.pid) {
             if (process.platform === 'win32') {
@@ -2221,7 +2320,7 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: "Cannot load conversation: " + err.message }));
         return;
       }
-      const resume = !!storedSession;
+      let resume = !!storedSession;
       if (storedSession) sessionId = storedSession.id;
 
       // Never silently start a blank conversation when a previous session is missing.
@@ -2334,18 +2433,30 @@ const server = http.createServer((req, res) => {
       broadcastToSession(sessionCtx, "session_title", { title });
       broadcastToSession(sessionCtx, "status", { status: "starting", model, cwd, sessionId, session_id: sessionId, text: "Đang kết nối Agent..." });
 
+      const localProxyAddr = (server && typeof server.address === "function") ? server.address() : null;
+      const llmHostBase = (localProxyAddr && typeof localProxyAddr.port === "number" && localProxyAddr.port > 0)
+        ? `http://127.0.0.1:${localProxyAddr.port}`
+        : `http://${NINE_ROUTER_IP}:${NINE_ROUTER_PORT}`;
+
       const env = {
         ...process.env,
         OPENAI_API_KEY: NINE_ROUTER_KEY,
-        OPENAI_HOST: `http://${NINE_ROUTER_IP}:${NINE_ROUTER_PORT}`,
-        OPENAI_BASE_URL: `http://${NINE_ROUTER_IP}:${NINE_ROUTER_PORT}/v1`,
-        OPENAI_API_BASE: `http://${NINE_ROUTER_IP}:${NINE_ROUTER_PORT}/v1`,
+        OPENAI_HOST: llmHostBase,
+        OPENAI_BASE_URL: `${llmHostBase}/v1`,
+        OPENAI_API_BASE: `${llmHostBase}/v1`,
         GOOSE_PROVIDER: "openai",
         GOOSE_MODEL: model,
         GOOSE_CONTEXT_LIMIT: process.env.GOOSE_CONTEXT_LIMIT || "400000",
         GOOSE_CLI_MIN_PRIORITY: "0.8",
         GOOSE_SHOW_FULL_OUTPUT: "false"
       };
+
+      const gooseMaxTokens = resolveGooseMaxTokens(model);
+      if (gooseMaxTokens) {
+        env.GOOSE_MAX_TOKENS = gooseMaxTokens;
+      } else {
+        delete env.GOOSE_MAX_TOKENS;
+      }
 
       applyWorkspaceEnvToProcessEnv(env, cwd);
       env.AI_HUB_SCRATCH_DIR = scratch.dir;
@@ -2362,13 +2473,17 @@ const server = http.createServer((req, res) => {
       const systemInstruction = buildSystemInstruction(cwd, model) + scratchInstruction(scratch.dir) + coordinationInstruction(auxiliaryModel)
         + (browserEnabled ? BROWSER_INSTRUCTION : "");
 
+      const launchGooseTurn = (turnPrompt, isAutoRetry = false) => {
+      if (isAutoRetry) {
+        try { fs.mkdirSync(scratch.dir, { recursive: true }); } catch {}
+      }
       const args = [
         "run",
         "--provider", "openai",
         "--model", model,
         "--system", systemInstruction,
         "--output-format", "stream-json",
-        "--text", prompt
+        "--text", turnPrompt
       ];
 
       // Resumed sessions already restore saved extensions; do not add the same name twice.
@@ -2412,22 +2527,24 @@ const server = http.createServer((req, res) => {
         args.push("--name", sessionId);
       }
 
-      console.log(`[SPAWN] goose model=${model} session=${sessionId} resume=${resume}`);
+      console.log(`[SPAWN] goose model=${model} session=${sessionId} resume=${resume}${isAutoRetry ? " autoRetry=" + (sessionCtx.transientRetryCount || 0) : ""}`);
       const child = spawn(GOOSE_PATH, args, { cwd, env, windowsHide: true });
       sessionCtx.process = child;
       sessionCtx.info.pid = child.pid;
       activeProcess = child;
 
-      broadcastHubEvent("session_turn_started", {
-        sessionId,
-        tempName: sessionCtx.tempName || null,
-        title,
-        clientId: data.clientId || null,
-        prompt: rawPrompt,
-        model,
-        cwd,
-        timestamp: Date.now()
-      });
+      if (!isAutoRetry) {
+        broadcastHubEvent("session_turn_started", {
+          sessionId,
+          tempName: sessionCtx.tempName || null,
+          title,
+          clientId: data.clientId || null,
+          prompt: rawPrompt,
+          model,
+          cwd,
+          timestamp: Date.now()
+        });
+      }
 
       let buffer = "";
 
@@ -2443,6 +2560,7 @@ const server = http.createServer((req, res) => {
         const idle = Date.now() - lastActivityAt;
         if (idle >= STALL_KILL_MS) {
           clearInterval(stallTimer);
+          sessionCtx.stallKilled = true;
           console.error(`[STALL KILL] session ${sessionId} idle ${Math.round(idle / 1000)}s, killing PID ${child.pid}`);
           broadcastToSession(sessionCtx, "error", { error: `Model/stream không phản hồi sau ${Math.round(idle / 60000)} phút nên phiên đã bị dừng tự động. Hãy gửi "tiếp tục" để chạy lại từ ngữ cảnh đã lưu.` });
           try { spawn("taskkill", ["/pid", String(child.pid), "/f", "/t"], { windowsHide: true, stdio: "ignore" }); } catch { try { child.kill(); } catch {} }
@@ -2455,6 +2573,24 @@ const server = http.createServer((req, res) => {
       child.on("close", () => clearInterval(stallTimer));
       child.on("error", () => clearInterval(stallTimer));
 
+      let stepHasThinking = false;
+      let stepHasText = false;
+      let stepHasToolCall = false;
+      let stepHasError = false;
+      let attemptTransientError = "";
+      const heldTransientErrors = [];
+
+      const recordOrBroadcastError = (errMsg) => {
+        const msgStr = String(errMsg || "Lỗi phản hồi");
+        stepHasError = true;
+        if (!sessionCtx.stallKilled && isTransientProviderError(msgStr) && (sessionCtx.transientRetryCount || 0) < MAX_TRANSIENT_RETRIES) {
+          attemptTransientError = msgStr;
+          heldTransientErrors.push(msgStr);
+        } else {
+          broadcastToSession(sessionCtx, "error", { error: msgStr });
+        }
+      };
+
       const processStdoutLine = (trimmed) => {
         if (!trimmed) return;
         if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
@@ -2464,10 +2600,17 @@ const server = http.createServer((req, res) => {
               for (const item of parsed.message.content) {
                 if (item.type === "text" && item.text) {
                   const textVal = typeof item.text === 'string' ? item.text : (item.text?.value || item.text?.text || JSON.stringify(item.text));
+                  if (String(textVal).trim()) {
+                    stepHasText = true;
+                    sessionCtx.transientRetryCount = 0;
+                    attemptTransientError = "";
+                    heldTransientErrors.length = 0;
+                  }
                   broadcastToSession(sessionCtx, "text", { text: textVal });
                 } else if (item.type === "thinking" && item.thinking) {
                   const thoughtVal = typeof item.thinking === 'string' ? item.thinking : (item.thinking?.value || item.thinking?.thinking || '');
                   if (thoughtVal) {
+                    stepHasThinking = true;
                     broadcastToSession(sessionCtx, "thinking", {
                       text: thoughtVal,
                       signature: typeof item.signature === "string" ? item.signature : ""
@@ -2475,6 +2618,10 @@ const server = http.createServer((req, res) => {
                   }
                 } else if (item.type === "toolRequest" && item.toolCall) {
                   pendingTools++;
+                  stepHasToolCall = true;
+                  sessionCtx.transientRetryCount = 0;
+                  attemptTransientError = "";
+                  heldTransientErrors.length = 0;
                   const reqToolName = item.toolCall.value?.name || "tool";
                   const reqToolArgs = item.toolCall.value?.arguments || {};
                   try {
@@ -2487,6 +2634,12 @@ const server = http.createServer((req, res) => {
                   });
                 } else if (item.type === "toolResponse") {
                   pendingTools = Math.max(0, pendingTools - 1);
+                  stepHasThinking = false;
+                  stepHasText = false;
+                  stepHasToolCall = false;
+                  sessionCtx.transientRetryCount = 0;
+                  attemptTransientError = "";
+                  heldTransientErrors.length = 0;
                   const isErr = Boolean(item.toolResult?.status === "error" || item.toolResult?.value?.isError || item.toolResult?.error);
                   let outStr = item.output || item.value || "";
                   if (!outStr && item.toolResult) {
@@ -2521,11 +2674,17 @@ const server = http.createServer((req, res) => {
                     } catch {}
                   }
                 } else if (item.type === "error") {
-                  broadcastToSession(sessionCtx, "error", { error: item.message || item.text || "Lỗi phản hồi" });
+                  recordOrBroadcastError(item.message || item.text || "Lỗi phản hồi");
                 }
               }
             } else if (parsed.type === "toolResponse") {
               pendingTools = Math.max(0, pendingTools - 1);
+              stepHasThinking = false;
+              stepHasText = false;
+              stepHasToolCall = false;
+              sessionCtx.transientRetryCount = 0;
+              attemptTransientError = "";
+              heldTransientErrors.length = 0;
               const isErr = Boolean(parsed.toolResult?.status === "error" || parsed.toolResult?.value?.isError || parsed.toolResult?.error);
               let outStr = parsed.output || parsed.value || "";
               if (!outStr && parsed.toolResult) {
@@ -2560,7 +2719,7 @@ const server = http.createServer((req, res) => {
                 } catch {}
               }
             } else if (parsed.type === "error") {
-              broadcastToSession(sessionCtx, "error", { error: parsed.error || "Lỗi tiến trình" });
+              recordOrBroadcastError(parsed.error || "Lỗi tiến trình");
             } else if (parsed.type === "complete") {
               broadcastToSession(sessionCtx, "complete", parsed);
               // goose may hang on shutdown after finishing; never leave the session stuck as running
@@ -2573,14 +2732,14 @@ const server = http.createServer((req, res) => {
             }
           } catch {
             if (trimmed.toLowerCase().startsWith("error:")) {
-              broadcastToSession(sessionCtx, "error", { error: trimmed });
+              recordOrBroadcastError(trimmed);
             } else {
               broadcastToSession(sessionCtx, "raw_log", { line: trimmed });
             }
           }
         } else {
           if (trimmed.toLowerCase().startsWith("error:")) {
-            broadcastToSession(sessionCtx, "error", { error: trimmed });
+            recordOrBroadcastError(trimmed);
           } else {
             broadcastToSession(sessionCtx, "raw_log", { line: trimmed });
           }
@@ -2625,6 +2784,10 @@ const server = http.createServer((req, res) => {
         if (sessionCtx.process !== child) return;
         const text = chunk.toString("utf8").trim();
         console.error(`[GOOSE STDERR] ${text}`);
+        if (text && !sessionCtx.stallKilled && isTransientProviderError(text) && (sessionCtx.transientRetryCount || 0) < MAX_TRANSIENT_RETRIES) {
+          attemptTransientError = attemptTransientError || text;
+          stepHasError = true;
+        }
         if (text) broadcastToSession(sessionCtx, "stderr", { text });
       });
 
@@ -2633,11 +2796,9 @@ const server = http.createServer((req, res) => {
         if (sessionCtx.process !== child || turnFinalized) return;
         turnFinalized = true;
         flushStdoutBuffer();
-        try { restartRecovery.complete(sessionCtx.info?.sessionId || sessionId); }
-        catch (error) { console.error("[RESTART CHECKPOINT] " + error.message); }
-        console.log(`[GOOSE CLOSE] Exit code: ${code} for session ${sessionId}`);
+        let stored = null;
         try {
-          const stored = findStoredSession(sessionId);
+          stored = findStoredSession(sessionId);
           if (stored) {
             sessionId = stored.id;
             sessionCtx.info.sessionId = stored.id;
@@ -2650,6 +2811,57 @@ const server = http.createServer((req, res) => {
         } catch (err) {
           console.error("[SESSION RESOLVE] " + err.message);
         }
+
+        // Auto-retry transient upstream errors (429 / 503 Service Unavailable / rate_limit_exceeded)
+        if (
+          attemptTransientError &&
+          !sessionCtx.isFinished &&
+          !sessionCtx.stallKilled &&
+          (sessionCtx.transientRetryCount || 0) < MAX_TRANSIENT_RETRIES &&
+          (stored?.id || resume)
+        ) {
+          sessionCtx.transientRetryCount = (sessionCtx.transientRetryCount || 0) + 1;
+          const attemptNum = sessionCtx.transientRetryCount;
+          const retryBaseOverride = process.env.AI_HUB_TRANSIENT_RETRY_BASE_MS !== undefined
+            ? Number(process.env.AI_HUB_TRANSIENT_RETRY_BASE_MS)
+            : undefined;
+          const delayMs = parseTransientRetryDelayMs(attemptTransientError, attemptNum, "", retryBaseOverride);
+          const delayLabel = formatDurationShort(delayMs);
+          try {
+            const dbPath = path.join(process.env.APPDATA || "", "Block", "goose", "data", "sessions", "sessions.db");
+            cleanupTrailingTransientErrorMessages(DatabaseSync, dbPath, sessionId);
+          } catch {}
+          console.warn(`[AUTO-RETRY] session ${sessionId} hit transient upstream error, retrying in ${delayMs}ms (${attemptNum}/${MAX_TRANSIENT_RETRIES})`);
+          broadcastToSession(sessionCtx, "status", {
+            status: "retrying",
+            model,
+            cwd,
+            sessionId,
+            session_id: sessionId,
+            text: `Chạm giới hạn tốc độ tạm thời, đang tự động thử lại sau ${delayLabel} (${attemptNum}/${MAX_TRANSIENT_RETRIES})...`
+          });
+          broadcastToSession(sessionCtx, "stderr", {
+            text: `[AUTO-RETRY] Chạm giới hạn tốc độ tạm thời (429/503), đang tự động tiếp tục sau ${delayLabel} (lần ${attemptNum}/${MAX_TRANSIENT_RETRIES})...`
+          });
+          const retryTimer = setTimeout(() => {
+            sessionCtx.retryTimer = null;
+            if (sessionCtx.isFinished) return;
+            resume = true;
+            launchGooseTurn("Tiếp tục", true);
+          }, delayMs);
+          if (retryTimer && typeof retryTimer.unref === "function") retryTimer.unref();
+          sessionCtx.retryTimer = retryTimer;
+          return;
+        }
+
+        if (heldTransientErrors.length > 0) {
+          broadcastToSession(sessionCtx, "error", { error: heldTransientErrors[heldTransientErrors.length - 1] });
+          heldTransientErrors.length = 0;
+        }
+
+        try { restartRecovery.complete(sessionCtx.info?.sessionId || sessionId); }
+        catch (error) { console.error("[RESTART CHECKPOINT] " + error.message); }
+        console.log(`[GOOSE CLOSE] Exit code: ${code} for session ${sessionId}`);
         let finalFileChanges = [];
         try {
           finalFileChanges = finalizeTurnSnapshotSync(sessionCtx.turnDiffTracker, sessionCtx.tempName || sessionCtx.sessionId, sessionId);
@@ -2662,8 +2874,14 @@ const server = http.createServer((req, res) => {
         }
         if (code !== 0 && code !== null) {
           broadcastToSession(sessionCtx, "stderr", { text: `Tiến trình kết thúc với mã lỗi: ${code}` });
+        } else if (code === 0 && stepHasThinking && !stepHasText && !stepHasToolCall && !stepHasError) {
+          console.warn(`[TRUNCATED TURN] session ${sessionId} model=${model} ended with thinking-only output (no text or tool_call)`);
+          broadcastToSession(sessionCtx, "error", {
+            error: "Model đã dừng ngay sau phần suy luận mà không trả về nội dung hay gọi công cụ (có thể bị cắt output/max_tokens hoặc đứt stream). Hãy gửi \"tiếp tục\" để chạy tiếp."
+          });
         }
         sessionCtx.isFinished = true;
+        cleanupScratchWithRetry(scratch);
         recentlyCompletedSessions.set(sessionCtx.sessionId, sessionCtx);
         if (sessionCtx.tempName) recentlyCompletedSessions.set(sessionCtx.tempName, sessionCtx);
         if (sessionCtx.info?.sessionId) recentlyCompletedSessions.set(sessionCtx.info.sessionId, sessionCtx);
@@ -2693,7 +2911,7 @@ const server = http.createServer((req, res) => {
         broadcastHubEvent("session_turn_completed", { sessionId, tempName: sessionCtx.tempName || null, exitCode: code });
       };
       // Wait for stdio closure before removing scratch, including stop/error paths.
-      child.once('close', () => { cleanupTurnScratch(scratch).catch(error => console.warn('[SCRATCH CLEANUP] ' + error.message)); });
+      child.once('close', () => { if (sessionCtx.isFinished) cleanupTurnScratch(scratch).catch(error => console.warn('[SCRATCH CLEANUP] ' + error.message)); });
       child.on("close", finalizeTurn);
       // "exit" fires even when a grandchild keeps stdio pipes open (then "close" never fires)
       child.on("exit", (code) => { setTimeout(() => finalizeTurn(code), 2000); });
@@ -2702,6 +2920,7 @@ const server = http.createServer((req, res) => {
         if (sessionCtx.process !== child) return;
         console.error(`[GOOSE ERROR] ${err.message} for session ${sessionId}`);
         sessionCtx.isFinished = true;
+        cleanupScratchWithRetry(scratch);
         recentlyCompletedSessions.set(sessionCtx.sessionId, sessionCtx);
         if (sessionCtx.tempName) recentlyCompletedSessions.set(sessionCtx.tempName, sessionCtx);
         if (sessionCtx.info?.sessionId) recentlyCompletedSessions.set(sessionCtx.info.sessionId, sessionCtx);
@@ -2729,6 +2948,9 @@ const server = http.createServer((req, res) => {
         if (sessionCtx.tempName) unreadSessionCompletions.add(sessionCtx.tempName);
         broadcastHubEvent("session_turn_completed", { sessionId, tempName: sessionCtx.tempName || null, error: err.message });
       });
+      };
+
+      launchGooseTurn(prompt, false);
     });
     return;
   }
@@ -2802,4 +3024,5 @@ server.listen(PORT, process.env.AI_HUB_HOST || "127.0.0.1", () => {
   console.log(`Router VPS       : http://${sys.vpsHost}/v1`);
   console.log(`Key Status       : ${NINE_ROUTER_KEY ? "Da nap tu moi truong [OK]" : "CHUA CO KEY (Kiem tra start-web.bat) [CANH BAO]"}`);
   console.log("========================================================");
+  runScratchSweep(5 * 60 * 1000);
 });

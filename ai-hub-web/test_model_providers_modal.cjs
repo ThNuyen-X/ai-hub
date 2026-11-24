@@ -48,10 +48,10 @@ vm.runInContext(`${modelsMatch[0]}\n${providersMatch[0]}\nthis.MODELS = MODELS;\
 
 const { MODELS, MODEL_PROVIDERS } = sandbox;
 
-// Kiem tra 3 options chinh
-assert.equal(MODEL_PROVIDERS.length, 3, 'Must have exactly 3 model provider options');
+// Kiem tra 4 options chinh
+assert.equal(MODEL_PROVIDERS.length, 4, 'Must have exactly 4 model provider options');
 const providerIds = Array.from(MODEL_PROVIDERS.map(p => p.id));
-assert.deepStrictEqual(JSON.stringify(providerIds), JSON.stringify(['chatgpt', 'claude', 'gemini']), 'Provider options must be chatgpt, claude, gemini');
+assert.deepStrictEqual(JSON.stringify(providerIds), JSON.stringify(['chatgpt', 'claude', 'gemini', 'kiro']), 'Provider options must be chatgpt, claude, gemini, kiro');
 
 // Kiem tra model ChatGPT
 const chatgptModels = Array.from(MODELS.filter(m => m.group === 'chatgpt'));
@@ -77,6 +77,16 @@ assert.deepStrictEqual(JSON.stringify(geminiModels.map(m => m.id)), JSON.stringi
   'ag/gemini-4-argon-high'
 ]));
 
+// Kiem tra model Kiro
+const kiroModels = Array.from(MODELS.filter(m => m.group === 'kiro'));
+assert.equal(kiroModels.length, 17, 'Kiro group contains all verified Kiro models');
+assert(kiroModels.some(m => m.id === 'kr/claude-opus-5.5'));
+assert(kiroModels.some(m => m.id === 'kr/claude-sonnet-5.5'));
+assert(kiroModels.some(m => m.id === 'kr/claude-sonnet-5'));
+assert(kiroModels.some(m => m.id === 'kr/claude-sonnet-4.6'));
+assert(kiroModels.some(m => m.id === 'kr/qwen3-coder-next'));
+assert(kiroModels.some(m => m.id === 'kr/glm-5'));
+
 // 3. Kiem tra logic JavaScript tuong tac: renderModelSelector & openModelProviderPopup
 const helperCode = `
   function escapeHtml(value) {
@@ -86,7 +96,8 @@ const helperCode = `
     openai: '<svg id="mock-openai"></svg>',
     claude: '<svg id="mock-claude"></svg>',
     gemini: '<svg id="mock-gemini"></svg>',
-    argon: '<svg id="mock-argon"></svg>'
+    argon: '<svg id="mock-argon"></svg>',
+    kiro: '<svg id="mock-kiro"></svg>'
   };
 
   function normalizeModelId(modelId) {
@@ -218,3 +229,13 @@ console.log('All Model Providers & Sub-popup Modal UI tests passed successfully!
 
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 4 Neon'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('ag/gemini-4-neon-xhigh'));
+
+// Test 8: Bấm vào Kiro -> Popup hien thi cac model Kiro va chon duoc
+sandbox.openModelProviderPopup('kiro');
+assert(!fakeDom.modelProviderModal.classList.contains('hidden'), 'modelProviderModal must be open for Kiro');
+assert(fakeDom.modelProviderModalTitle.innerText.includes('Kiro'), 'Title must mention Kiro');
+assert(fakeDom.modelProviderModalList.innerHTML.includes('kr/claude-opus-5.5'));
+assert(fakeDom.modelProviderModalList.innerHTML.includes('kr/claude-sonnet-5'));
+sandbox.selectModelFromPopup('kr/claude-sonnet-5');
+assert.equal(sandbox.currentSelectedModel, 'kr/claude-sonnet-5');
+assert.equal(fakeDom.currentModelName.innerText, 'Kiro Claude Sonnet 5');

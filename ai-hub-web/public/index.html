@@ -2017,7 +2017,24 @@
           </div>
           <input id="soundFileInput" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.webm" class="hidden" onchange="soundPreferences.upload(this)">
           <span id="soundFileLabel" class="break-all" style="color: var(--text-sub);"></span>
-          <span style="color: var(--text-sub);">Tối đa 2 MB, phát tối đa 8 giây. Bật loa để nghe thử. Lưu riêng trên trình duyệt này.</span>
+          <div id="soundTrimPanel" class="hidden rounded border p-2 space-y-2" style="border-color: var(--border-subtle);">
+            <div id="soundTrimName" class="break-all font-medium"></div>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="min-w-0">Bắt đầu (giây)
+                <input id="soundTrimStart" type="number" min="0" step="0.01" value="0" onchange="soundPreferences.updateTrim('start')" class="w-full rounded border p-1" style="background: var(--bg-input); border-color: var(--border);">
+              </label>
+              <label class="min-w-0">Kết thúc (giây)
+                <input id="soundTrimEnd" type="number" min="0" step="0.01" value="8" onchange="soundPreferences.updateTrim('end')" class="w-full rounded border p-1" style="background: var(--bg-input); border-color: var(--border);">
+              </label>
+            </div>
+            <div id="soundTrimInfo" role="status" style="color: var(--text-sub);"></div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="soundPreferences.previewTrim()" class="rounded border px-2 py-1" style="border-color: var(--border);">Nghe đoạn</button>
+              <button id="soundTrimSave" type="button" onclick="soundPreferences.saveTrim()" class="rounded border px-2 py-1 disabled:opacity-50" style="border-color: var(--border);">Lưu đoạn nhạc</button>
+              <button type="button" onclick="soundPreferences.cancelTrim()" class="rounded border px-2 py-1" style="border-color: var(--border);">Hủy</button>
+            </div>
+          </div>
+          <span style="color: var(--text-sub);">Không giới hạn file gốc 2 MB. Chọn đoạn tối đa 8 giây để nghe thử và lưu; chỉ đoạn đã cắt được lưu trên trình duyệt này (khoảng 334 KB trở xuống). File quá lớn vẫn có thể vượt bộ nhớ xử lý của thiết bị. Bật loa để nghe thử.</span>
         </div>
       </details>
 

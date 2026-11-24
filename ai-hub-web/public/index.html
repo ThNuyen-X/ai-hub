@@ -299,7 +299,7 @@
       font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    code, pre, .font-mono {
+    code, pre, .font-mono, code *, pre *, .font-mono * {
       font-family: 'JetBrains Mono', monospace !important;
     }
 
@@ -1543,7 +1543,6 @@
     }
     .browser-activity[data-state="working"] .browser-activity-dot { animation: pulse 1.4s ease-in-out infinite; }
     .browser-activity-step {
-      font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       opacity: 0.88;
     }
@@ -1589,7 +1588,6 @@
       color: #c084fc;
     }
     .browser-meta-chip.is-tab {
-      font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: var(--text-sub);
     }
@@ -1900,7 +1898,7 @@
         <img src="/logo.svg" width="32" height="32" alt="" class="w-8 h-8 shrink-0">
         <div class="flex items-center gap-1.5">
           <span class="font-semibold text-sm tracking-tight" style="color: var(--text-main);">Agent Studio</span>
-          <span class="text-[9px] font-bold font-mono px-1 py-0.2 rounded uppercase bg-blue-500/10 text-blue-500 border border-blue-500/20">PRO</span>
+          <span class="text-[9px] font-bold px-1 py-0.2 rounded uppercase bg-blue-500/10 text-blue-500 border border-blue-500/20">PRO</span>
         </div>
       </a>
       
@@ -1945,7 +1943,7 @@
           <span>⭐</span>
           <span>ĐÃ GHIM</span>
         </div>
-        <span id="pinnedCountBadge" class="text-[9.5px] font-mono px-1 rounded bg-amber-500/10 text-amber-500">0</span>
+        <span id="pinnedCountBadge" class="text-[9.5px] px-1 rounded bg-amber-500/10 text-amber-500">0</span>
       </div>
       <div id="pinnedSessionsList" class="space-y-0.5 mt-1"></div>
     </div>
@@ -1997,7 +1995,7 @@
           <span class="font-medium text-[11px] text-[var(--text-sub)]">Hệ thống sẵn sàng</span>
         </div>
         <button onclick="soundEffects.toggle()" id="audioToggleBtn" title="Bật/Tắt âm thanh hiệu ứng"
-                class="flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] ease-spring">
+                class="flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] ease-spring">
           <span id="audioIcon">🔊</span>
           <span id="audioStatusLabel">Bật</span>
         </button>
@@ -2165,7 +2163,7 @@
             </button>
 
             <!-- Live Stopwatch Timer Badge -->
-            <div id="headerLiveTimerBadge" class="hidden items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 ml-1 sm:ml-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 font-mono text-[10px] sm:text-[11px] shrink-0">
+            <div id="headerLiveTimerBadge" class="hidden items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 ml-1 sm:ml-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] sm:text-[11px] shrink-0">
               <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping"></span>
               <span id="headerLiveTimerText">00:00.0s</span>
             </div>
@@ -2219,7 +2217,7 @@
             <!-- Workspace + Session Title Breadcrumb Line -->
             <div class="flex items-center gap-1.5 mb-2 min-w-0">
               <span id="mobileMenuWorkspaceText" 
-                    class="shrink-0 px-2 py-0.5 rounded-md font-mono text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 max-w-[100px] truncate">
+                    class="shrink-0 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 max-w-[100px] truncate">
                 sso
               </span>
               <span class="text-zinc-600 text-xs shrink-0 select-none">/</span>
@@ -2360,7 +2358,7 @@
         <button onclick="toggleTerminalDrawer()" 
                 id="btnToggleTerminal"
                 type="button"
-                class="hidden lg:flex items-center space-x-1 sm:space-x-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-mono ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
+                class="hidden lg:flex items-center space-x-1 sm:space-x-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs ease-spring hover:bg-[var(--bg-hover)] shadow-2xs transition-colors"
                 style="background: var(--bg-card); border-color: var(--border); color: var(--text-sub);"
                 title="Bật/Tắt Terminal Drawer (Ctrl+`)">
           <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2389,7 +2387,7 @@
             <div class="px-2.5 py-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-[var(--text-sub)] border-b mb-1.5 flex items-center justify-between"
                  style="border-color: var(--border-subtle);">
               <span>Chọn Nhà Cung Cấp AI</span>
-              <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-mono">9Router</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 ">9Router</span>
             </div>
             <div id="modelListOptions" class="space-y-1"></div>
             <section class="mt-2 pt-2 border-t" style="border-color: var(--border-subtle);" aria-labelledby="auxiliaryPickerLabel">
@@ -2460,7 +2458,7 @@
             Môi trường điều khiển Goose Agent tối ưu cho lập trình viên. Thực thi terminal, chỉnh sửa mã nguồn, tìm bug và quản lý dự án độc lập.
           </p>
 
-          <button type="button" onclick="openWorkspaceModal()" title="Chọn workspace" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-mono mb-4"
+          <button type="button" onclick="openWorkspaceModal()" title="Chọn workspace" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs mb-4"
                style="background-color: var(--bg-surface); border-color: var(--border); color: var(--text-muted);">
             <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
@@ -2522,7 +2520,7 @@
 
           <div class="mt-6 text-center">
             <span class="text-[11px] text-[var(--text-sub)]">
-              Mẹo: Nhấn <kbd class="px-1.5 py-0.5 rounded bg-[var(--badge-bg)] text-[var(--text-main)] font-mono text-[10px] border border-[var(--border-subtle)]">Ctrl+K</kbd> để mở Command Palette hoặc gõ <kbd class="px-1.5 py-0.5 rounded bg-[var(--badge-bg)] text-[var(--text-main)] font-mono text-[10px] border border-[var(--border-subtle)]">/</kbd> để xem danh sách lệnh nhanh.
+              Mẹo: Nhấn <kbd class="px-1.5 py-0.5 rounded bg-[var(--badge-bg)] text-[var(--text-main)] text-[10px] border border-[var(--border-subtle)]">Ctrl+K</kbd> để mở Command Palette hoặc gõ <kbd class="px-1.5 py-0.5 rounded bg-[var(--badge-bg)] text-[var(--text-main)] text-[10px] border border-[var(--border-subtle)]">/</kbd> để xem danh sách lệnh nhanh.
             </span>
           </div>
 
@@ -2611,7 +2609,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
             </svg>
             <span class="text-[11.5px] font-semibold">Mở khung chat</span>
-            <span class="text-[10px] font-mono opacity-70 hidden sm:inline">(Ctrl+J)</span>
+            <span class="text-[10px] opacity-70 hidden sm:inline">(Ctrl+J)</span>
           </button>
         </div>
 
@@ -2669,7 +2667,7 @@
           </div>
 
           <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-            <span id="composerEscHint" class="text-[10px] font-mono opacity-60 hidden md:inline" style="color: var(--text-sub);">Esc dừng • / mở lệnh</span>
+            <span id="composerEscHint" class="text-[10px] opacity-60 hidden md:inline" style="color: var(--text-sub);">Esc dừng • / mở lệnh</span>
             
             <!-- Nút thu gọn khung chat -->
             <button type="button" onclick="toggleComposerCollapse(event, true)" id="btnToggleComposerCollapse"
@@ -2698,7 +2696,7 @@
           <div class="flex items-center space-x-1 sm:space-x-1.5 text-[11px] shrink-0 min-w-0">
             <span id="currentSessionFolderTag" hidden></span>
 
-            <span id="charCount" class="font-mono text-[10px] hidden sm:inline" style="color: var(--text-sub);">
+            <span id="charCount" class="text-[10px] hidden sm:inline" style="color: var(--text-sub);">
               0 ký tự
             </span>
           </div>
@@ -2747,17 +2745,17 @@
           <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
-          <span class="text-xs font-bold font-mono tracking-tight text-[var(--text-main)] truncate">AGENT EXECUTION LOGS</span>
-          <span id="terminalDrawerStatus" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 shrink-0">
+          <span class="text-xs font-bold tracking-tight text-[var(--text-main)] truncate">AGENT EXECUTION LOGS</span>
+          <span id="terminalDrawerStatus" class="text-[10px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 shrink-0">
             Idle
           </span>
-          <span id="terminalLineCountBadge" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 shrink-0">
+          <span id="terminalLineCountBadge" class="text-[10px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 shrink-0">
             0 dòng
           </span>
         </div>
 
         <!-- Terminal Log Filters & Action Controls -->
-        <div class="terminal-drawer-controls text-xs font-mono">
+        <div class="terminal-drawer-controls text-xs ">
           <!-- Filter buttons -->
           <button id="termFilterAll" onclick="filterTerminalLogs('all')" class="px-2 py-0.5 rounded text-[10.5px] bg-blue-500/20 text-blue-400 border border-blue-500/30">Tất cả</button>
           <button id="termFilterCmd" onclick="filterTerminalLogs('cmd')" class="px-2 py-0.5 rounded text-[10.5px] hover:bg-[var(--bg-hover)] text-zinc-400">Lệnh</button>
@@ -2813,15 +2811,15 @@
                class="w-full bg-transparent text-sm font-medium focus:outline-none placeholder-zinc-500"
                style="color: var(--text-main);"
                autocomplete="off">
-        <kbd class="px-2 py-0.5 rounded text-[10px] font-mono border bg-[var(--badge-bg)] text-[var(--text-sub)] border-[var(--border-subtle)]">ESC</kbd>
+        <kbd class="px-2 py-0.5 rounded text-[10px] border bg-[var(--badge-bg)] text-[var(--text-sub)] border-[var(--border-subtle)]">ESC</kbd>
       </div>
 
       <!-- Quick Category Filter Chips -->
       <div class="px-3 py-2 border-b flex items-center gap-1.5 text-xs select-none" style="border-color: var(--border-subtle);">
-        <button onclick="renderPaletteResults('')" class="px-2 py-0.5 rounded font-mono text-[11px] bg-blue-500/10 text-blue-400 border border-blue-500/20">Tất cả</button>
-        <button onclick="renderPaletteResults('>')" class="px-2 py-0.5 rounded font-mono text-[11px] text-zinc-400 hover:text-white">Lệnh (>)</button>
-        <button onclick="renderPaletteResults('@')" class="px-2 py-0.5 rounded font-mono text-[11px] text-zinc-400 hover:text-white">Model (@)</button>
-        <button onclick="renderPaletteResults('#')" class="px-2 py-0.5 rounded font-mono text-[11px] text-zinc-400 hover:text-white">Workspace (#)</button>
+        <button onclick="renderPaletteResults('')" class="px-2 py-0.5 rounded text-[11px] bg-blue-500/10 text-blue-400 border border-blue-500/20">Tất cả</button>
+        <button onclick="renderPaletteResults('>')" class="px-2 py-0.5 rounded text-[11px] text-zinc-400 hover:text-white">Lệnh (>)</button>
+        <button onclick="renderPaletteResults('@')" class="px-2 py-0.5 rounded text-[11px] text-zinc-400 hover:text-white">Model (@)</button>
+        <button onclick="renderPaletteResults('#')" class="px-2 py-0.5 rounded text-[11px] text-zinc-400 hover:text-white">Workspace (#)</button>
       </div>
 
       <!-- Palette Results List -->
@@ -2831,8 +2829,8 @@
       <div class="px-3.5 py-2 border-t flex items-center justify-between text-[11px]"
            style="border-color: var(--border-subtle); color: var(--text-sub); background: var(--bg-surface);">
         <div class="flex items-center space-x-3">
-          <span><kbd class="font-mono">↑↓</kbd> để di chuyển</span>
-          <span><kbd class="font-mono">↵</kbd> để chọn</span>
+          <span><kbd class="">↑↓</kbd> để di chuyển</span>
+          <span><kbd class="">↵</kbd> để chọn</span>
         </div>
         <span>AI Agent Studio Pro v2.0</span>
       </div>
@@ -2863,49 +2861,49 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Mở Universal Command Palette</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">K</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Bật / Tắt toàn màn hình (Fullscreen)</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">F11</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Đóng / Mở khung nhập chat</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">J</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Bật / Tắt Terminal Logs Drawer</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">`</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Tạo phiên làm việc mới</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">N</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Xuất toàn bộ chat ra Markdown (.md)</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">E</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Mở danh sách phím tắt</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">/</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Đóng Modal hoặc Dừng tiến trình</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Esc</kbd>
               </div>
             </div>
@@ -2918,25 +2916,25 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Gửi tin nhắn đến Agent</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Enter</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Xuống dòng trong ô nhập</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Shift</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Enter</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Gọi lại prompt trước đó</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">↑ Mũi tên lên</kbd> (khi ô trống)
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Mở menu lệnh nhanh</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">/</kbd>
               </div>
             </div>
@@ -2949,13 +2947,13 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Bật / Tắt âm thanh phản hồi</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Shift</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">S</kbd>
               </div>
             </div>
             <div class="flex items-center justify-between py-1 border-b" style="border-color: var(--border-subtle);">
               <span class="text-[var(--text-main)] font-medium">Chuyển đổi giao diện (Dark / Light / Warm)</span>
-              <div class="flex items-center gap-1 font-mono text-[11px]">
+              <div class="flex items-center gap-1 text-[11px]">
                 <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Ctrl</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">Shift</kbd> + <kbd class="px-2 py-0.5 rounded bg-[var(--badge-bg)] border border-[var(--border)]">T</kbd>
               </div>
             </div>
@@ -2981,7 +2979,7 @@
          style="background: #0f141c; border-color: #2e3440;">
       
       <!-- Window Header -->
-      <div class="px-4 py-2.5 border-b flex items-center justify-between font-mono text-xs select-none"
+      <div class="px-4 py-2.5 border-b flex items-center justify-between text-xs select-none"
            style="background: #0a0e14; border-color: #2e3440;">
         <div class="flex items-center space-x-2">
           <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
@@ -3011,7 +3009,7 @@
       </div>
 
       <!-- Footer Bar -->
-      <div class="px-4 py-2 border-t font-mono text-[11px] text-slate-400 flex items-center justify-between"
+      <div class="px-4 py-2 border-t text-[11px] text-slate-400 flex items-center justify-between"
            style="background: #0a0e14; border-color: #2e3440;">
         <span id="fullscreenCodeMeta">0 dòng</span>
         <span>Nhấn <kbd class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300">ESC</kbd> để đóng</span>
@@ -3060,7 +3058,7 @@
         </div>
 
         <!-- Breadcrumb / Current Dir -->
-        <div class="flex items-center justify-between text-[11px] font-mono px-1 text-[var(--text-sub)]">
+        <div class="flex items-center justify-between text-[11px] px-1 text-[var(--text-sub)]">
           <div id="attachFileBreadcrumbs" class="truncate flex items-center gap-1">...</div>
           <button id="btnAttachNavUp" onclick="navigateUpAttachFolder()" class="px-1.5 py-0.5 rounded hover:bg-[var(--bg-hover)] text-blue-400 shrink-0" title="Lên thư mục cha">⬆ Lên</button>
         </div>
@@ -3075,7 +3073,7 @@
       <div class="p-3 border-t flex flex-col gap-2 shrink-0" style="border-color: var(--border-subtle); background: var(--bg-surface);">
         <div class="flex items-center gap-2">
           <input id="attachFilePathInput" type="text" placeholder="Hoặc dán/nhập đường dẫn tệp thủ công..."
-                 class="flex-1 px-3 py-1.5 rounded-lg text-xs font-mono border bg-transparent focus:outline-none"
+                 class="flex-1 px-3 py-1.5 rounded-lg text-xs border bg-transparent focus:outline-none"
                  style="border-color: var(--border); color: var(--text-main);"
                  onkeydown="if(event.key==='Enter') confirmAttachManualFile()">
           <button onclick="confirmAttachManualFile()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white ease-spring shrink-0">
@@ -3358,7 +3356,7 @@
 
             <!-- Path Input Box -->
             <div class="relative flex items-center">
-              <span class="absolute left-3.5 text-zinc-500 font-mono text-xs pointer-events-none">📁</span>
+              <span class="absolute left-3.5 text-zinc-500 text-xs pointer-events-none">📁</span>
               <input type="text" id="manualPathInput" 
                      placeholder="Ví dụ: D:\ai-hub\my-project hoặc /home/user/project..."
                      oninput="onManualPathInputChange(this.value)"
@@ -3394,7 +3392,7 @@
           <!-- Helpful Syntax Hint -->
           <div class="p-3 rounded-xl border text-[11px] space-y-1" style="background: var(--bg-surface); border-color: var(--border-subtle); color: var(--text-sub);">
             <div class="font-medium text-[var(--text-main)]">Gợi ý cú pháp đường dẫn:</div>
-            <div class="flex flex-wrap gap-2 text-[10.5px] font-mono">
+            <div class="flex flex-wrap gap-2 text-[10.5px] ">
               <span class="px-1.5 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-subtle)]">Windows: D:\ai-hub\my-project</span>
               <span class="px-1.5 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-subtle)]">WSL: \\wsl$\Ubuntu\home\user\project</span>
               <span class="px-1.5 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-subtle)]">Linux/Mac: /home/user/project</span>
@@ -3504,7 +3502,7 @@
          style="background: var(--bg-surface); border-color: var(--border-subtle);">
       
       <!-- Modal Header -->
-      <div class="px-2.5 sm:px-4 py-2 sm:py-2.5 border-b flex items-center justify-between gap-1.5 sm:gap-2 font-mono text-xs select-none"
+      <div class="px-2.5 sm:px-4 py-2 sm:py-2.5 border-b flex items-center justify-between gap-1.5 sm:gap-2 text-xs select-none"
            style="background: var(--bg-hover); border-color: var(--border-subtle);">
         <div class="flex items-center space-x-1.5 sm:space-x-2 min-w-0 flex-1">
           <span class="hidden sm:inline-block w-3 h-3 rounded-full bg-rose-500/80 shrink-0"></span>
@@ -3555,7 +3553,7 @@
             <span>± Thay đổi trong phiên</span>
           </button>
         </div>
-        <div class="hidden sm:flex items-center gap-3 text-[11px] font-mono shrink-0" style="color: var(--text-sub);">
+        <div class="hidden sm:flex items-center gap-3 text-[11px] shrink-0" style="color: var(--text-sub);">
           <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-500/40 border border-emerald-500 inline-block"></span> Dòng xanh (+): Thêm mới</span>
           <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-rose-500/40 border border-rose-500 inline-block"></span> Dòng đỏ (-): Đã xóa</span>
         </div>
@@ -3635,7 +3633,7 @@
                 <button type="button" onclick="zoomDocxPreview(-0.1)" class="p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-sub)] hover:text-[var(--text-main)] transition-colors" title="Thu nhỏ">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
                 </button>
-                <span id="filePreviewDocxZoomLabel" class="px-1.5 font-mono text-[11px] text-[var(--text-sub)] min-w-[42px] text-center">100%</span>
+                <span id="filePreviewDocxZoomLabel" class="px-1.5 text-[11px] text-[var(--text-sub)] min-w-[42px] text-center">100%</span>
                 <button type="button" onclick="zoomDocxPreview(0.1)" class="p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-sub)] hover:text-[var(--text-main)] transition-colors" title="Phóng to">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 </button>
@@ -3712,7 +3710,7 @@
       </div>
 
       <!-- Footer Bar -->
-      <div class="px-4 py-2 border-t font-mono text-[11px] flex items-center justify-between"
+      <div class="px-4 py-2 border-t text-[11px] flex items-center justify-between"
            style="background: var(--bg-hover); border-color: var(--border-subtle); color: var(--text-sub);">
         <span id="filePreviewMeta" class="truncate mr-2">Đường dẫn</span>
         <span class="shrink-0">Nhấn <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">ESC</kbd> để đóng</span>
@@ -3759,7 +3757,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
           </svg>
           <span class="flex-1 font-medium text-[13px]">Mở trong tab mới</span>
-          <span class="text-[11px] opacity-70 font-mono">↗</span>
+          <span class="text-[11px] opacity-70 ">↗</span>
         </button>
       </div>
 
@@ -5472,7 +5470,7 @@
                 <span class="font-mono text-[11.5px] text-[var(--text-main)] group-hover:text-blue-400 truncate">${escapeHtml(item.name)}</span>
               </div>
               <div class="flex items-center space-x-1.5 shrink-0">
-                <span class="text-[10px] font-mono text-[var(--text-sub)]">${sizeKb}</span>
+                <span class="text-[10px] text-[var(--text-sub)]">${sizeKb}</span>
                 <button type="button" onclick="event.stopPropagation(); previewLocalFile('${escapeJs(item.path)}', event)"
                         class="p-1 rounded hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-colors"
                         title="Xem trước tệp này">
@@ -5584,7 +5582,7 @@
 
       return `
         <div class="code-block-container my-3 rounded-xl border overflow-hidden select-text shadow-sm" style="border-color: #2e3440; background: #0f141c;">
-          <div class="flex items-center justify-between px-3.5 py-1.5 border-b text-[11px] font-mono select-none" style="border-color: #2e3440; background: #0a0e14; color: #94a3b8;">
+          <div class="flex items-center justify-between px-3.5 py-1.5 border-b text-[11px] select-none" style="border-color: #2e3440; background: #0a0e14; color: #94a3b8;">
             <div class="flex items-center space-x-1.5 min-w-0 flex-1">
               <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block shrink-0"></span>
               <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block shrink-0"></span>
@@ -8935,7 +8933,7 @@
             title.textContent = model.name;
 
             const badge = document.createElement('span');
-            badge.className = 'auxiliary-option-badge text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)] shrink-0';
+            badge.className = 'auxiliary-option-badge text-[9.5px] px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)] shrink-0';
             badge.textContent = model.provider || 'AI';
 
             headerRow.append(title, badge);
@@ -9091,7 +9089,7 @@
                 ${MODEL_ICONS[p.iconType] || ''}
               </span>
               <span>${p.name}</span>
-              <span class="text-[9.5px] px-1 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[var(--badge-bg)] text-[var(--text-sub)]'} font-mono">${count}</span>
+              <span class="text-[9.5px] px-1 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[var(--badge-bg)] text-[var(--text-sub)]'} ">${count}</span>
             </button>
           `;
         }).join('');
@@ -9143,7 +9141,7 @@
                     <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     <span>Mức suy luận (Reasoning Effort):</span>
                   </span>
-                  <span class="text-[10px] text-blue-400 font-mono font-medium">${activeLevelKey ? (activeLevelKey === 'default' ? 'MẶC ĐỊNH' : activeLevelKey.toUpperCase()) : 'Chưa kích hoạt'}</span>
+                  <span class="text-[10px] text-blue-400 font-medium">${activeLevelKey ? (activeLevelKey === 'default' ? 'MẶC ĐỊNH' : activeLevelKey.toUpperCase()) : 'Chưa kích hoạt'}</span>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-1.5 sm:gap-2" role="group" aria-label="Reasoning level" onclick="event.stopPropagation()">
                   ${levelButtons}
@@ -9173,7 +9171,7 @@
                   <div class="min-w-0">
                     <div class="flex items-center gap-1.5 flex-wrap">
                       <span class="text-xs sm:text-sm font-bold ${isSelected ? 'text-blue-400' : 'text-[var(--text-main)]'}">${m.name}</span>
-                      <span class="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)] border border-[var(--border-subtle)]">${m.provider}</span>
+                      <span class="text-[9.5px] px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)] border border-[var(--border-subtle)]">${m.provider}</span>
                       ${isSelected ? `<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Đang chọn${activeVariant && activeVariant.level && activeVariant.level !== 'default' ? ': ' + activeVariant.level.toUpperCase() : ''}</span>` : ''}
                     </div>
                     <div class="text-[11px] text-[var(--text-sub)] mt-0.5 line-clamp-1">${m.tag}</div>
@@ -10341,12 +10339,12 @@
               <span class="text-sm shrink-0">${item.icon}</span>
               <div class="min-w-0">
                 <div class="text-xs font-semibold truncate ${isSelected ? 'text-blue-400' : 'text-[var(--text-main)]'}">${escapeHtml(item.label)}</div>
-                ${item.sub ? `<div class="text-[10px] text-[var(--text-sub)] truncate font-mono">${escapeHtml(item.sub)}</div>` : ''}
+                ${item.sub ? `<div class="text-[10px] text-[var(--text-sub)] truncate ">${escapeHtml(item.sub)}</div>` : ''}
               </div>
             </div>
             <div class="flex items-center space-x-1.5 shrink-0">
-              <span class="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)]">${item.category}</span>
-              ${item.shortcut ? `<kbd class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)] border border-[var(--border-subtle)]">${item.shortcut}</kbd>` : ''}
+              <span class="text-[9.5px] px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)]">${item.category}</span>
+              ${item.shortcut ? `<kbd class="text-[10px] px-1.5 py-0.2 rounded bg-[var(--badge-bg)] text-[var(--text-sub)] border border-[var(--border-subtle)]">${item.shortcut}</kbd>` : ''}
             </div>
           </div>
         `;
@@ -10980,7 +10978,7 @@
                 </span>
               </div>
               <div class="flex items-center space-x-1 shrink-0">
-                ${unreadCount ? `<span class="workspace-unread-badge text-[10px] font-mono px-1.5 rounded-full bg-blue-500 text-white" title="${unreadCount} phiên vừa xong chưa đọc" aria-label="${unreadCount} phiên vừa xong chưa đọc">${unreadCount}</span>` : ''}
+                ${unreadCount ? `<span class="workspace-unread-badge text-[10px] px-1.5 rounded-full bg-blue-500 text-white" title="${unreadCount} phiên vừa xong chưa đọc" aria-label="${unreadCount} phiên vừa xong chưa đọc">${unreadCount}</span>` : ''}
                 
                 <!-- Quick New Chat in this Workspace button -->
                 <button onclick="newSessionInWorkspace(event, '${escapeJs(wsPath)}')"
@@ -11051,7 +11049,7 @@
                         `}
                         ${isSessionUnread(s) ? '<span class="session-unread-dot w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" title="Vừa xong chưa đọc"></span>' : ''}
                         <span class="truncate">${escapeHtml(s.name || s.id)}</span>
-                        ${relTime ? `<span class="text-[9px] opacity-40 font-mono shrink-0 hidden sm:inline">${relTime}</span>` : ''}
+                        ${relTime ? `<span class="text-[9px] opacity-40 shrink-0 hidden sm:inline">${relTime}</span>` : ''}
                       </div>
                       
                       <div class="flex items-center space-x-0.5 shrink-0">
@@ -11325,7 +11323,7 @@
                 <svg class="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
-                <span class="font-mono text-xs font-semibold text-[var(--text-main)] truncate">Subagent ${escapeHtml(sub.id)}</span>
+                <span class="text-xs font-semibold text-[var(--text-main)] truncate">Subagent ${escapeHtml(sub.id)}</span>
                 ${statusPill}
               </div>
               <div class="flex items-center space-x-1.5 shrink-0" onclick="event.stopPropagation()">
@@ -11380,7 +11378,7 @@
               </div>
               <div class="flex items-center space-x-2 min-w-0">
                 <span class="text-xs sm:text-[13px] font-semibold text-[var(--text-main)] truncate">Báo cáo Subagent</span>
-                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-mono font-medium shrink-0"
+                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-medium shrink-0"
                       style="background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3);">
                   ${subagents.length} tác vụ
                 </span>
@@ -11402,7 +11400,7 @@
           </div>
           <div class="px-3.5 py-1.5 border-t flex items-center justify-between text-[11px] text-[var(--text-sub)] select-none"
                style="border-color: var(--border-subtle); background: var(--tool-header-bg);">
-            <span class="subagent-card-footer-timing font-mono">${item.startedAt ? new Date(item.startedAt).toLocaleString('vi-VN') : ''}</span>
+            <span class="subagent-card-footer-timing ">${item.startedAt ? new Date(item.startedAt).toLocaleString('vi-VN') : ''}</span>
             <span class="text-[10.5px] opacity-75">${subagents.length} tác vụ Subagent hoàn tất</span>
           </div>
         </div>
@@ -11598,13 +11596,13 @@
                 </svg>
               </span>
               <span class="internal-card-title text-xs font-medium text-[var(--text-main)] truncate">${escapeHtml(titleText)}</span>
-              <span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono shrink-0"
+              <span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] shrink-0"
                     style="background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25);">
                 Nội bộ
               </span>
             </div>
             <div class="flex items-center space-x-1.5 shrink-0" onclick="event.stopPropagation()">
-              ${timeStr ? `<span class="internal-card-timing hidden md:inline font-mono text-[10.5px] text-[var(--text-sub)] mr-1">${escapeHtml(timeStr)}</span>` : ''}
+              ${timeStr ? `<span class="internal-card-timing hidden md:inline text-[10.5px] text-[var(--text-sub)] mr-1">${escapeHtml(timeStr)}</span>` : ''}
               <button onclick="copySnippet('${cardId}', this)"
                       class="opacity-80 hover:opacity-100 ease-spring text-[10.5px] px-2 py-0.5 rounded hover:bg-[var(--bg-hover)] flex items-center gap-1 text-[var(--text-sub)] hover:text-[var(--text-main)]"
                       title="Sao chép toàn bộ tin nhắn nội bộ này">
@@ -11907,7 +11905,6 @@
       } else if (item.role === 'user') {
         const row = document.createElement('div');
         row.className = 'user-message-row w-full flex justify-end my-3 px-1 sm:px-2 group';
-        const isCodeLike = item.text.includes('\n') || item.text.startsWith('$') || item.text.includes('kubectl') || item.text.includes('curl ') || item.text.includes('SELECT ');
         const userSnippetId = 'user_' + Math.random().toString(36).substring(2, 9);
         window._codeSnippets[userSnippetId] = (item.text || '').trim();
         row.dataset.snippetId = userSnippetId;
@@ -11931,7 +11928,7 @@
               <span>•</span>
               <span>Bạn</span>
             </div>
-            <div class="user-bubble text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${isCodeLike ? 'font-mono text-[11.5px]' : 'font-medium'}">${escapeHtml((item.text || '').trim())}</div>
+            <div class="user-bubble text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap font-medium">${escapeHtml((item.text || '').trim())}</div>
             <button type="button" class="user-question-toggle" aria-expanded="false" onclick="toggleUserQuestion(this)">Mở rộng</button>
           </div>
         `;
@@ -12540,7 +12537,6 @@
       const row = document.createElement('div');
       row.className = 'user-message-row w-full flex justify-end my-3 px-1 sm:px-2 group';
 
-      const isCodeLike = text.includes('\n') || text.startsWith('$') || text.includes('kubectl') || text.includes('curl ') || text.includes('SELECT ');
       const userSnippetId = 'user_' + Math.random().toString(36).substring(2, 9);
       window._codeSnippets[userSnippetId] = (text || '').trim();
       row.dataset.snippetId = userSnippetId;
@@ -12564,7 +12560,7 @@
             <span>·</span>
             <span>Bạn</span>
           </div>
-          <div class="user-bubble text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${isCodeLike ? 'font-mono text-[11.5px]' : 'font-medium'}">${escapeHtml((text || '').trim())}</div>
+          <div class="user-bubble text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap font-medium">${escapeHtml((text || '').trim())}</div>
           <button type="button" class="user-question-toggle" aria-expanded="false" onclick="toggleUserQuestion(this)">Mở rộng</button>
         </div>
       `;
@@ -12607,7 +12603,7 @@
               <div class="ai-msg-meta flex items-center flex-wrap gap-x-1.5 gap-y-0.5 font-semibold min-w-0">
                 <span class="truncate max-w-[170px] sm:max-w-none" style="color: var(--text-main); font-weight: 600;">${escapeHtml(model.name)}</span>
                 <span class="shrink-0">·</span>
-                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded font-normal shrink-0" style="background: var(--badge-bg); color: var(--badge-text);">${escapeHtml(model.provider)}</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded font-normal shrink-0" style="background: var(--badge-bg); color: var(--badge-text);">${escapeHtml(model.provider)}</span>
                 <span class="ai-msg-role-dot shrink-0">·</span>
                 <span class="ai-msg-role-tag font-normal opacity-75 shrink-0">Agent</span>
               </div>
@@ -12726,7 +12722,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/>
           </svg>
           <span class="ai-process-label">Quá trình suy nghĩ & thực thi</span>
-          <span class="ai-process-meta text-[11px] font-mono opacity-75" style="color: var(--text-muted);"></span>
+          <span class="ai-process-meta text-[11px] opacity-75" style="color: var(--text-muted);"></span>
         </div>
         <div class="ai-process-body hidden mt-1.5 pl-3 border-l-2 space-y-2"
              style="border-color: var(--border-subtle);"></div>
@@ -12826,34 +12822,34 @@
         if (usePlainHeader) {
           details.className = 'thought-process-card my-1.5 text-xs';
           details.innerHTML = `
-              <summary class="py-1 cursor-pointer select-none flex items-center justify-between font-mono text-[11px] opacity-90 hover:opacity-100 transition-opacity" style="color: var(--text-muted);">
+              <summary class="py-1 cursor-pointer select-none flex items-center justify-between text-[11px] opacity-90 hover:opacity-100 transition-opacity" style="color: var(--text-muted);">
                 <div class="flex items-center space-x-2">
                   <span class="thought-brain-icon ${isThinkingDone ? '' : 'animate-pulse'}">🧠</span>
                   <span class="font-semibold text-blue-400">Quá trình suy nghĩ</span>
                   <span class="text-[10px] opacity-75 font-normal">(nhấp để mở/thu gọn)</span>
                 </div>
-                <span class="thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ${isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse'}">
+                <span class="thought-timer text-[10px] px-1.5 py-0.5 rounded ${isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse'}">
                   ${isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...'}
                 </span>
               </summary>
-              <div class="thought-body mt-1.5 p-3 rounded-xl border text-[12px] font-mono leading-relaxed whitespace-pre-wrap opacity-85 select-text" style="background: var(--bg-surface); border-color: var(--border-subtle); color: var(--text-sub);"></div>
+              <div class="thought-body mt-1.5 p-3 rounded-xl border text-[12px] leading-relaxed whitespace-pre-wrap opacity-85 select-text" style="background: var(--bg-surface); border-color: var(--border-subtle); color: var(--text-sub);"></div>
             `;
         } else {
           details.className = 'thought-process-card mb-3 rounded-xl border overflow-hidden text-xs';
           details.style.background = 'var(--bg-surface)';
           details.style.borderColor = 'var(--border-subtle)';
           details.innerHTML = `
-              <summary class="px-3 py-2 cursor-pointer select-none flex items-center justify-between font-mono text-[11px]" style="background: var(--bg-hover); color: var(--text-muted);">
+              <summary class="px-3 py-2 cursor-pointer select-none flex items-center justify-between text-[11px]" style="background: var(--bg-hover); color: var(--text-muted);">
                 <div class="flex items-center space-x-2">
                   <span class="thought-brain-icon ${isThinkingDone ? '' : 'animate-pulse'}">🧠</span>
                   <span class="font-semibold text-blue-400">Quá trình suy nghĩ</span>
                   <span class="text-[10px] opacity-75 font-normal">(nhấp để mở/thu gọn)</span>
                 </div>
-                <span class="thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ${isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse'}">
+                <span class="thought-timer text-[10px] px-1.5 py-0.5 rounded ${isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse'}">
                   ${isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...'}
                 </span>
               </summary>
-              <div class="thought-body p-3 text-[12px] font-mono leading-relaxed whitespace-pre-wrap opacity-85 border-t select-text" style="border-color: var(--border-subtle); color: var(--text-sub);"></div>
+              <div class="thought-body p-3 text-[12px] leading-relaxed whitespace-pre-wrap opacity-85 border-t select-text" style="border-color: var(--border-subtle); color: var(--text-sub);"></div>
             `;
         }
         const processBody = ensureAiProcessGroup(container);
@@ -12883,7 +12879,7 @@
       if (brainEl) brainEl.className = 'thought-brain-icon ' + (isThinkingDone ? '' : 'animate-pulse');
       const timerEl = container._thoughtElement.querySelector('.thought-timer');
       if (timerEl) {
-        timerEl.className = 'thought-timer font-mono text-[10px] px-1.5 py-0.5 rounded ' +
+        timerEl.className = 'thought-timer text-[10px] px-1.5 py-0.5 rounded ' +
           (isThinkingDone ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400 animate-pulse');
         timerEl.textContent = isThinkingDone ? '✓ Đã suy nghĩ xong' : 'Đang suy luận...';
       }
@@ -13260,7 +13256,7 @@
     function buildToolStatusBadgeHtml(isRunning, isError) {
       if (isRunning) {
         return `
-          <span class="tool-status-pill inline-flex items-center gap-1.5 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/20 animate-pulse" title="Đang chạy">
+          <span class="tool-status-pill inline-flex items-center gap-1.5 text-[10.5px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/20 animate-pulse" title="Đang chạy">
             <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
             <span class="tool-status-label">Đang chạy...</span>
           </span>
@@ -13268,14 +13264,14 @@
       }
       if (isError) {
         return `
-          <span class="tool-status-pill inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 border border-rose-500/25" title="Lỗi">
+          <span class="tool-status-pill inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 border border-rose-500/25" title="Lỗi">
             <span aria-hidden="true">✕</span>
             <span class="tool-status-label">Lỗi</span>
           </span>
         `;
       }
       return `
-        <span class="tool-status-pill inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25" title="Hoàn thành">
+        <span class="tool-status-pill inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25" title="Hoàn thành">
           <span aria-hidden="true">✓</span>
           <span class="tool-status-label">Hoàn thành</span>
         </span>
@@ -13708,7 +13704,7 @@
 
       if (data.elapsedMs != null) {
         const elapsed = document.createElement('span');
-        elapsed.className = 'text-[10px] text-[var(--text-sub)] shrink-0 font-mono';
+        elapsed.className = 'text-[10px] text-[var(--text-sub)] shrink-0 ';
         elapsed.textContent = Math.round(data.elapsedMs / 1000) + 's';
         topRow.appendChild(elapsed);
       }
@@ -14569,7 +14565,7 @@
         const isCurrent = explorerCurrentDir.toLowerCase().startsWith(d.toLowerCase());
         return `
           <button onclick="loadExplorerFolder('${escapeJs(d)}')" 
-                  class="px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all ease-spring flex items-center gap-1.5 ${
+                  class="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ease-spring flex items-center gap-1.5 ${
                     isCurrent 
                       ? 'bg-blue-600 text-white border-blue-500 shadow-sm' 
                       : 'border-[var(--border-subtle)] text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] hover:border-[var(--border)]'
@@ -14855,7 +14851,7 @@
               <div class="min-w-0 flex-1">
                 <div class="text-xs font-semibold ${isCurrent ? 'text-blue-400' : 'text-[var(--text-main)]'} truncate flex items-center gap-1.5">
                   <span>${escapeHtml(base)}</span>
-                  ${isCurrent ? '<span class="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 font-normal">Hiện tại</span>' : ''}
+                  ${isCurrent ? '<span class="text-[9.5px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 font-normal">Hiện tại</span>' : ''}
                 </div>
                 <div class="text-[10px] font-mono text-[var(--text-sub)] truncate mt-0.5">${escapeHtml(ws)}</div>
               </div>
@@ -15157,7 +15153,7 @@
           <div class="min-w-0">
             <h3 id="auxiliaryDialogTitle" class="text-xs font-bold truncate flex items-center gap-1.5" style="color: var(--text-main);">
               <span>Model Phụ Đồng Hành</span>
-              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Auxiliary</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Auxiliary</span>
             </h3>
             <p id="auxiliaryModelHelp" class="text-[10.5px] truncate" style="color: var(--text-sub);">
               Tự động hỗ trợ đọc code &amp; phân tích nền cho model chính

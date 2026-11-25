@@ -39,6 +39,7 @@ const { MAX_WORKSPACE_SESSIONS, makeWorkspaceSessionRoom } = require("./workspac
 const { buildSystemInstruction } = require("./system-instruction.cjs");
 const { validateModel: validateAuxiliaryModel, coordinationInstruction } = require("./auxiliary-model.cjs");
 const auxiliarySettings = require("./auxiliary-settings.cjs").createSettings();
+const hubPrefs = require("./hub-prefs.cjs").createPrefs();
 const { hasSessionExtension } = require("./session-extensions.cjs");
 const { browserAvailable, BROWSER_INSTRUCTION } = require("./browser-mcp.cjs");
 const {
@@ -2048,6 +2049,7 @@ const server = http.createServer((req, res) => {
         }
         const result = deleteWorkspaceAndSessions(dir);
         if (result && result.ok) {
+          try { hubPrefs.removeSessions(result.deletedSessionIds); } catch { /* Pin cleanup is best-effort. */ }
           broadcastHubEvent("sessions_updated", { type: "workspace_deleted", wsPath: dir });
         }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
@@ -2099,6 +2101,42 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Tuy chon dung chung luu o server (ghim phien, thu tu/ghim workspace)
+  if (pathname === "/api/hub-prefs" && (req.method === "GET" || req.method === "POST")) {
+    const reply = (code, payload) => {
+      res.writeHead(code, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify(payload));
+    };
+    if (req.method === "GET") {
+      reply(200, { ok: true, ...hubPrefs.get() });
+      return;
+    }
+    let body = "";
+    req.on("data", chunk => { body += chunk; if (body.length > 400000) req.destroy(); });
+    req.on("end", () => {
+      try {
+        const p = JSON.parse(body || "{}");
+        let changed = false;
+        let seeded = false;
+        if (p.seed && typeof p.seed === "object") {
+          seeded = hubPrefs.seed(p.seed).seeded;
+          changed = seeded || changed;
+        }
+        if (p.sessionPin && typeof p.sessionPin.id === "string" && typeof p.sessionPin.pinned === "boolean") {
+          changed = hubPrefs.setSessionPin(p.sessionPin.id, p.sessionPin.pinned) || changed;
+        }
+        if (p.workspaceOrder && typeof p.workspaceOrder === "object") {
+          changed = hubPrefs.setWorkspaceOrder(p.workspaceOrder) || changed;
+        }
+        if (changed) broadcastHubEvent("sessions_updated", { type: "prefs_updated" });
+        reply(200, { ok: true, seeded, ...hubPrefs.get() });
+      } catch (err) {
+        reply(400, { ok: false, error: err.message });
+      }
+    });
+    return;
+  }
+
   // API: Xoa phien lam viec
   if (req.method === "POST" && pathname === "/api/delete-session") {
     let body = "";
@@ -2115,6 +2153,7 @@ const server = http.createServer((req, res) => {
         const result = deleteSession(id);
         if (result && result.ok) {
           deleteSessionDiffStore(id);
+          try { hubPrefs.removeSessions([id]); } catch { /* Pin cleanup is best-effort. */ }
           unreadSessionCompletions.delete(id);
           broadcastHubEvent("sessions_updated", { type: "session_deleted", sessionId: id });
         }
@@ -2379,7 +2418,8 @@ const server = http.createServer((req, res) => {
               recentlyCompletedSessions.delete(s.id);
               sessionModels.delete(s.id);
               broadcastHubEvent("sessions_updated", { type: "session_deleted", sessionId: s.id });
-            });
+            },
+            s => hubPrefs.isSessionPinned(s.id) || (!!s.tempName && hubPrefs.isSessionPinned(s.tempName)));
         } catch (error) {
           res.writeHead(409, { "Content-Type": "application/json; charset=utf-8" });
           res.end(JSON.stringify({ error: error.message, code: "WORKSPACE_SESSION_LIMIT", limit: MAX_WORKSPACE_SESSIONS }));

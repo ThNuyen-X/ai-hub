@@ -3956,7 +3956,44 @@
     let terminalLogEntries = [];
     let liveExecutionTimerInterval = null;
     let liveExecutionStartTime = 0;
-    let pinnedSessionsSet = new Set(JSON.parse(localStorage.getItem('ai_hub_pinned_sessions') || '[]'));
+    // Pinned sessions and workspace order/pins live on the server (shared by every browser).
+    let pinnedSessionsSet = new Set();
+    let hubWorkspaceOrder = { order: [], pins: [] };
+    function applyHubPrefs(p) {
+      if (!p || !Array.isArray(p.sessionPins)) return;
+      pinnedSessionsSet = new Set(p.sessionPins);
+      const wo = p.workspaceOrder || {};
+      hubWorkspaceOrder = { order: Array.isArray(wo.order) ? wo.order : [], pins: Array.isArray(wo.pins) ? wo.pins : [] };
+    }
+    async function postHubPrefs(body) {
+      const res = await fetch('/api/hub-prefs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok || !data || !data.ok) throw new Error((data && data.error) || ('HTTP ' + res.status));
+      return data;
+    }
+    // One-time baseline: the first browser that still holds local pins/order seeds the server, then drops its local copy.
+    const hubPrefsReady = (async () => {
+      try {
+        const res = await fetch('/api/hub-prefs');
+        const data = await res.json();
+        if (!data || !data.ok) return;
+        applyHubPrefs(data);
+        if (data.initialized) return;
+        let legacyPins = [];
+        let legacyOrder = {};
+        try { legacyPins = JSON.parse(localStorage.getItem('ai_hub_pinned_sessions') || '[]'); } catch (_) {}
+        try { legacyOrder = JSON.parse(localStorage.getItem('ai_hub_workspace_order') || '{}') || {}; } catch (_) {}
+        const hasLegacy = (Array.isArray(legacyPins) && legacyPins.length > 0)
+          || (Array.isArray(legacyOrder.order) && legacyOrder.order.length > 0)
+          || (Array.isArray(legacyOrder.pins) && legacyOrder.pins.length > 0);
+        if (!hasLegacy) return;
+        const seeded = await postHubPrefs({ seed: { sessionPins: legacyPins, workspaceOrder: legacyOrder } });
+        applyHubPrefs(seeded);
+        if (seeded.seeded) {
+          try { localStorage.removeItem('ai_hub_pinned_sessions'); localStorage.removeItem('ai_hub_workspace_order'); } catch (_) {}
+        }
+      } catch (_) { /* Server unavailable: pins stay empty until the next refresh. */ }
+    })();
 
     window._codeSnippets = {};
     window._aiResponses = {};
@@ -5258,17 +5295,17 @@
     }
 
     // PIN / STAR SESSIONS
-    function togglePinSession(e, sessionId) {
+    async function togglePinSession(e, sessionId) {
       if (e) e.stopPropagation();
       soundEffects.playClick();
-      if (pinnedSessionsSet.has(sessionId)) {
-        pinnedSessionsSet.delete(sessionId);
-        showToast('Đã bỏ ghim phiên', 'info', 1500);
-      } else {
-        pinnedSessionsSet.add(sessionId);
-        showToast('Đã ghim phiên làm việc ⭐', 'success', 1500);
+      const pin = !pinnedSessionsSet.has(sessionId);
+      try {
+        applyHubPrefs(await postHubPrefs({ sessionPin: { id: sessionId, pinned: pin } }));
+      } catch (err) {
+        showToast('Không lưu được ghim lên server: ' + err.message, 'info', 2500);
+        return;
       }
-      localStorage.setItem('ai_hub_pinned_sessions', JSON.stringify(Array.from(pinnedSessionsSet)));
+      showToast(pin ? 'Đã ghim phiên làm việc ⭐' : 'Đã bỏ ghim phiên', pin ? 'success' : 'info', 1500);
       loadWorkspaceTree();
       initHubEvents();
     }
@@ -7728,7 +7765,7 @@
     };
 
     function readWorkspaceOrder() {
-      try { return JSON.parse(localStorage.getItem('ai_hub_workspace_order') || '{}'); } catch (_) { return {}; }
+      return hubWorkspaceOrder;
     }
 
     function sortedWorkspaceEntries(grouped) {
@@ -7743,7 +7780,7 @@
       });
     }
 
-    function changeWorkspaceOrder(action) {
+    async function changeWorkspaceOrder(action) {
       if (!currentContextMenuPath || !currentContextMenuPath.isWorkspace) return;
       const key = normPath(currentContextMenuPath.rawPath);
       const saved = readWorkspaceOrder();
@@ -7763,7 +7800,11 @@
           [order[from], order[to]] = [order[to], order[from]];
         }
       }
-      try { localStorage.setItem('ai_hub_workspace_order', JSON.stringify({ order, pins })); } catch (_) {}
+      try {
+        applyHubPrefs(await postHubPrefs({ workspaceOrder: { order, pins } }));
+      } catch (err) {
+        showToast('Không lưu được thứ tự workspace lên server: ' + err.message, 'info', 2500);
+      }
       closePathContextMenu();
       loadWorkspaceTree();
     }
@@ -10934,10 +10975,13 @@
         }
       }
       try {
-        const [infoRes, sessionsRes] = await Promise.all([
+        await hubPrefsReady;
+        const [infoRes, sessionsRes, prefsRes] = await Promise.all([
           fetch('/api/info').then(r => r.json()),
-          fetch('/api/sessions').then(r => r.json())
+          fetch('/api/sessions').then(r => r.json()),
+          fetch('/api/hub-prefs').then(r => r.json()).catch(() => null)
         ]);
+        applyHubPrefs(prefsRes && prefsRes.ok ? prefsRes : null);
 
         if (infoRes && infoRes.platform) hubServerPlatform = infoRes.platform;
         if (infoRes && Array.isArray(infoRes.drives) && infoRes.drives.length > 0) hubLocalDrives = infoRes.drives;
@@ -15092,10 +15136,7 @@
           showToast('Đã xóa phiên thành công', 'success');
           soundEffects.playBop();
           setSessionDraft(sessionId, '');
-          if (pinnedSessionsSet.has(sessionId)) {
-            pinnedSessionsSet.delete(sessionId);
-            localStorage.setItem('ai_hub_pinned_sessions', JSON.stringify(Array.from(pinnedSessionsSet)));
-          }
+          pinnedSessionsSet.delete(sessionId);
           if (currentSessionId === sessionId) {
             if (promptInput) promptInput.value = '';
             newSession();
@@ -15146,7 +15187,6 @@
           expandedWorkspaces.delete(normPath(wsPath));
           const deletedIds = new Set(data.deletedSessionIds || []);
           for (const id of deletedIds) pinnedSessionsSet.delete(id);
-          localStorage.setItem('ai_hub_pinned_sessions', JSON.stringify([...pinnedSessionsSet]));
           for (const key of Object.keys(localStorage)) {
             if (key.startsWith('ai_hub_session_workspace:') && normPath(localStorage.getItem(key)) === normPath(wsPath)) {
               localStorage.removeItem(key);

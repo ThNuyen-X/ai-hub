@@ -483,6 +483,21 @@
       user-select: none;
       word-break: break-all;
     }
+    /* Desktop: allow selecting/copying the path text. Touch devices keep long-press for the path menu. */
+    @media (hover: hover) and (pointer: fine) {
+      .local-path-badge,
+      .local-path-badge .path-text {
+        -webkit-user-select: text !important;
+        user-select: text !important;
+        cursor: pointer;
+      }
+      .local-path-badge .path-icon,
+      .local-path-badge .path-actions,
+      .local-path-badge .path-actions * {
+        -webkit-user-select: none !important;
+        user-select: none !important;
+      }
+    }
     [data-theme="warm"] .local-path-badge .path-text {
       color: #d97706;
     }
@@ -8153,6 +8168,12 @@
     }
 
     window.handlePathClick = function(rawPath, e) {
+      // Dragging to select the path text must not open the file preview.
+      try {
+        const sel = window.getSelection && window.getSelection();
+        const badge = e && e.currentTarget;
+        if (sel && !sel.isCollapsed && badge && sel.containsNode(badge, true) && String(sel).trim()) return;
+      } catch (_) {}
       if (suppressNextPathClick) {
         suppressNextPathClick = false;
         if (e) {
@@ -12145,6 +12166,8 @@
     }
 
     let sessionHistoryPage = null;
+    let fullConvAllItems = null;
+    let fullConvFullLoadToken = 0;
     let sessionHistoryConversation = [];
     let sessionHistoryLoading = false;
     let sessionHistoryAbort = null;
@@ -12155,6 +12178,8 @@
       sessionHistoryPage = null;
       sessionHistoryConversation = [];
       sessionHistoryLoading = false;
+      fullConvFullLoadToken++;
+      fullConvAllItems = null;
       document.getElementById('historyLazyBanner')?.remove();
     }
 
@@ -12164,10 +12189,22 @@
       const version = sessionViewVersion;
       const before = sessionHistoryPage.before;
       try {
-        const res = await fetch('/api/session?id=' + encodeURIComponent(currentSessionId) + '&limit=60&before=' + before, { signal: sessionHistoryAbort?.signal });
-        const data = await res.json();
-        if (version !== sessionViewVersion) return false;
-        if (!res.ok || data.error) throw new Error(data.error || 'History request failed');
+        // 60 raw messages often collapse into ~2 visible turns (tool calls merge), so gather pages until enough turns are loaded.
+        let olderConversation = [];
+        let lastPage = null;
+        let cursor = before;
+        for (let n = 0; n < 8; n++) {
+          const res = await fetch('/api/session?id=' + encodeURIComponent(currentSessionId) + '&limit=100&before=' + cursor, { signal: sessionHistoryAbort?.signal });
+          const pageData = await res.json();
+          if (version !== sessionViewVersion) return false;
+          if (!res.ok || pageData.error) throw new Error(pageData.error || 'History request failed');
+          olderConversation = (pageData.conversation || []).concat(olderConversation);
+          lastPage = pageData.historyPage || null;
+          if (!lastPage?.hasMore) break;
+          cursor = lastPage.before;
+          if (buildHistoryItemsFromConversation(olderConversation).length >= 10) break;
+        }
+        const data = { conversation: olderConversation, historyPage: lastPage };
         const previousCount = currentSessionHistoryItems.length;
         const boundaryCount = sessionHistoryConversation[0]?.historyQuestion ? Math.min(2, previousCount) : 1;
         sessionHistoryPage = data.historyPage || null;
@@ -12473,15 +12510,16 @@
       modal.classList.remove('hidden');
       modal.setAttribute('role', 'dialog');
       modal.setAttribute('aria-modal', 'true');
-      document.getElementById('fullConvModalTitle').textContent = currentSessionTitle.innerText + (sessionHistoryPage?.hasMore ? ' (phần đã tải - cuộn lên trong chat để tải cũ hơn)' : '');
+      document.getElementById('fullConvModalTitle').textContent = currentSessionTitle.innerText;
       document.getElementById('fullConvSearchInput').value = '';
       fullConvQuery = '';
       document.getElementById('fullConvCloseButton').focus();
-      renderFullConvModalContent(currentSessionHistoryItems);
+      loadFullConversationAndRender();
     }
 
     function closeFullConversationModal() {
       fullConvRenderVersion++;
+      fullConvFullLoadToken++;
       fullConvLoading = false;
       clearTimeout(fullConvSearchTimer);
       const modal = document.getElementById('fullConversationModal');
@@ -12567,8 +12605,50 @@
       }));
     }
 
+    async function loadFullConversationAndRender() {
+      const token = ++fullConvFullLoadToken;
+      const version = sessionViewVersion;
+      const sid = currentSessionId;
+      fullConvAllItems = null;
+      if (!sid || !sessionHistoryPage?.hasMore) {
+        renderFullConvModalContent(currentSessionHistoryItems);
+        return;
+      }
+      const container = document.getElementById('fullConvMessagesContainer');
+      const position = document.getElementById('fullConvPosition');
+      container.setAttribute('aria-busy', 'true');
+      container.innerHTML = '<div class="transcript-loading" role="status"><span class="transcript-spinner"></span><span id="fullConvLoadProgress">Đang tải toàn bộ lịch sử...</span></div>';
+      const stale = () => token !== fullConvFullLoadToken || version !== sessionViewVersion;
+      try {
+        let conversation = sessionHistoryConversation.slice();
+        const loadedItemCount = buildHistoryItemsFromConversation(conversation).length;
+        let before = sessionHistoryPage.before;
+        while (before) {
+          const label = 'Đang tải toàn bộ lịch sử... (' + conversation.length + ' tin nhắn)';
+          position.textContent = label;
+          const progress = document.getElementById('fullConvLoadProgress');
+          if (progress) progress.textContent = label;
+          const res = await fetch('/api/session?id=' + encodeURIComponent(sid) + '&limit=100&before=' + before, { signal: sessionHistoryAbort?.signal });
+          const data = await res.json();
+          if (stale()) return;
+          if (!res.ok || data.error) throw new Error(data.error || 'HTTP ' + res.status);
+          conversation = (data.conversation || []).concat(conversation);
+          before = data.historyPage?.hasMore ? data.historyPage.before : null;
+        }
+        // Keep live items (running turn, optimistic prompt) that exist only in the chat view.
+        const liveTail = currentSessionHistoryItems.slice(loadedItemCount);
+        fullConvAllItems = buildHistoryItemsFromConversation(conversation).concat(liveTail);
+      } catch (err) {
+        if (stale() || err.name === 'AbortError') return;
+        position.textContent = 'Không tải được toàn bộ lịch sử, đang hiển thị phần đã tải.';
+        fullConvAllItems = null;
+      }
+      if (stale()) return;
+      renderFullConvModalContent(fullConvAllItems || currentSessionHistoryItems);
+    }
+
     function jumpFullConversation(anchor) {
-      renderFullConvModalContent(currentSessionHistoryItems, anchor);
+      renderFullConvModalContent(fullConvAllItems || currentSessionHistoryItems, anchor);
     }
 
     function filterFullConvModal(query) {
@@ -12576,7 +12656,7 @@
       fullConvLoading = false;
       clearTimeout(fullConvSearchTimer);
       fullConvQuery = (query || '').toLocaleLowerCase('vi').trim();
-      fullConvSearchTimer = setTimeout(() => renderFullConvModalContent(currentSessionHistoryItems, 'start'), 200);
+      fullConvSearchTimer = setTimeout(() => renderFullConvModalContent(fullConvAllItems || currentSessionHistoryItems, 'start'), 200);
     }
 
     document.getElementById('fullConvMessagesContainer').addEventListener('scroll', () => {

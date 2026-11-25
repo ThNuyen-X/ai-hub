@@ -3,6 +3,10 @@ const http = require("node:http");
 const MAX_TRANSIENT_RETRIES = 3;
 const DEFAULT_MAX_RESET_WAIT_SEC = 300;
 const DEFAULT_KIRO_MIN_INTERVAL_MS = 2800;
+const DEFAULT_KIRO_HEAVY_BYTES = 150 * 1024;
+const DEFAULT_KIRO_HEAVY_INTERVAL_MS = 4500;
+const DEFAULT_KIRO_VERY_HEAVY_BYTES = 350 * 1024;
+const DEFAULT_KIRO_VERY_HEAVY_INTERVAL_MS = 6500;
 const DEFAULT_KIRO_MAX_CONCURRENCY = 1;
 
 const PERMANENT_ERROR_RE = /(?:invalid_api_key|incorrect api key|authentication_error|permission_denied|context_length_exceeded|maximum context length|model_not_found|does not exist|unsupported_parameter)/i;
@@ -207,6 +211,22 @@ function createLlmRetryProxy(options = {}) {
     : (process.env.AI_HUB_KIRO_MIN_INTERVAL_MS !== undefined
       ? Math.max(0, Number(process.env.AI_HUB_KIRO_MIN_INTERVAL_MS) || 0)
       : DEFAULT_KIRO_MIN_INTERVAL_MS);
+  const kiroHeavyBytes = options.kiroHeavyBytes !== undefined
+    ? Math.max(1, Number(options.kiroHeavyBytes) || DEFAULT_KIRO_HEAVY_BYTES)
+    : DEFAULT_KIRO_HEAVY_BYTES;
+  const kiroHeavyIntervalMs = options.kiroHeavyIntervalMs !== undefined
+    ? Math.max(0, Number(options.kiroHeavyIntervalMs) || 0)
+    : (process.env.AI_HUB_KIRO_HEAVY_INTERVAL_MS !== undefined
+      ? Math.max(0, Number(process.env.AI_HUB_KIRO_HEAVY_INTERVAL_MS) || 0)
+      : DEFAULT_KIRO_HEAVY_INTERVAL_MS);
+  const kiroVeryHeavyBytes = options.kiroVeryHeavyBytes !== undefined
+    ? Math.max(kiroHeavyBytes, Number(options.kiroVeryHeavyBytes) || DEFAULT_KIRO_VERY_HEAVY_BYTES)
+    : DEFAULT_KIRO_VERY_HEAVY_BYTES;
+  const kiroVeryHeavyIntervalMs = options.kiroVeryHeavyIntervalMs !== undefined
+    ? Math.max(0, Number(options.kiroVeryHeavyIntervalMs) || 0)
+    : (process.env.AI_HUB_KIRO_VERY_HEAVY_INTERVAL_MS !== undefined
+      ? Math.max(0, Number(process.env.AI_HUB_KIRO_VERY_HEAVY_INTERVAL_MS) || 0)
+      : DEFAULT_KIRO_VERY_HEAVY_INTERVAL_MS);
   const kiroMaxConcurrency = options.kiroMaxConcurrency !== undefined
     ? Math.max(1, Number(options.kiroMaxConcurrency) || 1)
     : (process.env.AI_HUB_KIRO_MAX_CONCURRENCY !== undefined
@@ -224,9 +244,14 @@ function createLlmRetryProxy(options = {}) {
   const bucketCooldownUntil = new Map();
   const bucketQueues = new Map();
 
-  function getBucketIntervalMs(modelKey) {
+  function getBucketIntervalMs(modelKey, payloadBytes = 0) {
     if (!modelKey) return 0;
-    return isKiroModel(modelKey) ? kiroMinIntervalMs : minModelIntervalMs;
+    if (!isKiroModel(modelKey)) return minModelIntervalMs;
+    if (kiroMinIntervalMs <= 0) return 0;
+    const bytes = Number(payloadBytes) || 0;
+    if (bytes >= kiroVeryHeavyBytes) return Math.max(kiroMinIntervalMs, kiroVeryHeavyIntervalMs);
+    if (bytes >= kiroHeavyBytes) return Math.max(kiroMinIntervalMs, kiroHeavyIntervalMs);
+    return kiroMinIntervalMs;
   }
 
   function getBucketConcurrencyLimit(modelKey) {
@@ -266,9 +291,9 @@ function createLlmRetryProxy(options = {}) {
     return rem;
   }
 
-  function reserveModelPacingDelay(modelKey) {
+  function reserveModelPacingDelay(modelKey, payloadBytes = 0) {
     const bucketKey = getRateLimitBucketKey(modelKey);
-    const intervalMs = getBucketIntervalMs(modelKey);
+    const intervalMs = getBucketIntervalMs(modelKey, payloadBytes);
     if (!bucketKey) return 0;
     const now = Date.now();
     const cooldownUntil = bucketCooldownUntil.get(bucketKey) || 0;
@@ -281,9 +306,9 @@ function createLlmRetryProxy(options = {}) {
     return Math.max(0, slotTime - now);
   }
 
-  function bumpBucketNextSlotAfterCompletion(modelKey) {
+  function bumpBucketNextSlotAfterCompletion(modelKey, payloadBytes = 0) {
     const bucketKey = getRateLimitBucketKey(modelKey);
-    const intervalMs = getBucketIntervalMs(modelKey);
+    const intervalMs = getBucketIntervalMs(modelKey, payloadBytes);
     if (!bucketKey || intervalMs <= 0) return;
     const now = Date.now();
     const prev = bucketNextSlotAt.get(bucketKey) || 0;
@@ -477,7 +502,7 @@ function createLlmRetryProxy(options = {}) {
             return;
           }
 
-          const pacingDelayMs = reserveModelPacingDelay(modelKey);
+          const pacingDelayMs = reserveModelPacingDelay(modelKey, bodyBuffer.length);
 
           const startUpstream = () => {
             if (isClosed()) {
@@ -504,6 +529,9 @@ function createLlmRetryProxy(options = {}) {
                     if (streamDone) return;
                     streamDone = true;
                     activeUpReq = null;
+                    if (isKiroModel(modelKey)) {
+                      bumpBucketNextSlotAfterCompletion(modelKey, bodyBuffer.length);
+                    }
                     releaseSlot();
                     cancelSlot = null;
                   };

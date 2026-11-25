@@ -44,6 +44,7 @@ const { browserAvailable, BROWSER_INSTRUCTION } = require("./browser-mcp.cjs");
 const {
   MAX_TRANSIENT_RETRIES,
   isTransientProviderError,
+  isKiroModel,
   formatDurationShort,
   parseTransientRetryDelayMs,
   cleanupTrailingTransientErrorMessages,
@@ -897,8 +898,16 @@ function getSessionsList() {
           if (mr.id && mr.model_config_json) modelConfigMap.set(mr.id, mr.model_config_json);
         }
       } catch {}
+      const totalTokensMap = new Map();
+      try {
+        for (const tr of db.prepare("SELECT id, total_tokens FROM sessions WHERE archived_at IS NULL AND total_tokens IS NOT NULL").all()) {
+          const n = Number(tr.total_tokens);
+          if (tr.id && Number.isFinite(n) && n > 0) totalTokensMap.set(tr.id, n);
+        }
+      } catch {}
       return rows.map(({ first_prompt, ...session }) => {
         const resolvedModel = extractSessionModel(modelConfigMap.get(session.id), session.id, session.name);
+        const totalTokens = totalTokensMap.get(session.id) || 0;
         const techName = isTechnicalSessionName(session.name) ? session.name : null;
         return {
           ...session,
@@ -906,7 +915,8 @@ function getSessionsList() {
           name: techName ? titleFromContent(first_prompt) : session.name,
           ...(techName ? { tempName: techName } : {}),
           date: session.updated_at,
-          ...(resolvedModel ? { model: resolvedModel } : {})
+          ...(resolvedModel ? { model: resolvedModel } : {}),
+          ...(totalTokens > 0 ? { totalTokens } : {})
         };
       });
     } catch (err) {
@@ -1171,6 +1181,7 @@ const llmRetryProxy = createLlmRetryProxy({
       if (!ctx || ctx.isFinished) continue;
       const ctxModel = String(ctx.info?.model || "").toLowerCase();
       if (!model || !ctxModel || ctxModel === model || ctxModel.endsWith("/" + model) || model.endsWith("/" + ctxModel)) {
+        if (typeof ctx.extendWatchdog === "function") ctx.extendWatchdog(delayMs);
         broadcastToSession(ctx, "stderr", {
           text: `[AUTO-RETRY] Upstream báo bận tạm thời (${statusCode}), đang tự động gửi lại request sau ${delayLabel} (lần ${attempt}/${maxRetries})...`
         });
@@ -1184,6 +1195,7 @@ const llmRetryProxy = createLlmRetryProxy({
       if (!ctx || ctx.isFinished) continue;
       const ctxModel = String(ctx.info?.model || "").toLowerCase();
       if (!model || !ctxModel || ctxModel === model || ctxModel.endsWith("/" + model) || model.endsWith("/" + ctxModel)) {
+        if (typeof ctx.extendWatchdog === "function") ctx.extendWatchdog(delayMs);
         broadcastToSession(ctx, "stderr", {
           text: `[RATE-LIMIT] Model ${model || ctxModel} đang trong thời gian chờ reset giới hạn, sẽ tự động tiếp tục sau ${delayLabel}...`
         });
@@ -2450,6 +2462,10 @@ const server = http.createServer((req, res) => {
         GOOSE_CLI_MIN_PRIORITY: "0.8",
         GOOSE_SHOW_FULL_OUTPUT: "false"
       };
+      // Kiro has no prompt caching (cachedTokens=0): compact earlier to avoid 200K+ TPM bursts & 429s.
+      if (isKiroModel(model) && !process.env.GOOSE_CONTEXT_LIMIT) {
+        env.GOOSE_CONTEXT_LIMIT = process.env.AI_HUB_KIRO_CONTEXT_LIMIT || "140000";
+      }
 
       const gooseMaxTokens = resolveGooseMaxTokens(model);
       if (gooseMaxTokens) {
@@ -2555,6 +2571,12 @@ const server = http.createServer((req, res) => {
       let lastActivityAt = Date.now();
       let pendingTools = 0;
       let stallWarned = false;
+      sessionCtx.extendWatchdog = (extraMs = 0) => {
+        if (sessionCtx.process !== child || sessionCtx.isFinished) return;
+        const nextBase = Date.now() + Math.max(0, Number(extraMs) || 0);
+        if (nextBase > lastActivityAt) lastActivityAt = nextBase;
+        stallWarned = false;
+      };
       const stallTimer = setInterval(() => {
         if (sessionCtx.process !== child || sessionCtx.isFinished) { clearInterval(stallTimer); return; }
         if (pendingTools > 0) return;

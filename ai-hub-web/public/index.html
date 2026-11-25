@@ -2670,6 +2670,28 @@
       <!-- Main Dock Box (Khung chat chính, ẩn hoàn toàn cùng nền khi thu gọn) -->
       <div id="mainDockBox" class="rounded-2xl border transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/30 overflow-hidden pointer-events-auto"
            style="background-color: var(--bg-card); border-color: var(--border); box-shadow: var(--shadow-dock);">
+
+        <!-- Smart Kiro Heavy-Session Advisory Banner (ẩn mặc định, chỉ hiện khi phiên Kiro >= 80K tokens) -->
+        <div id="kiroContextBanner" class="hidden px-2.5 sm:px-3.5 py-1.5 border-b flex flex-wrap items-center justify-between gap-1.5 text-[11px] select-none"
+             style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.28); color: var(--text-main);">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="shrink-0">⚠️</span>
+            <span id="kiroContextBannerText" class="truncate sm:whitespace-normal font-medium">Phiên Kiro đang dài (không có prompt cache, dễ chạm 429).</span>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button type="button" onclick="newSession()" class="px-2 py-0.5 rounded-md border text-[10.5px] font-semibold hover:bg-blue-600 hover:text-white transition-colors"
+                    style="background: var(--bg-card); border-color: var(--border); color: var(--text-main);"
+                    title="Tạo phiên mới để giảm tải context về ban đầu">✨ Phiên mới</button>
+            <button type="button" onclick="selectModel('ag/gemini-4-neon-medium')" class="px-2 py-0.5 rounded-md border text-[10.5px] font-semibold hover:bg-emerald-600 hover:text-white transition-colors"
+                    style="background: var(--bg-card); border-color: var(--border); color: var(--text-main);"
+                    title="Chuyển sang Gemini Neon (có prompt cache ~96%, rất ít chạm 429)">⚡ Gemini Neon</button>
+            <button id="kiroSwitchSonnetBtn" type="button" onclick="selectModel('kr/claude-sonnet-5.5')" class="hidden px-2 py-0.5 rounded-md border text-[10.5px] font-semibold hover:bg-amber-600 hover:text-white transition-colors"
+                    style="background: var(--bg-card); border-color: var(--border); color: var(--text-main);"
+                    title="Chuyển sang Kiro Sonnet 5.5 nhẹ quota hơn Opus">🪶 Kiro Sonnet</button>
+            <button type="button" onclick="dismissKiroContextBanner()" class="px-1.5 py-0.5 rounded text-xs opacity-65 hover:opacity-100"
+                    style="color: var(--text-sub);" title="Ẩn gợi ý cho phiên này">✕</button>
+          </div>
+        </div>
         
         <!-- Mode Switcher Pill Header inside Composer (Responsive trên di động) -->
         <div id="composerDockHeader" class="px-2 sm:px-3.5 pt-1.5 pb-1 flex items-center justify-between border-b text-[11px] select-none gap-1 sm:gap-2"
@@ -9255,6 +9277,46 @@
       toggleModelDropdown();
     }
 
+    const dismissedKiroBannerSessions = new Set();
+    const KIRO_HEAVY_SESSION_TOKENS = 80000;
+
+    function updateKiroContextBanner() {
+      const banner = document.getElementById('kiroContextBanner');
+      if (!banner) return;
+      const modelId = String(currentSelectedModel || '').toLowerCase();
+      const isKiro = modelId.startsWith('kr/') || modelId.startsWith('kiro/');
+      const sess = currentSessionId && Array.isArray(allSessionsCache)
+        ? allSessionsCache.find(s => s.id === currentSessionId || (s.tempName && s.tempName === currentSessionId))
+        : null;
+      const totalTokens = Number(sess?.totalTokens || 0);
+      const dismissKey = sess?.id || currentSessionId || '';
+      if (!isKiro || !dismissKey || totalTokens < KIRO_HEAVY_SESSION_TOKENS || dismissedKiroBannerSessions.has(dismissKey)) {
+        banner.classList.add('hidden');
+        return;
+      }
+      const textEl = document.getElementById('kiroContextBannerText');
+      if (textEl) {
+        const kTokens = Math.round(totalTokens / 1000);
+        textEl.textContent = `Phiên Kiro đang nặng (~${kTokens}K tokens, không có cache — dễ chạm 429).`;
+      }
+      const sonnetBtn = document.getElementById('kiroSwitchSonnetBtn');
+      if (sonnetBtn) {
+        const isOpus = modelId.includes('opus');
+        sonnetBtn.classList.toggle('hidden', !isOpus);
+      }
+      banner.classList.remove('hidden');
+    }
+
+    function dismissKiroContextBanner() {
+      const sess = currentSessionId && Array.isArray(allSessionsCache)
+        ? allSessionsCache.find(s => s.id === currentSessionId || (s.tempName && s.tempName === currentSessionId))
+        : null;
+      const dismissKey = sess?.id || currentSessionId || '';
+      if (dismissKey) dismissedKiroBannerSessions.add(dismissKey);
+      const banner = document.getElementById('kiroContextBanner');
+      if (banner) banner.classList.add('hidden');
+    }
+
     function selectModel(modelId) {
       modelId = normalizeModelId(modelId);
       currentSelectedModel = modelId;
@@ -9263,6 +9325,7 @@
         setSessionModel(currentSessionId, modelId);
       }
       renderModelSelector();
+      updateKiroContextBanner();
       closeModelDropdown();
       closeModelProviderModal();
       showToast(`Đã kích hoạt model: ${resolveModelMeta(modelId)?.name || modelId}`, 'info', 2000);
@@ -9781,6 +9844,7 @@
       }
       saveCurrentSessionDraft();
       currentSessionId = null;
+      updateKiroContextBanner();
       const nextNewSessionKey = 'new-' + safeRandomId();
       currentDraftSessionKey = nextNewSessionKey;
       currentDraftWorkspace = currentWorkspace;
@@ -10868,6 +10932,7 @@
           updateSessionUrl(currentSessionId, true);
         }
         if (selectedSession) currentSessionTitle.innerText = selectedSession.name;
+        updateKiroContextBanner();
         if (currentSessionId && /^\/[^/]+\/[^/]+\/?$/.test(window.location.pathname)) {
           updateSessionUrl(currentSessionId, true);
         }
@@ -12252,6 +12317,7 @@
       }
       currentDraftWorkspace = currentWorkspace;
       restoreSessionDraft(sessionId, currentWorkspace);
+      updateKiroContextBanner();
       const earlySessionModel = getSessionModel(sessionId);
       if (earlySessionModel) {
         applySessionModelSelection(earlySessionModel);

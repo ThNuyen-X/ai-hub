@@ -143,6 +143,56 @@ function cleanupTrailingTransientErrorMessages(DatabaseSync, dbPath, sessionId) 
   }
 }
 
+function normalizeEmptyParamToolsForKiro(bodyBuffer, modelKey) {
+  if (!isKiroModel(modelKey) || !bodyBuffer || bodyBuffer.length === 0 || bodyBuffer.length >= 5 * 1024 * 1024) {
+    return bodyBuffer;
+  }
+  try {
+    const parsed = JSON.parse(bodyBuffer.toString("utf8"));
+    if (!parsed || !Array.isArray(parsed.tools) || parsed.tools.length === 0) return bodyBuffer;
+    let mutated = false;
+    for (const tool of parsed.tools) {
+      if (!tool || typeof tool !== "object") continue;
+      const fn = tool.function && typeof tool.function === "object" ? tool.function : null;
+      const target = fn || tool;
+      const params = target.parameters;
+      if (!params || typeof params !== "object") {
+        target.parameters = {
+          type: "object",
+          properties: {
+            reason: {
+              type: "string",
+              description: "Brief explanation of why you are calling this tool"
+            }
+          },
+          required: ["reason"]
+        };
+        mutated = true;
+        continue;
+      }
+      const isObjType = !params.type || params.type === "object";
+      const props = params.properties;
+      if (isObjType && (!props || typeof props !== "object" || Object.keys(props).length === 0)) {
+        params.type = "object";
+        params.properties = {
+          reason: {
+            type: "string",
+            description: "Brief explanation of why you are calling this tool"
+          }
+        };
+        if (!Array.isArray(params.required) || !params.required.includes("reason")) {
+          params.required = ["reason"];
+        }
+        mutated = true;
+      }
+    }
+    if (!mutated) return bodyBuffer;
+    return Buffer.from(JSON.stringify(parsed), "utf8");
+  } catch {
+    return bodyBuffer;
+  }
+}
+
 function createLlmRetryProxy(options = {}) {
   const getTargetHost = typeof options.getTargetHost === "function"
     ? options.getTargetHost
@@ -357,7 +407,7 @@ function createLlmRetryProxy(options = {}) {
     });
     req.on("end", () => {
       if (isClosed()) return;
-      const bodyBuffer = Buffer.concat(bodyChunks);
+      let bodyBuffer = Buffer.concat(bodyChunks);
       let modelKey = "";
       if (req.method === "POST" && bodyBuffer.length > 0 && bodyBuffer.length < 5 * 1024 * 1024) {
         try {
@@ -365,6 +415,9 @@ function createLlmRetryProxy(options = {}) {
           const m = headStr.match(/"model"\s*:\s*"([^"]+)"/);
           if (m) modelKey = m[1].trim().toLowerCase();
         } catch {}
+        if (req.url && req.url.includes("/chat/completions") && isKiroModel(modelKey)) {
+          bodyBuffer = normalizeEmptyParamToolsForKiro(bodyBuffer, modelKey);
+        }
       }
 
       const forwardHeaders = { ...req.headers };
@@ -598,5 +651,6 @@ module.exports = {
   parseResetAfterSeconds,
   parseTransientRetryDelayMs,
   cleanupTrailingTransientErrorMessages,
+  normalizeEmptyParamToolsForKiro,
   createLlmRetryProxy
 };

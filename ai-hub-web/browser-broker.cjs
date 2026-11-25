@@ -1,5 +1,6 @@
 const net = require('node:net');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
@@ -32,6 +33,34 @@ function readLines(stream, consume) {
     }
   });
 }
+const ALLOWED_WRITE_ROOTS = [
+  path.resolve(__dirname, '..', 'ai-hub-data', 'previews'),
+  path.resolve(__dirname, '..', 'ai-hub-data', 'scratch'),
+  path.resolve(os.tmpdir()),
+  process.env.TEMP ? path.resolve(process.env.TEMP) : null,
+  process.env.TMP ? path.resolve(process.env.TMP) : null
+].filter(Boolean);
+const WRITE_PATH_KEYS = ['filePath', 'requestFilePath', 'responseFilePath', 'outputDirPath'];
+function isPathInsideRoot(targetPath, rootPath) {
+  const normTarget = process.platform === 'win32' ? targetPath.toLowerCase() : targetPath;
+  const normRoot = process.platform === 'win32' ? rootPath.toLowerCase() : rootPath;
+  return normTarget === normRoot || normTarget.startsWith(normRoot + path.sep);
+}
+function validateBrowserOutputPaths(callParams) {
+  const args = callParams?.arguments;
+  if (!args || typeof args !== 'object') return;
+  for (const key of WRITE_PATH_KEYS) {
+    const raw = args[key];
+    if (typeof raw !== 'string' || !raw.trim()) continue;
+    const resolved = path.resolve(raw.trim());
+    const allowed = ALLOWED_WRITE_ROOTS.some(root => isPathInsideRoot(resolved, root));
+    if (!allowed) {
+      throw new Error(`Access denied: "${raw}" is outside allowed AI Hub output directories (previews, scratch, temp).`);
+    }
+    const dirToCreate = key === 'outputDirPath' ? resolved : path.dirname(resolved);
+    try { fs.mkdirSync(dirToCreate, { recursive: true }); } catch {}
+  }
+}
 class BrowserHub {
   constructor(start) {
     this.customStart = Boolean(start);
@@ -39,18 +68,22 @@ class BrowserHub {
       if (mode === 'sso') {
         start = () => spawn(process.execPath, [entry,
           '--ws-endpoint=' + require('./browser-sso.cjs').ssoEndpoint(),
+          '--allow-unrestricted-paths',
           '--no-usage-statistics', '--no-performance-crux'], { stdio: ['pipe', 'pipe', 'inherit'], windowsHide: true });
       } else if (mode === 'personal') {
         start = () => spawn(process.execPath, [entry,
           ...['--autoConnect'],
+          '--allow-unrestricted-paths',
           '--no-usage-statistics', '--no-performance-crux'], { stdio: ['pipe', 'pipe', 'inherit'], windowsHide: true });
       } else {
         start = () => spawn(process.execPath, [entry,
           '--browserUrl=' + require('./browser-dev.cjs').devEndpoint(),
+          '--allow-unrestricted-paths',
           '--no-usage-statistics', '--no-performance-crux'], { stdio: ['pipe', 'pipe', 'inherit'], windowsHide: true });
       }
     }
     this.start = start; this.pending = new Map(); this.nextId = 0; this.queue = Promise.resolve(); this.queued = 0;
+    this.emptyParamTools = new Set(['list_pages']);
   }
   launch() {
     if (this.child) return;
@@ -131,8 +164,25 @@ class BrowserHub {
           await require('./browser-dev.cjs').ensureDevChrome();
         }
         await this.triggerDoraemon(message.params).catch(() => {});
+        let callParams = message.params;
+        if (callParams && this.emptyParamTools.has(callParams.name) && callParams.arguments && typeof callParams.arguments === 'object' && Object.prototype.hasOwnProperty.call(callParams.arguments, 'reason')) {
+          const rest = { ...callParams.arguments };
+          delete rest.reason;
+          callParams = { ...callParams, arguments: rest };
+        }
+        validateBrowserOutputPaths(callParams);
+        return this.request(message.method, callParams);
       }
-      return this.request(message.method, message.params);
+      const res = await this.request(message.method, message.params);
+      if (message.method === 'tools/list' && res && Array.isArray(res.tools)) {
+        for (const t of res.tools) {
+          const props = t?.inputSchema?.properties;
+          if (t?.name && (!props || typeof props !== 'object' || Object.keys(props).length === 0)) {
+            this.emptyParamTools.add(t.name);
+          }
+        }
+      }
+      return res;
     });
     this.queue = result.catch(() => {});
     try { return await result; } finally { this.queued--; }

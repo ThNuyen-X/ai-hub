@@ -2527,7 +2527,8 @@ const server = http.createServer((req, res) => {
         args.push("--name", sessionId);
       }
 
-      console.log(`[SPAWN] goose model=${model} session=${sessionId} resume=${resume}${isAutoRetry ? " autoRetry=" + (sessionCtx.transientRetryCount || 0) : ""}`);
+      const retryCountLog = (sessionCtx.transientRetryCount || 0) + (sessionCtx.thinkingOnlyRetryCount || 0);
+      console.log(`[SPAWN] goose model=${model} session=${sessionId} resume=${resume}${isAutoRetry ? " autoRetry=" + retryCountLog : ""}`);
       const child = spawn(GOOSE_PATH, args, { cwd, env, windowsHide: true });
       sessionCtx.process = child;
       sessionCtx.info.pid = child.pid;
@@ -2573,10 +2574,13 @@ const server = http.createServer((req, res) => {
       child.on("close", () => clearInterval(stallTimer));
       child.on("error", () => clearInterval(stallTimer));
 
+      const MAX_THINKING_ONLY_RETRIES = 1;
+      const THINKING_ONLY_RETRY_DELAY_MS = Math.max(0, Number(process.env.AI_HUB_THINKING_ONLY_RETRY_DELAY_MS ?? 1500));
       let stepHasThinking = false;
       let stepHasText = false;
       let stepHasToolCall = false;
       let stepHasError = false;
+      const isThinkingOnlyStep = () => stepHasThinking && !stepHasText && !stepHasToolCall && !stepHasError;
       let attemptTransientError = "";
       const heldTransientErrors = [];
 
@@ -2721,7 +2725,13 @@ const server = http.createServer((req, res) => {
             } else if (parsed.type === "error") {
               recordOrBroadcastError(parsed.error || "Lỗi tiến trình");
             } else if (parsed.type === "complete") {
-              broadcastToSession(sessionCtx, "complete", parsed);
+              const willRetryThinkingOnly =
+                isThinkingOnlyStep() &&
+                !sessionCtx.stallKilled &&
+                (sessionCtx.thinkingOnlyRetryCount || 0) < MAX_THINKING_ONLY_RETRIES;
+              if (!willRetryThinkingOnly) {
+                broadcastToSession(sessionCtx, "complete", parsed);
+              }
               // goose may hang on shutdown after finishing; never leave the session stuck as running
               setTimeout(() => {
                 if (turnFinalized || sessionCtx.process !== child) return;
@@ -2854,6 +2864,40 @@ const server = http.createServer((req, res) => {
           return;
         }
 
+        // Auto-retry once when model ends with thinking-only output (no text or tool_call)
+        const isThinkingOnlyTurn = code === 0 && isThinkingOnlyStep();
+        if (
+          isThinkingOnlyTurn &&
+          !sessionCtx.isFinished &&
+          !sessionCtx.stallKilled &&
+          (sessionCtx.thinkingOnlyRetryCount || 0) < MAX_THINKING_ONLY_RETRIES &&
+          (stored?.id || resume)
+        ) {
+          sessionCtx.thinkingOnlyRetryCount = (sessionCtx.thinkingOnlyRetryCount || 0) + 1;
+          const attemptNum = sessionCtx.thinkingOnlyRetryCount;
+          console.warn(`[TRUNCATED TURN] session ${sessionId} model=${model} ended with thinking-only output, auto-retrying (${attemptNum}/${MAX_THINKING_ONLY_RETRIES})`);
+          broadcastToSession(sessionCtx, "status", {
+            status: "retrying",
+            model,
+            cwd,
+            sessionId,
+            session_id: sessionId,
+            text: `Model dừng sau phần suy luận, đang tự động thử lại (${attemptNum}/${MAX_THINKING_ONLY_RETRIES})...`
+          });
+          broadcastToSession(sessionCtx, "stderr", {
+            text: `[AUTO-RETRY] Model dừng ngay sau phần suy luận (thinking-only), đang tự động tiếp tục (lần ${attemptNum}/${MAX_THINKING_ONLY_RETRIES})...`
+          });
+          const retryTimer = setTimeout(() => {
+            sessionCtx.retryTimer = null;
+            if (sessionCtx.isFinished) return;
+            resume = true;
+            launchGooseTurn("Tiếp tục", true);
+          }, THINKING_ONLY_RETRY_DELAY_MS);
+          if (retryTimer && typeof retryTimer.unref === "function") retryTimer.unref();
+          sessionCtx.retryTimer = retryTimer;
+          return;
+        }
+
         if (heldTransientErrors.length > 0) {
           broadcastToSession(sessionCtx, "error", { error: heldTransientErrors[heldTransientErrors.length - 1] });
           heldTransientErrors.length = 0;
@@ -2874,7 +2918,7 @@ const server = http.createServer((req, res) => {
         }
         if (code !== 0 && code !== null) {
           broadcastToSession(sessionCtx, "stderr", { text: `Tiến trình kết thúc với mã lỗi: ${code}` });
-        } else if (code === 0 && stepHasThinking && !stepHasText && !stepHasToolCall && !stepHasError) {
+        } else if (isThinkingOnlyTurn) {
           console.warn(`[TRUNCATED TURN] session ${sessionId} model=${model} ended with thinking-only output (no text or tool_call)`);
           broadcastToSession(sessionCtx, "error", {
             error: "Model đã dừng ngay sau phần suy luận mà không trả về nội dung hay gọi công cụ (có thể bị cắt output/max_tokens hoặc đứt stream). Hãy gửi \"tiếp tục\" để chạy tiếp."

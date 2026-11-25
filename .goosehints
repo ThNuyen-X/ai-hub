@@ -19,3 +19,7 @@
 - Script kiểm chứng tạm phải đặt trong thư mục scratch được cấp cho phiên, không để thành file thừa trong dự án.
 - Nếu không thể kiểm chứng, nêu rõ giới hạn; không tạo test hình thức để thay thế việc kiểm chứng thực tế.
 - Không tự xóa hoặc sửa test hiện có ngoài phạm vi tác vụ.
+
+## 4. Ranh Giới Workspace (Workspace Ownership)
+- **Đúng workspace, đúng rule**: Nếu tác vụ cần sửa đổi, cấu hình, deploy hoặc vận hành hạ tầng/dịch vụ thuộc về một workspace khác (ví dụ: `9Router` chạy trên `taleverse-vps` thuộc workspace **Tale-Verse** `D:\workspace\Tale-Verse`), **KHÔNG** tự ý chỉnh sửa hay thao tác thay đổi trực tiếp từ workspace `ai-hub`.
+- **Chuyển giao đúng nơi**: Chỉ nên kiểm tra read-only khi cần chẩn đoán; mọi thao tác thay đổi thuộc workspace khác phải giao lại cho phiên của workspace đó thực hiện (đề xuất nội dung bàn giao hoặc tạo phiên mới trong đúng workspace đó khi người dùng yêu cầu) để tuân thủ đầy đủ `.goosehints`, cấu hình và quy chuẩn riêng của workspace chủ quản.

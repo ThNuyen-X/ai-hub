@@ -2762,16 +2762,6 @@
 
           <!-- Right: Action Buttons -->
           <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
-            <!-- Stop Task Button (Visible while running, Icon Only) -->
-            <button id="stopBtn" 
-                    title="Dừng tiến trình (Esc)"
-                    aria-label="Dừng tiến trình"
-                    class="hidden h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg sm:rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white ease-spring flex items-center justify-center shadow-lg shadow-rose-600/30 animate-pulse shrink-0">
-              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
-              </svg>
-            </button>
-
             <button id="btnZaloSource" type="button" onclick="openZaloSource()"
                     title="Chọn file từ Zalo My Documents" aria-label="Chọn file từ Zalo My Documents"
                     class="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg sm:rounded-xl border text-xs font-semibold flex items-center gap-1 ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shrink-0"
@@ -2781,6 +2771,16 @@
                 <path d="M9 8h6l-6 7h6"/>
               </svg>
               <span>Zalo</span>
+            </button>
+
+            <!-- Stop Task Button (Visible while running, Icon Only) -->
+            <button id="stopBtn" 
+                    title="Dừng tiến trình (Esc)"
+                    aria-label="Dừng tiến trình"
+                    class="hidden h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg sm:rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white ease-spring flex items-center justify-center shadow-lg shadow-rose-600/30 animate-pulse shrink-0">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
+              </svg>
             </button>
 
             <!-- Send Button -->

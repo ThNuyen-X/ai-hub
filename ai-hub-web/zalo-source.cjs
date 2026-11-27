@@ -51,44 +51,62 @@ function validLink(value) {
 }
 async function list(c, action) {
   if (action === 'mydocs') {
-    await c.evaluate(`(() => {const i=document.querySelector('#contact-search-input');if(!i)throw Error('Zalo search is unavailable');i.focus();i.select();})()`);
-    await c.call('Input.insertText', { text: 'My Documents' });
-    await delay(700);
-    await c.evaluate(`(() => {const e=document.querySelector('[data-translate-inner="KEY_NAME_SEND2ME"]') || Array.from(document.querySelectorAll('.txt-highlight')).filter(e=>e.innerText?.trim()==='Documents').find(e=>e.getClientRects().length);if(!e)throw Error('My Documents was not found. Open it in Zalo first.');e.click();})()`);
-    await delay(1000);
-    const opened = await c.evaluate(`(() => {const h=document.querySelector('main .header-title, main .chat-title, main [class*="header"]');return !!h&&/My[\\s\\u00a0]+Documents/.test(h.innerText);})()`);
-    if (!opened) throw new Error('Cannot verify My Documents. Open it in Zalo, then use File / Folder.');
+    const alreadyInMyDocs = await c.evaluate(`(() => {const h=document.querySelector('main .header-title, main .chat-title, main [class*="header"]');return !!h&&/My[\\s\\u00a0]+Documents/.test(h.innerText);})()`);
+    if (!alreadyInMyDocs) {
+      await c.evaluate(`(() => {const i=document.querySelector('#contact-search-input');if(!i)throw Error('Zalo search is unavailable');i.focus();i.select();})()`);
+      await c.call('Input.insertText', { text: 'My Documents' });
+      await delay(700);
+      await c.evaluate(`(() => {const e=document.querySelector('[data-translate-inner="KEY_NAME_SEND2ME"]') || Array.from(document.querySelectorAll('.txt-highlight')).filter(e=>e.innerText?.trim()==='Documents').find(e=>e.getClientRects().length);if(!e)throw Error('My Documents was not found. Open it in Zalo first.');e.click();})()`);
+      await delay(1000);
+      const opened = await c.evaluate(`(() => {const h=document.querySelector('main .header-title, main .chat-title, main [class*="header"]');return !!h&&/My[\\s\\u00a0]+Documents/.test(h.innerText);})()`);
+      if (!opened) throw new Error('Cannot verify My Documents. Open it in Zalo, then use File / Folder.');
+    }
     action = 'overview';
   }
   if (['overview', 'files', 'links', 'media'].includes(action)) {
     if (action === 'overview') {
-      await c.evaluate(`(() => {if(!document.querySelector('#info-files-container'))document.querySelector('[data-translate-title="STR_CONVERSATION_INFO"]')?.click();})()`);
+      await c.evaluate(`(() => {
+        const back = document.querySelector('[data-id="btn_MutualGrp_Back"]');
+        if (back) back.click();
+        else if (!document.querySelector('.chat-info__header')) document.querySelector('[data-translate-title="STR_CONVERSATION_INFO"]')?.click();
+      })()`);
       await delay(900);
-    } else if (action !== 'media') {
-    await c.evaluate(`(() => { const id=${JSON.stringify(action === 'files' ? 'info-files-container' : 'info-links-container')}; const section=document.getElementById(id); if(!section){const b=document.querySelector('[data-translate-title="STR_CONVERSATION_INFO"]'); if(b)b.click();} })()`);
-    await delay(900);
-    await c.evaluate(`(() => {const section=document.getElementById(${JSON.stringify(action === 'files' ? 'info-files-container' : 'info-links-container')});const b=section?.querySelector('[data-translate-inner="STR_VIEW_ALL"]');if(b)b.click();})()`);
-    await delay(700);
+    } else {
+      const tabMap = { files: 'div_MediaStore_FileTab', media: 'div_MediaStore_MediaTab', links: 'div_MediaStore_LinkTab' };
+      const sectionMap = { files: 'info-files-container', links: 'info-links-container' };
+      await c.evaluate(`(() => {
+        const tab = document.querySelector(${JSON.stringify(`[data-id="${tabMap[action]}"]`)});
+        if (tab) { tab.click(); return; }
+        const section = ${JSON.stringify(action === 'media')} ? document.querySelector('[data-id="div_MediaStore_MediaList"]')?.parentElement : document.getElementById(${JSON.stringify(sectionMap[action] || '')});
+        if (!section) document.querySelector('[data-translate-title="STR_CONVERSATION_INFO"]')?.click();
+      })()`);
+      await delay(650);
+      await c.evaluate(`(() => {
+        const tab = document.querySelector(${JSON.stringify(`[data-id="${tabMap[action]}"]`)});
+        if (tab) { tab.click(); return; }
+        const section = ${JSON.stringify(action === 'media')} ? document.querySelector('[data-id="div_MediaStore_MediaList"]')?.parentElement : document.getElementById(${JSON.stringify(sectionMap[action] || '')});
+        section?.querySelector('[data-translate-inner="STR_VIEW_ALL"]')?.click();
+      })()`);
+      await delay(650);
     }
-    if(action==='media'){await c.evaluate(`(() => {const e=document.querySelector('[data-id="div_MediaStore_MediaList"]');e?.parentElement.querySelector('[data-translate-inner="STR_VIEW_ALL"]')?.click();})()`);await delay(700);}
   }
   if (action === 'more') {
     await c.evaluate(`(() => {const scope=document.querySelector('#info-files-container');const b=scope && Array.from(scope.querySelectorAll('button,div,span')).find(e=>e.children.length===0&&/^(Tải thêm|Load more)$/.test(e.innerText.trim()));if(b)b.click();})()`);
     await delay(600);
   }
-  const hasPanel = await c.evaluate(`!!(document.querySelector('#info-files-container') || document.querySelector('#info-links-container'))`);
+  const hasPanel = await c.evaluate(`!!(document.querySelector('#info-files-container') || document.querySelector('#info-links-container') || document.querySelector('[data-id="div_MediaStore_MediaTab"]'))`);
   if (!hasPanel) throw new Error('Zalo storage panel is not ready. Open conversation info, then refresh.');
   const items = await c.evaluate(`(() => {
     if(location.hostname!=='chat.zalo.me'||!document.querySelector('main'))throw Error('Log in to Zalo Web and open My Documents first.');
     window.__aiHubZaloItems ||= new Map(); const out=[];
     const add=(el,kind,name,extra={})=>{const id=crypto.randomUUID();window.__aiHubZaloItems.set(id,el);out.push({id,kind,name,...extra});};
     const scope=document.querySelector('#info-files-container');
-    for(const e of scope?.querySelectorAll('.cb-info-file-item')||[]){const n=e.querySelector('.cb-info-file-item__file-name');if(!n)continue;const folder=e.matches('.cb-info-file-item--folder,[data-type="folder"]')||!!e.querySelector('[id*="icon-folder"],.file-icon-folder');add(e,folder?'folder':'file',n.getAttribute('title')||n.innerText,{size:e.querySelector('.cb-info-file-item__file-size')?.innerText||'',date:e.querySelector('.cb-info-file-item__send-date')?.innerText.trim()||''});}
-    for(const [index,e] of Array.from(document.querySelectorAll('[data-id="div_MediaStore_MediaItem"],.media-store-preview-item')).entries()){const video=!!e.querySelector('video,[class*="video"],[class*="play"]')||e.className.includes('video');const key=e.querySelector('[id]')?.id||String(index+1);add(e,video?'video':'image',(video?'Video ':'Image ')+key,{date:e.getAttribute('title')||''});}
-    const links=document.querySelector('#info-links-container');const seen=new Set();
-    for(const a of links?.querySelectorAll('a[href]')||[]){if(!/^https?:/.test(a.href)||seen.has(a.href))continue;seen.add(a.href);add(a,'link',a.innerText.trim()||a.hostname,{url:a.href});}
-    for(const e of links?.querySelectorAll('[data-id="div_MediaStore_LinkItem"]')||[]){if(e.querySelector('a[href]'))continue;const title=e.querySelector('.chat-info-link__title');if(title)add(e,'link',title.getAttribute('title')||title.innerText,{domain:e.querySelector('.chat-info-link__subtitle')?.innerText||''});}
-    return {conversation:document.querySelector('main [class*="header"] [class*="title"]')?.innerText||'',items:out,hasMore:!!scope&&/Tải thêm|Load more/.test(scope.innerText),notice:'Only items available in the open Zalo conversation are listed. Use Zalo to change conversations or folders.'};
+    for(const e of document.querySelectorAll('.cb-info-file-item')) {const n=e.querySelector('.cb-info-file-item__file-name');if(!n)continue;const folder=e.matches('.cb-info-file-item--folder,[data-type="folder"]')||!!e.querySelector('[id*="icon-folder"],.file-icon-folder');add(e,folder?'folder':'file',n.getAttribute('title')||n.innerText,{size:e.querySelector('.cb-info-file-item__file-size')?.innerText||'',date:e.querySelector('.cb-info-file-item__send-date')?.innerText.trim()||''});}
+    const seenMedia=new Set();
+    for(const [index,e] of Array.from(document.querySelectorAll('[data-id="div_MediaStore_MediaItem"],.media-store-preview-item')).entries()){const video=!!e.querySelector('video,[class*="video"],[class*="play"]')||e.className.includes('video');const key=e.querySelector('[id]')?.id||String(index+1);if(seenMedia.has(key))continue;seenMedia.add(key);add(e,video?'video':'image',(video?'Video ':'Image ')+key,{date:e.getAttribute('title')||''});}
+    const seen=new Set();
+    for(const title of document.querySelectorAll('.chat-info-link__title')){const e=title.closest('.chat-info-link')||title.parentElement;const raw=(title.getAttribute('title')||title.innerText||'').trim();if(!raw||seen.has(raw))continue;seen.add(raw);add(e,'link',raw,{domain:e?.querySelector('.chat-info-link__subtitle')?.innerText||''});}
+    return {conversation:document.querySelector('main [class*="header"] [class*="title"]')?.innerText||'',items:out,hasMore:!!(scope&&/Tải thêm|Load more/.test(scope.innerText)),notice:'Only items available in the open Zalo conversation are listed. Use Zalo to change conversations or folders.'};
   })()`);
   for (const item of items.items) {
     if (item.kind === 'link' && !item.url) item.url = validLink(item.name);

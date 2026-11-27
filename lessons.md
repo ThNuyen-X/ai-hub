@@ -106,7 +106,7 @@
 - [Auxiliary streaming] Reject interrupted/truncated SSE before applying edits; measure first content separately, throttle progress, and use scoped original-line replacements to avoid echoing source. Never assume a low-thinking alias reduces upstream queue latency.
 
 - [Deployment] Static HTML can update while Node API routes remain old. Validate JSON content type, save model preferences immediately, and verify backend activation separately from UI availability.
-`r`n- [Restart observability] A scheduled detached worker is not a successful restart: retain child exit/output logs and require replacement HTTP readiness. Control-panel status must verify the current listener and HTTP, never trust cached/PID-file Node processes.
+`r- [Restart observability] A scheduled detached worker is not a successful restart: retain child exit/output logs and require replacement HTTP readiness. Control-panel status must verify the current listener and HTTP, never trust cached/PID-file Node processes.
 - [Resumed extensions] Check saved session extension names before adding auxiliary_model again via CLI; use read-only SQLite with finally-close, and skip this lookup when auxiliary support is disabled.
 
 - [Spring Data local runtime] Preserve -parameters/-g when compiling outside Maven; explicitly annotate named repository query arguments with @Param to avoid runtime binding failures in action-history calls.
@@ -345,3 +345,23 @@
 - **[Node script sửa file hàng loạt trên Windows]**: Khi tìm-thay chuỗi nhiều dòng, chuẩn hóa `\n` theo EOL thực của file (CRLF) trước `includes/replace`, nếu không bước sửa sẽ "not found" và script dừng giữa chừng, để lại thay đổi dở dang.
 - **[Kiro 0-Param Tool Call Drop (`kr/*`)]**: Khi gửi tool schema có `parameters.properties: {}` (như `chrome_devtools__list_pages`, `apps__list_apps`) lên `kr/*` qua 9Router, Kiro cắt stream ngay trước `tool_call` (trả về thinking-only, text-only hoặc stream rỗng 0 bytes); xử lý bằng cách tự chèn `reason: { type: "string" }` (`required: ["reason"]`) trong `normalizeEmptyParamToolsForKiro` tại proxy `/v1/*` (`ai-hub-web/transient-retry.cjs`).
 - **[Phân trang lịch sử chat]** Mỗi lần cuộn lên chỉ nạp 60 message thô, mà các tool call gộp lại nên chỉ ra ~2 lượt hiển thị, trông như "chỉ load được 1 đoạn". Fix: gom nhiều trang (limit 100) tới khi đủ ~10 lượt; modal "Toàn bộ cuộc trò chuyện" phải tải đủ mọi trang rồi mới render. Không dùng cmd echo để ghi tiếng Việt vào file (mất dấu), dùng Node/UTF-8.
+
+- Job/source visibility: enforce group/adult labels before a story exists, then linked-story access; apply identical SQL scope to lists, counts, badges, logs and direct-ID actions.
+- [SSO global combobox] ProVT has both common/adminLayout.jsp and common/renew/layout.jsp; load shared assets in both and verify local rendered scripts. MutationObserver must ignore attribute-only Select2 refreshes to avoid multi-select feedback loops.
+
+- Select2: decorate only .select2-dropdown, not the zero-size positioning wrapper; geometry tests must assert nonzero width and keyboard tests must focus the tested control.
+- **[Typography & Web Fonts Tiếng Việt]**: Tuyệt đối không tách font tiếng Việt thành 3 file `unicode-range` (`latin`, `latin-ext`, `vietnamese`) và không bật `cv11` (single-story `ɑ`) của Inter hay dùng Plus Jakarta Sans cho tiêu đề tiếng Việt; việc tách file làm đứt gãy bảng Kerning (`GPOS`) giữa chữ không dấu và chữ có dấu trong cùng một từ. Luôn đóng gói 1 file `.woff2` nguyên khối duy nhất chứa trọn bộ `ASCII + Latin-1 + Vietnamese` kèm bảng `GPOS` và nạp qua `next/font/local`.
+- Long-lived local Java services must override TEMP/TMP/TMPDIR and java.io.tmpdir to a persistent per-module runtime directory; AI-session scratch cleanup otherwise deletes Tomcat compiled JSP classes and causes ClassNotFoundException.
+
+- [MariaDB live migration] Use a matching server version for newer collations; validate target counts against a single-transaction dump, not a changing live source. mariadb-dump does not accept the client connect-timeout option.
+
+- [MariaDB lower_case_table_names] Chuyen 0 -> 1 bang dump/import vao datadir khoi tao voi gia tri 1; chan TCP khi snapshot (root co the vuot read_only), giu datadir cu va doi chieu COUNT/checksum/auth truoc khi mo lai ket noi.
+
+- jsTree 3.3 uses triggerHandler, so document-delegated lifecycle listeners do not run; decorate instances at creation and sync direct redraw/selection paths, preserving separate checked/selected contracts.
+- Security-level UI collapsing Email/TOTP must normalize legacy values in forms, persistence and CAS/menu runtime gates; never skip a protected menu just because no compatible account method is available.
+
+- Dirty-form navigation: register unsaved-change capture guards before MFA preflight; stopImmediatePropagation plus async location.assign otherwise skips the system confirm modal and falls through to native beforeunload.
+
+- Global Select2 enhancement must exclude .ui-datepicker month/year selectors before initialization; converting transient calendar selects overlays the day grid on first open.
+- Clear buttons in flex picker action rows must override both generic absolute button positioning and SVG centering; verify button containment and SVG center with live DOM rectangles.
+- Application reports must filter registered services by numeric ID, not case-insensitive CODE; audit tables storing only codes require exact-case comparison to avoid mixing SSO-BTP and sso-btp.

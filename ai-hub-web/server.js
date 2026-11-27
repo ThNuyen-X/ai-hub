@@ -1417,10 +1417,12 @@ const server = http.createServer((req, res) => {
       }
       const event = eventIndex >= 0 ? events[eventIndex] : null;
       let capturedOutput = '';
+      let commandFinished = false;
       if (event) {
         const callId = event.payload?.id || '';
         const resultEvent = events.slice(eventIndex + 1).find(e => e.event === 'tool_result' &&
           (!callId || !e.payload?.id || e.payload.id === callId));
+        commandFinished = !!resultEvent;
         if (resultEvent && resultEvent.payload?.output !== undefined && resultEvent.payload?.output !== null) {
           capturedOutput = String(resultEvent.payload.output);
         }
@@ -1444,7 +1446,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
         res.end(JSON.stringify({
           hasLogFile: false,
-          running: !!(ctx && !ctx.isFinished),
+          running: !!(event && !commandFinished && ctx && !ctx.isFinished),
           output: capturedOutput
         }));
       }

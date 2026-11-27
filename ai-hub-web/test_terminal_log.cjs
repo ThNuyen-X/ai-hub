@@ -67,6 +67,11 @@ const { findLogPath, findLogPaths, readLogTail, readCommandLog } = require('./te
   vm.runInContext(html.slice(html.indexOf('    let liveTerminalWatch = null;'), html.indexOf('    function toggleTerminalDrawer(forceState)')), context);
   const settle = () => new Promise(resolve => setImmediate(resolve));
   context.openToolTerminal('card');
+  assert.ok(nodes.get('liveTerminalOutput').textContent.includes('build'), 'Command must render before the first HTTP response');
+  assert.ok(html.includes('#terminalLogsFeed.hidden { display: none !important; }'), 'Hidden general feed must not push live output outside the drawer');
+  assert.ok(html.includes('#liveTerminalOutput { min-height: 0;'), 'Live output must shrink inside the fixed-height drawer');
+  assert.ok(html.includes('terminalDrawer.hidden = true;'), 'Closing must hide the drawer, not expose overflowing content');
+  assert.ok(html.includes('terminalDrawer.hidden = false;'), 'Opening must restore drawer visibility');
   await settle();
   assert.equal(requests, 1);
   assert.ok(nodes.get('liveTerminalOutput').textContent.includes('log'));

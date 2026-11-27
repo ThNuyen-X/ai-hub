@@ -903,6 +903,8 @@
     body { width: 100% !important; height: 100dvh !important; margin: 0; }
     main, #chatFeed, #terminalDrawer, #terminalLogsFeed { min-height: 0; min-width: 0; }
     #terminalDrawer { overflow: hidden; }
+    #terminalDrawer[hidden], #terminalLogsFeed.hidden { display: none !important; }
+    #liveTerminalOutput { min-height: 0; min-width: 0; flex: 1 1 0%; }
     #terminalLogsFeed, #liveTerminalOutput { color: #e2e8f0; }
     #terminalLogsFeed .text-zinc-600 { color: #94a3b8; }
     .ai-content-body, .markdown-body, .user-bubble { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
@@ -2802,7 +2804,7 @@
     <!-- ========================================================
          BOTTOM IDE TERMINAL & EXECUTION DRAWER (Ctrl+`)
          ======================================================== -->
-    <div id="terminalDrawer" 
+    <div id="terminalDrawer" hidden
          class="h-0 border-t shrink-0 flex flex-col transition-all duration-200 relative select-text z-30"
          style="background: var(--terminal-bg); border-color: var(--border);">
       
@@ -10133,6 +10135,7 @@
       pre.className = 'flex-1 overflow-auto p-3 m-0 text-xs whitespace-pre-wrap break-words select-text';
       // Terminal backgrounds stay dark in every theme, independently of page text colors.
       pre.style.color = '#e2e8f0';
+      pre.textContent = '$ ' + command + '\n\n' + (String(card._cardData.output || '').slice(-65536) || '[Dang cho ket qua lenh...]');
       terminalLogsFeed.classList.add('hidden');
       terminalDrawer.appendChild(pre);
       const watch = { sessionId: currentSessionId, timer: null, controller: null, busy: false, version: '', delay: 2000, finished: false };
@@ -10175,7 +10178,7 @@
             if (bestOutput) {
               pre.textContent = '$ ' + command + '\n\n' + bestOutput;
             } else if (runningNow) {
-              pre.textContent = '$ ' + command + '\n\n[Lệnh đang thực thi — output sẽ tự động hiển thị tại đây khi có kết quả từ tiến trình]';
+              pre.textContent = '$ ' + command + '\n\n[Lenh dang chay. Terminal chi xem output, khong chay lai lenh.]\n[Lenh nay khong ghi file log truc tiep; stdout/stderr chi co khi tool tra ket qua. Lenh dung -q/--quiet co the im lang rat lau.]';
             } else {
               pre.textContent = '$ ' + command + '\n\n[Lệnh đã hoàn thành — không có dữ liệu stdout/stderr]';
             }
@@ -10192,7 +10195,7 @@
             pre.textContent = '$ ' + command + '\n\n' + fallbackOutput +
               (runningNow ? '\n\n[Đang chờ cập nhật live stream: ' + err.message + ']' : '');
           } else if (runningNow) {
-            pre.textContent = '$ ' + command + '\n\n[Lệnh đang thực thi — tạm thời chưa đọc được live stream (' + err.message + ')]';
+            pre.textContent = '$ ' + command + '\n\n[Lenh dang chay. Terminal chi xem output, khong chay lai lenh.]\n[Lenh nay khong ghi file log truc tiep; stdout/stderr chi co khi tool tra ket qua. Lenh dung -q/--quiet co the im lang rat lau.]';
           } else {
             pre.textContent = '$ ' + command + '\n\n[Không có dữ liệu output được lưu cho lệnh này]';
           }
@@ -10227,6 +10230,7 @@
       const open = (typeof forceState === 'boolean') ? forceState : !isCurrentlyOpen;
 
       if (open) {
+        terminalDrawer.hidden = false;
         const defaultHeight = window.innerHeight <= 520 ? Math.min(220, Math.max(160, Math.floor(window.innerHeight * 0.65))) : 240;
         terminalDrawer.style.height = defaultHeight + 'px';
         const badge = document.getElementById('terminalDrawerBadge');
@@ -10237,6 +10241,7 @@
       } else {
         stopLiveTerminalWatch();
         terminalDrawer.style.height = '0px';
+        terminalDrawer.hidden = true;
       }
     }
 
@@ -14530,10 +14535,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: (currentAgentMode === 'chat' 
-              ? '[Yêu cầu: Hãy tư vấn, giải thích và viết code minh họa chi tiết, không tự ý sửa đổi file trong dự án trừ khi được yêu cầu]\n\n' + prompt 
+              ? '[Yêu cầu: Hãy tư vấn, giải thích và viết code minh họa chi tiết, không tự ý sửa đổi file trong dự án trừ khi được yêu cầu]\n\n' + requestPrompt 
               : (currentAgentMode === 'architect' 
-                ? '[Yêu cầu: Đóng vai trò Kiến trúc sư phần mềm, đánh giá cấu trúc hệ thống, phân tích hiệu năng, bảo mật và khả năng mở rộng]\n\n' + prompt 
-                : prompt)),
+                ? '[Yêu cầu: Đóng vai trò Kiến trúc sư phần mềm, đánh giá cấu trúc hệ thống, phân tích hiệu năng, bảo mật và khả năng mở rộng]\n\n' + requestPrompt 
+                : requestPrompt)),
             clientId: clientTabId,
             titlePrompt: prompt,
             workspace: currentWorkspace,

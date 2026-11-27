@@ -25,6 +25,8 @@ const { createTurnScratch, cleanupTurnScratch, sweepStaleScratch, scratchInstruc
     assert.equal(await cleanupTurnScratch(a), false);
     assert.ok(scratchInstruction(a.dir).includes('NOT the project workspace'));
     assert.ok(scratchInstruction(a.dir).includes('deliverables'));
+    assert.ok(scratchInstruction(a.dir).includes('Never write temporary files directly into the shared scratch root'));
+    assert.ok(scratchInstruction(a.dir).includes('only use the exact AI_HUB_SCRATCH_DIR above'));
     const expanded = createTurnScratch('D:/project', 'expanded', {
       LOCALAPPDATA: root,
       AI_HUB_SCRATCH_ROOT: '%localappdata%/ai-hub/scratch'

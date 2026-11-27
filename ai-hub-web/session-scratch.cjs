@@ -132,7 +132,7 @@ async function sweepStaleScratch(root, { activeDirs = [], maxAgeMs = 30 * 60 * 1
 
 function scratchInstruction(dir) {
   return '\n\n[AI HUB SCRATCH FILES]:\nAI_HUB_SCRATCH_DIR=' + JSON.stringify(dir) +
-    '\nStore ALL disposable helper scripts, OCR output, image crops, screenshots, debug logs and scratch files in this absolute directory, NOT the project workspace (including target/). Use absolute output paths; running a script from scratch does not change its working directory. TEMP, TMP and TMPDIR point here too. Never place deliverables or files needed for a follow-up here: move those to an appropriate persistent location and tell the user. This turn directory is automatically deleted after the agent process closes. Do not delete or modify other sessions\' scratch directories.';
+    '\nStore ALL disposable helper scripts, OCR output, image crops, screenshots, debug logs and scratch files in this absolute directory, NOT the project workspace (including target/). Never write temporary files directly into the shared scratch root or workspace/session parent directories; only use the exact AI_HUB_SCRATCH_DIR above, which is isolated for this workspace, session and turn. Do not hardcode a shared scratch path. Use absolute output paths; running a script from scratch does not change its working directory. TEMP, TMP and TMPDIR point here too. Never place deliverables or files needed for a follow-up here: move those to an appropriate persistent location and tell the user. This turn directory is automatically deleted after the agent process closes. Do not delete or modify other sessions\' scratch directories.';
 }
 
 module.exports = { resolveScratchRoot, createTurnScratch, cleanupTurnScratch, sweepStaleScratch, scratchInstruction };

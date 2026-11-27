@@ -3,6 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const ROOT = path.resolve(__dirname, '../ai-hub-data/zalo-inbox');
+const UPLOADS = path.resolve(__dirname, '../ai-hub-data/uploads');
+const { execFile } = require('node:child_process');
 const BASE = 'http://127.0.0.1:9223';
 let busy = false;
 let catalog = new Map();
@@ -201,17 +203,67 @@ async function readSelection(ref) {
   if(!/^[a-f0-9-]{36}$/.test(ref||''))throw Error('Invalid selection reference');
   return JSON.parse(await fs.promises.readFile(path.join(REFS,ref+'.json'),'utf8'));
 }
+function readWindowsClipboardFiles() {
+  if (process.platform !== 'win32') return Promise.resolve([]);
+  return new Promise(resolve => {
+    execFile('powershell.exe', [
+      '-NoProfile', '-Sta', '-Command',
+      '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; Add-Type -AssemblyName System.Windows.Forms; if([System.Windows.Forms.Clipboard]::ContainsFileDropList()){[System.Windows.Forms.Clipboard]::GetFileDropList() | ForEach-Object { Write-Output $_ }}'
+    ], { timeout: 3500, windowsHide: true }, (err, stdout) => {
+      if (err || !stdout) return resolve([]);
+      const paths = String(stdout).split(/\r?\n/).map(s => s.trim()).filter(p => p && fs.existsSync(p));
+      resolve(paths.map(p => {
+        const stat = fs.statSync(p);
+        return { path: p, name: path.basename(p), isDirectory: stat.isDirectory(), size: stat.isDirectory() ? 0 : stat.size };
+      }));
+    });
+  });
+}
+async function saveUploadedFile(name, buffer) {
+  if (!Buffer.isBuffer(buffer) || !buffer.length) throw new Error('Empty upload file');
+  if (buffer.length > 50 * 1024 * 1024) throw new Error('Maximum upload size is 50 MB');
+  const day = new Date().toISOString().slice(0, 10);
+  const dir = path.join(UPLOADS, day, crypto.randomUUID().slice(0, 8));
+  await fs.promises.mkdir(dir, { recursive: true });
+  const clean = safeName(name || 'uploaded-file');
+  const dest = path.join(dir, clean);
+  await fs.promises.writeFile(dest, buffer, { flag: 'wx' });
+  return { path: dest, name: clean, bytes: buffer.length };
+}
 function handle(req, res) {
-  if (req.url.split('?')[0] !== '/api/zalo-source') return false;
+  const pathname = (req.url || '').split('?')[0];
+  if (pathname !== '/api/zalo-source' && pathname !== '/api/attach-upload' && pathname !== '/api/clipboard-files') return false;
   const reply = (code, value) => { res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(value)); };
   if (req.method !== 'POST') { reply(405, { error: 'POST required' }); return true; }
   if (req.headers.origin && req.headers.origin !== 'http://' + req.headers.host && req.headers.origin !== 'https://' + req.headers.host) { reply(403, { error: 'Invalid origin' }); return true; }
+  if (pathname === '/api/clipboard-files') {
+    readWindowsClipboardFiles().then(files => reply(200, { ok: true, files })).catch(e => reply(400, { error: e.message }));
+    return true;
+  }
+  if (pathname === '/api/attach-upload') {
+    const rawName = decodeURIComponent(req.headers['x-file-name'] || 'upload.bin');
+    const chunks = []; let total = 0, tooLarge = false;
+    req.on('data', chunk => {
+      if (tooLarge) return;
+      total += chunk.length;
+      if (total > 50 * 1024 * 1024) { tooLarge = true; chunks.length = 0; return; }
+      chunks.push(chunk);
+    });
+    req.on('end', async () => {
+      try {
+        if (tooLarge) throw new Error('Maximum upload size is 50 MB');
+        const saved = await saveUploadedFile(rawName, Buffer.concat(chunks));
+        reply(200, { ok: true, file: saved });
+      } catch (e) { reply(400, { error: e.message }); }
+    });
+    return true;
+  }
   let body = '', large = false;
   req.on('data', chunk => { if (large) return; body += chunk; if (body.length > 4096) { large = true; body = ''; } });
   req.on('end', async () => { try { if (large) throw new Error('Request too large'); reply(200, { ok: true, ...await operate(JSON.parse(body)) }); } catch (e) { reply(400, { error: e.message }); } });
   return true;
 }
-module.exports = { handle, operate, safeName, validLink, ROOT, readSelection };
+module.exports = { handle, operate, safeName, validLink, ROOT, UPLOADS, readSelection, saveUploadedFile, readWindowsClipboardFiles };
 if(require.main===module){
   const [action,ref,index]=process.argv.slice(2);
   (async()=>{

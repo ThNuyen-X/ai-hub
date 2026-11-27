@@ -2754,14 +2754,13 @@
           <!-- Left: Status, Folder, Char Count -->
           <div class="flex items-center space-x-1 sm:space-x-1.5 text-[11px] shrink-0 min-w-0">
             <button id="btnZaloSource" type="button" onclick="openZaloSource()"
-                    title="Chọn file từ Zalo My Documents" aria-label="Chọn file từ Zalo My Documents"
-                    class="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg sm:rounded-xl border text-xs font-semibold flex items-center gap-1 ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shrink-0"
+                    title="Đính kèm tệp (Máy chủ PC, Tải lên từ thiết bị/điện thoại, Zalo My Documents, hoặc Ctrl+V)" aria-label="Đính kèm tệp hoặc Zalo"
+                    class="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg sm:rounded-xl border text-xs font-semibold flex items-center gap-1.5 ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shrink-0"
                     style="border-color: var(--border); color: var(--accent-text); background: var(--bg-card);">
-              <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/>
-                <path d="M9 8h6l-6 7h6"/>
+              <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
               </svg>
-              <span>Zalo</span>
+              <span>Đính kèm</span>
             </button>
 
             <span id="currentSessionFolderTag" hidden></span>
@@ -14467,7 +14466,9 @@
     async function sendMessage(options = {}) {
       const opts = (options && !(options instanceof Event) && typeof options === 'object') ? options : {};
       const hasOverride = typeof opts.promptOverride === 'string';
-      const prompt = (hasOverride ? opts.promptOverride : promptInput.value).trim();
+      const zaloAttachments = !hasOverride && window.zaloComposer ? window.zaloComposer.snapshot() : [];
+      const rawPrompt = (hasOverride ? opts.promptOverride : promptInput.value).trim();
+      const prompt = rawPrompt || (zaloAttachments.length ? 'Hãy kiểm tra tệp đính kèm.' : '');
       if (!prompt || isGenerating) return;
       if (!currentWorkspace) {
         showToast('Vui lòng chọn workspace trước khi gửi tin nhắn.', 'info');
@@ -14475,7 +14476,6 @@
         return;
       }
 
-      const zaloAttachments = !hasOverride && window.zaloComposer ? window.zaloComposer.snapshot() : [];
       const zaloContext = zaloAttachments.length ? window.zaloComposer.context(zaloAttachments) : '';
       const requestPrompt = prompt + (zaloContext ? '\n\n' + zaloContext : '');
       soundEffects.playBop();

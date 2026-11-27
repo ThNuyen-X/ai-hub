@@ -2753,15 +2753,6 @@
           
           <!-- Left: Status, Folder, Char Count -->
           <div class="flex items-center space-x-1 sm:space-x-1.5 text-[11px] shrink-0 min-w-0">
-            <span id="currentSessionFolderTag" hidden></span>
-
-            <span id="charCount" class="text-[10px] hidden sm:inline" style="color: var(--text-sub);">
-              0 ký tự
-            </span>
-          </div>
-
-          <!-- Right: Action Buttons -->
-          <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
             <button id="btnZaloSource" type="button" onclick="openZaloSource()"
                     title="Chọn file từ Zalo My Documents" aria-label="Chọn file từ Zalo My Documents"
                     class="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg sm:rounded-xl border text-xs font-semibold flex items-center gap-1 ease-spring hover:bg-[var(--bg-hover)] active:scale-95 shrink-0"
@@ -2773,6 +2764,15 @@
               <span>Zalo</span>
             </button>
 
+            <span id="currentSessionFolderTag" hidden></span>
+
+            <span id="charCount" class="text-[10px] hidden sm:inline" style="color: var(--text-sub);">
+              0 ký tự
+            </span>
+          </div>
+
+          <!-- Right: Action Buttons -->
+          <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
             <!-- Stop Task Button (Visible while running, Icon Only) -->
             <button id="stopBtn" 
                     title="Dừng tiến trình (Esc)"

@@ -1205,7 +1205,9 @@ const llmRetryProxy = createLlmRetryProxy({
   }
 });
 
+const zaloSource = require('./zalo-source.cjs');
 const server = http.createServer((req, res) => {
+  if (zaloSource.handle(req, res)) return;
   if (req.url && (req.url === "/v1" || req.url.startsWith("/v1/"))) {
     llmRetryProxy.handleProxyRequest(req, res);
     return;

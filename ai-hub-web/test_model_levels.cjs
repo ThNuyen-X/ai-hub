@@ -42,7 +42,7 @@ const backendContext = vm.createContext({ modelLevelVariants: ModelLevels.varian
 vm.runInContext(source.match(/const AVAILABLE_MODELS = \[[\s\S]*?\]\.flatMap\(modelLevelVariants\);/)[0] + '\nthis.models = AVAILABLE_MODELS;', backendContext);
 assert.deepEqual(Array.from(backendContext.models, m => m.id), Array.from(models.flatMap(ModelLevels.variants), m => m.id));
 assert.deepEqual(Array.from(backendContext.models, m => m.group), Array.from(models.flatMap(ModelLevels.variants), m => m.group));
-assert.equal(new Set(backendContext.models.map(m => m.id)).size, 111);
+assert.equal(new Set(backendContext.models.map(m => m.id)).size, 101);
 assert.equal(ModelLevels.normalize('ag/claude-opus-5-5'), 'ag/claude-opus-5-5-high');
 assert.equal(ModelLevels.normalize('ag/gemini-3.8-flash-high'), 'ag/gemini-3.8-flash-high');
 assert.ok(source.includes('!AVAILABLE_MODELS.some(item => item.id === model)'));

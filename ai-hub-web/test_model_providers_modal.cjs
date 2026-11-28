@@ -49,9 +49,9 @@ vm.runInContext(`${modelsMatch[0]}\n${providersMatch[0]}\nthis.MODELS = MODELS;\
 const { MODELS, MODEL_PROVIDERS } = sandbox;
 
 // Kiem tra 3 options chinh
-assert.equal(MODEL_PROVIDERS.length, 4, 'Must have exactly 4 model provider options');
+assert.equal(MODEL_PROVIDERS.length, 3, 'Must have exactly 3 model provider options');
 const providerIds = Array.from(MODEL_PROVIDERS.map(p => p.id));
-assert.deepStrictEqual(JSON.stringify(providerIds), JSON.stringify(['chatgpt', 'gemini', 'kiro', 'opencode']), 'Provider options must be chatgpt, gemini, kiro');
+assert.deepStrictEqual(JSON.stringify(providerIds), JSON.stringify(['chatgpt', 'gemini', 'kiro']), 'Provider options must be chatgpt, gemini, kiro');
 
 // Kiem tra model ChatGPT
 const chatgptModels = Array.from(MODELS.filter(m => m.group === 'chatgpt'));
@@ -87,7 +87,8 @@ assert(kiroModels.some(m => m.id === 'kr/qwen3-coder-next'));
 assert(kiroModels.some(m => m.id === 'kr/glm-5'));
 
 const openCodeModels = Array.from(MODELS.filter(m => m.group === 'opencode'));
-assert.equal(openCodeModels.length, 10);
+assert.equal(openCodeModels.length, 0);
+assert(!MODELS.some(m => m.id.startsWith('oc/')));
 assert(chatgptModels.some(m => m.id === 'cx/gpt-6.2-sol'));
 assert(chatgptModels.some(m => m.id === 'cx/gpt-6.2-astra[1m]'));
 assert(!MODELS.some(m => /daybreak|3\.7-flash|3\.6-flash|3\.1-pro|mimo-auto|jev-1\.13/.test(m.id)));
@@ -252,13 +253,15 @@ assert(!fakeDom.modelProviderModal.classList.contains('hidden'), 'modelProviderM
 assert(fakeDom.modelProviderModalTitle.innerText.includes('Kiro'), 'Title must mention Kiro');
 assert(fakeDom.modelProviderModalList.innerHTML.includes('kr/claude-opus-5.5'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('kr/claude-sonnet-5'));
+assert(fakeDom.modelProviderModalList.innerHTML.includes('data-model-family="opus"'));
+assert(fakeDom.modelProviderModalList.innerHTML.includes('data-model-family="sonnet"'));
+const kiroList = fakeDom.modelProviderModalList.innerHTML;
+assert(kiroList.indexOf("selectModelFromPopup('kr/claude-opus-5.5')") < kiroList.indexOf("selectModelFromPopup('kr/claude-opus-5.5-thinking')"));
+assert(kiroList.indexOf("selectModelFromPopup('kr/claude-opus-5.5-thinking')") < kiroList.indexOf("selectModelFromPopup('kr/claude-opus-5.5-agentic')"));
 sandbox.selectModelFromPopup('kr/claude-sonnet-5');
 assert.equal(sandbox.currentSelectedModel, 'kr/claude-sonnet-5');
 assert.equal(fakeDom.currentModelName.innerText, 'Kiro Claude Sonnet 5');
 
 // Newly discovered providers remain selectable.
-sandbox.openModelProviderPopup('opencode');
-assert(fakeDom.modelProviderModalTitle.innerText.includes('OpenCode'));
-assert(fakeDom.modelProviderModalList.innerHTML.includes('oc/big-pickle'));
 sandbox.selectModelFromPopup('cx/gpt-6.2-sol');
 assert.equal(sandbox.currentSelectedModel, 'cx/gpt-6.2-sol');

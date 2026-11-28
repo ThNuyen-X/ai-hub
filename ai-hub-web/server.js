@@ -2,6 +2,8 @@
 // AI AGENT HUB - PRO SERVER (MINIMALIST & FAST)
 // ========================================================
 const http = require("node:http");
+const { createRuntime: createTerminalRuntime, available: terminalAvailable, TERMINAL_INSTRUCTION } = require("./terminal-runtime.cjs");
+const terminalRuntime = createTerminalRuntime({ resolveSession: id => getRunningSession(id, true) });
 const { findLogPaths, readCommandLog } = require('./terminal-log.cjs');
 const { readHistoryPage, historyOutput } = require("./session-history.cjs");
 const { resolveScratchRoot, createTurnScratch, cleanupTurnScratch, sweepStaleScratch, scratchInstruction } = require('./session-scratch.cjs');
@@ -409,15 +411,6 @@ const AVAILABLE_MODELS = [
       { id: "kr/claude-sonnet-4.5-thinking-agentic", name: "Kiro Claude Sonnet 4.5 / Thinking + Agentic", full: "kr/claude-sonnet-4.5-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
       { id: "kr/gpt-5.6-terra-thinking-agentic", name: "Kiro GPT-5.6 Terra / Thinking + Agentic", full: "kr/gpt-5.6-terra-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
       { id: "kr/gpt-5.6-sol-thinking-agentic", name: "Kiro GPT-5.6 Sol / Thinking + Agentic", full: "kr/gpt-5.6-sol-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
-      { id: "oc/big-pickle", name: "Big Pickle", full: "oc/big-pickle", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
-      { id: "oc/deepseek-v4.1-flash-free", name: "Deepseek v4.1 Flash Free", full: "oc/deepseek-v4.1-flash-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
-      { id: "oc/iceman-free", name: "Iceman Free", full: "oc/iceman-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
-      { id: "oc/beam-free", name: "Beam Free", full: "oc/beam-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
-      { id: "oc/flint-40b-free", name: "Flint 40b Free", full: "oc/flint-40b-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
-      { id: "oc/nemotron-3.5-lightning-free", name: "Nemotron 3.5 Lightning Free", full: "oc/nemotron-3.5-lightning-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
-      { id: "oc/nemotron-3.5-super-vl-free", name: "Nemotron 3.5 Super vl Free", full: "oc/nemotron-3.5-super-vl-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
-      { id: "oc/hy4-flash-free", name: "Hy4 Flash Free", full: "oc/hy4-flash-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
-      { id: "oc/mimo-v2.6-flash-free", name: "Mimo v2.6 Flash Free", full: "oc/mimo-v2.6-flash-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
       { id: "kr/claude-opus-4.8-agentic", name: "Kiro Claude Opus 4.8 / Agentic", full: "kr/claude-opus-4.8-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
       { id: "kr/claude-opus-4.7-thinking-agentic", name: "Kiro Claude Opus 4.7 / Thinking + Agentic", full: "kr/claude-opus-4.7-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
       { id: "kr/claude-opus-4.5-thinking", name: "Kiro Claude Opus 4.5 / Thinking", full: "kr/claude-opus-4.5-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
@@ -426,7 +419,6 @@ const AVAILABLE_MODELS = [
       { id: "kr/claude-sonnet-4.5-agentic", name: "Kiro Claude Sonnet 4.5 / Agentic", full: "kr/claude-sonnet-4.5-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
       { id: "kr/claude-sonnet-5-thinking-agentic", name: "Kiro Claude Sonnet 5 / Thinking + Agentic", full: "kr/claude-sonnet-5-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
       { id: "kr/gpt-5.6-luna-thinking-agentic", name: "Kiro GPT-5.6 Luna / Thinking + Agentic", full: "kr/gpt-5.6-luna-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro" },
-      { id: "oc/seaglass-alpha-free", name: "Seaglass Alpha Free", full: "oc/seaglass-alpha-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai" },
       {"id":"kr/claude-opus-4.5-agentic","name":"Kiro Claude Opus 4.5 / Agentic","full":"kr/claude-opus-4.5-agentic","group":"kiro","provider":"Kiro","tag":"Live checked 2026-11-28: streaming + tool round-trip","iconType":"kiro"}
     ].flatMap(modelLevelVariants);
 
@@ -1325,6 +1317,11 @@ const server = http.createServer((req, res) => {
   }
   const urlObj = new URL(req.url, `http://${req.headers.host}`);
   const pathname = urlObj.pathname;
+
+  if (pathname.startsWith("/api/terminal/") || pathname.startsWith("/terminal-assets/")) {
+    void terminalRuntime.handle(req, res, urlObj);
+    return;
+  }
 
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -2577,9 +2574,15 @@ const server = http.createServer((req, res) => {
         env.AI_HUB_AUX_MODEL = auxiliaryModel;
         env.AI_HUB_AUX_CWD = cwd;
       }
+      const liveTerminalEnabled = !!localProxyAddr?.port && terminalAvailable();
+      if (liveTerminalEnabled) {
+        env.AI_HUB_TERMINAL_URL = `http://127.0.0.1:${localProxyAddr.port}`;
+        env.AI_HUB_TERMINAL_TOKEN = terminalRuntime.register(sessionCtx, env);
+      }
       const browserEnabled = browserAvailable();
       const systemInstruction = buildSystemInstruction(cwd, model) + scratchInstruction(scratch.dir) + coordinationInstruction(auxiliaryModel)
-        + (browserEnabled ? BROWSER_INSTRUCTION : "");
+        + (browserEnabled ? BROWSER_INSTRUCTION : "")
+        + (liveTerminalEnabled ? TERMINAL_INSTRUCTION : "");
 
       const launchGooseTurn = (turnPrompt, isAutoRetry = false) => {
       if (isAutoRetry) {
@@ -2609,6 +2612,14 @@ const server = http.createServer((req, res) => {
       );
       if (browserEnabled && !savedBrowser) {
         args.push("--with-extension", `chrome_devtools:"${process.execPath}" "${path.join(__dirname, "browser-mcp.cjs")}"`);
+      }
+
+      const savedTerminal = liveTerminalEnabled && resume && hasSessionExtension(
+        path.join(process.env.APPDATA, "Block", "goose", "data", "sessions", "sessions.db"),
+        sessionId, "hub_terminal"
+      );
+      if (liveTerminalEnabled && !savedTerminal) {
+        args.push("--with-extension", `hub_terminal:"${process.execPath}" "${path.join(__dirname, "terminal-mcp.cjs")}"`);
       }
 
       const personalBrowserEnabled = browserEnabled;

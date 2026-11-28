@@ -365,3 +365,10 @@
 - Global Select2 enhancement must exclude .ui-datepicker month/year selectors before initialization; converting transient calendar selects overlays the day grid on first open.
 - Clear buttons in flex picker action rows must override both generic absolute button positioning and SVG centering; verify button containment and SVG center with live DOM rectangles.
 - Application reports must filter registered services by numeric ID, not case-insensitive CODE; audit tables storing only codes require exact-case comparison to avoid mixing SSO-BTP and sso-btp.
+- HTQT UAT login/logout: verify deployed SysUser join-table mapping and compare source snapshot before changing SSO/JWT; empty rel_sys_user__role returns roles=[] and frontend logs out. Restore only validated user-role links; source snapshots may contain orphan role IDs.
+- Oracle CSDLHT merge: match users by username and roles by code, remap all child references; app 21 is DMDC in Oracle but CSDL_HTQT in MariaDB. Exclude ambiguous/orphan links, verify insert-only preservation in a rollback trial, then advance MariaDB sequences above remapped IDs. Legacy Oracle NCHAR charset 871 requires TO_CHAR projections with oracledb thin.
+- Self-profile access: bypass menu authorization only after authentication, for exact GET /sys-users-info/{authenticatedId}; keep other-user reads and all writes on normal authorization. Test method/path/ID negatives; persist UAT class hotfix mounts in Compose and remove them when deploying the rebuilt image.
+
+- [Model verification] Router /v1/models is discovery only: validate SSE tool arguments and tool-result round-trip; HTTP 200 may contain retirement text or empty image output. Retry 429 serially; a short [1m] probe does not verify full context capacity.
+
+- [Embedded PTY / Windows] Use raw cmd /d /s /c quoting and ConPTY DLL for node-pty; test live output before exit, reconnect without rerun, cancellation and per-session capabilities.

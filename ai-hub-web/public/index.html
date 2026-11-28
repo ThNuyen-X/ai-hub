@@ -4016,92 +4016,140 @@
 
     // MODELS DEFINITIONS
     const MODELS = [
-      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6.1-sol[1m]", name: "GPT-6.1 Sol / 1M", full: "cx/gpt-6.1-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short requests and tool round-trip verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6.1-terra", name: "GPT-6.1 Terra", full: "cx/gpt-6.1-terra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6.1-terra[1m]", name: "GPT-6.1 Terra / 1M", full: "cx/gpt-6.1-terra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short requests and tool round-trip verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6-astra", name: "GPT-6 Astra", full: "cx/gpt-6-astra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6-astra[1m]", name: "GPT-6 Astra / 1M", full: "cx/gpt-6-astra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6-sol", name: "GPT-6 Sol", full: "cx/gpt-6-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6-sol[1m]", name: "GPT-6 Sol / 1M", full: "cx/gpt-6-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6-luna", name: "GPT-6 Luna", full: "cx/gpt-6-luna", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-6-luna[1m]", name: "GPT-6 Luna / 1M", full: "cx/gpt-6-luna[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-sol", name: "GPT-5.6 Sol", full: "cx/gpt-5.6-sol", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-sol[1m]", name: "GPT-5.6 Sol / 1M", full: "cx/gpt-5.6-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-sol-review", name: "GPT-5.6 Sol Review", full: "cx/gpt-5.6-sol-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-terra", name: "GPT-5.6 Terra", full: "cx/gpt-5.6-terra", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-terra[1m]", name: "GPT-5.6 Terra / 1M", full: "cx/gpt-5.6-terra[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-terra-review", name: "GPT-5.6 Terra Review", full: "cx/gpt-5.6-terra-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-luna", name: "GPT-5.6 Luna", full: "cx/gpt-5.6-luna", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-luna[1m]", name: "GPT-5.6 Luna / 1M", full: "cx/gpt-5.6-luna[1m]", group: "chatgpt", provider: "OpenAI", tag: "1M route; short request verified", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-5.6-luna-review", name: "GPT-5.6 Luna Review", full: "cx/gpt-5.6-luna-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/gpt-reserve", name: "GPT Reserve", full: "cx/gpt-reserve", group: "chatgpt", provider: "OpenAI", tag: "Verified streaming and tool calls", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "cx/codex-auto-review", name: "Codex Auto Review", full: "cx/codex-auto-review", group: "chatgpt", provider: "OpenAI", tag: "Code review", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", full: "ag/gpt-oss-120b-medium", group: "chatgpt", provider: "Antigravity", tag: "Mã nguồn mở linh hoạt", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
-      { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "claude", provider: "Anthropic", tag: "Refactor sâu & tự sửa bug", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
-      { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "claude", provider: "Anthropic", tag: "Tư duy cấu trúc & phân tích phức tạp", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
-      { id: "ag/gemini-4-neon-high", name: "Gemini 4 Neon", full: "ag/gemini-4-neon-high", group: "gemini", provider: "DeepMind", tag: "Verified text, streaming and tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
-      { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Verified live; unlisted router alias", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
-      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Tốc độ cao, suy luận thích ứng", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
-      { id: "ag/gemini-2.5-flash", name: "Gemini 2.5 Flash", full: "ag/gemini-2.5-flash", group: "gemini", provider: "Google", tag: "Verified fast text and tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
-      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Mô hình suy luận cao cấp", iconType: "argon", iconBg: "rgba(66, 133, 244, 0.1)" },
-      { id: "kr/claude-opus-5.5", name: "Kiro Claude Opus 5.5", full: "kr/claude-opus-5.5", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified streaming & tool calls", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-opus-5", name: "Kiro Claude Opus 5", full: "kr/claude-opus-5", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-opus-4.8", name: "Kiro Claude Opus 4.8", full: "kr/claude-opus-4.8", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-opus-4.7", name: "Kiro Claude Opus 4.7", full: "kr/claude-opus-4.7", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-opus-4.5", name: "Kiro Claude Opus 4.5", full: "kr/claude-opus-4.5", group: "kiro", provider: "Kiro", tag: "200K ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-sonnet-5.5", name: "Kiro Claude Sonnet 5.5", full: "kr/claude-sonnet-5.5", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified live & tool calls (unlisted alias)", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-sonnet-5", name: "Kiro Claude Sonnet 5", full: "kr/claude-sonnet-5", group: "kiro", provider: "Kiro", tag: "1M ctx · Verified streaming & tool calls", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-sonnet-4.6", name: "Kiro Claude Sonnet 4.6", full: "kr/claude-sonnet-4.6", group: "kiro", provider: "Kiro", tag: "Verified live & tool calls (unlisted alias)", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-sonnet-4.5", name: "Kiro Claude Sonnet 4.5", full: "kr/claude-sonnet-4.5", group: "kiro", provider: "Kiro", tag: "200K ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/claude-haiku-4.5", name: "Kiro Claude Haiku 4.5", full: "kr/claude-haiku-4.5", group: "kiro", provider: "Kiro", tag: "200K ctx · Nhanh, tiết kiệm", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/gpt-5.6-sol", name: "Kiro GPT-5.6 Sol", full: "kr/gpt-5.6-sol", group: "kiro", provider: "Kiro", tag: "272K ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/gpt-5.6-terra", name: "Kiro GPT-5.6 Terra", full: "kr/gpt-5.6-terra", group: "kiro", provider: "Kiro", tag: "272K ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/gpt-5.6-luna", name: "Kiro GPT-5.6 Luna", full: "kr/gpt-5.6-luna", group: "kiro", provider: "Kiro", tag: "272K ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/deepseek-3.2", name: "Kiro DeepSeek 3.2", full: "kr/deepseek-3.2", group: "kiro", provider: "Kiro", tag: "128K ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/qwen3-coder-next", name: "Kiro Qwen3 Coder Next", full: "kr/qwen3-coder-next", group: "kiro", provider: "Kiro", tag: "1M ctx · Chuyên lập trình", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/glm-5", name: "Kiro GLM-5", full: "kr/glm-5", group: "kiro", provider: "Kiro", tag: "200K ctx · Verified text & tool calls", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
-      { id: "kr/MiniMax-M2.5", name: "Kiro MiniMax M2.5", full: "kr/MiniMax-M2.5", group: "kiro", provider: "Kiro", tag: "200K ctx · Verified live", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" }
+      { id: "cx/gpt-6.1-sol", name: "GPT-6.1 Sol", full: "cx/gpt-6.1-sol", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.1-sol[1m]", name: "GPT-6.1 Sol / 1M", full: "cx/gpt-6.1-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.1-terra", name: "GPT-6.1 Terra", full: "cx/gpt-6.1-terra", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.1-terra[1m]", name: "GPT-6.1 Terra / 1M", full: "cx/gpt-6.1-terra[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-astra", name: "GPT-6 Astra", full: "cx/gpt-6-astra", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-astra[1m]", name: "GPT-6 Astra / 1M", full: "cx/gpt-6-astra[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-sol", name: "GPT-6 Sol", full: "cx/gpt-6-sol", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-sol[1m]", name: "GPT-6 Sol / 1M", full: "cx/gpt-6-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-luna", name: "GPT-6 Luna", full: "cx/gpt-6-luna", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6-luna[1m]", name: "GPT-6 Luna / 1M", full: "cx/gpt-6-luna[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-sol", name: "GPT-5.6 Sol", full: "cx/gpt-5.6-sol", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-sol[1m]", name: "GPT-5.6 Sol / 1M", full: "cx/gpt-5.6-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-sol-review", name: "GPT-5.6 Sol Review", full: "cx/gpt-5.6-sol-review", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-terra", name: "GPT-5.6 Terra", full: "cx/gpt-5.6-terra", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-terra[1m]", name: "GPT-5.6 Terra / 1M", full: "cx/gpt-5.6-terra[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-terra-review", name: "GPT-5.6 Terra Review", full: "cx/gpt-5.6-terra-review", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-luna", name: "GPT-5.6 Luna", full: "cx/gpt-5.6-luna", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-luna[1m]", name: "GPT-5.6 Luna / 1M", full: "cx/gpt-5.6-luna[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-5.6-luna-review", name: "GPT-5.6 Luna Review", full: "cx/gpt-5.6-luna-review", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-reserve", name: "GPT Reserve", full: "cx/gpt-reserve", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/codex-auto-review", name: "Codex Auto Review", full: "cx/codex-auto-review", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "ag/gpt-oss-120b-medium", name: "GPT OSS 120B", full: "ag/gpt-oss-120b-medium", group: "gemini", provider: "Antigravity", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "ag/claude-sonnet-5-5-high", name: "Claude Sonnet 5.5", full: "ag/claude-sonnet-5-5-high", group: "gemini", provider: "Antigravity", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
+      { id: "ag/claude-opus-5-5-high", name: "Claude Opus 5.5", full: "ag/claude-opus-5-5-high", group: "gemini", provider: "Antigravity", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "claude", iconBg: "rgba(217, 119, 6, 0.1)" },
+      { id: "ag/gemini-4-neon-high", name: "Gemini 4 Neon", full: "ag/gemini-4-neon-high", group: "gemini", provider: "DeepMind", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-4-hydrogen-high", name: "Gemini 4 Hydrogen", full: "ag/gemini-4-hydrogen-high", group: "gemini", provider: "DeepMind", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-3.8-flash", name: "Gemini 3.8 Flash", full: "ag/gemini-3.8-flash", group: "gemini", provider: "Google", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-2.5-flash", name: "Gemini 2.5 Flash", full: "ag/gemini-2.5-flash", group: "gemini", provider: "Google", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "ag/gemini-4-argon-high", name: "Gemini 4 Argon", full: "ag/gemini-4-argon-high", group: "gemini", provider: "DeepMind", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "argon", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "kr/claude-opus-5.5", name: "Kiro Claude Opus 5.5", full: "kr/claude-opus-5.5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-5", name: "Kiro Claude Opus 5", full: "kr/claude-opus-5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.8", name: "Kiro Claude Opus 4.8", full: "kr/claude-opus-4.8", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.7", name: "Kiro Claude Opus 4.7", full: "kr/claude-opus-4.7", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.5", name: "Kiro Claude Opus 4.5", full: "kr/claude-opus-4.5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-5.5", name: "Kiro Claude Sonnet 5.5", full: "kr/claude-sonnet-5.5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-5", name: "Kiro Claude Sonnet 5", full: "kr/claude-sonnet-5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-4.6", name: "Kiro Claude Sonnet 4.6", full: "kr/claude-sonnet-4.6", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-4.5", name: "Kiro Claude Sonnet 4.5", full: "kr/claude-sonnet-4.5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-haiku-4.5", name: "Kiro Claude Haiku 4.5", full: "kr/claude-haiku-4.5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-sol", name: "Kiro GPT-5.6 Sol", full: "kr/gpt-5.6-sol", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-terra", name: "Kiro GPT-5.6 Terra", full: "kr/gpt-5.6-terra", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-luna", name: "Kiro GPT-5.6 Luna", full: "kr/gpt-5.6-luna", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/deepseek-3.2", name: "Kiro DeepSeek 3.2", full: "kr/deepseek-3.2", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/qwen3-coder-next", name: "Kiro Qwen3 Coder Next", full: "kr/qwen3-coder-next", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/glm-5", name: "Kiro GLM-5", full: "kr/glm-5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/MiniMax-M2.5", name: "Kiro MiniMax M2.5", full: "kr/MiniMax-M2.5", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "ag/gemini-4-carbon-high", name: "Gemini 4 Carbon", full: "ag/gemini-4-carbon-high", group: "gemini", provider: "Antigravity", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "gemini", iconBg: "rgba(66, 133, 244, 0.1)" },
+      { id: "cx/gpt-6.2-sol", name: "GPT-6.2 Sol", full: "cx/gpt-6.2-sol", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.2-sol[1m]", name: "GPT-6.2 Sol / 1M", full: "cx/gpt-6.2-sol[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.2-astra", name: "GPT-6.2 Astra", full: "cx/gpt-6.2-astra", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "cx/gpt-6.2-astra[1m]", name: "GPT-6.2 Astra / 1M", full: "cx/gpt-6.2-astra[1m]", group: "chatgpt", provider: "OpenAI", tag: "Live checked 2026-11-28: streaming + tool round-trip; 1M route, short context tested", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "kr/claude-opus-5.5-thinking", name: "Kiro Claude Opus 5.5 / Thinking", full: "kr/claude-opus-5.5-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-5.5-agentic", name: "Kiro Claude Opus 5.5 / Agentic", full: "kr/claude-opus-5.5-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-5.5-thinking-agentic", name: "Kiro Claude Opus 5.5 / Thinking + Agentic", full: "kr/claude-opus-5.5-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-5-thinking", name: "Kiro Claude Opus 5 / Thinking", full: "kr/claude-opus-5-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-5-agentic", name: "Kiro Claude Opus 5 / Agentic", full: "kr/claude-opus-5-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-5-thinking-agentic", name: "Kiro Claude Opus 5 / Thinking + Agentic", full: "kr/claude-opus-5-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.8-thinking", name: "Kiro Claude Opus 4.8 / Thinking", full: "kr/claude-opus-4.8-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.8-thinking-agentic", name: "Kiro Claude Opus 4.8 / Thinking + Agentic", full: "kr/claude-opus-4.8-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.7-thinking", name: "Kiro Claude Opus 4.7 / Thinking", full: "kr/claude-opus-4.7-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.7-agentic", name: "Kiro Claude Opus 4.7 / Agentic", full: "kr/claude-opus-4.7-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-5-thinking", name: "Kiro Claude Sonnet 5 / Thinking", full: "kr/claude-sonnet-5-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-haiku-4.5-thinking", name: "Kiro Claude Haiku 4.5 / Thinking", full: "kr/claude-haiku-4.5-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-4.5-thinking", name: "Kiro Claude Sonnet 4.5 / Thinking", full: "kr/claude-sonnet-4.5-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-sol-thinking", name: "Kiro GPT-5.6 Sol / Thinking", full: "kr/gpt-5.6-sol-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-luna-thinking", name: "Kiro GPT-5.6 Luna / Thinking", full: "kr/gpt-5.6-luna-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-5-agentic", name: "Kiro Claude Sonnet 5 / Agentic", full: "kr/claude-sonnet-5-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-haiku-4.5-agentic", name: "Kiro Claude Haiku 4.5 / Agentic", full: "kr/claude-haiku-4.5-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-terra-agentic", name: "Kiro GPT-5.6 Terra / Agentic", full: "kr/gpt-5.6-terra-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-sol-agentic", name: "Kiro GPT-5.6 Sol / Agentic", full: "kr/gpt-5.6-sol-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-luna-agentic", name: "Kiro GPT-5.6 Luna / Agentic", full: "kr/gpt-5.6-luna-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-haiku-4.5-thinking-agentic", name: "Kiro Claude Haiku 4.5 / Thinking + Agentic", full: "kr/claude-haiku-4.5-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-4.5-thinking-agentic", name: "Kiro Claude Sonnet 4.5 / Thinking + Agentic", full: "kr/claude-sonnet-4.5-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-terra-thinking-agentic", name: "Kiro GPT-5.6 Terra / Thinking + Agentic", full: "kr/gpt-5.6-terra-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-sol-thinking-agentic", name: "Kiro GPT-5.6 Sol / Thinking + Agentic", full: "kr/gpt-5.6-sol-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "oc/big-pickle", name: "Big Pickle", full: "oc/big-pickle", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "oc/deepseek-v4.1-flash-free", name: "Deepseek v4.1 Flash Free", full: "oc/deepseek-v4.1-flash-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "oc/iceman-free", name: "Iceman Free", full: "oc/iceman-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "oc/beam-free", name: "Beam Free", full: "oc/beam-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "oc/flint-40b-free", name: "Flint 40b Free", full: "oc/flint-40b-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "oc/nemotron-3.5-lightning-free", name: "Nemotron 3.5 Lightning Free", full: "oc/nemotron-3.5-lightning-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "oc/nemotron-3.5-super-vl-free", name: "Nemotron 3.5 Super vl Free", full: "oc/nemotron-3.5-super-vl-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "oc/hy4-flash-free", name: "Hy4 Flash Free", full: "oc/hy4-flash-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "oc/mimo-v2.6-flash-free", name: "Mimo v2.6 Flash Free", full: "oc/mimo-v2.6-flash-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      { id: "kr/claude-opus-4.8-agentic", name: "Kiro Claude Opus 4.8 / Agentic", full: "kr/claude-opus-4.8-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.7-thinking-agentic", name: "Kiro Claude Opus 4.7 / Thinking + Agentic", full: "kr/claude-opus-4.7-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.5-thinking", name: "Kiro Claude Opus 4.5 / Thinking", full: "kr/claude-opus-4.5-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-opus-4.5-thinking-agentic", name: "Kiro Claude Opus 4.5 / Thinking + Agentic", full: "kr/claude-opus-4.5-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-terra-thinking", name: "Kiro GPT-5.6 Terra / Thinking", full: "kr/gpt-5.6-terra-thinking", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-4.5-agentic", name: "Kiro Claude Sonnet 4.5 / Agentic", full: "kr/claude-sonnet-4.5-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/claude-sonnet-5-thinking-agentic", name: "Kiro Claude Sonnet 5 / Thinking + Agentic", full: "kr/claude-sonnet-5-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "kr/gpt-5.6-luna-thinking-agentic", name: "Kiro GPT-5.6 Luna / Thinking + Agentic", full: "kr/gpt-5.6-luna-thinking-agentic", group: "kiro", provider: "Kiro", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "kiro", iconBg: "rgba(139, 92, 246, 0.1)" },
+      { id: "oc/seaglass-alpha-free", name: "Seaglass Alpha Free", full: "oc/seaglass-alpha-free", group: "opencode", provider: "OpenCode", tag: "Live checked 2026-11-28: streaming + tool round-trip", iconType: "openai", iconBg: "rgba(16, 185, 129, 0.1)" },
+      {"id":"kr/claude-opus-4.5-agentic","name":"Kiro Claude Opus 4.5 / Agentic","full":"kr/claude-opus-4.5-agentic","group":"kiro","provider":"Kiro","tag":"Live checked 2026-11-28: streaming + tool round-trip","iconType":"kiro","iconBg":"rgba(139, 92, 246, 0.1)"}
     ];
 
     const MODEL_PROVIDERS = [
       {
-        id: "chatgpt",
-        name: "ChatGPT",
-        subtitle: "GPT-6.1 / GPT-6 / GPT-5.6 / Review / OSS",
-        provider: "OpenAI & Antigravity",
-        iconType: "openai",
-        iconBg: "rgba(16, 185, 129, 0.12)",
-        badgeColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+            "id": "chatgpt",
+            "name": "ChatGPT",
+            "subtitle": "GPT-6.2 / GPT-6.1 / GPT-6 / GPT-5.6 / Review",
+            "provider": "OpenAI",
+            "iconType": "openai",
+            "iconBg": "rgba(16, 185, 129, 0.12)",
+            "badgeColor": "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
       },
       {
-        id: "claude",
-        name: "Claude",
-        subtitle: "Sonnet 5.5 / Opus 5.5",
-        provider: "Anthropic",
-        iconType: "claude",
-        iconBg: "rgba(217, 119, 6, 0.12)",
-        badgeColor: "text-amber-400 bg-amber-500/10 border-amber-500/20"
+            "id": "gemini",
+            "name": "Gemini",
+            "subtitle": "Gemini / Claude Sonnet & Opus / GPT OSS",
+            "provider": "Google Antigravity",
+            "iconType": "gemini",
+            "iconBg": "rgba(66, 133, 244, 0.12)",
+            "badgeColor": "text-blue-400 bg-blue-500/10 border-blue-500/20"
       },
       {
-        id: "gemini",
-        name: "Gemini",
-        subtitle: "4 Neon / 4 Hydrogen / 3.8 Flash / 2.5 Flash / 4 Argon",
-        provider: "Google & DeepMind",
-        iconType: "gemini",
-        iconBg: "rgba(66, 133, 244, 0.12)",
-        badgeColor: "text-blue-400 bg-blue-500/10 border-blue-500/20"
+            "id": "kiro",
+            "name": "Kiro",
+            "subtitle": "Claude / GPT-5.6 / DeepSeek / Qwen / GLM-5 / MiniMax",
+            "provider": "AWS Kiro",
+            "iconType": "kiro",
+            "iconBg": "rgba(139, 92, 246, 0.12)",
+            "badgeColor": "text-violet-400 bg-violet-500/10 border-violet-500/20"
       },
       {
-        id: "kiro",
-        name: "Kiro",
-        subtitle: "Claude / GPT-5.6 / DeepSeek / Qwen / GLM-5 / MiniMax",
-        provider: "AWS Kiro",
-        iconType: "kiro",
-        iconBg: "rgba(139, 92, 246, 0.12)",
-        badgeColor: "text-violet-400 bg-violet-500/10 border-violet-500/20"
+            "id": "opencode",
+            "name": "OpenCode",
+            "subtitle": "Verified free models",
+            "provider": "OpenCode",
+            "iconType": "openai",
+            "iconBg": "rgba(16, 185, 129, 0.12)",
+            "badgeColor": "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
       }
-    ];
+];
 
     // Brand artwork: Lobe Icons (MIT). Sources are recorded in public/model-icons-sources.md.
     let modelIconSequence = 0;
@@ -9245,7 +9293,7 @@
       }
       
       if (listEl) {
-        listEl.innerHTML = groupModels.map(m => {
+        const renderModelCard = m => {
           const variants = ModelLevels.variants(m);
           const activeVariant = variants.find(v => v.id === currentSelectedModel);
           const isSelected = !!activeVariant;
@@ -9331,7 +9379,30 @@
               ${levelSectionHtml}
             </div>
           `;
-        }).join('');
+        };
+        if (provider.id === 'gemini') {
+          const families = [
+            { id: 'chatgpt', name: 'ChatGPT', iconType: 'openai', matches: m => m.id.startsWith('ag/gpt-') },
+            { id: 'claude', name: 'Claude', iconType: 'claude', matches: m => m.id.startsWith('ag/claude-') },
+            { id: 'gemini', name: 'Gemini', iconType: 'gemini', matches: m => !m.id.startsWith('ag/gpt-') && !m.id.startsWith('ag/claude-') }
+          ];
+          listEl.innerHTML = families.map(family => {
+            const models = groupModels.filter(family.matches);
+            if (!models.length) return '';
+            return `
+              <section data-model-family="${family.id}" aria-labelledby="model-family-${family.id}" class="space-y-2.5">
+                <h4 id="model-family-${family.id}" class="flex items-center gap-2 px-1 pt-2 text-xs font-bold text-[var(--text-main)]">
+                  ${MODEL_ICONS[family.iconType] || ''}
+                  <span>${family.name}</span>
+                  <span class="text-[10px] font-medium text-[var(--text-sub)]">(${models.length})</span>
+                </h4>
+                ${models.map(renderModelCard).join('')}
+              </section>
+            `;
+          }).join('');
+        } else {
+          listEl.innerHTML = groupModels.map(renderModelCard).join('');
+        }
       }
 
       if (modal) {

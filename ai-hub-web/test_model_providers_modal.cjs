@@ -48,44 +48,49 @@ vm.runInContext(`${modelsMatch[0]}\n${providersMatch[0]}\nthis.MODELS = MODELS;\
 
 const { MODELS, MODEL_PROVIDERS } = sandbox;
 
-// Kiem tra 4 options chinh
+// Kiem tra 3 options chinh
 assert.equal(MODEL_PROVIDERS.length, 4, 'Must have exactly 4 model provider options');
 const providerIds = Array.from(MODEL_PROVIDERS.map(p => p.id));
-assert.deepStrictEqual(JSON.stringify(providerIds), JSON.stringify(['chatgpt', 'claude', 'gemini', 'kiro']), 'Provider options must be chatgpt, claude, gemini, kiro');
+assert.deepStrictEqual(JSON.stringify(providerIds), JSON.stringify(['chatgpt', 'gemini', 'kiro', 'opencode']), 'Provider options must be chatgpt, gemini, kiro');
 
 // Kiem tra model ChatGPT
 const chatgptModels = Array.from(MODELS.filter(m => m.group === 'chatgpt'));
-assert.equal(chatgptModels.length, 22, 'ChatGPT group must have all verified GPT routes');
-assert.deepStrictEqual(Array.from(chatgptModels, m => m.id), ["cx/gpt-6.1-sol","cx/gpt-6.1-sol[1m]","cx/gpt-6.1-terra","cx/gpt-6.1-terra[1m]","cx/gpt-6-astra","cx/gpt-6-astra[1m]","cx/gpt-6-sol","cx/gpt-6-sol[1m]","cx/gpt-6-luna","cx/gpt-6-luna[1m]","cx/gpt-5.6-sol","cx/gpt-5.6-sol[1m]","cx/gpt-5.6-sol-review","cx/gpt-5.6-terra","cx/gpt-5.6-terra[1m]","cx/gpt-5.6-terra-review","cx/gpt-5.6-luna","cx/gpt-5.6-luna[1m]","cx/gpt-5.6-luna-review","cx/gpt-reserve","cx/codex-auto-review","ag/gpt-oss-120b-medium"]);
+assert.equal(chatgptModels.length, 25, 'ChatGPT group must have all verified GPT routes');
+assert.deepStrictEqual(Array.from(chatgptModels, m => m.id), ["cx/gpt-6.1-sol","cx/gpt-6.1-sol[1m]","cx/gpt-6.1-terra","cx/gpt-6.1-terra[1m]","cx/gpt-6-astra","cx/gpt-6-astra[1m]","cx/gpt-6-sol","cx/gpt-6-sol[1m]","cx/gpt-6-luna","cx/gpt-6-luna[1m]","cx/gpt-5.6-sol","cx/gpt-5.6-sol[1m]","cx/gpt-5.6-sol-review","cx/gpt-5.6-terra","cx/gpt-5.6-terra[1m]","cx/gpt-5.6-terra-review","cx/gpt-5.6-luna","cx/gpt-5.6-luna[1m]","cx/gpt-5.6-luna-review","cx/gpt-reserve","cx/codex-auto-review","cx/gpt-6.2-sol","cx/gpt-6.2-sol[1m]","cx/gpt-6.2-astra","cx/gpt-6.2-astra[1m]"]);
 
-// Kiem tra model Claude
+// Models are grouped by route, not model brand.
 const claudeModels = Array.from(MODELS.filter(m => m.group === 'claude'));
-assert.equal(claudeModels.length, 2, 'Claude group must have 2 supported models');
-assert.deepStrictEqual(JSON.stringify(claudeModels.map(m => m.id)), JSON.stringify([
-  'ag/claude-sonnet-5-5-high',
-  'ag/claude-opus-5-5-high'
-]));
-
-// Kiem tra model Gemini
+assert.equal(claudeModels.length, 0, 'No standalone Claude provider');
 const geminiModels = Array.from(MODELS.filter(m => m.group === 'gemini'));
-assert.equal(geminiModels.length, 5, 'Gemini group contains only verified models');
-assert.deepStrictEqual(JSON.stringify(geminiModels.map(m => m.id)), JSON.stringify([
+assert.equal(geminiModels.length, 9, 'Gemini includes all Antigravity models');
+assert.deepStrictEqual(Array.from(geminiModels, m => m.id), [
+  'ag/gpt-oss-120b-medium',
+  'ag/claude-sonnet-5-5-high',
+  'ag/claude-opus-5-5-high',
   'ag/gemini-4-neon-high',
   'ag/gemini-4-hydrogen-high',
   'ag/gemini-3.8-flash',
   'ag/gemini-2.5-flash',
-  'ag/gemini-4-argon-high'
-]));
+  'ag/gemini-4-argon-high',
+  'ag/gemini-4-carbon-high'
+]);
+assert(MODELS.every(m => !m.id.startsWith('ag/') || m.group === 'gemini'));
 
 // Kiem tra model Kiro
 const kiroModels = Array.from(MODELS.filter(m => m.group === 'kiro'));
-assert.equal(kiroModels.length, 17, 'Kiro group contains all verified Kiro models');
+assert.equal(kiroModels.length, 50, 'Kiro group contains all verified Kiro models');
 assert(kiroModels.some(m => m.id === 'kr/claude-opus-5.5'));
 assert(kiroModels.some(m => m.id === 'kr/claude-sonnet-5.5'));
 assert(kiroModels.some(m => m.id === 'kr/claude-sonnet-5'));
 assert(kiroModels.some(m => m.id === 'kr/claude-sonnet-4.6'));
 assert(kiroModels.some(m => m.id === 'kr/qwen3-coder-next'));
 assert(kiroModels.some(m => m.id === 'kr/glm-5'));
+
+const openCodeModels = Array.from(MODELS.filter(m => m.group === 'opencode'));
+assert.equal(openCodeModels.length, 10);
+assert(chatgptModels.some(m => m.id === 'cx/gpt-6.2-sol'));
+assert(chatgptModels.some(m => m.id === 'cx/gpt-6.2-astra[1m]'));
+assert(!MODELS.some(m => /daybreak|3\.7-flash|3\.6-flash|3\.1-pro|mimo-auto|jev-1\.13/.test(m.id)));
 
 // 3. Kiem tra logic JavaScript tuong tac: renderModelSelector & openModelProviderPopup
 const helperCode = `
@@ -171,10 +176,10 @@ vm.runInContext(`
 sandbox.renderModelSelector();
 assert.equal(fakeDom.currentModelName.innerText, 'GPT-6.1 Sol');
 assert(fakeDom.modelListOptions.innerHTML.includes('ChatGPT'), 'Dropdown must show ChatGPT');
-assert(fakeDom.modelListOptions.innerHTML.includes('Claude'), 'Dropdown must show Claude');
+assert(!fakeDom.modelListOptions.innerHTML.includes("openModelProviderPopup('claude')"), 'No separate Claude option');
 assert(fakeDom.modelListOptions.innerHTML.includes('Gemini'), 'Dropdown must show Gemini');
 assert(fakeDom.modelListOptions.innerHTML.includes("openModelProviderPopup('chatgpt')"));
-assert(fakeDom.modelListOptions.innerHTML.includes("openModelProviderPopup('claude')"));
+assert(fakeDom.modelListOptions.innerHTML.includes("openModelProviderPopup('kiro')"));
 assert(fakeDom.modelListOptions.innerHTML.includes("openModelProviderPopup('gemini')"));
 
 // Test 2: Bấm vào ChatGPT -> Popup hien thi GPT-6.1 Sol va GPT OSS 120B
@@ -182,26 +187,28 @@ sandbox.openModelProviderPopup('chatgpt');
 assert(!fakeDom.modelProviderModal.classList.contains('hidden'), 'modelProviderModal must be open');
 assert(fakeDom.modelProviderModalTitle.innerText.includes('ChatGPT'), 'Title must mention ChatGPT');
 assert(fakeDom.modelProviderTabs.innerHTML.includes('ChatGPT'), 'Tabs must include ChatGPT');
-assert(fakeDom.modelProviderTabs.innerHTML.includes('Claude'), 'Tabs must include Claude');
+assert(!fakeDom.modelProviderTabs.innerHTML.includes("openModelProviderPopup('claude')"), 'No separate Claude tab');
 assert(fakeDom.modelProviderTabs.innerHTML.includes('Gemini'), 'Tabs must include Gemini');
 assert(fakeDom.modelProviderModalList.innerHTML.includes('GPT-6.1 Sol'), 'List must include GPT-6.1 Sol');
-assert(fakeDom.modelProviderModalList.innerHTML.includes('GPT OSS 120B'), 'List must include GPT OSS 120B');
+assert(!fakeDom.modelProviderModalList.innerHTML.includes('GPT OSS 120B'), 'ChatGPT excludes Antigravity GPT OSS');
 assert(!fakeDom.modelProviderModalList.innerHTML.includes('Claude Sonnet'), 'ChatGPT popup must not include Claude');
 
 // Test 3: Bấm chọn GPT OSS 120B tu popup
+sandbox.openModelProviderPopup('gemini');
+assert(fakeDom.modelProviderModalList.innerHTML.includes('GPT OSS 120B'));
 sandbox.selectModelFromPopup('ag/gpt-oss-120b-medium');
 assert.equal(sandbox.currentSelectedModel, 'ag/gpt-oss-120b-medium');
 assert(fakeDom.modelProviderModal.classList.contains('hidden'), 'Popup must close after selection');
 assert.equal(fakeDom.currentModelName.innerText, 'GPT OSS 120B', 'Active model name in header must update');
 
 // Test 4: Bấm vào Claude -> Popup hien thi Sonnet 5.5, Opus 5.5, Sonnet 4.6
-sandbox.openModelProviderPopup('claude');
+sandbox.openModelProviderPopup('gemini');
 assert(!fakeDom.modelProviderModal.classList.contains('hidden'), 'modelProviderModal must be open for Claude');
-assert(fakeDom.modelProviderModalTitle.innerText.includes('Claude'), 'Title must mention Claude');
+assert(fakeDom.modelProviderModalTitle.innerText.includes('Gemini'), 'Claude is listed under Gemini');
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Claude Sonnet 5.5'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Claude Opus 5.5'));
 assert(!fakeDom.modelProviderModalList.innerHTML.includes('Claude Sonnet 4.6'));
-assert(!fakeDom.modelProviderModalList.innerHTML.includes('Gemini'));
+assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 4 Neon'));
 
 // Test 5: Bấm chọn Claude Sonnet 5.5 tu popup
 sandbox.selectModelFromPopup('ag/claude-sonnet-5-5-high');
@@ -213,6 +220,15 @@ assert.equal(fakeDom.currentModelName.innerText, 'Claude Sonnet 5.5');
 sandbox.openModelProviderPopup('gemini');
 assert(!fakeDom.modelProviderModal.classList.contains('hidden'), 'modelProviderModal must be open for Gemini');
 assert(fakeDom.modelProviderModalTitle.innerText.includes('Gemini'), 'Title must mention Gemini');
+const familySections = Array.from(fakeDom.modelProviderModalList.innerHTML.matchAll(/<section data-model-family="([^"]+)"[\s\S]*?<\/section>/g));
+assert.deepStrictEqual(familySections.map(match => match[1]), ['chatgpt', 'claude', 'gemini']);
+assert(familySections[0][0].includes('GPT OSS 120B'));
+assert(!familySections[0][0].includes('Claude Sonnet'));
+assert(familySections[1][0].includes('Claude Sonnet 5.5'));
+assert(familySections[1][0].includes('Claude Opus 5.5'));
+assert(!familySections[1][0].includes('GPT OSS'));
+assert(familySections[2][0].includes('Gemini 4 Neon'));
+assert(!familySections[2][0].includes('Claude Sonnet'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 4 Hydrogen'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('ag/gemini-4-hydrogen-high'));
 assert(fakeDom.modelProviderModalList.innerHTML.includes('Gemini 3.8 Flash'));
@@ -239,3 +255,10 @@ assert(fakeDom.modelProviderModalList.innerHTML.includes('kr/claude-sonnet-5'));
 sandbox.selectModelFromPopup('kr/claude-sonnet-5');
 assert.equal(sandbox.currentSelectedModel, 'kr/claude-sonnet-5');
 assert.equal(fakeDom.currentModelName.innerText, 'Kiro Claude Sonnet 5');
+
+// Newly discovered providers remain selectable.
+sandbox.openModelProviderPopup('opencode');
+assert(fakeDom.modelProviderModalTitle.innerText.includes('OpenCode'));
+assert(fakeDom.modelProviderModalList.innerHTML.includes('oc/big-pickle'));
+sandbox.selectModelFromPopup('cx/gpt-6.2-sol');
+assert.equal(sandbox.currentSelectedModel, 'cx/gpt-6.2-sol');
